@@ -50,7 +50,7 @@
             <p class="hero-desc">Series, doramas y películas GL de todo el mundo. Subtituladas con amor, actualizadas
                 cada día.</p>
             <div class="hero-actions">
-                <a href="#" class="btn-rose">
+                <a href="/episodios" class="btn-rose">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                     </svg>

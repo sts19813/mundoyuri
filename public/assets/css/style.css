@@ -10,6 +10,12 @@
         --text: #f0e8f5;
     }
 
+    @media (min-width: 1750px) {
+        .container, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+            max-width: 1700px;
+        }
+    }
+
     *,
     *::before,
     *::after {
