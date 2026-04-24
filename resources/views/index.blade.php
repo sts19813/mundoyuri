@@ -15,33 +15,17 @@
 
 <body>
 
-    <!-- ══ NAVBAR ══ -->
-    <nav class="gl-nav" id="navbar">
-        <div class="nav-inner">
-            <a href="#" class="brand">
-                <span class="brand-heart"></span>
-                Mundo GL
-            </a>
-            <ul class="nav-links">
-                <li><a href="#">Inicio</a></li>
-                <li><a href="#">Series</a></li>
-                <li><a href="#">Películas</a></li>
-                <li><a href="#">Géneros</a></li>
-            </ul>
-            <input type="text" class="nav-search" placeholder="Buscar series…">
-            <button class="nav-toggler">&#9776;</button>
-        </div>
-    </nav>
+    <x-navbar />
 
     <!-- ══ HERO ══ -->
     <section class="hero">
         <video class="hero-video" autoplay muted loop playsinline>
-            <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
+            <source src="/assets/video/BG.mp4" type="video/mp4">
         </video>
         <div class="hero-overlay"></div>
         <div class="hero-grain"></div>
 
-        <div class="hero-content">
+        <div class="hero-content container-xl px-4 pt-5">
             <div class="hero-tag">
                 <span class="brand-heart" style="width:14px;height:14px;"></span>
                 Contenido GL · Actualizado diario
@@ -76,7 +60,7 @@
     </section>
 
     <!-- ══ CARRUSEL DESTACADO ══ -->
-    <section class="featured-section">
+    <section >
         <div class="container-xl px-4">
             <div class="section-header">
                 <h2 class="section-title">Doramas destacados</h2>

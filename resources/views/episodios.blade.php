@@ -21,23 +21,7 @@
 
 <body>
 
-    <!-- ══ NAVBAR (same as index) ══ -->
-    <nav class="gl-nav scrolled" id="navbar">
-        <div class="nav-inner">
-            <a href="index.html" class="brand">
-                <span class="brand-heart"></span>
-                Series GL
-            </a>
-            <ul class="nav-links">
-                <li><a href="#">Inicio</a></li>
-                <li><a href="#">Series</a></li>
-                <li><a href="#">Películas</a></li>
-                <li><a href="#">Géneros</a></li>
-            </ul>
-            <input type="text" class="nav-search" placeholder="Buscar series…">
-            <button class="nav-toggler">&#9776;</button>
-        </div>
-    </nav>
+    <x-navbar />
 
     <!-- ══ MAIN LAYOUT ══ -->
     <div class="ep-layout">
