@@ -60,7 +60,7 @@
     </section>
 
     <!-- ══ CARRUSEL DESTACADO ══ -->
-    <section >
+    <section>
         <div class="container-xl px-4">
             <div class="section-header">
                 <h2 class="section-title">Doramas destacados</h2>
@@ -479,7 +479,10 @@
         <div class="container-xl px-4">
             <div class="row g-4 mb-2">
                 <div class="col-md-4">
-                    <div class="footer-brand">Series ♥ GL</div>
+                    <a href="/" class="brand">
+                        <span class="brand-heart"></span>
+                        Mundo GL
+                    </a>
                     <p class="footer-desc">Tu espacio para descubrir historias GL de todo el mundo. Series, doramas y
                         películas actualizadas cada día.</p>
                 </div>
