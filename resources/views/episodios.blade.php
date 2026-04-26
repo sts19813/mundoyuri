@@ -16,7 +16,7 @@
         href="{{ asset('assets/css/episodios.css') }}?v={{ filemtime(public_path('assets/css/episodios.css')) }}">
     <link rel="stylesheet" href="assets/style.css">
 
-  
+
 </head>
 
 <body>
@@ -669,6 +669,7 @@
 
     </div>
 
+    <x-footer />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         window.addEventListener('scroll', () => {
