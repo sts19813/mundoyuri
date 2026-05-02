@@ -692,7 +692,27 @@
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
 
-        .nav-links,
+        .nav-links {
+            display: none;
+            position: absolute;
+            top: 77px;
+            left: 0;
+            right: 0;
+            background: var(--dark-card);
+            border-bottom: 1px solid rgba(244, 63, 142, 0.2);
+            flex-direction: column;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-links.active {
+            display: flex;
+        }
+
+        .nav-links li {
+            padding: 10px 20px;
+        }
+
         .nav-search {
             display: none;
         }

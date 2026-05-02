@@ -488,6 +488,22 @@
             const rail = document.getElementById('featuredRail');
             rail.scrollBy({ left: dir * 320, behavior: 'smooth' });
         }
+
+
+        // Toggle menu en móvil
+        document.getElementById('navToggler').addEventListener('click', function () {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        });
+
+        // Cerrar menú cuando se hace clic en un enlace
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function () {
+                const navLinks = document.getElementById('navLinks');
+                navLinks.classList.remove('active');
+            });
+        });
+
     </script>
 </body>
 
