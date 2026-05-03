@@ -21,6 +21,8 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth'])
     ->group(function () {
+
+    
         Route::get('/perfil', [ProfileController::class, 'index'])->name('profile.index');
         Route::post('/perfil/actualizar', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/perfil/foto', [ProfileController::class, 'updatePhoto'])->name('profile.update.photo');
