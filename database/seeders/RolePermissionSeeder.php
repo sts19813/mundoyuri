@@ -24,10 +24,15 @@ class RolePermissionSeeder extends Seeder
             'create series',
             'edit series',
             'delete series',
+            'view genres',
+            'create genres',
+            'edit genres',
+            'delete genres',
             'view episodes',
             'create episodes',
             'edit episodes',
             'delete episodes',
+            'moderate content',
         ];
 
         foreach ($permissions as $permission) {
@@ -44,11 +49,15 @@ class RolePermissionSeeder extends Seeder
         $moderatorRole->syncPermissions([
             'view dashboard',
             'view series',
+            'view genres',
+            'create genres',
+            'edit genres',
             'create series',
             'edit series',
             'view episodes',
             'create episodes',
             'edit episodes',
+            'moderate content',
         ]);
         $userRole->syncPermissions([
             'view series',
@@ -56,4 +65,3 @@ class RolePermissionSeeder extends Seeder
         ]);
     }
 }
-

@@ -57,6 +57,42 @@
                     <!--end::Menu link-->
                 </div>
                 <!--end::Menu item-->
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.genres.*') ? 'active' : '' }}"
+                        href="{{ route('admin.genres.index') }}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                        </span>
+                        <span class="menu-title">Generos</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.series.*') ? 'active' : '' }}"
+                        href="{{ route('admin.series.index') }}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                        </span>
+                        <span class="menu-title">Series y Peliculas</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.episodes.*') ? 'active' : '' }}"
+                        href="{{ route('admin.episodes.index') }}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                        </span>
+                        <span class="menu-title">Episodios</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.moderation.*') ? 'active' : '' }}"
+                        href="{{ route('admin.moderation.index') }}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                        </span>
+                        <span class="menu-title">Validacion</span>
+                    </a>
+                </div>
             </div>
             <!--end::Menu sub-->
         </div>
@@ -77,20 +113,6 @@
             <!--end::Menu item-->
         @endcan
 
-        @can('view series')
-            <!--begin::Menu item-->
-            <div class="menu-item">
-                <!--begin::Menu link-->
-                <a class="menu-link" href="#">
-                    <span class="menu-bullet">
-                        <span class="bullet bullet-dot"></span>
-                    </span>
-                    <span class="menu-title">Series</span>
-                </a>
-                <!--end::Menu link-->
-            </div>
-            <!--end::Menu item-->
-        @endcan
     </div>
     <!--end::Sidebar Menu-->
 </div>

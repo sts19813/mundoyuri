@@ -59,6 +59,18 @@
                         @enderror
                     </div>
 
+                    {{-- ALIAS --}}
+                    <div class="fv-row mb-8">
+                        <input type="text" name="alias" value="{{ old('alias') }}" placeholder="Alias público (opcional)"
+                            class="form-control bg-transparent @error('alias') is-invalid @enderror" />
+                        <div class="text-muted fs-8 mt-1">Se usará para comentarios y aportes públicos.</div>
+                        @error('alias')
+                            <div class="invalid-feedback d-block">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
                     {{-- PASSWORD --}}
                     <div class="fv-row mb-8">
                         <input type="password" name="password" placeholder="Contraseña"

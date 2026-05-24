@@ -79,7 +79,7 @@
                 <!--end::Menu separator-->
                 <!--begin::Menu item-->
                 <div class="menu-item px-5">
-                    <a href="{{ route('profile.index') }}" class="menu-link px-5">{{ __('messages.user_profile') }}</a>
+                    <a href="{{ route('profile.edit') }}" class="menu-link px-5">{{ __('messages.user_profile') }}</a>
                 </div>
 
 

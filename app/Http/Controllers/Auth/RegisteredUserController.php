@@ -32,15 +32,21 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'alias' => ['nullable', 'string', 'max:120', 'unique:users,alias'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
+            'alias' => $request->alias,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        if (\Spatie\Permission\Models\Role::query()->where('name', 'user')->exists()) {
+            $user->assignRole('user');
+        }
 
         event(new Registered($user));
 

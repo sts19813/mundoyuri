@@ -11,6 +11,13 @@
             <!--begin::Sidebar menu-->
             <div id="kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false"
                 class="app-sidebar-menu-primary menu menu-column menu-rounded menu-sub-indention menu-state-bullet-primary px-3 mb-5">
+
+                <div class="menu-item mb-2">
+                    <div class="menu-content">
+                        <span class="menu-heading fw-bold text-uppercase fs-7">Panel</span>
+                    </div>
+                </div>
+
                 <div class="menu-item">
                     <a href="{{ route('dashboard') }}"
                         class="menu-link {{ request()->is('dashboard*') ? 'active' : '' }}">
@@ -20,74 +27,84 @@
                         <span class="menu-title">Dashboard</span>
                     </a>
                 </div>
+
                 <div class="menu-item">
-                    <a href="javascript:void(0);" class="menu-link">
-                        <span class="menu-icon">
-                            <i class="ki-outline ki-chart-line fs-2"></i>
-                        </span>
-                        <span class="menu-title">Insights de Turistas</span>
-                    </a>
-                </div>
-                <div class="menu-item">
-                    <a href=""
-                        class="menu-link {{ request()->is('provedores*') || request()->is('proveedores*') || request()->is('ubicaciones*') || request()->is('mapa*') ? 'active' : '' }}">
-                        <span class="menu-icon">
-                            <i class="ki-outline ki-building fs-2"></i>
-                        </span>
-                        <span class="menu-title">Proveedores</span>
-                    </a>
-                </div>
-                <div class="menu-item">
-                    <a href="javascript:void(0);" class="menu-link">
+                    <a href="{{ route('profile.edit') }}" class="menu-link {{ request()->is('profile*') ? 'active' : '' }}">
                         <span class="menu-icon">
                             <i class="ki-outline ki-user fs-2"></i>
                         </span>
-                        <span class="menu-title">Perfiles</span>
-                    </a>
-                </div>
-                <div class="menu-item">
-                    <a href="javascript:void(0);" class="menu-link">
-                        <span class="menu-icon">
-                            <i class="ki-outline ki-briefcase fs-2"></i>
-                        </span>
-                        <span class="menu-title">Convocatorias</span>
-                    </a>
-                </div>
-                <div class="menu-item">
-                    <a href="javascript:void(0);" class="menu-link">
-                        <span class="menu-icon">
-                            <i class="ki-outline ki-graph fs-2"></i>
-                        </span>
-                        <span class="menu-title">Análisis</span>
-                    </a>
-                </div>
-                <div class="menu-item">
-                    <a href=""
-                        class="menu-link {{ request()->is('dashboard*') ? 'active' : '' }}">
-                        <span class="menu-icon">
-                            <i class="ki-outline ki-document fs-2"></i>
-                        </span>
-                        <span class="menu-title">Reportes</span>
-                    </a>
-                </div>
-                <div class="menu-item">
-                    <a href=""
-                        class="menu-link {{ request()->is('config/agente*') ? 'active' : '' }}">
-                        <span class="menu-icon">
-                            <i class="ki-outline ki-setting-3 fs-2"></i>
-                        </span>
-                        <span class="menu-title">Configuración del agente</span>
+                        <span class="menu-title">Mi perfil</span>
                     </a>
                 </div>
 
                 <div class="menu-item">
-                    <a href="" class="menu-link">
+                    <a href="{{ route('home') }}" class="menu-link {{ request()->routeIs('home') ? 'active' : '' }}">
                         <span class="menu-icon">
-                            <i class="ki-outline ki-profile-user fs-2"></i>
+                            <i class="ki-outline ki-abstract-26 fs-2"></i>
                         </span>
-                        <span class="menu-title">Administración de usuarios</span>
+                        <span class="menu-title">Inicio portal</span>
                     </a>
                 </div>
+
+                <div class="menu-item">
+                    <a href="{{ route('catalog.series.index') }}" class="menu-link {{ request()->routeIs('catalog.series.*') ? 'active' : '' }}">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-film fs-2"></i>
+                        </span>
+                        <span class="menu-title">Series y películas</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="{{ route('catalog.genres.index') }}" class="menu-link {{ request()->routeIs('catalog.genres.*') ? 'active' : '' }}">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-category fs-2"></i>
+                        </span>
+                        <span class="menu-title">Géneros</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="{{ route('submissions.create') }}" class="menu-link {{ request()->routeIs('submissions.*') ? 'active' : '' }}">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-plus-square fs-2"></i>
+                        </span>
+                        <span class="menu-title">Subir contenido</span>
+                    </a>
+                </div>
+
+                @if(auth()->check() && auth()->user()->role === 'admin')
+                    <div class="menu-item mt-6 mb-2">
+                        <div class="menu-content">
+                            <span class="menu-heading fw-bold text-uppercase fs-7">Administración</span>
+                        </div>
+                    </div>
+
+                    <div class="menu-item">
+                        <a href="{{ route('admin.dashboard') }}" class="menu-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                            <span class="menu-icon">
+                                <i class="ki-outline ki-setting-2 fs-2"></i>
+                            </span>
+                            <span class="menu-title">Dashboard admin</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a href="{{ route('admin.moderation.index') }}" class="menu-link {{ request()->routeIs('admin.moderation.*') ? 'active' : '' }}">
+                            <span class="menu-icon">
+                                <i class="ki-outline ki-shield-tick fs-2"></i>
+                            </span>
+                            <span class="menu-title">Validación</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
+                        <a href="{{ route('admin.users.index') }}" class="menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                            <span class="menu-icon">
+                                <i class="ki-outline ki-profile-user fs-2"></i>
+                            </span>
+                            <span class="menu-title">Usuarios</span>
+                        </a>
+                    </div>
+                @endif
             </div>
             <!--end::Sidebar menu-->
         </div>
