@@ -15,7 +15,11 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
+        $user = auth()->user();
+        $isAdminByField = $user?->role === 'admin';
+        $isAdminByRole = $user && method_exists($user, 'hasRole') ? $user->hasRole('admin') : false;
+
+        if (!$user || (!$isAdminByField && !$isAdminByRole)) {
             return redirect('/')->with('error', 'No tienes permiso para acceder a esta sección');
         }
 

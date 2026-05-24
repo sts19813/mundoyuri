@@ -73,7 +73,12 @@
                     </a>
                 </div>
 
-                @if(auth()->check() && auth()->user()->role === 'admin')
+                @php
+                    $panelUser = auth()->user();
+                    $isAdminPanel = $panelUser && ($panelUser->role === 'admin' || (method_exists($panelUser, 'hasRole') && $panelUser->hasRole('admin')));
+                @endphp
+
+                @if($isAdminPanel)
                     <div class="menu-item mt-6 mb-2">
                         <div class="menu-content">
                             <span class="menu-heading fw-bold text-uppercase fs-7">Administración</span>

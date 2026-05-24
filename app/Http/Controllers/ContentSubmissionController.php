@@ -47,7 +47,8 @@ class ContentSubmissionController extends Controller
             'source_label' => ['nullable', 'string', 'max:120'],
         ]);
 
-        $isAdmin = auth()->user()?->role === 'admin';
+        $user = auth()->user();
+        $isAdmin = $user?->role === 'admin' || ($user && method_exists($user, 'hasRole') && $user->hasRole('admin'));
         $moderationStatus = $isAdmin ? 'approved' : 'pending';
 
         $series = Series::create([

@@ -1,6 +1,13 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Subir contenido')
+
+@section('toolbar')
+    <div class="page-title d-flex flex-column justify-content-center me-3">
+        <h1 class="page-heading fw-bold fs-3 m-0">Subir contenido</h1>
+        <span class="text-muted fs-7">Carga de títulos y episodios</span>
+    </div>
+@endsection
 
 @section('content')
     <div class="d-flex flex-column gap-5">

@@ -85,7 +85,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="symbol symbol-50px me-5">
-                                            <img alt="Avatar" src="{{ asset('/metronic/assets/media/avatars/300-2.jpg') }}" />
+                                            <img alt="Avatar" src="{{ asset('metronic/assets/media/avatars/300-2.jpg') }}" />
                                         </div>
                                         <div class="d-flex justify-content-start flex-column">
                                             <a href="{{ route('admin.users.show', $user->id) }}" class="text-dark fw-bold text-hover-primary fs-6">
@@ -161,3 +161,4 @@
         }
     </script>
 @endpush
+

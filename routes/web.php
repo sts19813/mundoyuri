@@ -14,22 +14,32 @@ use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
 use App\Http\Controllers\ContentSubmissionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [CatalogController::class, 'home'])->name('home');
-Route::get('/series', [CatalogController::class, 'series'])->name('catalog.series.index');
-Route::get('/generos', function () {
-    if (auth()->check() && auth()->user()->role === 'admin') {
-        return redirect()->route('admin.genres.index');
-    }
+Route::get('/', function () {
+    return view('index');
+})->name('home');
+Route::get('/index', function () {
+    return view('index');
+})->name('legacy.index');
 
-    return app(CatalogController::class)->genres();
-})->name('catalog.genres.index');
+Route::get('/inicio-catalogo', [CatalogController::class, 'home'])->name('catalog.home');
+Route::get('/series', [CatalogController::class, 'series'])->name('catalog.series.index');
+Route::get('/generos', [CatalogController::class, 'genres'])->name('catalog.genres.index');
 Route::get('/generos/{genre:slug}', [CatalogController::class, 'genre'])->name('catalog.genres.show');
 Route::get('/series/{series:slug}', [CatalogController::class, 'showSeries'])->name('catalog.series.show');
 Route::get('/series/{series:slug}/episodios/{episode:slug}', [CatalogController::class, 'showEpisode'])->name('catalog.episodes.show');
 Route::post('/comentarios', [CommentController::class, 'store'])->name('comments.store');
-Route::redirect('/episodios', '/series');
+Route::get('/episodios', function () {
+    return view('episodios');
+})->name('legacy.episodios');
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    $isAdmin = $user?->role === 'admin' || ($user && method_exists($user, 'hasRole') && $user->hasRole('admin'));
+
+    if ($isAdmin) {
+        return redirect()->route('admin.dashboard');
+    }
+
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -48,11 +58,20 @@ Route::middleware(['auth'])
 
 // Rutas del Panel Admin - Protegidas por middleware 'auth' y 'admin'
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::redirect('/', '/admin/dashboard');
+
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
+    Route::redirect('/users', '/admin/usuarios');
+    Route::redirect('/genres', '/admin/generos');
+    Route::redirect('/episodes', '/admin/episodios');
+    Route::redirect('/moderation', '/admin/validacion');
+
     // Gestión de Usuarios
-    Route::resource('users', AdminUserController::class)->names([
+    Route::resource('usuarios', AdminUserController::class)->parameters([
+        'usuarios' => 'user',
+    ])->names([
         'index' => 'admin.users.index',
         'create' => 'admin.users.create',
         'store' => 'admin.users.store',
@@ -62,7 +81,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'destroy' => 'admin.users.destroy',
     ]);
 
-    Route::resource('roles', AdminRoleController::class)->names([
+    Route::resource('roles', AdminRoleController::class)->parameters([
+        'roles' => 'role',
+    ])->names([
         'index' => 'admin.roles.index',
         'create' => 'admin.roles.create',
         'store' => 'admin.roles.store',
@@ -72,7 +93,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'destroy' => 'admin.roles.destroy',
     ]);
 
-    Route::resource('genres', AdminGenreController::class)->names([
+    Route::resource('generos', AdminGenreController::class)->parameters([
+        'generos' => 'genre',
+    ])->names([
         'index' => 'admin.genres.index',
         'create' => 'admin.genres.create',
         'store' => 'admin.genres.store',
@@ -82,7 +105,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'destroy' => 'admin.genres.destroy',
     ]);
 
-    Route::resource('series', AdminSeriesController::class)->names([
+    Route::resource('series', AdminSeriesController::class)->parameters([
+        'series' => 'series',
+    ])->names([
         'index' => 'admin.series.index',
         'create' => 'admin.series.create',
         'store' => 'admin.series.store',
@@ -92,7 +117,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'destroy' => 'admin.series.destroy',
     ]);
 
-    Route::resource('episodes', AdminEpisodeController::class)->names([
+    Route::resource('episodios', AdminEpisodeController::class)->parameters([
+        'episodios' => 'episode',
+    ])->names([
         'index' => 'admin.episodes.index',
         'create' => 'admin.episodes.create',
         'store' => 'admin.episodes.store',
@@ -102,11 +129,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'destroy' => 'admin.episodes.destroy',
     ]);
 
-    Route::get('/moderation', [ModerationController::class, 'index'])->name('admin.moderation.index');
-    Route::post('/moderation/series/{series}/approve', [ModerationController::class, 'approveSeries'])->name('admin.moderation.series.approve');
-    Route::post('/moderation/series/{series}/reject', [ModerationController::class, 'rejectSeries'])->name('admin.moderation.series.reject');
-    Route::post('/moderation/episodes/{episode}/approve', [ModerationController::class, 'approveEpisode'])->name('admin.moderation.episodes.approve');
-    Route::post('/moderation/episodes/{episode}/reject', [ModerationController::class, 'rejectEpisode'])->name('admin.moderation.episodes.reject');
+    Route::get('/validacion', [ModerationController::class, 'index'])->name('admin.moderation.index');
+    Route::post('/validacion/series/{series}/approve', [ModerationController::class, 'approveSeries'])->name('admin.moderation.series.approve');
+    Route::post('/validacion/series/{series}/reject', [ModerationController::class, 'rejectSeries'])->name('admin.moderation.series.reject');
+    Route::post('/validacion/episodios/{episode}/approve', [ModerationController::class, 'approveEpisode'])->name('admin.moderation.episodes.approve');
+    Route::post('/validacion/episodios/{episode}/reject', [ModerationController::class, 'rejectEpisode'])->name('admin.moderation.episodes.reject');
 
     // Perfil del Admin
     Route::get('/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
