@@ -47,9 +47,13 @@ class ContentSubmissionController extends Controller
             'source_label' => ['nullable', 'string', 'max:120'],
         ]);
 
+        $isAdmin = auth()->user()?->role === 'admin';
+        $moderationStatus = $isAdmin ? 'approved' : 'pending';
+
         $series = Series::create([
             'genre_id' => $validated['genre_id'],
             'created_by' => auth()->id(),
+            'approved_by' => $isAdmin ? auth()->id() : null,
             'title' => $validated['title'],
             'slug' => $this->resolveUniqueSlug($validated['title']),
             'content_type' => $validated['content_type'],
@@ -60,12 +64,14 @@ class ContentSubmissionController extends Controller
             'duration_minutes' => $validated['duration_minutes'] ?? null,
             'banner_image' => $validated['banner_image'] ?? null,
             'cover_image' => $validated['cover_image'] ?? null,
-            'moderation_status' => 'pending',
+            'moderation_status' => $moderationStatus,
+            'published_at' => $isAdmin ? now() : null,
         ]);
 
         if (!empty($validated['episode_title'])) {
             $episode = $series->episodes()->create([
                 'created_by' => auth()->id(),
+                'approved_by' => $isAdmin ? auth()->id() : null,
                 'title' => $validated['episode_title'],
                 'slug' => $this->resolveUniqueEpisodeSlug($series->title, $validated['episode_number'] ?? 1),
                 'season_number' => $validated['season_number'] ?? 1,
@@ -73,7 +79,8 @@ class ContentSubmissionController extends Controller
                 'release_date' => $validated['episode_release_date'] ?? null,
                 'duration_minutes' => $validated['episode_duration_minutes'] ?? null,
                 'description' => $validated['episode_description'] ?? null,
-                'moderation_status' => 'pending',
+                'moderation_status' => $moderationStatus,
+                'published_at' => $isAdmin ? now() : null,
             ]);
 
             if (!empty($validated['source_provider']) && !empty($validated['source_url'])) {
@@ -86,8 +93,11 @@ class ContentSubmissionController extends Controller
             }
         }
 
-        return redirect()->route('submissions.create')
-            ->with('success', 'Contenido enviado. Quedo en revision para validacion.');
+        $message = $isAdmin
+            ? 'Contenido publicado correctamente.'
+            : 'Contenido enviado. Quedo en revision para validacion.';
+
+        return redirect()->route('submissions.create')->with('success', $message);
     }
 
     private function resolveUniqueSlug(string $title): string

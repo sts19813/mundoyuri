@@ -125,9 +125,11 @@
                         <!--begin::Select-->
                         <select name="role" class="form-select form-select-solid @error('role') is-invalid @enderror" required>
                             <option value="">Seleccionar rol</option>
-                            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrador</option>
-                            <option value="moderator" {{ old('role') === 'moderator' ? 'selected' : '' }}>Moderador</option>
-                            <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>Usuario</option>
+                            @foreach($roles as $roleName)
+                                <option value="{{ $roleName }}" {{ old('role') === $roleName ? 'selected' : '' }}>
+                                    {{ ucfirst($roleName) }}
+                                </option>
+                            @endforeach
                         </select>
                         @error('role')
                             <div class="invalid-feedback d-block">{{ $message }}</div>

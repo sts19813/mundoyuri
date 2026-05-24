@@ -104,8 +104,17 @@
                             <span class="menu-title">Usuarios</span>
                         </a>
                     </div>
+                    <div class="menu-item">
+                        <a href="{{ route('admin.roles.index') }}" class="menu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                            <span class="menu-icon">
+                                <i class="ki-outline ki-security-user fs-2"></i>
+                            </span>
+                            <span class="menu-title">Roles</span>
+                        </a>
+                    </div>
                 @endif
             </div>
+            
             <!--end::Sidebar menu-->
         </div>
     </div>

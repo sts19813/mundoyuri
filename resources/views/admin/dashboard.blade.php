@@ -29,6 +29,7 @@
         <a href="{{ route('admin.series.create') }}" class="btn btn-light-primary">Nueva serie o pelicula</a>
         <a href="{{ route('admin.episodes.create') }}" class="btn btn-light-primary">Nuevo episodio</a>
         <a href="{{ route('admin.genres.create') }}" class="btn btn-light-primary">Nuevo genero</a>
+        <a href="{{ route('admin.roles.index') }}" class="btn btn-light-primary">Roles y permisos</a>
     </div>
 </div>
 @endsection

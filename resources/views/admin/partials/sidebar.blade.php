@@ -56,6 +56,15 @@
                     </a>
                     <!--end::Menu link-->
                 </div>
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
+                        href="{{ route('admin.roles.index') }}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                        </span>
+                        <span class="menu-title">Roles</span>
+                    </a>
+                </div>
                 <!--end::Menu item-->
                 <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.genres.*') ? 'active' : '' }}"

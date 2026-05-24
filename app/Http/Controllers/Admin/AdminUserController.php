@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class AdminUserController extends Controller
 {
@@ -23,7 +25,8 @@ class AdminUserController extends Controller
 
     public function create()
     {
-        return view('admin.users.create');
+        $roles = Role::query()->orderBy('name')->pluck('name');
+        return view('admin.users.create', compact('roles'));
     }
 
     public function store(Request $request)
@@ -32,7 +35,7 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
-            'role' => 'required|in:admin,moderator,user',
+            'role' => ['required', Rule::in(Role::query()->pluck('name')->toArray())],
             'is_active' => 'nullable|boolean'
         ]);
 
@@ -53,7 +56,8 @@ class AdminUserController extends Controller
 
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        $roles = Role::query()->orderBy('name')->pluck('name');
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, User $user)
@@ -62,7 +66,7 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|min:8|confirmed',
-            'role' => 'required|in:admin,moderator,user',
+            'role' => ['required', Rule::in(Role::query()->pluck('name')->toArray())],
             'is_active' => 'nullable|boolean'
         ]);
 

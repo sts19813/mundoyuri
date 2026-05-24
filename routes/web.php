@@ -4,6 +4,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
@@ -15,7 +16,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
 Route::get('/series', [CatalogController::class, 'series'])->name('catalog.series.index');
-Route::get('/generos', [CatalogController::class, 'genres'])->name('catalog.genres.index');
+Route::get('/generos', function () {
+    if (auth()->check() && auth()->user()->role === 'admin') {
+        return redirect()->route('admin.genres.index');
+    }
+
+    return app(CatalogController::class)->genres();
+})->name('catalog.genres.index');
 Route::get('/generos/{genre:slug}', [CatalogController::class, 'genre'])->name('catalog.genres.show');
 Route::get('/series/{series:slug}', [CatalogController::class, 'showSeries'])->name('catalog.series.show');
 Route::get('/series/{series:slug}/episodios/{episode:slug}', [CatalogController::class, 'showEpisode'])->name('catalog.episodes.show');
@@ -53,6 +60,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'edit' => 'admin.users.edit',
         'update' => 'admin.users.update',
         'destroy' => 'admin.users.destroy',
+    ]);
+
+    Route::resource('roles', AdminRoleController::class)->names([
+        'index' => 'admin.roles.index',
+        'create' => 'admin.roles.create',
+        'store' => 'admin.roles.store',
+        'show' => 'admin.roles.show',
+        'edit' => 'admin.roles.edit',
+        'update' => 'admin.roles.update',
+        'destroy' => 'admin.roles.destroy',
     ]);
 
     Route::resource('genres', AdminGenreController::class)->names([
