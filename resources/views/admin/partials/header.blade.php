@@ -1,96 +1,28 @@
-<!--begin::Header-->
-<div id="kt_app_header" class="app-header" data-kt-sticky="true" data-kt-sticky-offset="{default: '200px', lg: '300px'}"
-    data-kt-sticky-transition-timingfunction="linear" data-kt-sticky-transition-duration=".5s">
-    <!--begin::Header container-->
-    <div class="app-container container-xxl d-flex align-items-stretch justify-content-between"
-        id="kt_app_header_container">
-        <!--begin::Logo-->
-        <div class="d-flex align-items-center flex-lg-grow-1" id="kt_app_header_logo">
-            <a href="{{ route('admin.dashboard') }}">
-                <img alt="Logo" src="{{ asset('/metronic/assets/media/logos/default-dark.svg') }}" class="h-25px app-sidebar-logo-default" />
-                <img alt="Logo" src="{{ asset('/metronic/assets/media/logos/default-light.svg') }}" class="h-25px app-sidebar-logo-minimize" />
+<div id="kt_app_header" class="app-header d-flex flex-column flex-stack">
+    <div class="d-flex flex-stack flex-grow-1">
+        <div class="app-header-logo d-flex align-items-center ps-lg-12" id="kt_app_header_logo">
+            <div id="kt_app_sidebar_toggle"
+                class="app-sidebar-toggle btn btn-sm btn-icon bg-body btn-color-gray-500 btn-active-color-primary w-30px h-30px ms-n2 me-4 d-none d-lg-flex"
+                data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body"
+                data-kt-toggle-name="app-sidebar-minimize">
+                <i class="ki-outline ki-abstract-14 fs-3 mt-1"></i>
+            </div>
+
+            <div class="btn btn-icon btn-active-color-primary w-35px h-35px ms-3 me-2 d-flex d-lg-none"
+                id="kt_app_sidebar_mobile_toggle">
+                <i class="ki-outline ki-abstract-14 fs-2"></i>
+            </div>
+
+            <a href="{{ route('admin.dashboard') }}" class="app-sidebar-logo">
+                <img alt="Metronic" src="{{ asset('metronic/assets/media/logos/default-dark.svg') }}"
+                    class="theme-light-show h-30px" />
+                <img alt="Metronic" src="{{ asset('metronic/assets/media/logos/default.svg') }}"
+                    class="theme-dark-show h-30px" />
             </a>
         </div>
-        <!--end::Logo-->
 
-        <!--begin::Header nav-->
-        <div class="d-flex align-items-center justify-content-end flex-lg-grow-1" id="kt_app_header_nav">
-            <!--begin::Navbar-->
-            <div class="app-navbar flex-shrink-0">
-                <!--begin::User menu-->
-                <div class="app-navbar-item ms-1 ms-md-4" id="kt_header_user_menu_toggle">
-                    <!--begin::Menu- wrapper-->
-                    <div class="cursor-pointer symbol symbol-30px" data-kt-menu-trigger="click"
-                        data-kt-menu-placement="bottom-end">
-                        <img src="{{ asset('/metronic/assets/media/avatars/300-2.jpg') }}" alt="user" />
-                    </div>
-
-                    <!--begin::Menu-->
-                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-6 w-275px py-4"
-                        data-kt-menu="true">
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-3">
-                            <div class="menu-content d-flex align-items-center px-3">
-                                <div class="symbol symbol-50px me-5">
-                                    <img alt="Logo" src="{{ asset('/metronic/assets/media/avatars/300-2.jpg') }}" />
-                                </div>
-
-                                <div class="d-flex flex-column">
-                                    <div class="fw-bolder d-flex align-items-center fs-5">
-                                        {{ Auth::user()->name }}
-                                    </div>
-                                    <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
-                                        {{ Auth::user()->email }}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Menu item-->
-
-                        <!--begin::Menu separator-->
-                        <div class="separator my-2"></div>
-                        <!--end::Menu separator-->
-
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-5">
-                            <a href="{{ route('admin.profile.show') }}" class="menu-link px-5">
-                                Mi Perfil
-                            </a>
-                        </div>
-                        <!--end::Menu item-->
-
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-5">
-                            <a href="{{ route('admin.profile.edit') }}" class="menu-link px-5">
-                                Configuración
-                            </a>
-                        </div>
-                        <!--end::Menu item-->
-
-                        <!--begin::Menu separator-->
-                        <div class="separator my-2"></div>
-                        <!--end::Menu separator-->
-
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-5">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="menu-link px-5 text-danger">
-                                    Cerrar sesión
-                                </button>
-                            </form>
-                        </div>
-                        <!--end::Menu item-->
-                    </div>
-                    <!--end::Menu-->
-                    <!--end::Menu- wrapper-->
-                </div>
-                <!--end::User menu-->
-            </div>
-            <!--end::Navbar-->
-        </div>
-        <!--end::Header nav-->
+        @include('admin.partials.navbar')
     </div>
-    <!--end::Header container-->
+
+    <div class="app-header-separator"></div>
 </div>
-<!--end::Header-->

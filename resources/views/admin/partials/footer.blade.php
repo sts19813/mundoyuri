@@ -1,24 +1,20 @@
-<!--begin::Footer-->
-<div id="kt_app_footer" class="app-footer flex-column flex-md-row align-items-md-center justify-content-between py-3 py-lg-4"
-    id="kt_app_footer">
-    <!--begin::Copyright-->
-    <div class="text-muted order-2 order-md-1 text-center text-md-left text-gray-500 fw-semibold">
-        &copy; {{ date('Y') }} <a href="#" class="text-muted text-hover-primary">Mundo GL</a>
-    </div>
-    <!--end::Copyright-->
+<div id="kt_app_footer" class="app-footer">
+    <div class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3">
+        <div class="text-gray-900 order-2 order-md-1">
+            <span class="text-muted fw-semibold me-1">{{ date('Y') }}&copy;</span>
+            <span class="text-gray-800">Mundo GL</span>
+        </div>
 
-    <!--begin::Menu-->
-    <ul class="menu menu-gray-600 menu-hover-primary order-1">
-        <li class="menu-item">
-            <a href="#" class="menu-link ps-0">Acerca de</a>
-        </li>
-        <li class="menu-item">
-            <a href="#" class="menu-link ps-0">Soporte</a>
-        </li>
-        <li class="menu-item">
-            <a href="#" class="menu-link ps-0">Términos</a>
-        </li>
-    </ul>
-    <!--end::Menu-->
+        <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
+            <li class="menu-item">
+                <a href="#" class="menu-link px-2">Acerca de</a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link px-2">Soporte</a>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link px-2">Términos</a>
+            </li>
+        </ul>
+    </div>
 </div>
-<!--end::Footer-->
