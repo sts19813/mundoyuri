@@ -55,7 +55,7 @@
                 <!-- ── PLAYER ── -->
                 <div class="player-wrap">
                     @if($primarySource)
-                        <iframe id="episodePlayer" class="player-embed" src="{{ $primarySource->video_url }}"
+                        <iframe id="episodePlayer" class="player-embed" src="{{ $primarySource->playable_url }}"
                             title="{{ $series->title }} - Episodio {{ $episode->episode_number }}"
                             allowfullscreen
                             referrerpolicy="strict-origin-when-cross-origin"
@@ -92,7 +92,7 @@
                         @forelse($episode->sources as $source)
                             <button type="button"
                                 class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
-                                data-video-url="{{ $source->video_url }}"
+                                data-video-url="{{ $source->playable_url }}"
                                 data-provider="{{ strtoupper($source->provider) }}">
                                 <div class="server-icon">⚡</div>
                                 <div class="server-info">
@@ -252,7 +252,7 @@
                     </div>
                     @forelse($episode->sources as $source)
                         <div class="links-row">
-                            <a href="{{ $source->video_url }}" target="_blank" rel="noopener" class="links-row-option">
+                            <a href="{{ $source->playable_url }}" target="_blank" rel="noopener" class="links-row-option">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <circle cx="12" cy="12" r="10" />

@@ -9,7 +9,13 @@
                 'label' => old('source_label')[$idx] ?? '',
             ];
         })->values()->all()
-        : (isset($episode) ? $episode->sources->map(fn($s) => ['provider' => $s->provider, 'video_url' => $s->video_url, 'label' => $s->label])->values()->all() : []);
+        : (isset($episode)
+            ? $episode->sources->map(fn($s) => [
+                'provider' => $s->provider === 'youtube' ? 'youtube_link' : $s->provider,
+                'video_url' => $s->video_url,
+                'label' => $s->label,
+            ])->values()->all()
+            : []);
 
     if (count($sources) < 3) {
         for ($i = count($sources); $i < 3; $i++) {
@@ -65,7 +71,8 @@
                 <label class="form-label">Proveedor {{ $index + 1 }}</label>
                 <select class="form-select" name="source_provider[]">
                     <option value="">Selecciona</option>
-                    <option value="youtube" @selected($source['provider'] === 'youtube')>YouTube</option>
+                    <option value="youtube_link" @selected($source['provider'] === 'youtube' || $source['provider'] === 'youtube_link')>YouTube (enlace)</option>
+                    <option value="youtube_iframe" @selected($source['provider'] === 'youtube_iframe')>YouTube (iframe)</option>
                     <option value="vimeo" @selected($source['provider'] === 'vimeo')>Vimeo</option>
                     <option value="byse" @selected($source['provider'] === 'byse')>BYSE</option>
                     <option value="voe" @selected($source['provider'] === 'voe')>VOE</option>
@@ -74,8 +81,12 @@
                 </select>
             </div>
             <div class="col-md-5">
-                <label class="form-label">URL {{ $index + 1 }}</label>
-                <input class="form-control" type="url" name="source_url[]" value="{{ $source['video_url'] }}">
+                <label class="form-label">URL o iframe {{ $index + 1 }}</label>
+                <input class="form-control" type="text" name="source_url[]" value="{{ $source['video_url'] }}"
+                    placeholder="https://www.youtube.com/watch?v=... o <iframe ...>">
+                @error("source_url.$index")
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-3">
                 <label class="form-label">Etiqueta {{ $index + 1 }}</label>

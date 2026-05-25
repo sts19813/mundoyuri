@@ -27,7 +27,7 @@
             <div class="card-body">
                 @if($primary)
                     <div class="ratio ratio-16x9 mb-3">
-                        <iframe src="{{ $primary->video_url }}" title="Video" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                        <iframe src="{{ $primary->playable_url }}" title="Video" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                     </div>
                 @else
                     <div class="alert alert-warning mb-0">Este episodio aun no tiene fuente de video disponible.</div>
@@ -36,7 +36,7 @@
                 <h5 class="mt-3">Fuentes disponibles</h5>
                 <div class="d-flex flex-wrap gap-2">
                     @forelse($episode->sources as $source)
-                        <a class="btn {{ $source->is_primary ? 'btn-primary' : 'btn-light' }}" href="{{ $source->video_url }}" target="_blank" rel="noopener">
+                        <a class="btn {{ $source->is_primary ? 'btn-primary' : 'btn-light' }}" href="{{ $source->playable_url }}" target="_blank" rel="noopener">
                             {{ strtoupper($source->provider) }}{{ $source->label ? ' · '.$source->label : '' }}
                         </a>
                     @empty

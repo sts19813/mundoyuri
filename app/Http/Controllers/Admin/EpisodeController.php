@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
+use Illuminate\Support\Arr;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -123,8 +124,40 @@ class EpisodeController extends Controller
             'description' => ['nullable', 'string'],
             'moderation_status' => ['required', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
-            'source_provider.*' => ['nullable', 'in:youtube,vimeo,byse,voe,ok,netu'],
-            'source_url.*' => ['nullable', 'url'],
+            'source_provider.*' => ['nullable', 'in:youtube,youtube_link,youtube_iframe,vimeo,byse,voe,ok,netu'],
+            'source_url.*' => [
+                'nullable',
+                'string',
+                'max:5000',
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                    $index = (int) Str::afterLast($attribute, '.');
+                    $provider = trim((string) Arr::get($request->input('source_provider', []), $index, ''));
+                    $rawUrl = trim((string) $value);
+
+                    if ($provider === '' && $rawUrl === '') {
+                        return;
+                    }
+
+                    if ($provider !== '' && $rawUrl === '') {
+                        $fail('Debes indicar la URL o iframe de la fuente seleccionada.');
+
+                        return;
+                    }
+
+                    if ($provider === '' && $rawUrl !== '') {
+                        $fail('Selecciona un proveedor para la fuente indicada.');
+
+                        return;
+                    }
+
+                    $normalizedProvider = $this->normalizeProvider($provider);
+                    $normalizedUrl = $this->normalizeSourceUrl($normalizedProvider, $rawUrl);
+
+                    if (!$normalizedUrl) {
+                        $fail('La fuente no es válida. Usa una URL pública o un iframe con src válido.');
+                    }
+                },
+            ],
             'source_label.*' => ['nullable', 'string', 'max:120'],
             'source_primary' => ['nullable', 'integer'],
         ]);
@@ -140,19 +173,180 @@ class EpisodeController extends Controller
         $episode->sources()->delete();
 
         foreach ($providers as $index => $provider) {
+            $provider = trim((string) $provider);
             $url = $urls[$index] ?? null;
 
             if (empty($provider) || empty($url)) {
                 continue;
             }
 
+            $provider = $this->normalizeProvider($provider);
+            $normalizedUrl = $this->normalizeSourceUrl($provider, (string) $url);
+
+            if (!$normalizedUrl) {
+                continue;
+            }
+
             $episode->sources()->create([
                 'provider' => $provider,
-                'video_url' => $url,
+                'video_url' => $normalizedUrl,
                 'label' => $labels[$index] ?? null,
                 'is_primary' => $index === $primaryIndex,
             ]);
         }
+    }
+
+    private function normalizeProvider(string $provider): string
+    {
+        $provider = strtolower(trim($provider));
+
+        if (in_array($provider, ['youtube', 'youtube_link', 'youtube_iframe'], true)) {
+            return 'youtube';
+        }
+
+        return $provider;
+    }
+
+    private function normalizeSourceUrl(string $provider, string $rawValue): ?string
+    {
+        $rawValue = trim($rawValue);
+
+        if ($rawValue === '') {
+            return null;
+        }
+
+        $url = $this->extractIframeSrc($rawValue) ?? $rawValue;
+        $url = trim($url);
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        if ($provider === 'youtube') {
+            return $this->normalizeYouTubeEmbedUrl($url);
+        }
+
+        return $url;
+    }
+
+    private function extractIframeSrc(string $rawValue): ?string
+    {
+        if (!str_contains(strtolower($rawValue), '<iframe')) {
+            return null;
+        }
+
+        if (preg_match('/src\s*=\s*["\']([^"\']+)["\']/i', $rawValue, $matches) === 1) {
+            return html_entity_decode($matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        return null;
+    }
+
+    private function normalizeYouTubeEmbedUrl(string $url): ?string
+    {
+        $parts = parse_url($url);
+
+        if (!$parts || empty($parts['host'])) {
+            return null;
+        }
+
+        $host = strtolower($parts['host']);
+        $path = $parts['path'] ?? '';
+        $query = $parts['query'] ?? '';
+        $queryParams = [];
+        parse_str($query, $queryParams);
+
+        $videoId = null;
+
+        if (in_array($host, ['youtu.be', 'www.youtu.be'], true)) {
+            $videoId = trim($path, '/');
+        }
+
+        if (!$videoId && isset($queryParams['v'])) {
+            $videoId = (string) $queryParams['v'];
+        }
+
+        if (!$videoId && preg_match('~/embed/([^/?&]+)~', $path, $matches) === 1) {
+            $videoId = $matches[1];
+        }
+
+        if (!$videoId && preg_match('~/shorts/([^/?&]+)~', $path, $matches) === 1) {
+            $videoId = $matches[1];
+        }
+
+        if (!$videoId && preg_match('~/v/([^/?&]+)~', $path, $matches) === 1) {
+            $videoId = $matches[1];
+        }
+
+        if (!$videoId && preg_match('~/live/([^/?&]+)~', $path, $matches) === 1) {
+            $videoId = $matches[1];
+        }
+
+        if (!$videoId) {
+            return null;
+        }
+
+        $videoId = preg_replace('/[^a-zA-Z0-9_-]/', '', $videoId);
+
+        if (!$videoId) {
+            return null;
+        }
+
+        $embedParams = [];
+        $allowedParams = ['start', 'list', 'index', 'si', 'rel', 'autoplay'];
+
+        foreach ($allowedParams as $param) {
+            if (isset($queryParams[$param]) && $queryParams[$param] !== '') {
+                $embedParams[$param] = $queryParams[$param];
+            }
+        }
+
+        if (!isset($embedParams['start']) && isset($queryParams['t'])) {
+            $seconds = $this->parseYouTubeTimeToSeconds((string) $queryParams['t']);
+
+            if ($seconds > 0) {
+                $embedParams['start'] = $seconds;
+            }
+        }
+
+        $embedUrl = 'https://www.youtube.com/embed/'.$videoId;
+
+        if (!empty($embedParams)) {
+            $embedUrl .= '?'.http_build_query($embedParams);
+        }
+
+        return $embedUrl;
+    }
+
+    private function parseYouTubeTimeToSeconds(string $value): int
+    {
+        $value = strtolower(trim($value));
+
+        if ($value === '') {
+            return 0;
+        }
+
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        $hours = 0;
+        $minutes = 0;
+        $seconds = 0;
+
+        if (preg_match('/(\d+)h/', $value, $match) === 1) {
+            $hours = (int) $match[1];
+        }
+
+        if (preg_match('/(\d+)m/', $value, $match) === 1) {
+            $minutes = (int) $match[1];
+        }
+
+        if (preg_match('/(\d+)s/', $value, $match) === 1) {
+            $seconds = (int) $match[1];
+        }
+
+        return ($hours * 3600) + ($minutes * 60) + $seconds;
     }
 
     private function resolveUniqueSlug(string $slug, ?int $exceptId = null): string

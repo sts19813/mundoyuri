@@ -20,7 +20,7 @@
             @forelse($episode->sources as $source)
                 <li class="list-group-item d-flex justify-content-between">
                     <span>{{ strtoupper($source->provider) }}{{ $source->label ? ' · '.$source->label : '' }}</span>
-                    <a href="{{ $source->video_url }}" target="_blank" rel="noopener">Abrir</a>
+                    <a href="{{ $source->playable_url }}" target="_blank" rel="noopener">Abrir</a>
                 </li>
             @empty
                 <li class="list-group-item text-muted">Sin fuentes registradas</li>
