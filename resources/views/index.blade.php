@@ -17,6 +17,14 @@
 
     <x-navbar />
 
+    @php
+        $featuredSeries = $featuredSeries ?? collect();
+        $latestEpisodes = $latestEpisodes ?? collect();
+        $seriesCount = $seriesCount ?? $featuredSeries->count();
+        $episodesCount = $episodesCount ?? $latestEpisodes->count();
+        $genresCount = $genresCount ?? 0;
+    @endphp
+
     <!-- ══ HERO ══ -->
     <section class="hero">
         <video class="hero-video" autoplay muted loop playsinline>
@@ -34,25 +42,25 @@
             <p class="hero-desc">Series, doramas y películas GL de todo el mundo. Subtituladas con amor, actualizadas
                 cada día.</p>
             <div class="hero-actions">
-                <a href="/episodios" class="btn-rose">
+                <a href="{{ route('legacy.episodios') }}" class="btn-rose">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                     </svg>
                     Explorar ahora
                 </a>
-                <a href="#" class="btn-ghost">Ver novedades</a>
+                <a href="{{ route('legacy.episodios') }}" class="btn-ghost">Ver novedades</a>
             </div>
             <div class="hero-stats">
                 <div>
-                    <div class="hero-stat-num">56+</div>
+                    <div class="hero-stat-num">{{ $seriesCount }}+</div>
                     <div class="hero-stat-label">Series activas</div>
                 </div>
                 <div>
-                    <div class="hero-stat-num">400+</div>
+                    <div class="hero-stat-num">{{ $episodesCount }}+</div>
                     <div class="hero-stat-label">Episodios</div>
                 </div>
                 <div>
-                    <div class="hero-stat-num">12</div>
+                    <div class="hero-stat-num">{{ $genresCount }}</div>
                     <div class="hero-stat-label">Géneros</div>
                 </div>
             </div>
@@ -64,7 +72,7 @@
         <div class="container-xl px-4">
             <div class="section-header">
                 <h2 class="section-title">Doramas destacados</h2>
-                <a href="#" class="section-link">Ver todo →</a>
+                <a href="{{ route('catalog.series.index') }}" class="section-link">Ver todo →</a>
             </div>
 
             <!-- Controles -->
@@ -76,93 +84,31 @@
             </div>
 
             <div class="featured-rail" id="featuredRail">
-                <!-- cards 1–9 -->
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?1" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="live-dot"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>The Secret of Us</h5>
-                        <small>2024 · En curso</small>
+                @forelse($featuredSeries as $series)
+                    <a href="{{ route('catalog.series.show', $series->slug) }}" class="featured-card">
+                        <img src="{{ $series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/800/400?'.$series->id) }}"
+                            alt="{{ $series->title }}">
+                        <div class="featured-card-overlay"></div>
+                        @if($series->status === 'ongoing')
+                            <div class="live-dot"></div>
+                        @endif
+                        <div class="featured-card-body">
+                            <span class="featured-card-badge">{{ ucfirst($series->content_type) }}</span>
+                            <h5>{{ $series->title }}</h5>
+                            <small>{{ $series->release_year ?: 'S/F' }} · {{ $series->status === 'completed' ? 'Completada' : 'En curso' }}</small>
+                        </div>
+                    </a>
+                @empty
+                    <div class="featured-card">
+                        <img src="https://picsum.photos/800/400?empty-featured" alt="Sin contenido">
+                        <div class="featured-card-overlay"></div>
+                        <div class="featured-card-body">
+                            <span class="featured-card-badge">Catálogo</span>
+                            <h5>Aún no hay series publicadas</h5>
+                            <small>Vuelve más tarde</small>
+                        </div>
                     </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?2" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="live-dot"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>Scandal Love</h5>
-                        <small>2026 · En curso</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?3" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>Hometown Romance</h5>
-                        <small>2026 · Completada</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?4" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="live-dot"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>Broken Love</h5>
-                        <small>2026 · En curso</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?5" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>Shadow of Love</h5>
-                        <small>2026 · Completada</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?6" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="live-dot"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>My Only Sunshine</h5>
-                        <small>2026 · En curso</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?7" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>Girl Rules</h5>
-                        <small>2026 · Completada</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?8" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>The Loyal Pin</h5>
-                        <small>2024 · Completada</small>
-                    </div>
-                </div>
-                <div class="featured-card">
-                    <img src="https://picsum.photos/800/400?9" alt="">
-                    <div class="featured-card-overlay"></div>
-                    <div class="live-dot"></div>
-                    <div class="featured-card-body">
-                        <span class="featured-card-badge">Dorama</span>
-                        <h5>Play Park</h5>
-                        <small>2026 · En curso</small>
-                    </div>
-                </div>
+                @endforelse
             </div>
         </div>
     </section>
@@ -172,93 +118,38 @@
         <div class="container-xl px-4">
             <div class="section-header">
                 <h2 class="section-title">Últimos episodios</h2>
-                <a href="#" class="section-link">Ver todo →</a>
+                <a href="{{ route('legacy.episodios') }}" class="section-link">Ver todo →</a>
             </div>
             <div class="row g-3">
-
-                <div class="col-6 col-md-3">
-                    <div class="episode-card">
-                        <div class="episode-thumb">
-                            <img src="https://picsum.photos/400/250?11" alt="">
-                            <span class="ep-badge-new">Nuevo</span>
-                            <span class="ep-live"></span>
-                            <div class="ep-play-btn">
-                                <div class="ep-play-icon">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
+                @forelse($latestEpisodes->take(4) as $episode)
+                    <div class="col-6 col-md-3">
+                        <a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card">
+                            <div class="episode-thumb">
+                                <img src="{{ $episode->thumbnail_image ?: ($episode->series->cover_image ?: 'https://picsum.photos/400/250?ep-'.$episode->id) }}"
+                                    alt="{{ $episode->title }}">
+                                @if(optional($episode->published_at)->gte(now()->subDays(7)))
+                                    <span class="ep-badge-new">Nuevo</span>
+                                @endif
+                                <span class="ep-live"></span>
+                                <div class="ep-play-btn">
+                                    <div class="ep-play-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="episode-info">
-                            <h6>Episodio 15</h6>
-                            <small>Shadow of Love</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="episode-card">
-                        <div class="episode-thumb">
-                            <img src="https://picsum.photos/400/250?12" alt="">
-                            <span class="ep-badge-new">Nuevo</span>
-                            <span class="ep-live"></span>
-                            <div class="ep-play-btn">
-                                <div class="ep-play-icon">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                </div>
+                            <div class="episode-info">
+                                <h6>Episodio {{ $episode->episode_number }}</h6>
+                                <small>{{ $episode->series->title ?? 'Serie desconocida' }}</small>
                             </div>
-                        </div>
-                        <div class="episode-info">
-                            <h6>Episodio 6</h6>
-                            <small>Scandal Love</small>
-                        </div>
+                        </a>
                     </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="episode-card">
-                        <div class="episode-thumb">
-                            <img src="https://picsum.photos/400/250?13" alt="">
-                            <span class="ep-badge-new">Nuevo</span>
-                            <span class="ep-live"></span>
-                            <div class="ep-play-btn">
-                                <div class="ep-play-icon">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="episode-info">
-                            <h6>Episodio 8</h6>
-                            <small>My Only Sunshine</small>
-                        </div>
+                @empty
+                    <div class="col-12">
+                        <div class="episode-card p-4">Aún no hay episodios publicados.</div>
                     </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="episode-card">
-                        <div class="episode-thumb">
-                            <img src="https://picsum.photos/400/250?14" alt="">
-                            <span class="ep-badge-new">Nuevo</span>
-                            <span class="ep-live"></span>
-                            <div class="ep-play-btn">
-                                <div class="ep-play-icon">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="episode-info">
-                            <h6>Episodio 6</h6>
-                            <small>Girl Rules</small>
-                        </div>
-                    </div>
-                </div>
+                @endforelse
 
             </div>
         </div>
@@ -270,205 +161,36 @@
             <div class="section-header">
                 <h2 class="section-title">Series GL</h2>
                 <div style="display:flex;align-items:center;gap:16px;">
-                    <span style="color:var(--muted);font-size:0.85rem;">56 series</span>
-                    <a href="#" class="section-link">Ver todo →</a>
+                    <span style="color:var(--muted);font-size:0.85rem;">{{ $seriesCount }} series</span>
+                    <a href="{{ route('catalog.series.index') }}" class="section-link">Ver todo →</a>
                 </div>
             </div>
             <div class="row g-3">
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?21" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
+                @forelse($featuredSeries as $series)
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <a href="{{ route('catalog.series.show', $series->slug) }}" class="catalog-card">
+                            <div class="catalog-poster">
+                                <img src="{{ $series->cover_image ?: ($series->banner_image ?: 'https://picsum.photos/300/420?series-'.$series->id) }}"
+                                    alt="{{ $series->title }}">
+                                <div class="catalog-poster-overlay">
+                                    <div class="cat-play">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Fruit</h6><small>Mar. 27, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?22" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
+                            <div class="catalog-info">
+                                <h6>{{ $series->title }}</h6>
+                                <small>{{ optional($series->published_at)->format('d/m/Y') ?: 'Sin fecha' }}</small>
                             </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>The Secret of Us</h6><small>Jun. 24, 2024</small>
-                        </div>
+                        </a>
                     </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?23" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Scandal Love</h6><small>Abr. 08, 2026</small>
-                        </div>
+                @empty
+                    <div class="col-12">
+                        <div class="catalog-card p-4">Aún no hay series publicadas.</div>
                     </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?24" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Hometown Romance</h6><small>Abr. 03, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?25" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Broken Love</h6><small>Mar. 27, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?26" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Shadow of Love</h6><small>Mar. 24, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?27" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>The Water</h6><small>Mar. 21, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?28" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>The Loyal Pin</h6><small>Ago. 04, 2024</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?29" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Girl From Nowhere</h6><small>Mar. 04, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?30" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Girl Rules</h6><small>Mar. 09, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?31" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>My Only Sunshine</h6><small>Feb. 25, 2026</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                    <div class="catalog-card">
-                        <div class="catalog-poster">
-                            <img src="https://picsum.photos/300/420?32" alt="">
-                            <div class="catalog-poster-overlay">
-                                <div class="cat-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg></div>
-                            </div>
-                        </div>
-                        <div class="catalog-info">
-                            <h6>Play Park</h6><small>Feb. 20, 2026</small>
-                        </div>
-                    </div>
-                </div>
+                @endforelse
 
             </div>
         </div>

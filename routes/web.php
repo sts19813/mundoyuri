@@ -3,6 +3,7 @@
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -14,12 +15,8 @@ use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
 use App\Http\Controllers\ContentSubmissionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('index');
-})->name('home');
-Route::get('/index', function () {
-    return view('index');
-})->name('legacy.index');
+Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
+Route::get('/index', [PublicCatalogController::class, 'home'])->name('legacy.index');
 
 Route::get('/inicio-catalogo', [CatalogController::class, 'home'])->name('catalog.home');
 Route::get('/series', [CatalogController::class, 'series'])->name('catalog.series.index');
@@ -28,9 +25,8 @@ Route::get('/generos/{genre:slug}', [CatalogController::class, 'genre'])->name('
 Route::get('/series/{series:slug}', [CatalogController::class, 'showSeries'])->name('catalog.series.show');
 Route::get('/series/{series:slug}/episodios/{episode:slug}', [CatalogController::class, 'showEpisode'])->name('catalog.episodes.show');
 Route::post('/comentarios', [CommentController::class, 'store'])->name('comments.store');
-Route::get('/episodios', function () {
-    return view('episodios');
-})->name('legacy.episodios');
+Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
+Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
