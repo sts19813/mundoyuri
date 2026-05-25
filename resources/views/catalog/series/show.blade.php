@@ -1,78 +1,266 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $series->title }}</title>
+    <title>{{ $series->title }} - Series GL</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/episodios.css') }}?v={{ filemtime(public_path('assets/css/episodios.css')) }}">
 </head>
+
 <body>
-<x-navbar />
+    <x-navbar />
 
-<section class="py-5 mt-5">
-    <div class="container-xl px-4">
-        <div class="card border-0 bg-dark text-white mb-4">
-            <img src="{{ $series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/1400/500?series='.$series->id) }}" class="card-img" style="max-height:340px;object-fit:cover;opacity:0.4;" alt="{{ $series->title }}">
-            <div class="card-img-overlay d-flex flex-column justify-content-end">
-                <h1 class="display-6">{{ $series->title }}</h1>
-                <p class="mb-2">{{ $series->genre->name }} · {{ $series->content_type === 'series' ? 'Serie' : 'Pelicula' }} · {{ ucfirst($series->status) }}</p>
-                <p class="mb-0">{{ $series->description }}</p>
+    @php
+        $comments = $series->comments;
+        $avatarClasses = ['', 'av2', 'av3'];
+        $firstEpisode = $series->episodes->first();
+    @endphp
+
+    <div class="ep-layout">
+        <main class="ep-main">
+            <div class="ep-breadcrumb">
+                <a href="{{ route('home') }}">Inicio</a>
+                <span>›</span>
+                <a href="{{ route('catalog.series.index') }}">Series GL</a>
+                <span>›</span>
+                <span style="color:var(--text)">{{ $series->title }}</span>
             </div>
-        </div>
 
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h4 class="mb-3">Informacion</h4>
-                        <div class="row g-2">
-                            <div class="col-md-6"><strong>Pais:</strong> {{ $series->country_of_origin ?: 'N/D' }}</div>
-                            <div class="col-md-6"><strong>Ano:</strong> {{ $series->release_year ?: 'N/D' }}</div>
-                            <div class="col-md-6"><strong>Duracion:</strong> {{ $series->duration_minutes ? $series->duration_minutes.' min' : 'N/D' }}</div>
-                            <div class="col-md-6"><strong>Episodios:</strong> {{ $series->episodes->count() }}</div>
+            <section class="player-wrap" style="margin-bottom:20px;">
+                <img src="{{ $series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/1200/675?series='.$series->id) }}"
+                    alt="{{ $series->title }}" class="player-poster">
+                <div class="player-overlay-ui">
+                    <div class="player-top-bar">
+                        <div class="player-title-badge">{{ ucfirst($series->content_type) }} · {{ ucfirst($series->status) }}</div>
+                    </div>
+                    <div class="player-center">
+                        @if($firstEpisode)
+                            <a href="{{ route('public.episodes.show', $firstEpisode->slug) }}" class="player-play-btn">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            </a>
+                        @endif
+                    </div>
+                    <div class="player-bottom">
+                        <div class="player-controls-row">
+                            <div class="player-ctrl-left">
+                                <span class="player-time">{{ $series->genre->name ?? 'Sin género' }}</span>
+                            </div>
+                            <div class="player-ctrl-right">
+                                <span class="player-time">{{ $series->release_year ?: 'S/F' }} · {{ $series->country_of_origin ?: 'GL' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="mb-3">Episodios</h4>
-                        @forelse($series->episodes as $episode)
-                            <a href="{{ route('catalog.episodes.show', [$series->slug, $episode->slug]) }}" class="d-flex justify-content-between align-items-center text-decoration-none border rounded p-3 mb-2">
-                                <div>
-                                    <strong>S{{ $episode->season_number }}E{{ $episode->episode_number }}</strong> · {{ $episode->title }}
-                                    <div class="text-muted small">{{ optional($episode->release_date)->format('d/m/Y') ?: 'Sin fecha' }}</div>
+            <div class="ep-title-section">
+                <h1>{{ $series->title }}</h1>
+                <p style="color:var(--muted);margin-top:10px;line-height:1.7;">{{ $series->description ?: 'Sin descripción disponible.' }}</p>
+                <div class="ep-meta-row mt-3">
+                    <div class="ep-meta-item">Duración: {{ $series->duration_minutes ? $series->duration_minutes.' min' : 'N/D' }}</div>
+                    <div class="ep-meta-dot"></div>
+                    <div class="ep-meta-item">Temporadas: {{ $series->total_seasons ?: 'N/D' }}</div>
+                    <div class="ep-meta-dot"></div>
+                    <div class="ep-meta-item">Episodios: {{ $series->episodes->count() }}</div>
+                </div>
+            </div>
+
+            <div class="ep-list-section">
+                <div class="ep-list-header">
+                    <span class="ep-list-title">Episodios disponibles</span>
+                    <div class="ep-list-filter">
+                        <button class="ep-filter-pill active">Publicados</button>
+                    </div>
+                </div>
+                <div class="ep-list">
+                    @forelse($series->episodes as $episode)
+                        <a href="{{ route('public.episodes.show', $episode->slug) }}" class="ep-list-item">
+                            <div class="ep-list-thumb">
+                                <img src="{{ $episode->thumbnail_image ?: ($series->cover_image ?: 'https://picsum.photos/140/90?'.$episode->id) }}" alt="">
+                                <div class="ep-thumb-num">E{{ $episode->episode_number }}</div>
+                            </div>
+                            <div class="ep-list-info">
+                                <div class="ep-list-ep-title">S{{ $episode->season_number }}E{{ $episode->episode_number }} · {{ $episode->title }}</div>
+                                <div class="ep-list-date">{{ optional($episode->release_date)->format('d/m/Y') ?: 'Sin fecha' }}</div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="alert alert-dark mb-0" style="background:var(--dark-card);border-color:rgba(244,63,142,.16);color:var(--muted);">
+                            No hay episodios aprobados para esta serie.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="comments-section">
+                <div class="comments-header">
+                    <div class="comments-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </div>
+                    <span class="comments-title">Comentarios</span>
+                    <span class="comments-count">{{ $comments->count() }}</span>
+                </div>
+
+                @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+
+                @foreach($comments as $comment)
+                    @php
+                        $avatar = mb_strtoupper(mb_substr($comment->display_alias, 0, 1));
+                        $avatarClass = $avatarClasses[$loop->index % count($avatarClasses)];
+                    @endphp
+                    <div class="comment-item">
+                        <div class="comment-avatar {{ $avatarClass }}">{{ $avatar }}</div>
+                        <div class="comment-body">
+                            <div class="comment-meta">
+                                <span class="comment-user">{{ $comment->display_alias }}</span>
+                                <span class="comment-date">{{ $comment->created_at->format('d M Y') }}</span>
+                            </div>
+                            <p class="comment-text">{{ $comment->body }}</p>
+
+                            @foreach($comment->replies as $reply)
+                                <div class="comment-reply">
+                                    <div style="display:flex;gap:10px;align-items:flex-start;">
+                                        <div class="comment-avatar av2" style="width:30px;height:30px;font-size:0.75rem;">
+                                            {{ mb_strtoupper(mb_substr($reply->display_alias, 0, 1)) }}
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div class="comment-meta">
+                                                <span class="comment-user">{{ $reply->display_alias }}</span>
+                                                <span class="comment-date">{{ $reply->created_at->format('d M Y') }}</span>
+                                            </div>
+                                            <p class="comment-text" style="margin-bottom:4px;">{{ $reply->body }}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span class="badge bg-primary">Ver</span>
-                            </a>
-                        @empty
-                            <div class="alert alert-light mb-0">No hay episodios aprobados para esta serie.</div>
-                        @endforelse
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endforeach
 
-                @include('catalog.partials.comments', ['comments' => $series->comments, 'targetType' => 'series', 'targetId' => $series->id])
+                <div class="comment-form">
+                    <form method="POST" action="{{ route('comments.store') }}">
+                        @csrf
+                        <input type="hidden" name="target_type" value="series">
+                        <input type="hidden" name="target_id" value="{{ $series->id }}">
+
+                        <div class="comment-form-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                            Deja un comentario
+                        </div>
+
+                        <textarea class="cf-textarea" name="body" placeholder="Tu comentario…">{{ old('body') }}</textarea>
+                        @error('body')
+                            <div class="text-danger small mb-2">{{ $message }}</div>
+                        @enderror
+
+                        <div class="cf-fields">
+                            @guest
+                                <div class="cf-field">
+                                    <label>Alias <span>*</span></label>
+                                    <input type="text" name="alias" class="cf-input" placeholder="Tu alias" value="{{ old('alias') }}">
+                                    @error('alias')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @else
+                                <div class="cf-field">
+                                    <label>Comentarás como</label>
+                                    <input type="text" class="cf-input" value="{{ auth()->user()->alias ?: auth()->user()->name }}" disabled>
+                                </div>
+                            @endguest
+
+                            <div class="cf-field">
+                                <label>Correo electrónico</label>
+                                <input type="email" class="cf-input" placeholder="No será publicado" disabled>
+                            </div>
+                        </div>
+
+                        <div class="cf-check-row">
+                            <input type="checkbox" class="cf-check" id="saveInfo" disabled>
+                            <label for="saveInfo">Guarda mi nombre y correo para la próxima vez que comente</label>
+                        </div>
+                        <button class="cf-submit" type="submit">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                            Publicar comentario
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <aside class="ep-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <span class="sidebar-title">Nuevos capítulos</span>
+                    <span class="sidebar-fire">🔥</span>
+                </div>
+                <div class="sidebar-list">
+                    @forelse($recentEpisodes as $item)
+                        <a href="{{ route('public.episodes.show', $item->slug) }}" class="sidebar-item">
+                            <span class="sidebar-rank {{ $loop->iteration <= 3 ? 'top3' : '' }}">{{ $loop->iteration }}</span>
+                            <div class="sidebar-thumb">
+                                <img src="{{ $item->thumbnail_image ?: 'https://picsum.photos/200/130?'.$item->id }}" alt="">
+                                <div class="sidebar-thumb-overlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg></div>
+                            </div>
+                            <div class="sidebar-info">
+                                <div class="sidebar-series">{{ $item->series->title ?? 'Serie' }}</div>
+                                <div class="sidebar-year">E{{ $item->episode_number }} · {{ optional($item->published_at)->format('d/m/Y') ?: 'Sin fecha' }}</div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="sidebar-item">Sin episodios recientes.</div>
+                    @endforelse
+                </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="mb-3">Acciones</h5>
-                        @auth
-                            <a href="{{ route('submissions.create') }}" class="btn btn-primary w-100 mb-2">Subir nuevo contenido</a>
-                        @else
-                            <a href="{{ route('login') }}" class="btn btn-primary w-100 mb-2">Inicia sesion para aportar</a>
-                        @endauth
-                        <a href="{{ route('catalog.series.index') }}" class="btn btn-light w-100">Volver al catalogo</a>
-                    </div>
+            <div class="server-section mt-3">
+                <div class="server-header">
+                    <span class="server-header-title">Acciones</span>
                 </div>
+                @auth
+                    <a href="{{ route('submissions.create') }}" class="cf-submit" style="text-decoration:none;justify-content:center;width:100%;">Subir contenido</a>
+                @else
+                    <a href="{{ route('login') }}" class="cf-submit" style="text-decoration:none;justify-content:center;width:100%;">Inicia sesión para aportar</a>
+                @endauth
+                <a href="{{ route('catalog.series.index') }}" class="ep-nav-btn mt-2" style="text-decoration:none;">
+                    <div>
+                        <div class="ep-nav-label">Regresar</div>
+                        <div class="ep-nav-title">Volver al catálogo</div>
+                    </div>
+                </a>
             </div>
-        </div>
+        </aside>
     </div>
-</section>
 
-<x-footer />
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <x-footer />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+        });
+    </script>
 </body>
+
 </html>

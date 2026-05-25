@@ -132,15 +132,31 @@ class CatalogController extends Controller
             'genre',
             'episodes' => fn ($query) => $query
                 ->where('moderation_status', 'approved')
+                ->whereNotNull('published_at')
                 ->orderBy('season_number')
                 ->orderBy('episode_number'),
             'comments' => fn ($query) => $query
+                ->where('is_approved', true)
                 ->whereNull('parent_id')
                 ->latest()
-                ->with(['user', 'replies.user']),
+                ->with([
+                    'user',
+                    'replies' => fn ($replyQuery) => $replyQuery
+                        ->where('is_approved', true)
+                        ->latest()
+                        ->with('user'),
+                ]),
         ]);
 
-        return view('catalog.series.show', compact('series'));
+        $recentEpisodes = Episode::query()
+            ->with('series')
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->latest('published_at')
+            ->take(8)
+            ->get();
+
+        return view('catalog.series.show', compact('series', 'recentEpisodes'));
     }
 
     public function showEpisode(Series $series, Episode $episode): View

@@ -54,102 +54,24 @@
 
                 <!-- ── PLAYER ── -->
                 <div class="player-wrap">
-                    <img src="{{ $episode->thumbnail_image ?: ($series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/1200/675?'.$episode->id)) }}" alt="{{ $series->title }}" class="player-poster">
-                    <div class="player-overlay-ui">
+                    @if($primarySource)
+                        <iframe id="episodePlayer" class="player-embed" src="{{ $primarySource->video_url }}"
+                            title="{{ $series->title }} - Episodio {{ $episode->episode_number }}"
+                            allowfullscreen
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            loading="lazy"></iframe>
+                    @else
+                        <img src="{{ $episode->thumbnail_image ?: ($series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/1200/675?'.$episode->id)) }}"
+                            alt="{{ $series->title }}" class="player-poster">
+                    @endif
 
-                        <!-- top -->
-                        <div class="player-top-bar">
-                            <div class="player-title-badge">
-                                <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
-                                    <circle cx="4" cy="4" r="4" />
-                                </svg>
-                                T{{ $episode->season_number }} · Episodio {{ $episode->episode_number }}
-                            </div>
-                            <div class="player-lang-flags">
-                                <div class="flag-circle">{{ $series->country_of_origin ? mb_substr($series->country_of_origin, 0, 2) : 'GL' }}</div>
-                                <div class="flag-circle">ES</div>
-                            </div>
-                        </div>
-
-                        <!-- center -->
-                        <div class="player-center">
-                            <button class="player-skip-btn" title="Retroceder 10s">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="1 4 1 10 7 10" />
-                                    <path d="M3.51 15a9 9 0 1 0 .49-4.95" /><text x="8" y="17"
-                                        style="font-size:5px;fill:white;stroke:none">10</text>
-                                </svg>
-                            </button>
-                            @if($primarySource)
-                                <a href="{{ $primarySource->video_url }}" target="_blank" rel="noopener" class="player-play-btn">
-                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                </a>
-                            @else
-                                <button class="player-play-btn" type="button">
-                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                </button>
-                            @endif
-                            <button class="player-skip-btn" title="Adelantar 10s">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="23 4 23 10 17 10" />
-                                    <path d="M20.49 15a9 9 0 1 1-.49-4.95" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- bottom -->
-                        <div class="player-bottom">
-                            <div class="player-progress-bar">
-                                <div class="player-progress-fill"></div>
-                            </div>
-                            <div class="player-controls-row">
-                                <div class="player-ctrl-left">
-                                    <button class="player-ctrl-btn">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                                            <path d="M8 5v14l11-7z" />
-                                        </svg>
-                                    </button>
-                                    <button class="player-ctrl-btn">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
-                                            stroke-width="2">
-                                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                                        </svg>
-                                    </button>
-                                    <div class="player-vol-bar">
-                                        <div class="player-vol-fill"></div>
-                                    </div>
-                                    <span class="player-time">{{ $episode->duration_minutes ? $episode->duration_minutes.' min' : 'Duración no disponible' }}</span>
-                                </div>
-                                <div class="player-ctrl-right">
-                                    <button class="player-ctrl-btn"
-                                        style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:500;">1×</button>
-                                    <button class="player-ctrl-btn">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
-                                            stroke-width="2">
-                                            <rect x="2" y="2" width="20" height="20" rx="2.18" />
-                                            <line x1="7" y1="2" x2="7" y2="22" />
-                                            <line x1="17" y1="2" x2="17" y2="22" />
-                                            <line x1="2" y1="12" x2="22" y2="12" />
-                                        </svg>
-                                    </button>
-                                    <button class="player-ctrl-btn">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
-                                            stroke-width="2">
-                                            <path
-                                                d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="player-source-indicator">
+                        <span class="player-title-badge">
+                            T{{ $episode->season_number }} · E{{ $episode->episode_number }}
+                        </span>
+                        @if($primarySource)
+                            <span class="player-source-chip" id="activeSourceLabel">{{ strtoupper($primarySource->provider) }}</span>
+                        @endif
                     </div>
                 </div>
 
@@ -168,14 +90,17 @@
                     </div>
                     <div class="server-list">
                         @forelse($episode->sources as $source)
-                            <a href="{{ $source->video_url }}" target="_blank" rel="noopener" class="server-item {{ $source->is_primary ? 'active' : '' }}">
+                            <button type="button"
+                                class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
+                                data-video-url="{{ $source->video_url }}"
+                                data-provider="{{ strtoupper($source->provider) }}">
                                 <div class="server-icon">⚡</div>
                                 <div class="server-info">
                                     <div class="server-name">{{ strtoupper($source->provider) }}</div>
                                     <div class="server-meta">{{ $source->label ?: 'Audio original · Sub Español' }}</div>
                                 </div>
                                 <span class="server-badge {{ $source->is_primary ? 'badge-clean' : 'badge-ads' }}">{{ $source->is_primary ? 'Principal' : 'Alterno' }}</span>
-                            </a>
+                            </button>
                         @empty
                             <div class="server-item">
                                 <div class="server-info">
@@ -503,6 +428,32 @@
         window.addEventListener('scroll', () => {
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
         });
+
+        const playerFrame = document.getElementById('episodePlayer');
+        const activeSourceLabel = document.getElementById('activeSourceLabel');
+        const sourceButtons = document.querySelectorAll('.source-switcher');
+
+        if (playerFrame && sourceButtons.length > 0) {
+            sourceButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const nextUrl = button.getAttribute('data-video-url');
+                    const provider = button.getAttribute('data-provider');
+
+                    if (!nextUrl) {
+                        return;
+                    }
+
+                    playerFrame.src = nextUrl;
+
+                    sourceButtons.forEach((item) => item.classList.remove('active'));
+                    button.classList.add('active');
+
+                    if (activeSourceLabel) {
+                        activeSourceLabel.textContent = provider || 'FUENTE';
+                    }
+                });
+            });
+        }
     </script>
 </body>
 
