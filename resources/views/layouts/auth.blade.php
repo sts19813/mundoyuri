@@ -11,6 +11,36 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <style>
+        .google-auth-btn {
+            border-color: var(--bs-gray-300) !important;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%);
+            color: var(--bs-gray-800) !important;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .google-auth-btn:hover,
+        .google-auth-btn:focus {
+            transform: translateY(-1px);
+            border-color: var(--bs-primary) !important;
+            box-shadow: 0 14px 30px rgba(54, 153, 255, 0.16);
+            color: var(--bs-gray-900) !important;
+        }
+
+        [data-bs-theme="dark"] .google-auth-btn {
+            background: linear-gradient(180deg, #1f2433 0%, #171c29 100%);
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: var(--bs-gray-100) !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+        }
+
+        [data-bs-theme="dark"] .google-auth-btn:hover,
+        [data-bs-theme="dark"] .google-auth-btn:focus {
+            border-color: rgba(var(--bs-primary-rgb), 0.5) !important;
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+        }
+    </style>
 
     @stack('styles')
 </head>

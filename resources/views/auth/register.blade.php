@@ -22,6 +22,29 @@
                         </div>
                     </div>
 
+                    @include('auth.partials.google-auth', [
+                        'label' => 'Registrarme con Google',
+                        'intent' => 'register',
+                    ])
+
+                    @if (session('success'))
+                        <div class="alert alert-success d-flex align-items-center mb-5">
+                            <i class="ki-outline ki-check-circle fs-2 me-3"></i>
+                            <div>
+                                {{ session('success') }}
+                            </div>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="alert alert-danger d-flex align-items-center mb-5">
+                            <i class="ki-outline ki-cross-circle fs-2 me-3"></i>
+                            <div>
+                                {{ session('error') }}
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- ERRORES --}}
                     @if ($errors->any())
                         <div class="alert alert-danger d-flex align-items-center mb-5">
