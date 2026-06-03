@@ -44,7 +44,13 @@
                     <a href="{{ route('catalog.series.show', $item->slug) }}" class="text-decoration-none">
                         <div class="catalog-card h-100">
                             <div class="catalog-poster">
-                                <img src="{{ $item->cover_image ?: 'https://picsum.photos/300/420?series='.$item->id }}" alt="{{ $item->title }}">
+                                <x-media-preview
+                                    :src="$item->coverMediaUrl() ?: 'https://picsum.photos/300/420?series='.$item->id"
+                                    :type="$item->coverMediaUrl() ? $item->coverMediaType() : 'image'"
+                                    :alt="$item->title"
+                                    class="catalog-poster-media"
+                                    :hover-play="$item->coverMediaType() === 'video'"
+                                />
                             </div>
                             <div class="catalog-info">
                                 <h6>{{ $item->title }}</h6>
@@ -66,5 +72,6 @@
 
 <x-footer />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@include('partials.hover-media-script')
 </body>
 </html>

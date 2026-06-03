@@ -32,7 +32,7 @@
             </div>
         @endif
 
-        <form class="card" method="POST" action="{{ route('submissions.store') }}">
+        <form class="card" method="POST" action="{{ route('submissions.store') }}" enctype="multipart/form-data">
             @csrf
             <div class="card-body">
                 <h4 class="mb-3">Datos de la serie o película</h4>
@@ -81,12 +81,13 @@
                         <input class="form-control form-control-solid" type="number" name="duration_minutes" value="{{ old('duration_minutes') }}">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">URL banner</label>
-                        <input class="form-control form-control-solid" type="url" name="banner_image" value="{{ old('banner_image') }}">
+                        <label class="form-label">Archivo banner</label>
+                        <input class="form-control form-control-solid" type="file" name="banner_image" accept="image/*,video/*">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">URL portada</label>
-                        <input class="form-control form-control-solid" type="url" name="cover_image" value="{{ old('cover_image') }}">
+                        <label class="form-label">Archivo portada</label>
+                        <input class="form-control form-control-solid" type="file" name="cover_image" accept="image/*,video/*">
+                        <div class="form-text">La portada es la carátula que se muestra en portada, series y catálogo.</div>
                     </div>
                 </div>
 

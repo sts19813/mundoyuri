@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
+use App\Support\SeriesMedia;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class ContentSubmissionController extends Controller
@@ -34,8 +37,8 @@ class ContentSubmissionController extends Controller
             'country_of_origin' => ['nullable', 'string', 'max:120'],
             'release_year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
-            'banner_image' => ['nullable', 'url'],
-            'cover_image' => ['nullable', 'url'],
+            'banner_image' => SeriesMedia::validationRules(),
+            'cover_image' => SeriesMedia::validationRules(),
             'episode_title' => ['nullable', 'string', 'max:255'],
             'episode_number' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'season_number' => ['nullable', 'integer', 'min:1', 'max:999'],
@@ -50,26 +53,27 @@ class ContentSubmissionController extends Controller
         $user = auth()->user();
         $isAdmin = $user?->role === 'admin' || ($user && method_exists($user, 'hasRole') && $user->hasRole('admin'));
         $moderationStatus = $isAdmin ? 'approved' : 'pending';
+        $seriesData = Arr::except($validated, ['banner_image', 'cover_image']);
 
         $series = Series::create([
-            'genre_id' => $validated['genre_id'],
+            'genre_id' => $seriesData['genre_id'],
             'created_by' => auth()->id(),
             'approved_by' => $isAdmin ? auth()->id() : null,
-            'title' => $validated['title'],
-            'slug' => $this->resolveUniqueSlug($validated['title']),
-            'content_type' => $validated['content_type'],
-            'status' => $validated['status'],
-            'description' => $validated['description'],
-            'country_of_origin' => $validated['country_of_origin'] ?? null,
-            'release_year' => $validated['release_year'] ?? null,
-            'duration_minutes' => $validated['duration_minutes'] ?? null,
-            'banner_image' => $validated['banner_image'] ?? null,
-            'cover_image' => $validated['cover_image'] ?? null,
+            'title' => $seriesData['title'],
+            'slug' => $this->resolveUniqueSlug($seriesData['title']),
+            'content_type' => $seriesData['content_type'],
+            'status' => $seriesData['status'],
+            'description' => $seriesData['description'],
+            'country_of_origin' => $seriesData['country_of_origin'] ?? null,
+            'release_year' => $seriesData['release_year'] ?? null,
+            'duration_minutes' => $seriesData['duration_minutes'] ?? null,
+            'banner_image' => SeriesMedia::syncUploadedField($request, 'banner_image'),
+            'cover_image' => SeriesMedia::syncUploadedField($request, 'cover_image'),
             'moderation_status' => $moderationStatus,
             'published_at' => $isAdmin ? now() : null,
         ]);
 
-        if (!empty($validated['episode_title'])) {
+        if (! empty($validated['episode_title'])) {
             $episode = $series->episodes()->create([
                 'created_by' => auth()->id(),
                 'approved_by' => $isAdmin ? auth()->id() : null,
@@ -84,7 +88,7 @@ class ContentSubmissionController extends Controller
                 'published_at' => $isAdmin ? now() : null,
             ]);
 
-            if (!empty($validated['source_provider']) && !empty($validated['source_url'])) {
+            if (! empty($validated['source_provider']) && ! empty($validated['source_url'])) {
                 $episode->sources()->create([
                     'provider' => $validated['source_provider'],
                     'label' => $validated['source_label'] ?? 'Fuente principal',
@@ -121,7 +125,7 @@ class ContentSubmissionController extends Controller
         $slug = $baseSlug;
         $index = 1;
 
-        while (\App\Models\Episode::query()->where('slug', $slug)->exists()) {
+        while (Episode::query()->where('slug', $slug)->exists()) {
             $slug = "{$baseSlug}-{$index}";
             $index++;
         }

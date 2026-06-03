@@ -43,7 +43,13 @@
                     <a href="{{ route('catalog.series.show', $item->slug) }}" class="text-decoration-none">
                         <div class="catalog-card">
                             <div class="catalog-poster">
-                                <img src="{{ $item->cover_image ?: 'https://picsum.photos/300/420?random='.$item->id }}" alt="{{ $item->title }}">
+                                <x-media-preview
+                                    :src="$item->coverMediaUrl() ?: 'https://picsum.photos/300/420?random='.$item->id"
+                                    :type="$item->coverMediaUrl() ? $item->coverMediaType() : 'image'"
+                                    :alt="$item->title"
+                                    class="catalog-poster-media"
+                                    :hover-play="$item->coverMediaType() === 'video'"
+                                />
                             </div>
                             <div class="catalog-info">
                                 <h6>{{ $item->title }}</h6>
@@ -118,5 +124,6 @@ if (toggler) {
     toggler.addEventListener('click', () => document.getElementById('navLinks')?.classList.toggle('active'));
 }
 </script>
+@include('partials.hover-media-script')
 </body>
 </html>

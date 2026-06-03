@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\SeriesMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Model;
 
 class Series extends Model
 {
@@ -66,5 +67,35 @@ class Series extends Model
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function bannerMediaPath(): ?string
+    {
+        return $this->banner_image ?: $this->cover_image;
+    }
+
+    public function bannerMediaUrl(): ?string
+    {
+        return SeriesMedia::publicUrl($this->bannerMediaPath());
+    }
+
+    public function bannerMediaType(): ?string
+    {
+        return SeriesMedia::detectType($this->bannerMediaPath());
+    }
+
+    public function coverMediaPath(): ?string
+    {
+        return $this->cover_image ?: $this->banner_image;
+    }
+
+    public function coverMediaUrl(): ?string
+    {
+        return SeriesMedia::publicUrl($this->coverMediaPath());
+    }
+
+    public function coverMediaType(): ?string
+    {
+        return SeriesMedia::detectType($this->coverMediaPath());
     }
 }

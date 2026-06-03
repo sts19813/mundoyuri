@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Genre;
 use App\Models\Series;
+use App\Support\SeriesMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -44,9 +46,12 @@ class SeriesController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateSeries($request);
+        $seriesData = Arr::except($validated, ['banner_image', 'cover_image']);
 
         $series = Series::create([
-            ...$validated,
+            ...$seriesData,
+            'banner_image' => SeriesMedia::syncUploadedField($request, 'banner_image'),
+            'cover_image' => SeriesMedia::syncUploadedField($request, 'cover_image'),
             'slug' => $this->resolveUniqueSlug($validated['slug'] ?? $validated['title']),
             'created_by' => auth()->id(),
         ]);
@@ -73,9 +78,12 @@ class SeriesController extends Controller
     public function update(Request $request, Series $series): RedirectResponse
     {
         $validated = $this->validateSeries($request, $series->id);
+        $seriesData = Arr::except($validated, ['banner_image', 'cover_image']);
 
         $series->update([
-            ...$validated,
+            ...$seriesData,
+            'banner_image' => SeriesMedia::syncUploadedField($request, 'banner_image', $series->banner_image),
+            'cover_image' => SeriesMedia::syncUploadedField($request, 'cover_image', $series->cover_image),
             'slug' => $this->resolveUniqueSlug($validated['slug'] ?? $validated['title'], $series->id),
         ]);
 
@@ -86,6 +94,8 @@ class SeriesController extends Controller
 
     public function destroy(Series $series): RedirectResponse
     {
+        SeriesMedia::deleteIfStored($series->banner_image);
+        SeriesMedia::deleteIfStored($series->cover_image);
         $series->delete();
 
         return redirect()->route('admin.series.index')->with('success', 'Serie eliminada.');
@@ -105,8 +115,8 @@ class SeriesController extends Controller
             'total_seasons' => ['nullable', 'integer', 'min:1', 'max:100'],
             'total_episodes' => ['nullable', 'integer', 'min:0', 'max:100000'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
-            'banner_image' => ['nullable', 'url'],
-            'cover_image' => ['nullable', 'url'],
+            'banner_image' => SeriesMedia::validationRules(),
+            'cover_image' => SeriesMedia::validationRules(),
             'trailer_url' => ['nullable', 'url'],
             'is_featured' => ['nullable', 'boolean'],
             'moderation_status' => ['required', 'in:pending,approved,rejected'],

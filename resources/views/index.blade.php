@@ -86,8 +86,13 @@
             <div class="featured-rail" id="featuredRail">
                 @forelse($featuredSeries as $series)
                     <a href="{{ route('catalog.series.show', $series->slug) }}" class="featured-card">
-                        <img src="{{ $series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/800/400?'.$series->id) }}"
-                            alt="{{ $series->title }}">
+                        <x-media-preview
+                            :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/800/400?'.$series->id"
+                            :type="$series->bannerMediaUrl() ? $series->bannerMediaType() : 'image'"
+                            :alt="$series->title"
+                            class="featured-card-media"
+                            :hover-play="$series->bannerMediaType() === 'video'"
+                        />
                         <div class="featured-card-overlay"></div>
                         @if($series->status === 'ongoing')
                             <div class="live-dot"></div>
@@ -100,7 +105,7 @@
                     </a>
                 @empty
                     <div class="featured-card">
-                        <img src="https://picsum.photos/800/400?empty-featured" alt="Sin contenido">
+                        <x-media-preview src="https://picsum.photos/800/400?empty-featured" type="image" alt="Sin contenido" class="featured-card-media" />
                         <div class="featured-card-overlay"></div>
                         <div class="featured-card-body">
                             <span class="featured-card-badge">Catálogo</span>
@@ -125,8 +130,13 @@
                     <div class="col-6 col-md-3">
                         <a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card">
                             <div class="episode-thumb">
-                                <img src="{{ $episode->thumbnail_image ?: ($episode->series->cover_image ?: 'https://picsum.photos/400/250?ep-'.$episode->id) }}"
-                                    alt="{{ $episode->title }}">
+                                <x-media-preview
+                                    :src="$episode->thumbnail_image ?: ($episode->series->coverMediaUrl() ?: 'https://picsum.photos/400/250?ep-'.$episode->id)"
+                                    :type="$episode->thumbnail_image ? 'image' : ($episode->series->coverMediaUrl() ? $episode->series->coverMediaType() : 'image')"
+                                    :alt="$episode->title"
+                                    class="episode-thumb-media"
+                                    :hover-play="!$episode->thumbnail_image && $episode->series->coverMediaType() === 'video'"
+                                />
                                 @if(optional($episode->published_at)->gte(now()->subDays(7)))
                                     <span class="ep-badge-new">Nuevo</span>
                                 @endif
@@ -170,8 +180,13 @@
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                         <a href="{{ route('catalog.series.show', $series->slug) }}" class="catalog-card">
                             <div class="catalog-poster">
-                                <img src="{{ $series->cover_image ?: ($series->banner_image ?: 'https://picsum.photos/300/420?series-'.$series->id) }}"
-                                    alt="{{ $series->title }}">
+                                <x-media-preview
+                                    :src="$series->coverMediaUrl() ?: 'https://picsum.photos/300/420?series-'.$series->id"
+                                    :type="$series->coverMediaUrl() ? $series->coverMediaType() : 'image'"
+                                    :alt="$series->title"
+                                    class="catalog-poster-media"
+                                    :hover-play="$series->coverMediaType() === 'video'"
+                                />
                                 <div class="catalog-poster-overlay">
                                     <div class="cat-play">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
@@ -227,6 +242,7 @@
         });
 
     </script>
+    @include('partials.hover-media-script')
 </body>
 
 </html>

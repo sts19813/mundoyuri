@@ -633,10 +633,16 @@
       position: relative;
   }
 
-  .ep-list-thumb img {
+  .ep-list-thumb img,
+  .ep-list-thumb video,
+  .ep-list-thumb .ep-thumb-media {
       width: 100%;
       height: 100%;
       object-fit: cover;
+  }
+
+  .ep-list-item:hover .ep-list-thumb video {
+      transform: scale(1.04);
   }
 
   .ep-list-thumb .ep-thumb-num {

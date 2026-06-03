@@ -42,8 +42,25 @@
         <div class="col-md-2"><label class="form-label">Temporadas</label><input class="form-control" type="number" name="total_seasons" value="{{ old('total_seasons', $series->total_seasons ?? 1) }}"></div>
         <div class="col-md-2"><label class="form-label">Episodios</label><input class="form-control" type="number" name="total_episodes" value="{{ old('total_episodes', $series->total_episodes ?? 0) }}"></div>
         <div class="col-md-2"><label class="form-label">Duracion min</label><input class="form-control" type="number" name="duration_minutes" value="{{ old('duration_minutes', $series->duration_minutes ?? '') }}"></div>
-        <div class="col-md-6"><label class="form-label">URL banner</label><input class="form-control" type="url" name="banner_image" value="{{ old('banner_image', $series->banner_image ?? '') }}"></div>
-        <div class="col-md-6"><label class="form-label">URL portada</label><input class="form-control" type="url" name="cover_image" value="{{ old('cover_image', $series->cover_image ?? '') }}"></div>
+        <div class="col-md-6">
+            <label class="form-label">Archivo banner</label>
+            <input class="form-control" type="file" name="banner_image" accept="image/*,video/*">
+            @if(isset($series) && $series->bannerMediaUrl())
+                <div class="mt-3">
+                    <x-media-preview :src="$series->bannerMediaUrl()" :type="$series->bannerMediaType()" :alt="$series->title" class="w-100 rounded" style="max-height: 220px; object-fit: cover;" :autoplay="true" />
+                </div>
+            @endif
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Archivo portada</label>
+            <input class="form-control" type="file" name="cover_image" accept="image/*,video/*">
+            <div class="form-text">Se usa como carátula en portada, catálogo y el resto del sitio.</div>
+            @if(isset($series) && $series->coverMediaUrl())
+                <div class="mt-3" style="max-width: 220px;">
+                    <x-media-preview :src="$series->coverMediaUrl()" :type="$series->coverMediaType()" :alt="$series->title" class="w-100 rounded" style="aspect-ratio: 3 / 4; object-fit: cover;" :autoplay="true" />
+                </div>
+            @endif
+        </div>
         <div class="col-md-6"><label class="form-label">Trailer URL</label><input class="form-control" type="url" name="trailer_url" value="{{ old('trailer_url', $series->trailer_url ?? '') }}"></div>
         <div class="col-md-3">
             <label class="form-label">Moderacion</label>

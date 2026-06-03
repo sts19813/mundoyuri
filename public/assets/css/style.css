@@ -379,7 +379,9 @@
         transform: scale(1.03);
     }
 
-    .featured-card img {
+    .featured-card img,
+    .featured-card video,
+    .featured-card .featured-card-media {
         width: 100%;
         height: 200px;
         object-fit: cover;
@@ -473,7 +475,9 @@
         overflow: hidden;
     }
 
-    .episode-thumb img {
+    .episode-thumb img,
+    .episode-thumb video,
+    .episode-thumb .episode-thumb-media {
         width: 100%;
         height: 170px;
         object-fit: cover;
@@ -481,7 +485,8 @@
         transition: transform 0.35s;
     }
 
-    .episode-card:hover .episode-thumb img {
+    .episode-card:hover .episode-thumb img,
+    .episode-card:hover .episode-thumb video {
         transform: scale(1.07);
     }
 
@@ -570,7 +575,9 @@
         position: relative;
     }
 
-    .catalog-poster img {
+    .catalog-poster img,
+    .catalog-poster video,
+    .catalog-poster .catalog-poster-media {
         width: 100%;
         height: 240px;
         object-fit: cover;
@@ -578,7 +585,8 @@
         transition: transform 0.35s;
     }
 
-    .catalog-card:hover .catalog-poster img {
+    .catalog-card:hover .catalog-poster img,
+    .catalog-card:hover .catalog-poster video {
         transform: scale(1.08);
     }
 

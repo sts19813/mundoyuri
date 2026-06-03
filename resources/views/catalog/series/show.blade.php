@@ -35,8 +35,13 @@
             </div>
 
             <section class="player-wrap" style="margin-bottom:20px;">
-                <img src="{{ $series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/1200/675?series='.$series->id) }}"
-                    alt="{{ $series->title }}" class="player-poster">
+                <x-media-preview
+                    :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/1200/675?series='.$series->id"
+                    :type="$series->bannerMediaUrl() ? $series->bannerMediaType() : 'image'"
+                    :alt="$series->title"
+                    class="player-poster"
+                    :autoplay="true"
+                />
                 <div class="player-overlay-ui">
                     <div class="player-top-bar">
                         <div class="player-title-badge">{{ ucfirst($series->content_type) }} · {{ ucfirst($series->status) }}</div>
@@ -86,7 +91,13 @@
                     @forelse($series->episodes as $episode)
                         <a href="{{ route('public.episodes.show', $episode->slug) }}" class="ep-list-item">
                             <div class="ep-list-thumb">
-                                <img src="{{ $episode->thumbnail_image ?: ($series->cover_image ?: 'https://picsum.photos/140/90?'.$episode->id) }}" alt="">
+                                <x-media-preview
+                                    :src="$episode->thumbnail_image ?: ($series->coverMediaUrl() ?: 'https://picsum.photos/140/90?'.$episode->id)"
+                                    :type="$episode->thumbnail_image ? 'image' : ($series->coverMediaUrl() ? $series->coverMediaType() : 'image')"
+                                    alt=""
+                                    class="ep-thumb-media"
+                                    :hover-play="!$episode->thumbnail_image && $series->coverMediaType() === 'video'"
+                                />
                                 <div class="ep-thumb-num">E{{ $episode->episode_number }}</div>
                             </div>
                             <div class="ep-list-info">
@@ -261,6 +272,7 @@
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
         });
     </script>
+    @include('partials.hover-media-script')
 </body>
 
 </html>

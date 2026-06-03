@@ -61,8 +61,13 @@
                             referrerpolicy="strict-origin-when-cross-origin"
                             loading="lazy"></iframe>
                     @else
-                        <img src="{{ $episode->thumbnail_image ?: ($series->banner_image ?: ($series->cover_image ?: 'https://picsum.photos/1200/675?'.$episode->id)) }}"
-                            alt="{{ $series->title }}" class="player-poster">
+                        <x-media-preview
+                            :src="$episode->thumbnail_image ?: ($series->bannerMediaUrl() ?: 'https://picsum.photos/1200/675?'.$episode->id)"
+                            :type="$episode->thumbnail_image ? 'image' : ($series->bannerMediaUrl() ? $series->bannerMediaType() : 'image')"
+                            :alt="$series->title"
+                            class="player-poster"
+                            :autoplay="!$episode->thumbnail_image && $series->bannerMediaType() === 'video'"
+                        />
                     @endif
 
                     <div class="player-source-indicator">
