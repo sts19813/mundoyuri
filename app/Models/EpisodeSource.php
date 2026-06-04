@@ -35,11 +35,29 @@ class EpisodeSource extends Model
 
     public function getPlayableUrlAttribute(): string
     {
+        if ($this->provider === 'pixeldrain_cdn') {
+            return route('episode-sources.player', $this);
+        }
+
         if ($this->provider !== 'youtube') {
             return $this->video_url;
         }
 
         return $this->normalizeYouTubeEmbedUrl($this->video_url) ?? $this->video_url;
+    }
+
+    public function getPlayerTypeAttribute(): string
+    {
+        return 'iframe';
+    }
+
+    public function getDirectVideoUrlAttribute(): string
+    {
+        if ($this->provider !== 'pixeldrain_cdn') {
+            return $this->video_url;
+        }
+
+        return $this->normalizePixeldrainUrl($this->video_url) ?? $this->video_url;
     }
 
     public function isPart(): bool
@@ -119,6 +137,44 @@ class EpisodeSource extends Model
         }
 
         return $embedUrl;
+    }
+
+    private function normalizePixeldrainUrl(string $url): ?string
+    {
+        $parts = parse_url($url);
+
+        if (! $parts || empty($parts['host'])) {
+            return null;
+        }
+
+        $host = strtolower($parts['host']);
+        $path = trim($parts['path'] ?? '', '/');
+
+        if (! str_contains($host, 'pixeldrain')) {
+            return null;
+        }
+
+        $fileId = null;
+
+        if (preg_match('~^api/file/([^/?#]+)$~', $path, $matches) === 1) {
+            $fileId = $matches[1];
+        } elseif (preg_match('~^u/([^/?#]+)$~', $path, $matches) === 1) {
+            $fileId = $matches[1];
+        } elseif (preg_match('~^([^/?#]+)$~', $path, $matches) === 1) {
+            $fileId = $matches[1];
+        }
+
+        if (! $fileId) {
+            return null;
+        }
+
+        $fileId = preg_replace('/[^a-zA-Z0-9_-]/', '', $fileId);
+
+        if (! $fileId) {
+            return null;
+        }
+
+        return 'https://pixeldrain.com/api/file/'.$fileId;
     }
 
     private function parseYouTubeTimeToSeconds(string $value): int

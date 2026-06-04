@@ -28,8 +28,13 @@
         <div class="card mb-4">
             <div class="card-body">
                 @if($primary)
-                    <div class="ratio ratio-16x9 mb-3">
-                        <iframe id="catalogEpisodePlayer" src="{{ $primary->playable_url }}" title="Video" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    <div class="ratio ratio-16x9 mb-3" id="catalogEpisodeFrameWrap" @if($primary->player_type !== 'iframe') style="display:none;" @endif>
+                        <iframe id="catalogEpisodePlayer" src="{{ $primary->player_type === 'iframe' ? $primary->playable_url : '' }}" title="Video" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    </div>
+                    <div class="mb-3" id="catalogEpisodeVideoWrap" @if($primary->player_type !== 'video') style="display:none;" @endif>
+                        <video id="catalogEpisodeVideo" class="w-100 rounded" controls playsinline preload="metadata" style="aspect-ratio: 16 / 9; background: #000;">
+                            <source src="{{ $primary->player_type === 'video' ? $primary->playable_url : '' }}">
+                        </video>
                     </div>
                 @else
                     <div class="alert alert-warning mb-0">Este episodio aun no tiene fuente de video disponible.</div>
@@ -39,7 +44,7 @@
                     <h5 class="mt-3">Partes del episodio</h5>
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         @foreach($partSources as $source)
-                            <button type="button" class="btn {{ $source->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light' }} catalog-source-switcher" data-video-url="{{ $source->playable_url }}">
+                            <button type="button" class="btn {{ $source->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light' }} catalog-source-switcher" data-video-url="{{ $source->playable_url }}" data-player-type="{{ $source->player_type }}">
                                 {{ $source->label ?: 'Parte '.($source->sort_order ?: $loop->iteration) }}
                             </button>
                         @endforeach
@@ -49,7 +54,7 @@
                 <h5 class="mt-3">Fuentes disponibles</h5>
                 <div class="d-flex flex-wrap gap-2">
                     @forelse($fullSources as $source)
-                        <button type="button" class="btn {{ $source->is_primary ? 'btn-primary' : 'btn-light' }} catalog-source-switcher" data-video-url="{{ $source->playable_url }}">
+                        <button type="button" class="btn {{ $source->is_primary ? 'btn-primary' : 'btn-light' }} catalog-source-switcher" data-video-url="{{ $source->playable_url }}" data-player-type="{{ $source->player_type }}">
                             {{ strtoupper($source->provider) }}{{ $source->label ? ' · '.$source->label : '' }}
                         </button>
                     @empty
@@ -80,16 +85,58 @@
 <x-footer />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-document.querySelectorAll('.catalog-source-switcher').forEach((button) => {
-    button.addEventListener('click', () => {
-        const player = document.getElementById('catalogEpisodePlayer');
-        const nextUrl = button.getAttribute('data-video-url');
+const catalogFrameWrap = document.getElementById('catalogEpisodeFrameWrap');
+const catalogFrame = document.getElementById('catalogEpisodePlayer');
+const catalogVideoWrap = document.getElementById('catalogEpisodeVideoWrap');
+const catalogVideo = document.getElementById('catalogEpisodeVideo');
 
-        if (!player || !nextUrl) {
-            return;
+function switchCatalogPlayer(type, url) {
+    if (!url) {
+        return;
+    }
+
+    if (type === 'video') {
+        if (catalogFrame) {
+            catalogFrame.src = '';
+        }
+        if (catalogFrameWrap) {
+            catalogFrameWrap.style.display = 'none';
+        }
+        if (catalogVideo) {
+            catalogVideo.pause();
+            catalogVideo.src = url;
+            catalogVideo.load();
+        }
+        if (catalogVideoWrap) {
+            catalogVideoWrap.style.display = '';
         }
 
-        player.src = nextUrl;
+        return;
+    }
+
+    if (catalogVideo) {
+        catalogVideo.pause();
+        catalogVideo.removeAttribute('src');
+        catalogVideo.load();
+    }
+    if (catalogVideoWrap) {
+        catalogVideoWrap.style.display = 'none';
+    }
+    if (catalogFrame) {
+        catalogFrame.src = url;
+    }
+    if (catalogFrameWrap) {
+        catalogFrameWrap.style.display = '';
+    }
+}
+
+document.querySelectorAll('.catalog-source-switcher').forEach((button) => {
+    button.addEventListener('click', () => {
+        const nextUrl = button.getAttribute('data-video-url');
+        const playerType = button.getAttribute('data-player-type') || 'iframe';
+
+        switchCatalogPlayer(playerType, nextUrl);
+
         document.querySelectorAll('.catalog-source-switcher').forEach((item) => {
             item.classList.remove('btn-primary');
             item.classList.add('btn-light');

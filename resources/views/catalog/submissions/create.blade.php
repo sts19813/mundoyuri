@@ -119,12 +119,9 @@
                         <label class="form-label">Proveedor video</label>
                         <select class="form-select form-select-solid" name="source_provider">
                             <option value="">Selecciona una fuente</option>
-                            <option value="youtube">YouTube</option>
-                            <option value="vimeo">Vimeo</option>
-                            <option value="byse">BYSE</option>
-                            <option value="voe">VOE</option>
-                            <option value="ok">OK</option>
-                            <option value="netu">NETU</option>
+                            @foreach($sourceProviders as $providerKey => $providerConfig)
+                                <option value="{{ $providerKey }}" @selected(old('source_provider') === $providerKey)>{{ $providerConfig['label'] }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-8">

@@ -9,6 +9,7 @@ use App\Support\SeriesMedia;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -22,8 +23,9 @@ class ContentSubmissionController extends Controller
     public function create(): View
     {
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
+        $sourceProviders = config('episode_sources.providers', []);
 
-        return view('catalog.submissions.create', compact('genres'));
+        return view('catalog.submissions.create', compact('genres', 'sourceProviders'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -45,7 +47,7 @@ class ContentSubmissionController extends Controller
             'episode_release_date' => ['nullable', 'date'],
             'episode_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'episode_description' => ['nullable', 'string'],
-            'source_provider' => ['nullable', 'in:youtube,vimeo,byse,voe,ok,netu'],
+            'source_provider' => ['nullable', Rule::in(array_keys(config('episode_sources.providers', [])))],
             'source_url' => ['nullable', 'url'],
             'source_label' => ['nullable', 'string', 'max:120'],
         ]);
@@ -89,8 +91,10 @@ class ContentSubmissionController extends Controller
             ]);
 
             if (! empty($validated['source_provider']) && ! empty($validated['source_url'])) {
+                $providerConfig = config('episode_sources.providers.'.$validated['source_provider'], []);
+
                 $episode->sources()->create([
-                    'provider' => $validated['source_provider'],
+                    'provider' => $providerConfig['stores_as'] ?? $validated['source_provider'],
                     'label' => $validated['source_label'] ?? 'Fuente principal',
                     'video_url' => $validated['source_url'],
                     'is_primary' => true,

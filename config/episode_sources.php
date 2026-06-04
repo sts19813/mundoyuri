@@ -25,5 +25,8 @@ return [
         'netu' => [
             'label' => 'NETU',
         ],
+        'pixeldrain_cdn' => [
+            'label' => 'Pixeldrain CDN',
+        ],
     ],
 ];

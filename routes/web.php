@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\EpisodeSourcePlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -24,6 +25,7 @@ Route::get('/generos', [CatalogController::class, 'genres'])->name('catalog.genr
 Route::get('/generos/{genre:slug}', [CatalogController::class, 'genre'])->name('catalog.genres.show');
 Route::get('/series/{series:slug}', [CatalogController::class, 'showSeries'])->name('catalog.series.show');
 Route::get('/series/{series:slug}/episodios/{episode:slug}', [CatalogController::class, 'showEpisode'])->name('catalog.episodes.show');
+Route::get('/player/episode-sources/{source}', EpisodeSourcePlayerController::class)->name('episode-sources.player');
 Route::post('/comentarios', [CommentController::class, 'store'])->name('comments.store');
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');

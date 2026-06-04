@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Episode;
+use App\Models\EpisodeSource;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\User;
@@ -168,5 +169,97 @@ class AdminEpisodeSourcesTest extends TestCase
             ]);
 
         $response->assertStatus(422)->assertJsonValidationErrors(['episode_number']);
+    }
+
+    public function test_admin_can_create_episode_with_pixeldrain_cdn_source(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'Accion',
+            'slug' => 'accion',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie pixeldrain',
+            'slug' => 'serie-pixeldrain',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para validar Pixeldrain CDN.',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.episodes.store'), [
+                'series_id' => $series->id,
+                'title' => 'Episodio Pixeldrain',
+                'season_number' => 1,
+                'episode_number' => 2,
+                'moderation_status' => 'approved',
+                'source_provider' => ['pixeldrain_cdn'],
+                'source_type' => ['full'],
+                'source_url' => ['https://cdn.pixeldrain.eu.cc/LTRmJYYs'],
+                'source_label' => ['Pixeldrain CDN'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertRedirect(route('admin.episodes.index'));
+
+        $episode = Episode::query()->with('sources')->where('title', 'Episodio Pixeldrain')->firstOrFail();
+
+        $this->assertCount(1, $episode->sources);
+        $this->assertSame('pixeldrain_cdn', $episode->sources[0]->provider);
+        $this->assertSame('iframe', $episode->sources[0]->player_type);
+        $this->assertSame(route('episode-sources.player', $episode->sources[0]), $episode->sources[0]->playable_url);
+        $this->assertSame('https://pixeldrain.com/api/file/LTRmJYYs', $episode->sources[0]->video_url);
+        $this->assertSame('https://pixeldrain.com/api/file/LTRmJYYs', $episode->sources[0]->direct_video_url);
+        $this->assertTrue($episode->sources[0]->is_primary);
+    }
+
+    public function test_pixeldrain_source_uses_lightweight_player_page(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'Fantasia',
+            'slug' => 'fantasia',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie stream',
+            'slug' => 'serie-stream',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para probar el stream.',
+        ]);
+        $episode = Episode::query()->create([
+            'series_id' => $series->id,
+            'created_by' => $admin->id,
+            'title' => 'Ep stream',
+            'slug' => 'ep-stream',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'moderation_status' => 'approved',
+        ]);
+
+        $source = EpisodeSource::query()->create([
+            'episode_id' => $episode->id,
+            'provider' => 'pixeldrain_cdn',
+            'source_type' => 'full',
+            'label' => 'Pixeldrain',
+            'sort_order' => 1,
+            'video_url' => 'https://cdn.pixeldrain.eu.cc/LTRmJYYs',
+            'is_primary' => true,
+        ]);
+
+        $response = $this->get(route('episode-sources.player', $source));
+
+        $response->assertOk();
+        $response->assertHeader('Referrer-Policy', 'no-referrer');
+        $response->assertSee('https://pixeldrain.com/api/file/LTRmJYYs', false);
+        $response->assertSee('<video controls playsinline preload="metadata">', false);
     }
 }

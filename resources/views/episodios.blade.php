@@ -28,20 +28,17 @@
         <x-footer />
     @else
         @php
-            $primarySource = $episode->sources->firstWhere('is_primary', true) ?: $episode->sources->first();
+            $partSources = $episode->sources->where('source_type', 'part')->sortBy('sort_order')->values();
+            $fullSources = $episode->sources->where('source_type', '!=', 'part')->values();
+            $primarySource = $partSources->firstWhere('is_primary', true) ?: $partSources->first() ?: $fullSources->firstWhere('is_primary', true) ?: $fullSources->first();
             $shareUrl = route('public.episodes.show', $episode->slug);
             $releaseDate = $episode->release_date ?: $episode->published_at;
             $avatarClasses = ['', 'av2', 'av3'];
             $comments = $episode->comments;
         @endphp
 
-        <!-- ══ MAIN LAYOUT ══ -->
         <div class="ep-layout">
-
-            <!-- ═══ COLUMNA PRINCIPAL ═══ -->
             <main class="ep-main">
-
-                <!-- breadcrumb -->
                 <div class="ep-breadcrumb">
                     <a href="{{ route('home') }}">Inicio</a>
                     <span>›</span>
@@ -52,14 +49,17 @@
                     <span style="color:var(--text)">Temporada {{ $episode->season_number }} · Episodio {{ $episode->episode_number }}</span>
                 </div>
 
-                <!-- ── PLAYER ── -->
                 <div class="player-wrap">
                     @if($primarySource)
-                        <iframe id="episodePlayer" class="player-embed" src="{{ $primarySource->playable_url }}"
+                        <iframe id="episodePlayer" class="player-embed" src="{{ $primarySource->player_type === 'iframe' ? $primarySource->playable_url : '' }}"
                             title="{{ $series->title }} - Episodio {{ $episode->episode_number }}"
                             allowfullscreen
                             referrerpolicy="strict-origin-when-cross-origin"
-                            loading="lazy"></iframe>
+                            loading="lazy"
+                            @if($primarySource->player_type !== 'iframe') style="display:none;" @endif></iframe>
+                        <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata" style="background:#000; @if($primarySource->player_type !== 'video') display:none; @endif">
+                            <source src="{{ $primarySource->player_type === 'video' ? $primarySource->playable_url : '' }}">
+                        </video>
                     @else
                         <x-media-preview
                             :src="$episode->thumbnail_image ?: ($series->bannerMediaUrl() ?: 'https://picsum.photos/1200/675?'.$episode->id)"
@@ -80,25 +80,40 @@
                     </div>
                 </div>
 
-                <!-- ── SERVERS ── -->
+                @if($partSources->isNotEmpty())
+                    <div class="server-section">
+                        <div class="server-header">
+                            <span class="server-header-title">Partes del episodio</span>
+                            <div class="server-views">{{ $partSources->count() }} partes</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($partSources as $part)
+                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-video-url="{{ $part->playable_url }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-player-type="{{ $part->player_type }}">
+                                    {{ $part->label ?: 'Parte '.($part->sort_order ?: $loop->iteration) }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="server-section">
                     <div class="server-header">
                         <span class="server-header-title">Fuentes de vídeo</span>
                         <div class="server-views">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
-                            {{ $episode->sources->count() }} fuentes
+                            {{ $fullSources->count() }} fuentes
                         </div>
                     </div>
                     <div class="server-list">
-                        @forelse($episode->sources as $source)
+                        @forelse($fullSources as $source)
                             <button type="button"
                                 class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
                                 data-video-url="{{ $source->playable_url }}"
-                                data-provider="{{ strtoupper($source->provider) }}">
+                                data-provider="{{ strtoupper($source->provider) }}"
+                                data-player-type="{{ $source->player_type }}">
                                 <div class="server-icon">⚡</div>
                                 <div class="server-info">
                                     <div class="server-name">{{ strtoupper($source->provider) }}</div>
@@ -109,21 +124,19 @@
                         @empty
                             <div class="server-item">
                                 <div class="server-info">
-                                    <div class="server-name">Sin fuentes</div>
-                                    <div class="server-meta">Este episodio aún no tiene enlaces disponibles.</div>
+                                    <div class="server-name">{{ $partSources->isNotEmpty() ? 'Sin fuentes completas' : 'Sin fuentes' }}</div>
+                                    <div class="server-meta">{{ $partSources->isNotEmpty() ? 'Este episodio se reproduce por partes.' : 'Este episodio aún no tiene enlaces disponibles.' }}</div>
                                 </div>
                             </div>
                         @endforelse
                     </div>
                 </div>
 
-                <!-- ── EPISODE TITLE + META ── -->
                 <div class="ep-title-section">
                     <h1>{{ $series->title }} · <em>Temporada {{ $episode->season_number }} Episodio {{ $episode->episode_number }}</em></h1>
                     <div class="ep-meta-row">
                         <div class="ep-meta-item">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" />
                                 <line x1="16" y1="2" x2="16" y2="6" />
                                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -133,8 +146,7 @@
                         </div>
                         <div class="ep-meta-dot"></div>
                         <div class="ep-meta-item">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10" />
                                 <polyline points="12 6 12 12 16 14" />
                             </svg>
@@ -145,13 +157,11 @@
                     </div>
                 </div>
 
-                <!-- ── NAV PREV/NEXT ── -->
                 <div class="ep-nav">
                     @if($previousEpisode)
                         <a href="{{ route('public.episodes.show', $previousEpisode->slug) }}" class="ep-nav-btn prev">
                             <div class="ep-nav-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="15 18 9 12 15 6" />
                                 </svg>
                             </div>
@@ -163,8 +173,7 @@
                     @else
                         <a href="#" class="ep-nav-btn prev">
                             <div class="ep-nav-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="15 18 9 12 15 6" />
                                 </svg>
                             </div>
@@ -178,8 +187,7 @@
                     @if($nextEpisode)
                         <a href="{{ route('public.episodes.show', $nextEpisode->slug) }}" class="ep-nav-btn next">
                             <div class="ep-nav-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="9 18 15 12 9 6" />
                                 </svg>
                             </div>
@@ -191,8 +199,7 @@
                     @else
                         <a href="#" class="ep-nav-btn next">
                             <div class="ep-nav-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="9 18 15 12 9 6" />
                                 </svg>
                             </div>
@@ -204,7 +211,6 @@
                     @endif
                 </div>
 
-                <!-- ── SHARE ── -->
                 <div class="share-section">
                     <span class="share-label">Compartir</span>
                     <span class="share-count">{{ $comments->count() }}</span>
@@ -213,7 +219,6 @@
                     <a href="https://wa.me/?text={{ urlencode($series->title.' - '.$shareUrl) }}" target="_blank" rel="noopener" class="share-btn share-wa">WhatsApp</a>
                 </div>
 
-                <!-- ── EPISODE LIST ── -->
                 <div class="ep-list-section">
                     <div class="ep-list-header">
                         <span class="ep-list-title">Episodios · Temporada {{ $episode->season_number }}</span>
@@ -245,7 +250,6 @@
                     </div>
                 </div>
 
-                <!-- ── DOWNLOAD LINKS ── -->
                 <div class="links-section">
                     <div class="links-header">
                         <span class="links-title">Enlaces</span>
@@ -255,16 +259,15 @@
                         <span>Opciones</span>
                         <span>Idioma</span>
                     </div>
-                    @forelse($episode->sources as $source)
+                    @forelse($fullSources->isNotEmpty() ? $fullSources : $partSources as $source)
                         <div class="links-row">
                             <a href="{{ $source->playable_url }}" target="_blank" rel="noopener" class="links-row-option">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10" />
                                     <polyline points="8 12 12 16 16 12" />
                                     <line x1="12" y1="8" x2="12" y2="16" />
                                 </svg>
-                                {{ strtoupper($source->provider) }}
+                                {{ $source->source_type === 'part' ? 'PARTE '.($source->sort_order ?: $loop->iteration) : strtoupper($source->provider) }}
                             </a>
                             <span class="links-row-lang">{{ $source->label ?: 'Sub Español' }}</span>
                         </div>
@@ -276,12 +279,10 @@
                     @endforelse
                 </div>
 
-                <!-- ── COMMENTS ── -->
                 <div class="comments-section">
                     <div class="comments-header">
                         <div class="comments-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
                         </div>
@@ -327,7 +328,6 @@
                         </div>
                     @endforeach
 
-                    <!-- comment form -->
                     <div class="comment-form">
                         <form method="POST" action="{{ route('comments.store') }}">
                             @csrf
@@ -335,8 +335,7 @@
                             <input type="hidden" name="target_id" value="{{ $episode->id }}">
 
                             <div class="comment-form-title">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                 </svg>
                                 Deja un comentario
@@ -374,8 +373,7 @@
                                 <label for="saveInfo">Guarda mi nombre y correo para la próxima vez que comente</label>
                             </div>
                             <button class="cf-submit" type="submit">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="22" y1="2" x2="11" y2="13" />
                                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                                 </svg>
@@ -385,15 +383,12 @@
                     </div>
                 </div>
 
-                <!-- disclaimer -->
                 <div class="ep-disclaimer">
-                    Este sitio no almacena archivos ni videos. Todo el contenido proviene de fuentes externas y se encuentra
-                    alojado en sitios de terceros.
+                    Este sitio no almacena archivos ni videos. Todo el contenido proviene de fuentes externas y se encuentra alojado en sitios de terceros.
                 </div>
 
             </main>
 
-            <!-- ═══ SIDEBAR ═══ -->
             <aside class="ep-sidebar">
                 <div class="sidebar-section">
                     <div class="sidebar-header">
@@ -406,8 +401,7 @@
                                 <span class="sidebar-rank {{ $loop->iteration <= 3 ? 'top3' : '' }}">{{ $loop->iteration }}</span>
                                 <div class="sidebar-thumb">
                                     <img src="{{ $item->thumbnail_image ?: 'https://picsum.photos/200/130?'.$item->id }}" alt="">
-                                    <div class="sidebar-thumb-overlay"><svg width="16" height="16" viewBox="0 0 24 24"
-                                            fill="white">
+                                    <div class="sidebar-thumb-overlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                                             <path d="M8 5v14l11-7z" />
                                         </svg></div>
                                 </div>
@@ -435,23 +429,60 @@
         });
 
         const playerFrame = document.getElementById('episodePlayer');
+        const playerVideo = document.getElementById('episodeVideoPlayer');
         const activeSourceLabel = document.getElementById('activeSourceLabel');
         const sourceButtons = document.querySelectorAll('.source-switcher');
 
-        if (playerFrame && sourceButtons.length > 0) {
+        function switchEpisodePlayer(type, url) {
+            if (!url) {
+                return;
+            }
+
+            if (type === 'video') {
+                if (playerFrame) {
+                    playerFrame.src = '';
+                    playerFrame.style.display = 'none';
+                }
+                if (playerVideo) {
+                    playerVideo.pause();
+                    playerVideo.src = url;
+                    playerVideo.load();
+                    playerVideo.style.display = 'block';
+                }
+
+                return;
+            }
+
+            if (playerVideo) {
+                playerVideo.pause();
+                playerVideo.removeAttribute('src');
+                playerVideo.load();
+                playerVideo.style.display = 'none';
+            }
+            if (playerFrame) {
+                playerFrame.src = url;
+                playerFrame.style.display = 'block';
+            }
+        }
+
+        if (sourceButtons.length > 0) {
             sourceButtons.forEach((button) => {
                 button.addEventListener('click', () => {
                     const nextUrl = button.getAttribute('data-video-url');
                     const provider = button.getAttribute('data-provider');
+                    const playerType = button.getAttribute('data-player-type') || 'iframe';
 
-                    if (!nextUrl) {
-                        return;
-                    }
+                    switchEpisodePlayer(playerType, nextUrl);
 
-                    playerFrame.src = nextUrl;
+                    sourceButtons.forEach((item) => {
+                        item.classList.remove('active');
+                        item.classList.remove('btn-primary');
+                        item.classList.add('btn-light-primary');
+                    });
 
-                    sourceButtons.forEach((item) => item.classList.remove('active'));
                     button.classList.add('active');
+                    button.classList.remove('btn-light-primary');
+                    button.classList.add('btn-primary');
 
                     if (activeSourceLabel) {
                         activeSourceLabel.textContent = provider || 'FUENTE';
