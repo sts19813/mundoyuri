@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -50,7 +51,7 @@ class EpisodeController extends Controller
         return view('admin.episodes.create', compact('seriesOptions', 'sourceProviders'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $this->validateEpisode($request);
 
@@ -62,6 +63,13 @@ class EpisodeController extends Controller
 
         $this->syncSources($episode, $request);
         $this->syncModeration($episode, $validated['moderation_status'] ?? 'pending', $validated['moderation_notes'] ?? null);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Episodio guardado.',
+                'redirect' => route('admin.episodes.edit', $episode),
+            ]);
+        }
 
         return redirect()->route('admin.episodes.index')->with('success', 'Episodio guardado.');
     }
@@ -82,7 +90,7 @@ class EpisodeController extends Controller
         return view('admin.episodes.edit', compact('episode', 'seriesOptions', 'sourceProviders'));
     }
 
-    public function update(Request $request, Episode $episode): RedirectResponse
+    public function update(Request $request, Episode $episode): JsonResponse|RedirectResponse
     {
         $validated = $this->validateEpisode($request, $episode->id);
 
@@ -93,6 +101,13 @@ class EpisodeController extends Controller
 
         $this->syncSources($episode, $request);
         $this->syncModeration($episode, $validated['moderation_status'] ?? 'pending', $validated['moderation_notes'] ?? null);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Episodio actualizado.',
+                'redirect' => route('admin.episodes.edit', $episode),
+            ]);
+        }
 
         return redirect()->route('admin.episodes.index')->with('success', 'Episodio actualizado.');
     }
@@ -128,6 +143,8 @@ class EpisodeController extends Controller
             'moderation_notes' => ['nullable', 'string'],
             'source_provider' => ['nullable', 'array'],
             'source_provider.*' => ['nullable', Rule::in(array_keys($this->sourceProviders()))],
+            'source_type' => ['nullable', 'array'],
+            'source_type.*' => ['nullable', Rule::in(['full', 'part'])],
             'source_url' => ['nullable', 'array'],
             'source_url.*' => [
                 'nullable',
@@ -164,6 +181,8 @@ class EpisodeController extends Controller
             ],
             'source_label' => ['nullable', 'array'],
             'source_label.*' => ['nullable', 'string', 'max:120'],
+            'source_sort_order' => ['nullable', 'array'],
+            'source_sort_order.*' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'source_primary' => ['nullable', 'integer'],
         ]);
     }
@@ -171,8 +190,10 @@ class EpisodeController extends Controller
     private function syncSources(Episode $episode, Request $request): void
     {
         $providers = $request->input('source_provider', []);
+        $types = $request->input('source_type', []);
         $urls = $request->input('source_url', []);
         $labels = $request->input('source_label', []);
+        $sortOrders = $request->input('source_sort_order', []);
         $primaryIndex = (int) $request->input('source_primary', 0);
         $validSources = [];
 
@@ -193,18 +214,28 @@ class EpisodeController extends Controller
                 continue;
             }
 
+            $sourceType = in_array(($types[$index] ?? 'full'), ['full', 'part'], true)
+                ? $types[$index]
+                : 'full';
+
             $validSources[] = [
                 'provider' => $provider,
+                'source_type' => $sourceType,
                 'video_url' => $normalizedUrl,
                 'label' => $labels[$index] ?? null,
-                'is_primary' => false,
+                'sort_order' => (int) ($sortOrders[$index] ?? ($index + 1)),
+                'is_primary' => $index === $primaryIndex,
             ];
         }
+
+        usort($validSources, fn (array $left, array $right) => [($left['source_type'] === 'part' ? 0 : 1), $left['sort_order']] <=> [($right['source_type'] === 'part' ? 0 : 1), $right['sort_order']]);
+
+        $hasPrimary = collect($validSources)->contains(fn (array $source) => $source['is_primary'] === true);
 
         foreach ($validSources as $index => $source) {
             $episode->sources()->create([
                 ...$source,
-                'is_primary' => $index === $primaryIndex || ($primaryIndex >= count($validSources) && $index === 0),
+                'is_primary' => $source['is_primary'] || (! $hasPrimary && $index === 0),
             ]);
         }
     }

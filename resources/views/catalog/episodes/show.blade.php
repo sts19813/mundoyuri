@@ -11,7 +11,9 @@
 <x-navbar />
 
 @php
-    $primary = $episode->sources->firstWhere('is_primary', true) ?: $episode->sources->first();
+    $partSources = $episode->sources->where('source_type', 'part')->sortBy('sort_order')->values();
+    $fullSources = $episode->sources->where('source_type', '!=', 'part')->values();
+    $primary = $partSources->firstWhere('is_primary', true) ?: $partSources->first() ?: $fullSources->firstWhere('is_primary', true) ?: $fullSources->first();
 @endphp
 
 <section class="py-5 mt-5">
@@ -27,20 +29,31 @@
             <div class="card-body">
                 @if($primary)
                     <div class="ratio ratio-16x9 mb-3">
-                        <iframe src="{{ $primary->playable_url }}" title="Video" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                        <iframe id="catalogEpisodePlayer" src="{{ $primary->playable_url }}" title="Video" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                     </div>
                 @else
                     <div class="alert alert-warning mb-0">Este episodio aun no tiene fuente de video disponible.</div>
                 @endif
 
+                @if($partSources->isNotEmpty())
+                    <h5 class="mt-3">Partes del episodio</h5>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @foreach($partSources as $source)
+                            <button type="button" class="btn {{ $source->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light' }} catalog-source-switcher" data-video-url="{{ $source->playable_url }}">
+                                {{ $source->label ?: 'Parte '.($source->sort_order ?: $loop->iteration) }}
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+
                 <h5 class="mt-3">Fuentes disponibles</h5>
                 <div class="d-flex flex-wrap gap-2">
-                    @forelse($episode->sources as $source)
-                        <a class="btn {{ $source->is_primary ? 'btn-primary' : 'btn-light' }}" href="{{ $source->playable_url }}" target="_blank" rel="noopener">
+                    @forelse($fullSources as $source)
+                        <button type="button" class="btn {{ $source->is_primary ? 'btn-primary' : 'btn-light' }} catalog-source-switcher" data-video-url="{{ $source->playable_url }}">
                             {{ strtoupper($source->provider) }}{{ $source->label ? ' · '.$source->label : '' }}
-                        </a>
+                        </button>
                     @empty
-                        <span class="text-muted">Sin fuentes registradas.</span>
+                        <span class="text-muted">{{ $partSources->isNotEmpty() ? 'Este episodio se reproduce por partes.' : 'Sin fuentes registradas.' }}</span>
                     @endforelse
                 </div>
             </div>
@@ -66,5 +79,25 @@
 
 <x-footer />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.querySelectorAll('.catalog-source-switcher').forEach((button) => {
+    button.addEventListener('click', () => {
+        const player = document.getElementById('catalogEpisodePlayer');
+        const nextUrl = button.getAttribute('data-video-url');
+
+        if (!player || !nextUrl) {
+            return;
+        }
+
+        player.src = nextUrl;
+        document.querySelectorAll('.catalog-source-switcher').forEach((item) => {
+            item.classList.remove('btn-primary');
+            item.classList.add('btn-light');
+        });
+        button.classList.remove('btn-light');
+        button.classList.add('btn-primary');
+    });
+});
+</script>
 </body>
 </html>

@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EpisodeSource extends Model
 {
@@ -13,7 +13,9 @@ class EpisodeSource extends Model
     protected $fillable = [
         'episode_id',
         'provider',
+        'source_type',
         'label',
+        'sort_order',
         'video_url',
         'is_primary',
     ];
@@ -22,6 +24,7 @@ class EpisodeSource extends Model
     {
         return [
             'is_primary' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
@@ -39,11 +42,16 @@ class EpisodeSource extends Model
         return $this->normalizeYouTubeEmbedUrl($this->video_url) ?? $this->video_url;
     }
 
+    public function isPart(): bool
+    {
+        return $this->source_type === 'part';
+    }
+
     private function normalizeYouTubeEmbedUrl(string $url): ?string
     {
         $parts = parse_url($url);
 
-        if (!$parts || empty($parts['host'])) {
+        if (! $parts || empty($parts['host'])) {
             return null;
         }
 
@@ -58,41 +66,41 @@ class EpisodeSource extends Model
             $videoId = (string) $queryParams['v'];
         }
 
-        if (!$videoId && preg_match('~/embed/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/embed/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && preg_match('~/shorts/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/shorts/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && preg_match('~/v/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/v/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && preg_match('~/live/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/live/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && in_array(strtolower($parts['host']), ['youtu.be', 'www.youtu.be'], true)) {
+        if (! $videoId && in_array(strtolower($parts['host']), ['youtu.be', 'www.youtu.be'], true)) {
             $videoId = trim($path, '/');
         }
 
-        if (!$videoId) {
+        if (! $videoId) {
             return null;
         }
 
         $videoId = preg_replace('/[^a-zA-Z0-9_-]/', '', $videoId);
 
-        if (!$videoId) {
+        if (! $videoId) {
             return null;
         }
 
         $embedParams = [];
 
-        if (!empty($queryParams['start'])) {
+        if (! empty($queryParams['start'])) {
             $embedParams['start'] = $queryParams['start'];
-        } elseif (!empty($queryParams['t'])) {
+        } elseif (! empty($queryParams['t'])) {
             $seconds = $this->parseYouTubeTimeToSeconds((string) $queryParams['t']);
 
             if ($seconds > 0) {
@@ -100,13 +108,13 @@ class EpisodeSource extends Model
             }
         }
 
-        if (!empty($queryParams['list'])) {
+        if (! empty($queryParams['list'])) {
             $embedParams['list'] = $queryParams['list'];
         }
 
         $embedUrl = 'https://www.youtube.com/embed/'.$videoId;
 
-        if (!empty($embedParams)) {
+        if (! empty($embedParams)) {
             $embedUrl .= '?'.http_build_query($embedParams);
         }
 

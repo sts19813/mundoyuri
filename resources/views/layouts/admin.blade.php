@@ -111,7 +111,34 @@
 
             document.documentElement.setAttribute('data-bs-theme', mode);
         }
+
+        function adminToast(type, message) {
+            if (typeof Swal === 'undefined') {
+                alert(message);
+                return;
+            }
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: type === 'error' ? 5500 : 2600,
+                timerProgressBar: true,
+                icon: type,
+                title: message,
+            });
+        }
     </script>
+
+    @if(session('success'))
+        <script>document.addEventListener('DOMContentLoaded', () => adminToast('success', @js(session('success'))));</script>
+    @endif
+    @if(session('error'))
+        <script>document.addEventListener('DOMContentLoaded', () => adminToast('error', @js(session('error'))));</script>
+    @endif
+    @if($errors->any())
+        <script>document.addEventListener('DOMContentLoaded', () => adminToast('error', @js($errors->first())));</script>
+    @endif
 
     @stack('scripts')
 </body>

@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Model;
 
 class Episode extends Model
 {
@@ -54,7 +54,7 @@ class Episode extends Model
 
     public function sources(): HasMany
     {
-        return $this->hasMany(EpisodeSource::class);
+        return $this->hasMany(EpisodeSource::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function comments(): MorphMany
