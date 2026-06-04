@@ -7,7 +7,9 @@ use App\Models\EpisodeSource;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AdminEpisodeSourcesTest extends TestCase
@@ -216,6 +218,133 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertSame('https://pixeldrain.com/api/file/LTRmJYYs', $episode->sources[0]->video_url);
         $this->assertSame('https://pixeldrain.com/api/file/LTRmJYYs', $episode->sources[0]->direct_video_url);
         $this->assertTrue($episode->sources[0]->is_primary);
+    }
+
+    public function test_admin_can_create_episode_with_bunny_stream_source_using_video_id(): void
+    {
+        config()->set('services.bunny.library_id', '987654');
+        config()->set('services.bunny.api_key', 'test-bunny-key');
+
+        Http::fake([
+            'https://video.bunnycdn.com/library/987654/videos/*' => Http::response([
+                'guid' => '550e8400-e29b-41d4-a716-446655440000',
+                'isPublic' => true,
+                'status' => 3,
+            ], 200),
+        ]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'SciFi',
+            'slug' => 'scifi',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie bunny',
+            'slug' => 'serie-bunny',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para validar Bunny Stream.',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.episodes.store'), [
+                'series_id' => $series->id,
+                'title' => 'Episodio Bunny',
+                'season_number' => 1,
+                'episode_number' => 3,
+                'moderation_status' => 'approved',
+                'source_provider' => ['bunny_stream'],
+                'source_type' => ['full'],
+                'source_url' => ['550e8400-e29b-41d4-a716-446655440000'],
+                'source_label' => ['Bunny Principal'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertRedirect(route('admin.episodes.index'));
+
+        $episode = Episode::query()->with('sources')->where('title', 'Episodio Bunny')->firstOrFail();
+
+        $this->assertCount(1, $episode->sources);
+        $this->assertSame('bunny_stream', $episode->sources[0]->provider);
+        $this->assertSame('iframe', $episode->sources[0]->player_type);
+        $this->assertSame(
+            'https://player.mediadelivery.net/embed/987654/550e8400-e29b-41d4-a716-446655440000',
+            $episode->sources[0]->video_url
+        );
+        $this->assertSame($episode->sources[0]->video_url, $episode->sources[0]->playable_url);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://video.bunnycdn.com/library/987654/videos/550e8400-e29b-41d4-a716-446655440000');
+    }
+
+    public function test_private_bunny_video_is_allowed_when_token_key_is_configured(): void
+    {
+        Carbon::setTestNow('2026-06-03 12:00:00');
+
+        config()->set('services.bunny.library_id', '987654');
+        config()->set('services.bunny.api_key', 'test-bunny-key');
+        config()->set('services.bunny.token_key', 'secret-token-key');
+        config()->set('services.bunny.token_ttl', 120);
+
+        Http::fake([
+            'https://video.bunnycdn.com/library/987654/videos/*' => Http::response([
+                'guid' => '550e8400-e29b-41d4-a716-446655440000',
+                'isPublic' => false,
+                'status' => 3,
+            ], 200),
+        ]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'Drama privado',
+            'slug' => 'drama-privado',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie bunny privada',
+            'slug' => 'serie-bunny-privada',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para validar Bunny privado.',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.episodes.store'), [
+                'series_id' => $series->id,
+                'title' => 'Episodio Bunny Privado',
+                'season_number' => 1,
+                'episode_number' => 4,
+                'moderation_status' => 'approved',
+                'source_provider' => ['bunny_stream'],
+                'source_type' => ['full'],
+                'source_url' => ['550e8400-e29b-41d4-a716-446655440000'],
+                'source_label' => ['Bunny Privado'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertRedirect(route('admin.episodes.index'));
+
+        $episode = Episode::query()->with('sources')->where('title', 'Episodio Bunny Privado')->firstOrFail();
+        $playableUrl = $episode->sources[0]->playable_url;
+        $expectedExpires = Carbon::now()->addMinutes(120)->timestamp;
+        $expectedToken = hash('sha256', 'secret-token-key'.'550e8400-e29b-41d4-a716-446655440000'.$expectedExpires);
+
+        $this->assertStringStartsWith(
+            'https://player.mediadelivery.net/embed/987654/550e8400-e29b-41d4-a716-446655440000?',
+            $playableUrl
+        );
+        $this->assertStringContainsString('token='.$expectedToken, $playableUrl);
+        $this->assertStringContainsString('expires='.$expectedExpires, $playableUrl);
+
+        Carbon::setTestNow();
     }
 
     public function test_pixeldrain_source_uses_lightweight_player_page(): void

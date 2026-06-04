@@ -25,6 +25,9 @@ return [
         'netu' => [
             'label' => 'NETU',
         ],
+        'bunny_stream' => [
+            'label' => 'Bunny Stream',
+        ],
         'pixeldrain_cdn' => [
             'label' => 'Pixeldrain CDN',
         ],

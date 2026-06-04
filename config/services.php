@@ -42,4 +42,12 @@ return [
         'prompt' => env('GOOGLE_PROMPT', 'select_account'),
     ],
 
+    'bunny' => [
+        'library_id' => env('BUNNY_STREAM_LIBRARY_ID'),
+        'api_key' => env('BUNNY_STREAM_API_KEY'),
+        'embed_host' => env('BUNNY_STREAM_EMBED_HOST', 'player.mediadelivery.net'),
+        'token_key' => env('BUNNY_STREAM_TOKEN_KEY'),
+        'token_ttl' => env('BUNNY_STREAM_TOKEN_TTL', 120),
+    ],
+
 ];

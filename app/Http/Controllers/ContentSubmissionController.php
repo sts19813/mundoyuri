@@ -6,6 +6,7 @@ use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Support\SeriesMedia;
+use App\Support\VideoSource;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,7 +49,46 @@ class ContentSubmissionController extends Controller
             'episode_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'episode_description' => ['nullable', 'string'],
             'source_provider' => ['nullable', Rule::in(array_keys(config('episode_sources.providers', [])))],
-            'source_url' => ['nullable', 'url'],
+            'source_url' => [
+                'nullable',
+                'string',
+                'max:5000',
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                    $provider = trim((string) $request->input('source_provider', ''));
+                    $rawUrl = trim((string) $value);
+
+                    if ($provider === '' && $rawUrl === '') {
+                        return;
+                    }
+
+                    if ($provider !== '' && $rawUrl === '') {
+                        $fail('Debes indicar la URL o identificador de la fuente seleccionada.');
+
+                        return;
+                    }
+
+                    if ($provider === '' && $rawUrl !== '') {
+                        $fail('Selecciona un proveedor para la fuente indicada.');
+
+                        return;
+                    }
+
+                    $normalizedProvider = VideoSource::normalizeProvider($provider);
+                    $normalizedUrl = VideoSource::normalizeUrl($normalizedProvider, $rawUrl);
+
+                    if (! $normalizedUrl) {
+                        $fail('La fuente no es válida. Usa una URL pública, iframe o ID compatible.');
+
+                        return;
+                    }
+
+                    $remoteValidationMessage = VideoSource::validateRemote($normalizedProvider, $normalizedUrl);
+
+                    if ($remoteValidationMessage) {
+                        $fail($remoteValidationMessage);
+                    }
+                },
+            ],
             'source_label' => ['nullable', 'string', 'max:120'],
         ]);
 
@@ -92,13 +132,17 @@ class ContentSubmissionController extends Controller
 
             if (! empty($validated['source_provider']) && ! empty($validated['source_url'])) {
                 $providerConfig = config('episode_sources.providers.'.$validated['source_provider'], []);
+                $provider = $providerConfig['stores_as'] ?? $validated['source_provider'];
+                $normalizedUrl = VideoSource::normalizeUrl($provider, $validated['source_url']);
 
-                $episode->sources()->create([
-                    'provider' => $providerConfig['stores_as'] ?? $validated['source_provider'],
-                    'label' => $validated['source_label'] ?? 'Fuente principal',
-                    'video_url' => $validated['source_url'],
-                    'is_primary' => true,
-                ]);
+                if ($normalizedUrl) {
+                    $episode->sources()->create([
+                        'provider' => $provider,
+                        'label' => $validated['source_label'] ?? 'Fuente principal',
+                        'video_url' => $normalizedUrl,
+                        'is_primary' => true,
+                    ]);
+                }
             }
         }
 

@@ -114,6 +114,7 @@
                                 <label class="form-label source-url-label">URL o iframe {{ $index + 1 }}</label>
                                 <input class="form-control" type="text" name="source_url[]" value="{{ $source['video_url'] }}"
                                     placeholder="https://www.youtube.com/watch?v=... o <iframe ...>">
+                                <div class="form-text source-url-help">Pega una URL pública, iframe o el identificador del proveedor.</div>
                                 @error("source_url.$index")
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -167,6 +168,7 @@
             <div class="col-md-3">
                 <label class="form-label source-url-label">URL o iframe</label>
                 <input class="form-control" type="text" name="source_url[]" placeholder="https://www.youtube.com/watch?v=... o <iframe ...>">
+                <div class="form-text source-url-help">Pega una URL pública, iframe o el identificador del proveedor.</div>
             </div>
             <div class="col-md-2">
                 <label class="form-label source-label-label">Etiqueta</label>
@@ -211,6 +213,20 @@
             const orderInput = row.querySelector('.source-order-input');
             if (orderInput && !orderInput.value) {
                 orderInput.value = index + 1;
+            }
+
+            const providerSelect = row.querySelector('[name="source_provider[]"]');
+            const helpText = row.querySelector('.source-url-help');
+
+            if (providerSelect && helpText) {
+                const helpMap = {
+                    bunny_stream: 'Bunny: pega el Video ID, el embed URL o el play URL oficial.',
+                    youtube_link: 'YouTube: puedes pegar enlace normal o iframe.',
+                    youtube_iframe: 'YouTube: puedes pegar enlace normal o iframe.',
+                    pixeldrain_cdn: 'Pixeldrain: pega el enlace del archivo; el sistema lo adapta solo.',
+                };
+
+                helpText.textContent = helpMap[providerSelect.value] || 'Pega una URL pública, iframe o el identificador del proveedor.';
             }
         });
 
@@ -258,6 +274,12 @@
             if (firstRadio) {
                 firstRadio.checked = true;
             }
+        }
+    });
+
+    list.addEventListener('change', (event) => {
+        if (event.target.matches('[name="source_provider[]"]')) {
+            refreshRows();
         }
     });
 

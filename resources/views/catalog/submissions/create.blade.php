@@ -126,7 +126,8 @@
                     </div>
                     <div class="col-md-8">
                         <label class="form-label">URL de reproducción</label>
-                        <input class="form-control form-control-solid" type="url" name="source_url" value="{{ old('source_url') }}">
+                        <input class="form-control form-control-solid" type="text" name="source_url" value="{{ old('source_url') }}">
+                        <div class="form-text">Si eliges Bunny Stream, puedes pegar el Video ID, embed URL o play URL.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Etiqueta de fuente</label>

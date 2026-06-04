@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Support\VideoSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -171,11 +172,19 @@ class EpisodeController extends Controller
                         return;
                     }
 
-                    $normalizedProvider = $this->normalizeProvider($provider);
-                    $normalizedUrl = $this->normalizeSourceUrl($normalizedProvider, $rawUrl);
+                    $normalizedProvider = VideoSource::normalizeProvider($provider);
+                    $normalizedUrl = VideoSource::normalizeUrl($normalizedProvider, $rawUrl);
 
                     if (! $normalizedUrl) {
                         $fail('La fuente no es válida. Usa una URL pública o un iframe con src válido.');
+
+                        return;
+                    }
+
+                    $remoteValidationMessage = VideoSource::validateRemote($normalizedProvider, $normalizedUrl);
+
+                    if ($remoteValidationMessage) {
+                        $fail($remoteValidationMessage);
                     }
                 },
             ],
@@ -207,8 +216,8 @@ class EpisodeController extends Controller
                 continue;
             }
 
-            $provider = $this->normalizeProvider($provider);
-            $normalizedUrl = $this->normalizeSourceUrl($provider, (string) $url);
+            $provider = VideoSource::normalizeProvider($provider);
+            $normalizedUrl = VideoSource::normalizeUrl($provider, (string) $url);
 
             if (! $normalizedUrl) {
                 continue;
