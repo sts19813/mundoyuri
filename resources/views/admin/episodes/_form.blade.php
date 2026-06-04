@@ -17,13 +17,11 @@
             ])->values()->all()
             : []);
 
-    if (count($sources) < 3) {
-        for ($i = count($sources); $i < 3; $i++) {
-            $sources[] = ['provider' => '', 'video_url' => '', 'label' => ''];
-        }
+    if (count($sources) === 0) {
+        $sources[] = ['provider' => '', 'video_url' => '', 'label' => ''];
     }
 
-    $primaryIndex = old('source_primary', isset($episode) ? ($episode->sources->search(fn($s) => $s->is_primary) ?: 0) : 0);
+    $primaryIndex = (int) old('source_primary', isset($episode) ? ($episode->sources->search(fn($s) => $s->is_primary) ?: 0) : 0);
 @endphp
 <div class="card">
     <div class="card-body row g-4">
@@ -65,42 +63,157 @@
         </div>
         <div class="col-md-6"><label class="form-label">Notas de moderacion</label><input class="form-control" name="moderation_notes" value="{{ old('moderation_notes', $episode->moderation_notes ?? '') }}"></div>
 
-        <div class="col-12"><hr><h5>Fuentes de video</h5></div>
-        @foreach($sources as $index => $source)
-            <div class="col-md-3">
-                <label class="form-label">Proveedor {{ $index + 1 }}</label>
-                <select class="form-select" name="source_provider[]">
-                    <option value="">Selecciona</option>
-                    <option value="youtube_link" @selected($source['provider'] === 'youtube' || $source['provider'] === 'youtube_link')>YouTube (enlace)</option>
-                    <option value="youtube_iframe" @selected($source['provider'] === 'youtube_iframe')>YouTube (iframe)</option>
-                    <option value="vimeo" @selected($source['provider'] === 'vimeo')>Vimeo</option>
-                    <option value="byse" @selected($source['provider'] === 'byse')>BYSE</option>
-                    <option value="voe" @selected($source['provider'] === 'voe')>VOE</option>
-                    <option value="ok" @selected($source['provider'] === 'ok')>OK</option>
-                    <option value="netu" @selected($source['provider'] === 'netu')>NETU</option>
-                </select>
+        <div class="col-12">
+            <hr>
+            <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <h5 class="mb-0">Fuentes de video</h5>
+                <button class="btn btn-light-primary" type="button" id="add-source-row">Agregar fuente</button>
             </div>
-            <div class="col-md-5">
-                <label class="form-label">URL o iframe {{ $index + 1 }}</label>
-                <input class="form-control" type="text" name="source_url[]" value="{{ $source['video_url'] }}"
-                    placeholder="https://www.youtube.com/watch?v=... o <iframe ...>">
-                @error("source_url.$index")
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
+            <p class="text-muted fs-7 mt-2 mb-0">Puedes agregar una o muchas fuentes. Para nuevos proveedores, solo hace falta registrarlos en la configuración.</p>
+        </div>
+        <div class="col-12">
+            <div id="episode-sources-list" class="d-flex flex-column gap-4">
+                @foreach($sources as $index => $source)
+                    <div class="border rounded p-4 source-row" data-source-row>
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <label class="form-label source-provider-label">Proveedor {{ $index + 1 }}</label>
+                                <select class="form-select" name="source_provider[]">
+                                    <option value="">Selecciona</option>
+                                    @foreach($sourceProviders as $providerKey => $providerConfig)
+                                        <option value="{{ $providerKey }}" @selected($source['provider'] === $providerKey || (($source['provider'] === 'youtube') && ($providerKey === 'youtube_link')))>{{ $providerConfig['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label source-url-label">URL o iframe {{ $index + 1 }}</label>
+                                <input class="form-control" type="text" name="source_url[]" value="{{ $source['video_url'] }}"
+                                    placeholder="https://www.youtube.com/watch?v=... o <iframe ...>">
+                                @error("source_url.$index")
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label source-label-label">Etiqueta {{ $index + 1 }}</label>
+                                <input class="form-control" name="source_label[]" value="{{ $source['label'] }}" placeholder="Ej. Principal, HD Latino, Backup">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end justify-content-between gap-2">
+                                <label class="form-check form-check-custom form-check-solid mb-0">
+                                    <input class="form-check-input source-primary-input" type="radio" name="source_primary" value="{{ $index }}" {{ $primaryIndex === $index ? 'checked' : '' }}>
+                                </label>
+                                <button type="button" class="btn btn-icon btn-light-danger source-remove-btn" title="Eliminar fuente">
+                                    <span class="fs-5">×</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Etiqueta {{ $index + 1 }}</label>
-                <input class="form-control" name="source_label[]" value="{{ $source['label'] }}">
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <label class="form-check form-check-custom form-check-solid">
-                    <input class="form-check-input" type="radio" name="source_primary" value="{{ $index }}" {{ (int)$primaryIndex === $index ? 'checked' : '' }}>
-                </label>
-            </div>
-        @endforeach
+        </div>
     </div>
     <div class="card-footer d-flex justify-content-end gap-2">
         <a href="{{ route('admin.episodes.index') }}" class="btn btn-light">Cancelar</a>
         <button class="btn btn-primary" type="submit">Guardar</button>
     </div>
 </div>
+<template id="episode-source-template">
+    <div class="border rounded p-4 source-row" data-source-row>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <label class="form-label source-provider-label">Proveedor</label>
+                <select class="form-select" name="source_provider[]">
+                    <option value="">Selecciona</option>
+                    @foreach($sourceProviders as $providerKey => $providerConfig)
+                        <option value="{{ $providerKey }}">{{ $providerConfig['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label source-url-label">URL o iframe</label>
+                <input class="form-control" type="text" name="source_url[]" placeholder="https://www.youtube.com/watch?v=... o <iframe ...>">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label source-label-label">Etiqueta</label>
+                <input class="form-control" name="source_label[]" placeholder="Ej. Principal, HD Latino, Backup">
+            </div>
+            <div class="col-md-1 d-flex align-items-end justify-content-between gap-2">
+                <label class="form-check form-check-custom form-check-solid mb-0">
+                    <input class="form-check-input source-primary-input" type="radio" name="source_primary" value="0">
+                </label>
+                <button type="button" class="btn btn-icon btn-light-danger source-remove-btn" title="Eliminar fuente">
+                    <span class="fs-5">×</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+(() => {
+    const list = document.getElementById('episode-sources-list');
+    const addButton = document.getElementById('add-source-row');
+    const template = document.getElementById('episode-source-template');
+
+    if (!list || !addButton || !template) {
+        return;
+    }
+
+    const refreshRows = () => {
+        const rows = [...list.querySelectorAll('[data-source-row]')];
+
+        rows.forEach((row, index) => {
+            row.querySelector('.source-provider-label').textContent = `Proveedor ${index + 1}`;
+            row.querySelector('.source-url-label').textContent = `URL o iframe ${index + 1}`;
+            row.querySelector('.source-label-label').textContent = `Etiqueta ${index + 1}`;
+            row.querySelector('.source-primary-input').value = index;
+        });
+
+        if (rows.length === 1) {
+            rows[0].querySelector('.source-remove-btn').setAttribute('disabled', 'disabled');
+        } else {
+            rows.forEach((row) => row.querySelector('.source-remove-btn').removeAttribute('disabled'));
+        }
+
+        if (!rows.some((row) => row.querySelector('.source-primary-input').checked) && rows[0]) {
+            rows[0].querySelector('.source-primary-input').checked = true;
+        }
+    };
+
+    addButton.addEventListener('click', () => {
+        const fragment = template.content.cloneNode(true);
+        list.appendChild(fragment);
+        refreshRows();
+    });
+
+    list.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('.source-remove-btn');
+
+        if (!removeButton) {
+            return;
+        }
+
+        const rows = list.querySelectorAll('[data-source-row]');
+
+        if (rows.length <= 1) {
+            return;
+        }
+
+        const row = removeButton.closest('[data-source-row]');
+        const radio = row?.querySelector('.source-primary-input');
+        const wasChecked = radio?.checked;
+
+        row?.remove();
+        refreshRows();
+
+        if (wasChecked) {
+            list.querySelector('.source-primary-input')?.setAttribute('checked', 'checked');
+            const firstRadio = list.querySelector('.source-primary-input');
+
+            if (firstRadio) {
+                firstRadio.checked = true;
+            }
+        }
+    });
+
+    refreshRows();
+})();
+</script>

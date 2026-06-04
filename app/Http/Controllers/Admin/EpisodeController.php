@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
-use Illuminate\Support\Arr;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -45,8 +45,9 @@ class EpisodeController extends Controller
     public function create(): View
     {
         $seriesOptions = Series::query()->orderBy('title')->get();
+        $sourceProviders = $this->sourceProviders();
 
-        return view('admin.episodes.create', compact('seriesOptions'));
+        return view('admin.episodes.create', compact('seriesOptions', 'sourceProviders'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -75,9 +76,10 @@ class EpisodeController extends Controller
     public function edit(Episode $episode): View
     {
         $seriesOptions = Series::query()->orderBy('title')->get();
+        $sourceProviders = $this->sourceProviders();
         $episode->load('sources');
 
-        return view('admin.episodes.edit', compact('episode', 'seriesOptions'));
+        return view('admin.episodes.edit', compact('episode', 'seriesOptions', 'sourceProviders'));
     }
 
     public function update(Request $request, Episode $episode): RedirectResponse
@@ -124,7 +126,9 @@ class EpisodeController extends Controller
             'description' => ['nullable', 'string'],
             'moderation_status' => ['required', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
-            'source_provider.*' => ['nullable', 'in:youtube,youtube_link,youtube_iframe,vimeo,byse,voe,ok,netu'],
+            'source_provider' => ['nullable', 'array'],
+            'source_provider.*' => ['nullable', Rule::in(array_keys($this->sourceProviders()))],
+            'source_url' => ['nullable', 'array'],
             'source_url.*' => [
                 'nullable',
                 'string',
@@ -153,11 +157,12 @@ class EpisodeController extends Controller
                     $normalizedProvider = $this->normalizeProvider($provider);
                     $normalizedUrl = $this->normalizeSourceUrl($normalizedProvider, $rawUrl);
 
-                    if (!$normalizedUrl) {
+                    if (! $normalizedUrl) {
                         $fail('La fuente no es válida. Usa una URL pública o un iframe con src válido.');
                     }
                 },
             ],
+            'source_label' => ['nullable', 'array'],
             'source_label.*' => ['nullable', 'string', 'max:120'],
             'source_primary' => ['nullable', 'integer'],
         ]);
@@ -169,6 +174,7 @@ class EpisodeController extends Controller
         $urls = $request->input('source_url', []);
         $labels = $request->input('source_label', []);
         $primaryIndex = (int) $request->input('source_primary', 0);
+        $validSources = [];
 
         $episode->sources()->delete();
 
@@ -183,15 +189,22 @@ class EpisodeController extends Controller
             $provider = $this->normalizeProvider($provider);
             $normalizedUrl = $this->normalizeSourceUrl($provider, (string) $url);
 
-            if (!$normalizedUrl) {
+            if (! $normalizedUrl) {
                 continue;
             }
 
-            $episode->sources()->create([
+            $validSources[] = [
                 'provider' => $provider,
                 'video_url' => $normalizedUrl,
                 'label' => $labels[$index] ?? null,
-                'is_primary' => $index === $primaryIndex,
+                'is_primary' => false,
+            ];
+        }
+
+        foreach ($validSources as $index => $source) {
+            $episode->sources()->create([
+                ...$source,
+                'is_primary' => $index === $primaryIndex || ($primaryIndex >= count($validSources) && $index === 0),
             ]);
         }
     }
@@ -199,12 +212,9 @@ class EpisodeController extends Controller
     private function normalizeProvider(string $provider): string
     {
         $provider = strtolower(trim($provider));
+        $providerConfig = $this->sourceProviders();
 
-        if (in_array($provider, ['youtube', 'youtube_link', 'youtube_iframe'], true)) {
-            return 'youtube';
-        }
-
-        return $provider;
+        return $providerConfig[$provider]['stores_as'] ?? $provider;
     }
 
     private function normalizeSourceUrl(string $provider, string $rawValue): ?string
@@ -218,7 +228,7 @@ class EpisodeController extends Controller
         $url = $this->extractIframeSrc($rawValue) ?? $rawValue;
         $url = trim($url);
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             return null;
         }
 
@@ -231,7 +241,7 @@ class EpisodeController extends Controller
 
     private function extractIframeSrc(string $rawValue): ?string
     {
-        if (!str_contains(strtolower($rawValue), '<iframe')) {
+        if (! str_contains(strtolower($rawValue), '<iframe')) {
             return null;
         }
 
@@ -246,7 +256,7 @@ class EpisodeController extends Controller
     {
         $parts = parse_url($url);
 
-        if (!$parts || empty($parts['host'])) {
+        if (! $parts || empty($parts['host'])) {
             return null;
         }
 
@@ -262,33 +272,33 @@ class EpisodeController extends Controller
             $videoId = trim($path, '/');
         }
 
-        if (!$videoId && isset($queryParams['v'])) {
+        if (! $videoId && isset($queryParams['v'])) {
             $videoId = (string) $queryParams['v'];
         }
 
-        if (!$videoId && preg_match('~/embed/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/embed/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && preg_match('~/shorts/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/shorts/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && preg_match('~/v/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/v/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId && preg_match('~/live/([^/?&]+)~', $path, $matches) === 1) {
+        if (! $videoId && preg_match('~/live/([^/?&]+)~', $path, $matches) === 1) {
             $videoId = $matches[1];
         }
 
-        if (!$videoId) {
+        if (! $videoId) {
             return null;
         }
 
         $videoId = preg_replace('/[^a-zA-Z0-9_-]/', '', $videoId);
 
-        if (!$videoId) {
+        if (! $videoId) {
             return null;
         }
 
@@ -301,7 +311,7 @@ class EpisodeController extends Controller
             }
         }
 
-        if (!isset($embedParams['start']) && isset($queryParams['t'])) {
+        if (! isset($embedParams['start']) && isset($queryParams['t'])) {
             $seconds = $this->parseYouTubeTimeToSeconds((string) $queryParams['t']);
 
             if ($seconds > 0) {
@@ -311,7 +321,7 @@ class EpisodeController extends Controller
 
         $embedUrl = 'https://www.youtube.com/embed/'.$videoId;
 
-        if (!empty($embedParams)) {
+        if (! empty($embedParams)) {
             $embedUrl .= '?'.http_build_query($embedParams);
         }
 
@@ -347,6 +357,11 @@ class EpisodeController extends Controller
         }
 
         return ($hours * 3600) + ($minutes * 60) + $seconds;
+    }
+
+    private function sourceProviders(): array
+    {
+        return config('episode_sources.providers', []);
     }
 
     private function resolveUniqueSlug(string $slug, ?int $exceptId = null): string
