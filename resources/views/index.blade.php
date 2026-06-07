@@ -131,11 +131,11 @@
                         <a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card">
                             <div class="episode-thumb">
                                 <x-media-preview
-                                    :src="$episode->thumbnail_image ?: ($episode->series->coverMediaUrl() ?: 'https://picsum.photos/400/250?ep-'.$episode->id)"
-                                    :type="$episode->thumbnail_image ? 'image' : ($episode->series->coverMediaUrl() ? $episode->series->coverMediaType() : 'image')"
+                                    :src="$episode->previewMediaUrl('400/250')"
+                                    :type="$episode->previewMediaType()"
                                     :alt="$episode->title"
                                     class="episode-thumb-media"
-                                    :hover-play="!$episode->thumbnail_image && $episode->series->coverMediaType() === 'video'"
+                                    :hover-play="$episode->previewMediaType() === 'video'"
                                 />
                                 @if(optional($episode->published_at)->gte(now()->subDays(7)))
                                     <span class="ep-badge-new">Nuevo</span>

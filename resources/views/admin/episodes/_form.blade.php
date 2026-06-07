@@ -69,7 +69,17 @@
         </div>
         <div class="col-md-4"><label class="form-label">Fecha publicacion</label><input class="form-control" type="date" name="release_date" value="{{ old('release_date', isset($episode->release_date) ? $episode->release_date->format('Y-m-d') : '') }}"></div>
         <div class="col-md-4"><label class="form-label">Duracion min</label><input class="form-control" type="number" name="duration_minutes" value="{{ old('duration_minutes', $episode->duration_minutes ?? '') }}"></div>
-        <div class="col-md-4"><label class="form-label">Thumbnail URL</label><input class="form-control" type="url" name="thumbnail_image" value="{{ old('thumbnail_image', $episode->thumbnail_image ?? '') }}"></div>
+        <div class="col-md-4">
+            <label class="form-label">Thumbnail</label>
+            <input class="form-control @error('thumbnail_image') is-invalid @enderror" type="file" name="thumbnail_image" accept="image/*">
+            <div class="form-text">Sube una imagen JPG, PNG, WEBP o GIF. Si no subes una nueva, se conserva la actual.</div>
+            @error('thumbnail_image')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            @if(isset($episode) && $episode->thumbnailUrl())
+                <div class="mt-3">
+                    <img src="{{ $episode->thumbnailUrl() }}" alt="{{ $episode->title }}" class="w-100 rounded" style="max-height: 150px; object-fit: cover;">
+                </div>
+            @endif
+        </div>
         <div class="col-12"><label class="form-label">Descripcion</label><textarea class="form-control" rows="4" name="description">{{ old('description', $episode->description ?? '') }}</textarea></div>
         <div class="col-md-6">
             <label class="form-label">Moderacion</label>

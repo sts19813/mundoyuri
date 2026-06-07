@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SeriesMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -60,5 +61,73 @@ class Episode extends Model
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function thumbnailUrl(): ?string
+    {
+        return SeriesMedia::publicUrl($this->thumbnail_image);
+    }
+
+    public function previewMediaUrl(string $randomSize = '400/250'): string
+    {
+        if ($this->thumbnailUrl()) {
+            return $this->thumbnailUrl();
+        }
+
+        $series = $this->resolvedSeries();
+
+        return $series?->coverMediaUrl()
+            ?: $series?->bannerMediaUrl()
+            ?: $this->randomImageUrl($randomSize);
+    }
+
+    public function previewMediaType(): string
+    {
+        if ($this->thumbnailUrl()) {
+            return 'image';
+        }
+
+        $series = $this->resolvedSeries();
+
+        if ($series?->coverMediaUrl()) {
+            return $series->coverMediaType() ?: 'image';
+        }
+
+        if ($series?->bannerMediaUrl()) {
+            return $series->bannerMediaType() ?: 'image';
+        }
+
+        return 'image';
+    }
+
+    public function imageUrl(string $randomSize = '400/250'): string
+    {
+        if ($this->thumbnailUrl()) {
+            return $this->thumbnailUrl();
+        }
+
+        $series = $this->resolvedSeries();
+
+        if ($series?->coverMediaUrl() && $series->coverMediaType() !== 'video') {
+            return $series->coverMediaUrl();
+        }
+
+        if ($series?->bannerMediaUrl() && $series->bannerMediaType() !== 'video') {
+            return $series->bannerMediaUrl();
+        }
+
+        return $this->randomImageUrl($randomSize);
+    }
+
+    private function resolvedSeries(): ?Series
+    {
+        return $this->relationLoaded('series')
+            ? $this->getRelation('series')
+            : $this->series;
+    }
+
+    private function randomImageUrl(string $size): string
+    {
+        return "https://picsum.photos/{$size}?episode={$this->id}";
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Support\SeriesMedia;
 use App\Support\VideoSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -55,9 +56,11 @@ class EpisodeController extends Controller
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $this->validateEpisode($request);
+        $episodeData = $this->episodeData($validated);
 
         $episode = Episode::create([
-            ...$validated,
+            ...$episodeData,
+            'thumbnail_image' => SeriesMedia::syncUploadedField($request, 'thumbnail_image'),
             'slug' => $this->resolveUniqueSlug($validated['slug'] ?? $this->buildDefaultSlug($validated)),
             'created_by' => auth()->id(),
         ]);
@@ -94,9 +97,11 @@ class EpisodeController extends Controller
     public function update(Request $request, Episode $episode): JsonResponse|RedirectResponse
     {
         $validated = $this->validateEpisode($request, $episode->id);
+        $episodeData = $this->episodeData($validated);
 
         $episode->update([
-            ...$validated,
+            ...$episodeData,
+            'thumbnail_image' => SeriesMedia::syncUploadedField($request, 'thumbnail_image', $episode->thumbnail_image),
             'slug' => $this->resolveUniqueSlug($validated['slug'] ?? $this->buildDefaultSlug($validated), $episode->id),
         ]);
 
@@ -115,6 +120,7 @@ class EpisodeController extends Controller
 
     public function destroy(Episode $episode): RedirectResponse
     {
+        SeriesMedia::deleteIfStored($episode->thumbnail_image);
         $episode->delete();
 
         return redirect()->route('admin.episodes.index')->with('success', 'Episodio eliminado.');
@@ -138,7 +144,7 @@ class EpisodeController extends Controller
             ],
             'release_date' => ['nullable', 'date'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
-            'thumbnail_image' => ['nullable', 'url'],
+            'thumbnail_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
             'description' => ['nullable', 'string'],
             'moderation_status' => ['required', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
@@ -193,6 +199,19 @@ class EpisodeController extends Controller
             'source_sort_order' => ['nullable', 'array'],
             'source_sort_order.*' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'source_primary' => ['nullable', 'integer'],
+        ]);
+    }
+
+    private function episodeData(array $validated): array
+    {
+        return Arr::except($validated, [
+            'thumbnail_image',
+            'source_provider',
+            'source_type',
+            'source_url',
+            'source_label',
+            'source_sort_order',
+            'source_primary',
         ]);
     }
 

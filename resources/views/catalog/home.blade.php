@@ -77,7 +77,7 @@
                     <a href="{{ route('catalog.episodes.show', [$episode->series->slug, $episode->slug]) }}" class="text-decoration-none">
                         <div class="episode-card">
                             <div class="episode-thumb">
-                                <img src="{{ $episode->thumbnail_image ?: 'https://picsum.photos/400/250?episode='.$episode->id }}" alt="{{ $episode->title }}">
+                                <img src="{{ $episode->imageUrl('400/250') }}" alt="{{ $episode->title }}">
                             </div>
                             <div class="episode-info">
                                 <h6>S{{ $episode->season_number }}E{{ $episode->episode_number }} · {{ $episode->title }}</h6>

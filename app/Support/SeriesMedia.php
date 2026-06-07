@@ -82,6 +82,7 @@ class SeriesMedia
         return match ($field) {
             'banner_image' => 'series/banners',
             'cover_image' => 'series/covers',
+            'thumbnail_image' => 'episodes/thumbnails',
             default => 'series/media',
         };
     }

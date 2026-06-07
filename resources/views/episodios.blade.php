@@ -62,11 +62,11 @@
                         </video>
                     @else
                         <x-media-preview
-                            :src="$episode->thumbnail_image ?: ($series->bannerMediaUrl() ?: 'https://picsum.photos/1200/675?'.$episode->id)"
-                            :type="$episode->thumbnail_image ? 'image' : ($series->bannerMediaUrl() ? $series->bannerMediaType() : 'image')"
+                            :src="$episode->previewMediaUrl('1200/675')"
+                            :type="$episode->previewMediaType()"
                             :alt="$series->title"
                             class="player-poster"
-                            :autoplay="!$episode->thumbnail_image && $series->bannerMediaType() === 'video'"
+                            :autoplay="$episode->previewMediaType() === 'video'"
                         />
                     @endif
 
@@ -231,7 +231,7 @@
                         @foreach($seriesEpisodes as $item)
                             <a href="{{ route('public.episodes.show', $item->slug) }}" class="ep-list-item {{ $item->id === $episode->id ? 'current' : '' }}">
                                 <div class="ep-list-thumb">
-                                    <img src="{{ $item->thumbnail_image ?: 'https://picsum.photos/140/90?'.$item->id }}" alt="">
+                                    <img src="{{ $item->imageUrl('140/90') }}" alt="">
                                     <div class="ep-thumb-num">E{{ $item->episode_number }}</div>
                                 </div>
                                 <div class="ep-list-info">
@@ -303,7 +303,7 @@
                             <a href="{{ route('public.episodes.show', $item->slug) }}" class="sidebar-item">
                                 <span class="sidebar-rank {{ $loop->iteration <= 3 ? 'top3' : '' }}">{{ $loop->iteration }}</span>
                                 <div class="sidebar-thumb">
-                                    <img src="{{ $item->thumbnail_image ?: 'https://picsum.photos/200/130?'.$item->id }}" alt="">
+                                    <img src="{{ $item->imageUrl('200/130') }}" alt="">
                                     <div class="sidebar-thumb-overlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                                             <path d="M8 5v14l11-7z" />
                                         </svg></div>

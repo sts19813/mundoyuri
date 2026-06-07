@@ -92,11 +92,11 @@
                         <a href="{{ route('public.episodes.show', $episode->slug) }}" class="ep-list-item">
                             <div class="ep-list-thumb">
                                 <x-media-preview
-                                    :src="$episode->thumbnail_image ?: ($series->coverMediaUrl() ?: 'https://picsum.photos/140/90?'.$episode->id)"
-                                    :type="$episode->thumbnail_image ? 'image' : ($series->coverMediaUrl() ? $series->coverMediaType() : 'image')"
+                                    :src="$episode->previewMediaUrl('140/90')"
+                                    :type="$episode->previewMediaType()"
                                     alt=""
                                     class="ep-thumb-media"
-                                    :hover-play="!$episode->thumbnail_image && $series->coverMediaType() === 'video'"
+                                    :hover-play="$episode->previewMediaType() === 'video'"
                                 />
                                 <div class="ep-thumb-num">E{{ $episode->episode_number }}</div>
                             </div>
@@ -132,7 +132,7 @@
                         <a href="{{ route('public.episodes.show', $item->slug) }}" class="sidebar-item">
                             <span class="sidebar-rank {{ $loop->iteration <= 3 ? 'top3' : '' }}">{{ $loop->iteration }}</span>
                             <div class="sidebar-thumb">
-                                <img src="{{ $item->thumbnail_image ?: 'https://picsum.photos/200/130?'.$item->id }}" alt="">
+                                <img src="{{ $item->imageUrl('200/130') }}" alt="">
                                 <div class="sidebar-thumb-overlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                                         <path d="M8 5v14l11-7z" />
                                     </svg></div>
