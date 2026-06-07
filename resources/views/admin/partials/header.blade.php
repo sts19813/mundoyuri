@@ -13,7 +13,7 @@
                 <i class="ki-outline ki-abstract-14 fs-2"></i>
             </div>
 
-            <a href="{{ route('admin.dashboard') }}" class="app-sidebar-logo">
+            <a href="{{ Auth::user()?->isAdmin() ? route('admin.dashboard') : route('dashboard') }}" class="app-sidebar-logo">
                 <img alt="Metronic" src="{{ asset('metronic/assets/media/logos/default-dark.svg') }}"
                     class="theme-light-show h-30px" />
                 <img alt="Metronic" src="{{ asset('metronic/assets/media/logos/default.svg') }}"

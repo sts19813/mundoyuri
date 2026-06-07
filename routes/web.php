@@ -44,8 +44,8 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth'])
     ->group(function () {
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile', [AdminProfileController::class, 'show'])->name('profile.edit');
+        Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::redirect('/perfil', '/profile');
 
@@ -53,6 +53,12 @@ Route::middleware(['auth'])
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])->name('submissions.store');
     });
 
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
+    Route::get('/profile/edit', fn () => redirect()->route('admin.profile.show'))->name('admin.profile.edit');
+    Route::put('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+    Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.updatePassword');
+});
 
 // Rutas del Panel Admin - Protegidas por middleware 'auth' y 'admin'
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
@@ -132,12 +138,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/validacion/series/{series}/reject', [ModerationController::class, 'rejectSeries'])->name('admin.moderation.series.reject');
     Route::post('/validacion/episodios/{episode}/approve', [ModerationController::class, 'approveEpisode'])->name('admin.moderation.episodes.approve');
     Route::post('/validacion/episodios/{episode}/reject', [ModerationController::class, 'rejectEpisode'])->name('admin.moderation.episodes.reject');
-
-    // Perfil del Admin
-    Route::get('/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
-    Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
-    Route::put('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
-    Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.updatePassword');
 });
 
 require __DIR__.'/auth.php';

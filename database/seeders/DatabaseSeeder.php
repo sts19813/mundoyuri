@@ -22,11 +22,11 @@ class DatabaseSeeder extends Seeder
         $this->call(RolePermissionSeeder::class);
 
         $admin = User::query()->firstOrCreate(
-            ['email' => 'admin@mundogl.local'],
+            ['email' => 'sts19813@gmail.com'],
             [
                 'name' => 'Admin MundoGL',
                 'alias' => 'admin',
-                'password' => Hash::make('Admin1234!'),
+                'password' => Hash::make('Isabela97'),
                 'role' => 'admin',
                 'is_active' => true,
             ]

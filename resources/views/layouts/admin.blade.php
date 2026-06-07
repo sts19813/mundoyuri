@@ -128,6 +128,17 @@
                 title: message,
             });
         }
+
+        document.addEventListener('click', function (event) {
+            const themeMode = event.target.closest('[data-kt-element="mode"][data-kt-value]');
+
+            if (!themeMode) {
+                return;
+            }
+
+            event.preventDefault();
+            setThemeMode(themeMode.dataset.ktValue);
+        });
     </script>
 
     @if(session('success'))
