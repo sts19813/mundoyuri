@@ -1,9 +1,7 @@
-<!-- ══ NAVBAR (same as index) ══ -->
 <nav class="gl-nav scrolled" id="navbar">
     <div class="nav-inner">
-        <a href="{{ route('home') }}" class="brand">
-            <span class="brand-heart"></span>
-            Mundo GL
+        <a href="{{ route('home') }}" class="brand" aria-label="Mundo Yuri">
+            <img src="{{ asset('assets/img/logos/Logo_default.png') }}" alt="Mundo Yuri" class="brand-logo">
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="{{ route('home') }}">Inicio</a></li>

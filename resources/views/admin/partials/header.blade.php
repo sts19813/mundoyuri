@@ -14,10 +14,10 @@
             </div>
 
             <a href="{{ Auth::user()?->isAdmin() ? route('admin.dashboard') : route('dashboard') }}" class="app-sidebar-logo">
-                <img alt="Metronic" src="{{ asset('metronic/assets/media/logos/default-dark.svg') }}"
-                    class="theme-light-show h-30px" />
-                <img alt="Metronic" src="{{ asset('metronic/assets/media/logos/default.svg') }}"
-                    class="theme-dark-show h-30px" />
+                <img alt="Metronic" src="{{ asset('/assets/img/logos/Logo_black.png') }}"
+                    class="theme-light-show" height="80"/>
+                <img alt="Metronic" src="{{ asset('/assets/img/logos/Logo white.png') }}"
+                    class="theme-dark-show" height="80" />
             </a>
         </div>
 
