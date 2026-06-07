@@ -12,7 +12,7 @@
         </a>
     </div>
 
-    <div class="app-navbar-item ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
+    <div class="app-navbar-item ms-1 ms-lg-3 me-3 me-lg-6" id="kt_header_user_menu_toggle">
         <div class="cursor-pointer symbol symbol-circle symbol-35px symbol-md-40px"
             data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
             data-kt-menu-placement="bottom-end">
