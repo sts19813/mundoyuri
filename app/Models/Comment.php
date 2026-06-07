@@ -41,7 +41,7 @@ class Comment extends Model
 
     public function replies(): HasMany
     {
-        return $this->hasMany(Comment::class, 'parent_id');
+        return $this->hasMany(Comment::class, 'parent_id')->oldest();
     }
 
     public function commentable(): MorphTo
@@ -52,5 +52,20 @@ class Comment extends Model
     public function getDisplayAliasAttribute(): string
     {
         return $this->user?->alias ?: $this->user?->name ?: $this->alias ?: 'Anonimo';
+    }
+
+    public function avatarUrl(): ?string
+    {
+        return $this->user?->avatarUrl();
+    }
+
+    public function initials(): string
+    {
+        return mb_strtoupper(mb_substr($this->display_alias, 0, 1)) ?: 'A';
+    }
+
+    public function displayTime(): string
+    {
+        return $this->created_at->format('d M Y · g:i a');
     }
 }

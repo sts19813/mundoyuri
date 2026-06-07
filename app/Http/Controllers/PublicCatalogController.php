@@ -108,7 +108,7 @@ class PublicCatalogController extends Controller
                     'user',
                     'replies' => fn ($replyQuery) => $replyQuery
                         ->where('is_approved', true)
-                        ->latest()
+                        ->oldest()
                         ->with('user'),
                 ]),
         ]);
@@ -172,4 +172,3 @@ class PublicCatalogController extends Controller
             && Schema::hasTable('episode_sources');
     }
 }
-

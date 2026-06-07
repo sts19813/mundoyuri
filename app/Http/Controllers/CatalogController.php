@@ -143,7 +143,7 @@ class CatalogController extends Controller
                     'user',
                     'replies' => fn ($replyQuery) => $replyQuery
                         ->where('is_approved', true)
-                        ->latest()
+                        ->oldest()
                         ->with('user'),
                 ]),
         ]);
@@ -172,9 +172,16 @@ class CatalogController extends Controller
         $episode->load([
             'sources',
             'comments' => fn ($query) => $query
+                ->where('is_approved', true)
                 ->whereNull('parent_id')
                 ->latest()
-                ->with(['user', 'replies.user']),
+                ->with([
+                    'user',
+                    'replies' => fn ($replyQuery) => $replyQuery
+                        ->where('is_approved', true)
+                        ->oldest()
+                        ->with('user'),
+                ]),
         ]);
 
         $episodes = $series->episodes()

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Episode;
+use App\Models\Comment;
 use App\Models\Series;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
 {
@@ -33,14 +35,31 @@ class CommentController extends Controller
             abort(404);
         }
 
+        $parent = null;
+        if (!empty($validated['parent_id'])) {
+            $parent = Comment::query()
+                ->whereKey($validated['parent_id'])
+                ->whereNull('parent_id')
+                ->firstOrFail();
+
+            $sameTarget = $parent->commentable_type === $commentable->getMorphClass()
+                && (int) $parent->commentable_id === (int) $commentable->getKey();
+
+            if (!$sameTarget) {
+                throw ValidationException::withMessages([
+                    'parent_id' => 'No se pudo responder ese comentario.',
+                ]);
+            }
+        }
+
         $commentable->comments()->create([
             'user_id' => auth()->id(),
-            'parent_id' => $validated['parent_id'] ?? null,
+            'parent_id' => $parent?->id,
             'alias' => auth()->check() ? (auth()->user()->alias ?: auth()->user()->name) : $validated['alias'],
             'body' => $validated['body'],
             'is_approved' => true,
         ]);
 
-        return back()->with('success', 'Comentario publicado correctamente.');
+        return back()->with('success', $parent ? 'Respuesta publicada correctamente.' : 'Comentario publicado correctamente.');
     }
 }

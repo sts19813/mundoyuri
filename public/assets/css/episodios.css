@@ -858,6 +858,14 @@
       font-weight: 700;
       color: #fff;
       flex-shrink: 0;
+      overflow: hidden;
+  }
+
+  .comment-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
   }
 
   .comment-avatar.av2 {
@@ -937,6 +945,32 @@
       width: 30px;
       height: 30px;
       font-size: 0.75rem;
+  }
+
+  .comment-reply-inner {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+  }
+
+  .comment-reply-body {
+      flex: 1;
+  }
+
+  .comment-reply-form {
+      margin: 14px 0 6px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(244, 63, 142, 0.12);
+      border-radius: 12px;
+  }
+
+  .comment-reply-form .cf-textarea {
+      min-height: 72px;
+  }
+
+  .comment-reply-form .cf-fields {
+      grid-template-columns: 1fr;
   }
 
   /* Comment form */
@@ -1061,6 +1095,11 @@
   .cf-submit:hover {
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(244, 63, 142, 0.35);
+  }
+
+  .cf-submit-sm {
+      padding: 9px 18px;
+      font-size: 0.8rem;
   }
 
   /* ── SIDEBAR ── */

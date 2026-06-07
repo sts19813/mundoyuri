@@ -113,109 +113,12 @@
                 </div>
             </div>
 
-            <div class="comments-section">
-                <div class="comments-header">
-                    <div class="comments-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                    </div>
-                    <span class="comments-title">Comentarios</span>
-                    <span class="comments-count">{{ $comments->count() }}</span>
-                </div>
-
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-
-                @foreach($comments as $comment)
-                    @php
-                        $avatar = mb_strtoupper(mb_substr($comment->display_alias, 0, 1));
-                        $avatarClass = $avatarClasses[$loop->index % count($avatarClasses)];
-                    @endphp
-                    <div class="comment-item">
-                        <div class="comment-avatar {{ $avatarClass }}">{{ $avatar }}</div>
-                        <div class="comment-body">
-                            <div class="comment-meta">
-                                <span class="comment-user">{{ $comment->display_alias }}</span>
-                                <span class="comment-date">{{ $comment->created_at->format('d M Y') }}</span>
-                            </div>
-                            <p class="comment-text">{{ $comment->body }}</p>
-
-                            @foreach($comment->replies as $reply)
-                                <div class="comment-reply">
-                                    <div style="display:flex;gap:10px;align-items:flex-start;">
-                                        <div class="comment-avatar av2" style="width:30px;height:30px;font-size:0.75rem;">
-                                            {{ mb_strtoupper(mb_substr($reply->display_alias, 0, 1)) }}
-                                        </div>
-                                        <div style="flex:1;">
-                                            <div class="comment-meta">
-                                                <span class="comment-user">{{ $reply->display_alias }}</span>
-                                                <span class="comment-date">{{ $reply->created_at->format('d M Y') }}</span>
-                                            </div>
-                                            <p class="comment-text" style="margin-bottom:4px;">{{ $reply->body }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-
-                <div class="comment-form">
-                    <form method="POST" action="{{ route('comments.store') }}">
-                        @csrf
-                        <input type="hidden" name="target_type" value="series">
-                        <input type="hidden" name="target_id" value="{{ $series->id }}">
-
-                        <div class="comment-form-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                            </svg>
-                            Deja un comentario
-                        </div>
-
-                        <textarea class="cf-textarea" name="body" placeholder="Tu comentario…">{{ old('body') }}</textarea>
-                        @error('body')
-                            <div class="text-danger small mb-2">{{ $message }}</div>
-                        @enderror
-
-                        <div class="cf-fields">
-                            @guest
-                                <div class="cf-field">
-                                    <label>Alias <span>*</span></label>
-                                    <input type="text" name="alias" class="cf-input" placeholder="Tu alias" value="{{ old('alias') }}">
-                                    @error('alias')
-                                        <div class="text-danger small">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            @else
-                                <div class="cf-field">
-                                    <label>Comentarás como</label>
-                                    <input type="text" class="cf-input" value="{{ auth()->user()->alias ?: auth()->user()->name }}" disabled>
-                                </div>
-                            @endguest
-
-                            <div class="cf-field">
-                                <label>Correo electrónico</label>
-                                <input type="email" class="cf-input" placeholder="No será publicado" disabled>
-                            </div>
-                        </div>
-
-                        <div class="cf-check-row">
-                            <input type="checkbox" class="cf-check" id="saveInfo" disabled>
-                            <label for="saveInfo">Guarda mi nombre y correo para la próxima vez que comente</label>
-                        </div>
-                        <button class="cf-submit" type="submit">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13" />
-                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                            </svg>
-                            Publicar comentario
-                        </button>
-                    </form>
-                </div>
-            </div>
+            @include('catalog.partials.threaded-comments', [
+                'comments' => $comments,
+                'targetType' => 'series',
+                'targetId' => $series->id,
+                'avatarClasses' => $avatarClasses,
+            ])
         </main>
 
         <aside class="ep-sidebar">
