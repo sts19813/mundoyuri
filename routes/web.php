@@ -6,6 +6,7 @@ use App\Http\Controllers\EpisodeSourcePlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminProfileController;
@@ -96,6 +97,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         'update' => 'admin.roles.update',
         'destroy' => 'admin.roles.destroy',
     ]);
+
+    Route::resource('permisos', AdminPermissionController::class)
+        ->only(['index', 'store', 'destroy'])
+        ->parameters([
+            'permisos' => 'permission',
+        ])
+        ->names([
+            'index' => 'admin.permissions.index',
+            'store' => 'admin.permissions.store',
+            'destroy' => 'admin.permissions.destroy',
+        ]);
 
     Route::resource('generos', AdminGenreController::class)->parameters([
         'generos' => 'genre',

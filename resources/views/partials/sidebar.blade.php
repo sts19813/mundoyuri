@@ -102,19 +102,11 @@
                         </a>
                     </div>
                     <div class="menu-item">
-                        <a href="{{ route('admin.users.index') }}" class="menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.users.index') }}" class="menu-link {{ request()->routeIs('admin.users.*', 'admin.roles.*', 'admin.permissions.*') ? 'active' : '' }}">
                             <span class="menu-icon">
                                 <i class="ki-outline ki-profile-user fs-2"></i>
                             </span>
-                            <span class="menu-title">Usuarios</span>
-                        </a>
-                    </div>
-                    <div class="menu-item">
-                        <a href="{{ route('admin.roles.index') }}" class="menu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                            <span class="menu-icon">
-                                <i class="ki-outline ki-security-user fs-2"></i>
-                            </span>
-                            <span class="menu-title">Roles</span>
+                            <span class="menu-title">Usuarios y permisos</span>
                         </a>
                     </div>
                 @endif

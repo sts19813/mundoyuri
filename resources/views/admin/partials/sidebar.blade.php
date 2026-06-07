@@ -81,16 +81,9 @@
                     </div>
 
                     <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
+                        <a class="menu-link {{ request()->routeIs('admin.users.*', 'admin.roles.*', 'admin.permissions.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
                             <span class="menu-icon"><i class="ki-outline ki-profile-user fs-2"></i></span>
-                            <span class="menu-title">Usuarios</span>
-                        </a>
-                    </div>
-
-                    <div class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}" href="{{ route('admin.roles.index') }}">
-                            <span class="menu-icon"><i class="ki-outline ki-security-user fs-2"></i></span>
-                            <span class="menu-title">Roles</span>
+                            <span class="menu-title">Usuarios y permisos</span>
                         </a>
                     </div>
 
