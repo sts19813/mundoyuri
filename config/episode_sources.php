@@ -13,6 +13,9 @@ return [
         'vimeo' => [
             'label' => 'Vimeo',
         ],
+        'dailymotion' => [
+            'label' => 'Dailymotion',
+        ],
         'byse' => [
             'label' => 'BYSE',
         ],

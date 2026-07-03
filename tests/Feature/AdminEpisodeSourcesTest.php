@@ -16,6 +16,54 @@ class AdminEpisodeSourcesTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_can_add_dailymotion_playback_to_a_movie(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'Romance',
+            'slug' => 'romance',
+            'is_active' => true,
+        ]);
+        $movie = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Pelicula Dailymotion',
+            'slug' => 'pelicula-dailymotion',
+            'content_type' => 'movie',
+            'status' => 'completed',
+            'description' => 'Descripcion suficientemente larga para la pelicula Dailymotion.',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.episodes.store'), [
+                'series_id' => $movie->id,
+                'title' => 'Pelicula completa',
+                'season_number' => 1,
+                'episode_number' => 1,
+                'moderation_status' => 'approved',
+                'source_provider' => ['dailymotion'],
+                'source_type' => ['full'],
+                'source_url' => ['https://dai.ly/kMoruavr3wFz7EHkyr0'],
+                'source_label' => ['Dailymotion'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertRedirect(route('admin.episodes.index'));
+
+        $source = Episode::query()->with('sources')->firstOrFail()->sources->firstOrFail();
+
+        $this->assertSame('dailymotion', $source->provider);
+        $this->assertSame(
+            'https://geo.dailymotion.com/player.html?video=kMoruavr3wFz7EHkyr0',
+            $source->video_url
+        );
+        $this->assertSame($source->video_url, $source->playable_url);
+        $this->assertSame('iframe', $source->player_type);
+        $this->assertTrue($source->is_primary);
+    }
+
     public function test_admin_can_create_episode_with_dynamic_sources(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -224,6 +272,7 @@ class AdminEpisodeSourcesTest extends TestCase
     {
         config()->set('services.bunny.library_id', '987654');
         config()->set('services.bunny.api_key', 'test-bunny-key');
+        config()->set('services.bunny.token_key', null);
 
         Http::fake([
             'https://video.bunnycdn.com/library/987654/videos/*' => Http::response([

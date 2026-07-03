@@ -38,6 +38,10 @@ class VideoSource
             return self::normalizeYouTubeEmbedUrl($url);
         }
 
+        if ($provider === 'dailymotion') {
+            return self::normalizeDailymotionEmbedUrl($url);
+        }
+
         if ($provider === 'pixeldrain_cdn') {
             return self::normalizePixeldrainUrl($url);
         }
@@ -243,6 +247,61 @@ class VideoSource
         }
 
         return 'https://pixeldrain.com/api/file/'.$fileId;
+    }
+
+    public static function normalizeDailymotionEmbedUrl(string $url): ?string
+    {
+        $parts = parse_url($url);
+
+        if (! $parts || empty($parts['host'])) {
+            return null;
+        }
+
+        $host = strtolower($parts['host']);
+        $allowedHosts = [
+            'dai.ly',
+            'www.dai.ly',
+            'dailymotion.com',
+            'www.dailymotion.com',
+            'geo.dailymotion.com',
+        ];
+
+        if (! in_array($host, $allowedHosts, true)) {
+            return null;
+        }
+
+        $path = $parts['path'] ?? '';
+        $videoId = null;
+
+        if (in_array($host, ['dai.ly', 'www.dai.ly'], true)) {
+            $videoId = trim($path, '/');
+        }
+
+        if (! $videoId && preg_match('~/(?:embed/)?video/([^/?#]+)~', $path, $matches) === 1) {
+            $videoId = $matches[1];
+        }
+
+        $queryParams = [];
+        parse_str($parts['query'] ?? '', $queryParams);
+
+        if (! $videoId && isset($queryParams['video'])) {
+            $videoId = (string) $queryParams['video'];
+        }
+
+        if (! $videoId) {
+            return null;
+        }
+
+        // Public page URLs may append a human-readable title after the ID.
+        $videoId = explode('_', $videoId, 2)[0];
+
+        if (preg_match('/^[a-zA-Z0-9]+$/', $videoId) !== 1) {
+            return null;
+        }
+
+        return 'https://geo.dailymotion.com/player.html?'.http_build_query([
+            'video' => $videoId,
+        ]);
     }
 
     public static function normalizeBunnyUrl(string $rawValue): ?string
