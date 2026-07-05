@@ -8,9 +8,6 @@
             <li><a href="{{ route('catalog.series.index', ['type' => 'series']) }}">Series</a></li>
             <li><a href="{{ route('catalog.series.index', ['type' => 'movie']) }}">Peliculas</a></li>
             <li><a href="{{ route('catalog.genres.index') }}">Generos</a></li>
-            @auth
-                <li><a href="{{ route('submissions.create') }}">Subir contenido</a></li>
-            @endauth
         </ul>
         <div class="nav-actions">
             <form action="{{ route('catalog.series.index') }}" method="GET" class="nav-search-form" role="search">
