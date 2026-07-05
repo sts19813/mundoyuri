@@ -3,19 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): RedirectResponse
+    public function edit(Request $request): View
     {
-        return Redirect::route('admin.profile.show');
+        return view('profile.edit', [
+            'user' => $request->user(),
+        ]);
     }
 
     /**
@@ -23,15 +28,33 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        /** @var User $user */
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill([
+            'name' => $validated['name'],
+            'alias' => $validated['alias'] ?? null,
+            'email' => $validated['email'],
+        ]);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        if ($request->boolean('avatar_remove')) {
+            $this->deleteProfileImage($user);
+            $user->profile_image = null;
+        }
 
-        return Redirect::route('admin.profile.show')->with('success', 'Perfil actualizado exitosamente');
+        if ($request->hasFile('profile_image')) {
+            $this->deleteProfileImage($user);
+            $user->profile_image = $request->file('profile_image')->store('profile-images', 'public');
+        }
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('success', 'Tu perfil se actualizó correctamente.');
     }
 
     /**
@@ -53,5 +76,12 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    private function deleteProfileImage(User $user): void
+    {
+        if ($user->profile_image) {
+            Storage::disk('public')->delete($user->profile_image);
+        }
     }
 }

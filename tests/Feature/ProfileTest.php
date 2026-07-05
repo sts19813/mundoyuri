@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -41,6 +43,44 @@ class ProfileTest extends TestCase
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_profile_image_and_alias_can_be_updated_from_the_portal(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => $user->name,
+                'alias' => 'yuri-fan',
+                'email' => $user->email,
+                'profile_image' => UploadedFile::fake()->image('avatar.webp'),
+            ]);
+
+        $response->assertSessionHasNoErrors()->assertRedirect('/profile');
+
+        $user->refresh();
+        $this->assertSame('yuri-fan', $user->alias);
+        $this->assertNotNull($user->profile_image);
+        Storage::disk('public')->assertExists($user->profile_image);
+    }
+
+    public function test_portal_navigation_changes_with_the_session_state(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Iniciar sesión')
+            ->assertDontSee('Cerrar sesión');
+
+        $user = User::factory()->create(['name' => 'Luna Rivera']);
+
+        $this->actingAs($user)->get('/')
+            ->assertOk()
+            ->assertSee('LR')
+            ->assertSee('Mi perfil')
+            ->assertSee('Cerrar sesión');
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

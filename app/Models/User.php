@@ -72,6 +72,11 @@ class User extends Authenticatable
         return asset('metronic/assets/media/avatars/blank.png');
     }
 
+    public function hasProfileAvatar(): bool
+    {
+        return filled($this->profile_image) || filled($this->google_avatar);
+    }
+
     public function initials(): string
     {
         $name = trim($this->name ?: $this->email);

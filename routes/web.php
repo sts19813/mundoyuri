@@ -38,10 +38,10 @@ Route::get('/dashboard', [AdminDashboardController::class, 'index'])
 
 Route::middleware(['auth'])
     ->group(function () {
-        Route::get('/profile', [AdminProfileController::class, 'show'])->name('profile.edit');
-        Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-        Route::redirect('/perfil', '/profile');
+        Route::redirect('/perfil', '/profile')->name('profile.spanish');
 
         Route::get('/aportes/nuevo', fn () => redirect()->route('admin.series.create'))->name('submissions.create');
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])
