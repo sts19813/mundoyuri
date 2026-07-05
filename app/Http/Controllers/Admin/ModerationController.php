@@ -13,7 +13,7 @@ class ModerationController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
+        $this->middleware(['auth', 'can:moderate content']);
     }
 
     public function index(): View

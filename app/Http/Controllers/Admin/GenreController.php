@@ -13,7 +13,11 @@ class GenreController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
+        $this->middleware('auth');
+        $this->middleware('can:view genres')->only(['index', 'show']);
+        $this->middleware('can:create genres')->only(['create', 'store']);
+        $this->middleware('can:edit genres')->only(['edit', 'update']);
+        $this->middleware('can:delete genres')->only('destroy');
     }
 
     public function index(): View

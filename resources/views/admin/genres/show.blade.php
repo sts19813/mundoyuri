@@ -9,7 +9,9 @@
         <p><strong>Slug:</strong> {{ $genre->slug }}</p>
         <p><strong>Descripcion:</strong> {{ $genre->description ?: 'Sin descripcion' }}</p>
         <p><strong>Estado:</strong> {{ $genre->is_active ? 'Activo' : 'Inactivo' }}</p>
-        <a href="{{ route('admin.genres.edit', $genre) }}" class="btn btn-primary">Editar</a>
+        @can('edit genres')
+            <a href="{{ route('admin.genres.edit', $genre) }}" class="btn btn-primary">Editar</a>
+        @endcan
         <a href="{{ route('admin.genres.index') }}" class="btn btn-light">Volver</a>
     </div>
 </div>

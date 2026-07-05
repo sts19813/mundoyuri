@@ -10,18 +10,30 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SeriesController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
+        $this->middleware('auth');
+        $this->middleware('can:view series')->only(['index', 'show']);
+        $this->middleware('can:create series')->only(['create', 'store']);
+        $this->middleware('can:edit series')->only(['edit', 'update']);
+        $this->middleware('can:delete series')->only('destroy');
     }
 
     public function index(Request $request): View
     {
         $query = Series::query()->with(['genre', 'creator']);
+
+        if (! $request->user()->can('moderate content')) {
+            $query->where(function ($scope) use ($request): void {
+                $scope->where('moderation_status', 'approved')
+                    ->orWhere('created_by', $request->user()->id);
+            });
+        }
 
         if ($request->filled('moderation_status')) {
             $query->where('moderation_status', $request->string('moderation_status'));
@@ -48,6 +60,12 @@ class SeriesController extends Controller
         $validated = $this->validateSeries($request);
         $seriesData = Arr::except($validated, ['banner_image', 'cover_image']);
 
+        if (! $request->user()->can('moderate content')) {
+            $seriesData['is_featured'] = false;
+            $seriesData['moderation_status'] = 'pending';
+            $seriesData['moderation_notes'] = null;
+        }
+
         $series = Series::create([
             ...$seriesData,
             'banner_image' => SeriesMedia::syncUploadedField($request, 'banner_image'),
@@ -63,7 +81,22 @@ class SeriesController extends Controller
 
     public function show(Series $series): View
     {
-        $series->load(['genre', 'episodes.sources', 'creator', 'approver']);
+        $this->authorizeVisible($series);
+        $series->load([
+            'genre',
+            'creator',
+            'approver',
+            'episodes' => function ($query): void {
+                if (! auth()->user()->can('moderate content')) {
+                    $query->where(function ($scope): void {
+                        $scope->where('moderation_status', 'approved')
+                            ->orWhere('created_by', auth()->id());
+                    });
+                }
+
+                $query->with('sources');
+            },
+        ]);
 
         return view('admin.series.show', compact('series'));
     }
@@ -119,7 +152,7 @@ class SeriesController extends Controller
             'cover_image' => SeriesMedia::validationRules(),
             'trailer_url' => ['nullable', 'url'],
             'is_featured' => ['nullable', 'boolean'],
-            'moderation_status' => ['required', 'in:pending,approved,rejected'],
+            'moderation_status' => [Rule::requiredIf($request->user()->can('moderate content')), 'nullable', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
         ]);
     }
@@ -145,6 +178,11 @@ class SeriesController extends Controller
 
     private function syncModeration(Series $series, string $status, ?string $notes): void
     {
+        if (! auth()->user()->can('moderate content')) {
+            $status = 'pending';
+            $notes = null;
+        }
+
         if ($status === 'approved') {
             $series->forceFill([
                 'moderation_status' => 'approved',
@@ -173,5 +211,15 @@ class SeriesController extends Controller
             'approved_by' => null,
             'published_at' => null,
         ])->save();
+    }
+
+    private function authorizeVisible(Series $series): void
+    {
+        abort_unless(
+            auth()->user()->can('moderate content')
+                || $series->moderation_status === 'approved'
+                || $series->created_by === auth()->id(),
+            403
+        );
     }
 }

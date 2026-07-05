@@ -43,7 +43,7 @@
             <label class="form-label">Serie</label>
             <select class="form-select @error('series_id') is-invalid @enderror" name="series_id" required>
                 @foreach($seriesOptions as $option)
-                    <option value="{{ $option->id }}" @selected(old('series_id', $episode->series_id ?? '') == $option->id)>{{ $option->title }}</option>
+                    <option value="{{ $option->id }}" @selected(old('series_id', $episode->series_id ?? request('series_id')) == $option->id)>{{ $option->title }}</option>
                 @endforeach
             </select>
             @error('series_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -81,15 +81,22 @@
             @endif
         </div>
         <div class="col-12"><label class="form-label">Descripcion</label><textarea class="form-control" rows="4" name="description">{{ old('description', $episode->description ?? '') }}</textarea></div>
-        <div class="col-md-6">
-            <label class="form-label">Moderacion</label>
-            <select class="form-select" name="moderation_status" required>
-                <option value="pending" @selected(old('moderation_status', $episode->moderation_status ?? 'pending') === 'pending')>Pendiente</option>
-                <option value="approved" @selected(old('moderation_status', $episode->moderation_status ?? '') === 'approved')>Aprobado</option>
-                <option value="rejected" @selected(old('moderation_status', $episode->moderation_status ?? '') === 'rejected')>Rechazado</option>
-            </select>
-        </div>
-        <div class="col-md-6"><label class="form-label">Notas de moderacion</label><input class="form-control" name="moderation_notes" value="{{ old('moderation_notes', $episode->moderation_notes ?? '') }}"></div>
+        @can('moderate content')
+            <div class="col-md-6">
+                <label class="form-label">Moderación</label>
+                <select class="form-select" name="moderation_status" required>
+                    <option value="pending" @selected(old('moderation_status', $episode->moderation_status ?? 'pending') === 'pending')>Pendiente</option>
+                    <option value="approved" @selected(old('moderation_status', $episode->moderation_status ?? '') === 'approved')>Aprobado</option>
+                    <option value="rejected" @selected(old('moderation_status', $episode->moderation_status ?? '') === 'rejected')>Rechazado</option>
+                </select>
+            </div>
+            <div class="col-md-6"><label class="form-label">Notas de moderación</label><input class="form-control" name="moderation_notes" value="{{ old('moderation_notes', $episode->moderation_notes ?? '') }}"></div>
+        @else
+            <input type="hidden" name="moderation_status" value="pending">
+            <div class="col-12">
+                <div class="alert alert-light-primary mb-0">El episodio y sus fuentes se enviarán a moderación antes de publicarse.</div>
+            </div>
+        @endcan
 
         <div class="col-12">
             <hr>

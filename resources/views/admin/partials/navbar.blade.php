@@ -1,6 +1,17 @@
 @php
     $user = Auth::user();
     $isAdmin = $user?->isAdmin();
+    $panelRole = $isAdmin ? 'admin' : ($user?->getRoleNames()->first() ?: $user?->role ?: 'user');
+    $panelRoleLabel = match ($panelRole) {
+        'admin' => 'Administrador',
+        'moderator' => 'Moderador',
+        default => 'Usuario',
+    };
+    $panelRoleBadge = match ($panelRole) {
+        'admin' => 'success',
+        'moderator' => 'primary',
+        default => 'secondary',
+    };
 @endphp
 
 <div class="app-navbar flex-grow-1 justify-content-end" id="kt_app_header_navbar">
@@ -29,9 +40,7 @@
                     <div class="d-flex flex-column min-w-0">
                         <div class="fw-bold d-flex align-items-center fs-5 text-gray-900 text-truncate">
                             <span data-profile-name>{{ $user->name }}</span>
-                            @if($isAdmin)
-                                <span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2">Admin</span>
-                            @endif
+                            <span class="badge badge-light-{{ $panelRoleBadge }} fw-bold fs-8 px-2 py-1 ms-2">{{ $panelRoleLabel }}</span>
                         </div>
                         <a href="mailto:{{ $user->email }}" class="fw-semibold text-muted text-hover-primary fs-7 text-truncate"
                             data-profile-email>

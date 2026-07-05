@@ -1,10 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Episodios - Admin')
+@section('title', 'Episodios')
 
 @section('toolbar')
 <div class="page-title d-flex flex-column justify-content-center me-3"><h1 class="page-heading fw-bold fs-3 m-0">Episodios</h1></div>
-<div><a href="{{ route('admin.episodes.create') }}" class="btn btn-primary">Nuevo episodio</a></div>
+@can('create episodes')
+    <div><a href="{{ route('admin.episodes.create') }}" class="btn btn-primary">Nuevo episodio</a></div>
+@endcan
 @endsection
 
 @section('content')
@@ -47,11 +49,15 @@
                     <td><span class="badge badge-light-{{ $episode->moderation_status === 'approved' ? 'success' : ($episode->moderation_status === 'pending' ? 'warning' : 'danger') }}">{{ ucfirst($episode->moderation_status) }}</span></td>
                     <td class="text-end">
                         <a href="{{ route('admin.episodes.show', $episode) }}" class="btn btn-sm btn-light">Ver</a>
-                        <a href="{{ route('admin.episodes.edit', $episode) }}" class="btn btn-sm btn-light-primary">Editar</a>
-                        <form method="POST" action="{{ route('admin.episodes.destroy', $episode) }}" class="d-inline" onsubmit="return confirm('Eliminar episodio?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
-                        </form>
+                        @can('edit episodes')
+                            <a href="{{ route('admin.episodes.edit', $episode) }}" class="btn btn-sm btn-light-primary">Editar</a>
+                        @endcan
+                        @can('delete episodes')
+                            <form method="POST" action="{{ route('admin.episodes.destroy', $episode) }}" class="d-inline" onsubmit="return confirm('¿Eliminar episodio?')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
+                            </form>
+                        @endcan
                     </td>
                 </tr>
             @empty

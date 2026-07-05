@@ -13,10 +13,10 @@
                 <i class="ki-outline ki-abstract-14 fs-2"></i>
             </div>
 
-            <a href="{{ Auth::user()?->isAdmin() ? route('admin.dashboard') : route('dashboard') }}" class="app-sidebar-logo">
-                <img alt="Metronic" src="{{ asset('/assets/img/logos/Logo_black.png') }}"
+            <a href="{{ route('dashboard') }}" class="app-sidebar-logo">
+                <img alt="Mundo Yuri" src="{{ asset('/assets/img/logos/Logo_black.png') }}"
                     class="theme-light-show" height="80"/>
-                <img alt="Metronic" src="{{ asset('/assets/img/logos/Logo white.png') }}"
+                <img alt="Mundo Yuri" src="{{ asset('/assets/img/logos/Logo white.png') }}"
                     class="theme-dark-show" height="80" />
             </a>
         </div>

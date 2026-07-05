@@ -62,24 +62,31 @@
             @endif
         </div>
         <div class="col-md-6"><label class="form-label">Trailer URL</label><input class="form-control" type="url" name="trailer_url" value="{{ old('trailer_url', $series->trailer_url ?? '') }}"></div>
-        <div class="col-md-3">
-            <label class="form-label">Moderacion</label>
-            <select class="form-select" name="moderation_status" required>
-                <option value="pending" @selected(old('moderation_status', $series->moderation_status ?? 'pending') === 'pending')>Pendiente</option>
-                <option value="approved" @selected(old('moderation_status', $series->moderation_status ?? '') === 'approved')>Aprobado</option>
-                <option value="rejected" @selected(old('moderation_status', $series->moderation_status ?? '') === 'rejected')>Rechazado</option>
-            </select>
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <label class="form-check form-check-custom form-check-solid">
-                <input class="form-check-input" type="checkbox" name="is_featured" value="1" {{ old('is_featured', $series->is_featured ?? false) ? 'checked' : '' }}>
-                <span class="form-check-label">Destacada</span>
-            </label>
-        </div>
-        <div class="col-12">
-            <label class="form-label">Notas de moderacion</label>
-            <textarea class="form-control" rows="3" name="moderation_notes">{{ old('moderation_notes', $series->moderation_notes ?? '') }}</textarea>
-        </div>
+        @can('moderate content')
+            <div class="col-md-3">
+                <label class="form-label">Moderación</label>
+                <select class="form-select" name="moderation_status" required>
+                    <option value="pending" @selected(old('moderation_status', $series->moderation_status ?? 'pending') === 'pending')>Pendiente</option>
+                    <option value="approved" @selected(old('moderation_status', $series->moderation_status ?? '') === 'approved')>Aprobado</option>
+                    <option value="rejected" @selected(old('moderation_status', $series->moderation_status ?? '') === 'rejected')>Rechazado</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <label class="form-check form-check-custom form-check-solid">
+                    <input class="form-check-input" type="checkbox" name="is_featured" value="1" {{ old('is_featured', $series->is_featured ?? false) ? 'checked' : '' }}>
+                    <span class="form-check-label">Destacada</span>
+                </label>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Notas de moderación</label>
+                <textarea class="form-control" rows="3" name="moderation_notes">{{ old('moderation_notes', $series->moderation_notes ?? '') }}</textarea>
+            </div>
+        @else
+            <input type="hidden" name="moderation_status" value="pending">
+            <div class="col-12">
+                <div class="alert alert-light-primary mb-0">El título se enviará a moderación antes de publicarse.</div>
+            </div>
+        @endcan
     </div>
     <div class="card-footer d-flex justify-content-end gap-2">
         <a href="{{ route('admin.series.index') }}" class="btn btn-light">Cancelar</a>

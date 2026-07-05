@@ -9,7 +9,9 @@
         <p><strong>Fecha:</strong> {{ optional($episode->release_date)->format('d/m/Y') ?: 'N/D' }}</p>
         <p><strong>Moderacion:</strong> {{ $episode->moderation_status }}</p>
         <p><strong>Descripcion:</strong> {{ $episode->description ?: 'Sin descripcion' }}</p>
-        <a href="{{ route('admin.episodes.edit', $episode) }}" class="btn btn-primary">Editar</a>
+        @can('edit episodes')
+            <a href="{{ route('admin.episodes.edit', $episode) }}" class="btn btn-primary">Editar</a>
+        @endcan
         <a href="{{ route('admin.episodes.index') }}" class="btn btn-light">Volver</a>
     </div>
 </div>

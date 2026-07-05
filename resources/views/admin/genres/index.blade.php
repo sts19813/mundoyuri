@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'Generos - Admin')
+@section('title', 'Géneros')
 
 @section('toolbar')
 <div class="page-title d-flex flex-column justify-content-center me-3">
-    <h1 class="page-heading fw-bold fs-3 m-0">Generos</h1>
+    <h1 class="page-heading fw-bold fs-3 m-0">Géneros</h1>
 </div>
-<div>
-    <a href="{{ route('admin.genres.create') }}" class="btn btn-primary">Nuevo genero</a>
-</div>
+@can('create genres')
+    <div><a href="{{ route('admin.genres.create') }}" class="btn btn-primary">Nuevo género</a></div>
+@endcan
 @endsection
 
 @section('content')
@@ -28,11 +28,15 @@
                         <td><span class="badge {{ $genre->is_active ? 'badge-light-success' : 'badge-light-danger' }}">{{ $genre->is_active ? 'Activo' : 'Inactivo' }}</span></td>
                         <td class="text-end">
                             <a href="{{ route('admin.genres.show', $genre) }}" class="btn btn-sm btn-light">Ver</a>
-                            <a href="{{ route('admin.genres.edit', $genre) }}" class="btn btn-sm btn-light-primary">Editar</a>
-                            <form class="d-inline" method="POST" action="{{ route('admin.genres.destroy', $genre) }}" onsubmit="return confirm('Eliminar genero?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
-                            </form>
+                            @can('edit genres')
+                                <a href="{{ route('admin.genres.edit', $genre) }}" class="btn btn-sm btn-light-primary">Editar</a>
+                            @endcan
+                            @can('delete genres')
+                                <form class="d-inline" method="POST" action="{{ route('admin.genres.destroy', $genre) }}" onsubmit="return confirm('¿Eliminar género?')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
+                                </form>
+                            @endcan
                         </td>
                     </tr>
                 @empty

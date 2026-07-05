@@ -1,12 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'Series y Peliculas - Admin')
+@section('title', 'Series y películas')
 
 @section('toolbar')
 <div class="page-title d-flex flex-column justify-content-center me-3">
-    <h1 class="page-heading fw-bold fs-3 m-0">Series y Peliculas</h1>
+    <h1 class="page-heading fw-bold fs-3 m-0">Series y películas</h1>
 </div>
-<div><a href="{{ route('admin.series.create') }}" class="btn btn-primary">Nuevo titulo</a></div>
+@can('create series')
+    <div><a href="{{ route('admin.series.create') }}" class="btn btn-primary">Nuevo título</a></div>
+@endcan
 @endsection
 
 @section('content')
@@ -42,11 +44,15 @@
                     <td><span class="badge badge-light-{{ $item->moderation_status === 'approved' ? 'success' : ($item->moderation_status === 'pending' ? 'warning' : 'danger') }}">{{ ucfirst($item->moderation_status) }}</span></td>
                     <td class="text-end">
                         <a href="{{ route('admin.series.show', $item) }}" class="btn btn-sm btn-light">Ver</a>
-                        <a href="{{ route('admin.series.edit', $item) }}" class="btn btn-sm btn-light-primary">Editar</a>
-                        <form class="d-inline" method="POST" action="{{ route('admin.series.destroy', $item) }}" onsubmit="return confirm('Eliminar titulo?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
-                        </form>
+                        @can('edit series')
+                            <a href="{{ route('admin.series.edit', $item) }}" class="btn btn-sm btn-light-primary">Editar</a>
+                        @endcan
+                        @can('delete series')
+                            <form class="d-inline" method="POST" action="{{ route('admin.series.destroy', $item) }}" onsubmit="return confirm('¿Eliminar título?')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
+                            </form>
+                        @endcan
                     </td>
                 </tr>
             @empty

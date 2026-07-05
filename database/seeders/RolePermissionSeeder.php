@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -60,8 +60,20 @@ class RolePermissionSeeder extends Seeder
             'moderate content',
         ]);
         $userRole->syncPermissions([
+            'view dashboard',
             'view series',
+            'create series',
+            'view genres',
             'view episodes',
+            'create episodes',
         ]);
+
+        User::query()
+            ->whereIn('role', ['admin', 'moderator', 'user'])
+            ->each(function (User $user): void {
+                if (! $user->hasRole($user->role)) {
+                    $user->syncRoles([$user->role]);
+                }
+            });
     }
 }

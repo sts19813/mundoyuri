@@ -14,7 +14,12 @@
         <p><strong>Duracion:</strong> {{ $series->duration_minutes ?: 'N/D' }}</p>
         <p><strong>Creado por:</strong> {{ $series->creator?->name ?: 'Sistema' }}</p>
         <p><strong>Aprobado por:</strong> {{ $series->approver?->name ?: 'Pendiente' }}</p>
-        <a href="{{ route('admin.series.edit', $series) }}" class="btn btn-primary">Editar</a>
+        @can('edit series')
+            <a href="{{ route('admin.series.edit', $series) }}" class="btn btn-primary">Editar</a>
+        @endcan
+        @can('create episodes')
+            <a href="{{ route('admin.episodes.create', ['series_id' => $series->id]) }}" class="btn btn-light-primary">Agregar episodio</a>
+        @endcan
         <a href="{{ route('admin.series.index') }}" class="btn btn-light">Volver</a>
     </div>
 </div>
@@ -28,7 +33,7 @@
                 <tbody>
                 @forelse($series->episodes as $episode)
                     <tr>
-                        <td>{{ $episode->title }}</td>
+                        <td><a href="{{ route('admin.episodes.show', $episode) }}">{{ $episode->title }}</a></td>
                         <td>{{ $episode->season_number }}</td>
                         <td>{{ $episode->episode_number }}</td>
                         <td>{{ $episode->moderation_status }}</td>

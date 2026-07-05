@@ -32,16 +32,9 @@ Route::post('/comentarios', [CommentController::class, 'store'])->name('comments
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    $isAdmin = $user?->role === 'admin' || ($user && method_exists($user, 'hasRole') && $user->hasRole('admin'));
-
-    if ($isAdmin) {
-        return redirect()->route('admin.dashboard');
-    }
-
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth'])
     ->group(function () {
@@ -50,8 +43,10 @@ Route::middleware(['auth'])
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::redirect('/perfil', '/profile');
 
-        Route::get('/aportes/nuevo', [ContentSubmissionController::class, 'create'])->name('submissions.create');
-        Route::post('/aportes', [ContentSubmissionController::class, 'store'])->name('submissions.store');
+        Route::get('/aportes/nuevo', fn () => redirect()->route('admin.series.create'))->name('submissions.create');
+        Route::post('/aportes', [ContentSubmissionController::class, 'store'])
+            ->middleware('can:create series')
+            ->name('submissions.store');
     });
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {
@@ -61,16 +56,16 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.updatePassword');
 });
 
-// Rutas del Panel Admin - Protegidas por middleware 'auth' y 'admin'
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+// Panel compartido: cada controlador protege sus acciones mediante permisos.
+Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
     Route::redirect('/', '/admin/dashboard');
 
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
-    Route::get('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'edit'])->name('admin.settings.backblaze-b2.edit');
-    Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->name('admin.settings.backblaze-b2.update');
-    Route::post('/configuracion/backblaze-b2/verificar', [BackblazeB2SettingController::class, 'verify'])->name('admin.settings.backblaze-b2.verify');
+    Route::get('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'edit'])->middleware('admin')->name('admin.settings.backblaze-b2.edit');
+    Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->middleware('admin')->name('admin.settings.backblaze-b2.update');
+    Route::post('/configuracion/backblaze-b2/verificar', [BackblazeB2SettingController::class, 'verify'])->middleware('admin')->name('admin.settings.backblaze-b2.verify');
 
     Route::redirect('/users', '/admin/usuarios');
     Route::redirect('/genres', '/admin/generos');

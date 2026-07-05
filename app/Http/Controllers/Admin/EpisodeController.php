@@ -7,6 +7,7 @@ use App\Models\Episode;
 use App\Models\Series;
 use App\Support\SeriesMedia;
 use App\Support\VideoSource;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,12 +20,23 @@ class EpisodeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
+        $this->middleware('auth');
+        $this->middleware('can:view episodes')->only(['index', 'show']);
+        $this->middleware('can:create episodes')->only(['create', 'store']);
+        $this->middleware('can:edit episodes')->only(['edit', 'update']);
+        $this->middleware('can:delete episodes')->only('destroy');
     }
 
     public function index(Request $request): View
     {
         $query = Episode::query()->with(['series', 'sources']);
+
+        if (! $request->user()->can('moderate content')) {
+            $query->where(function ($scope) use ($request): void {
+                $scope->where('moderation_status', 'approved')
+                    ->orWhere('created_by', $request->user()->id);
+            });
+        }
 
         if ($request->filled('series_id')) {
             $query->where('series_id', $request->integer('series_id'));
@@ -40,14 +52,14 @@ class EpisodeController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $seriesOptions = Series::query()->orderBy('title')->get();
+        $seriesOptions = $this->availableSeries()->get();
 
         return view('admin.episodes.index', compact('episodes', 'seriesOptions'));
     }
 
     public function create(): View
     {
-        $seriesOptions = Series::query()->orderBy('title')->get();
+        $seriesOptions = $this->availableSeries()->get();
         $sourceProviders = $this->sourceProviders();
 
         return view('admin.episodes.create', compact('seriesOptions', 'sourceProviders'));
@@ -71,7 +83,9 @@ class EpisodeController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Episodio guardado.',
-                'redirect' => route('admin.episodes.edit', $episode),
+                'redirect' => $request->user()->can('edit episodes')
+                    ? route('admin.episodes.edit', $episode)
+                    : route('admin.episodes.show', $episode),
             ]);
         }
 
@@ -80,6 +94,7 @@ class EpisodeController extends Controller
 
     public function show(Episode $episode): View
     {
+        $this->authorizeVisible($episode);
         $episode->load(['series', 'sources', 'creator', 'approver']);
 
         return view('admin.episodes.show', compact('episode'));
@@ -87,7 +102,7 @@ class EpisodeController extends Controller
 
     public function edit(Episode $episode): View
     {
-        $seriesOptions = Series::query()->orderBy('title')->get();
+        $seriesOptions = $this->availableSeries()->get();
         $sourceProviders = $this->sourceProviders();
         $episode->load('sources');
 
@@ -128,8 +143,17 @@ class EpisodeController extends Controller
 
     private function validateEpisode(Request $request, ?int $exceptId = null): array
     {
+        $seriesExists = Rule::exists('series', 'id');
+
+        if (! $request->user()->can('moderate content')) {
+            $seriesExists->where(function ($query) use ($request): void {
+                $query->where('moderation_status', 'approved')
+                    ->orWhere('created_by', $request->user()->id);
+            });
+        }
+
         return $request->validate([
-            'series_id' => ['required', 'exists:series,id'],
+            'series_id' => ['required', $seriesExists],
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:episodes,slug,'.$exceptId],
             'season_number' => ['required', 'integer', 'min:1', 'max:999'],
@@ -146,7 +170,7 @@ class EpisodeController extends Controller
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'thumbnail_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
             'description' => ['nullable', 'string'],
-            'moderation_status' => ['required', 'in:pending,approved,rejected'],
+            'moderation_status' => [Rule::requiredIf($request->user()->can('moderate content')), 'nullable', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
             'source_provider' => ['nullable', 'array'],
             'source_provider.*' => ['nullable', Rule::in(array_keys($this->sourceProviders()))],
@@ -495,6 +519,11 @@ class EpisodeController extends Controller
 
     private function syncModeration(Episode $episode, string $status, ?string $notes): void
     {
+        if (! auth()->user()->can('moderate content')) {
+            $status = 'pending';
+            $notes = null;
+        }
+
         if ($status === 'approved') {
             $episode->forceFill([
                 'moderation_status' => 'approved',
@@ -523,5 +552,27 @@ class EpisodeController extends Controller
             'approved_by' => null,
             'published_at' => null,
         ])->save();
+    }
+
+    private function availableSeries(): Builder
+    {
+        return Series::query()
+            ->when(! auth()->user()->can('moderate content'), function ($query): void {
+                $query->where(function ($scope): void {
+                    $scope->where('moderation_status', 'approved')
+                        ->orWhere('created_by', auth()->id());
+                });
+            })
+            ->orderBy('title');
+    }
+
+    private function authorizeVisible(Episode $episode): void
+    {
+        abort_unless(
+            auth()->user()->can('moderate content')
+                || $episode->moderation_status === 'approved'
+                || $episode->created_by === auth()->id(),
+            403
+        );
     }
 }

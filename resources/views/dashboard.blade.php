@@ -42,7 +42,7 @@
                         <div class="card-body p-9">
                             <span class="symbol symbol-50px mb-5">
                                 <span class="symbol-label bg-light-primary">
-                                    <i class="ki-outline ki-film fs-2x text-primary"></i>
+                                    <i class="ki-outline ki-screen fs-2x text-primary"></i>
                                 </span>
                             </span>
                             <div class="fw-bold fs-4 text-gray-900 mb-1">Catálogo</div>

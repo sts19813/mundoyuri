@@ -15,19 +15,26 @@ class AdminDashboardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('admin');
+        $this->middleware('can:view dashboard');
     }
 
     public function index(): View
     {
+        $user = auth()->user();
+        $canModerate = $user->can('moderate content');
+
         $stats = [
-            'users' => User::count(),
+            'users' => $user->can('manage users') ? User::count() : null,
             'genres' => Genre::count(),
-            'series' => Series::count(),
-            'episodes' => Episode::count(),
-            'pending_series' => Series::where('moderation_status', 'pending')->count(),
-            'pending_episodes' => Episode::where('moderation_status', 'pending')->count(),
-            'comments' => Comment::count(),
+            'series' => $canModerate ? Series::count() : $user->submittedSeries()->count(),
+            'episodes' => $canModerate ? Episode::count() : $user->submittedEpisodes()->count(),
+            'pending_series' => $canModerate
+                ? Series::where('moderation_status', 'pending')->count()
+                : $user->submittedSeries()->where('moderation_status', 'pending')->count(),
+            'pending_episodes' => $canModerate
+                ? Episode::where('moderation_status', 'pending')->count()
+                : $user->submittedEpisodes()->where('moderation_status', 'pending')->count(),
+            'comments' => $user->can('manage users') ? Comment::count() : $user->comments()->count(),
         ];
 
         return view('admin.dashboard', compact('stats'));
