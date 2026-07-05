@@ -27,6 +27,10 @@ class VideoSource
             return self::normalizeBunnyUrl($rawValue);
         }
 
+        if ($provider === 'backblaze_b2') {
+            return BackblazeB2Url::normalize(self::extractIframeSrc($rawValue) ?? $rawValue);
+        }
+
         $url = self::extractIframeSrc($rawValue) ?? $rawValue;
         $url = trim($url);
 
@@ -51,7 +55,7 @@ class VideoSource
 
     public static function playableUrl(?string $provider, string $videoUrl, mixed $source = null): string
     {
-        if ($provider === 'pixeldrain_cdn' && $source) {
+        if (in_array($provider, ['pixeldrain_cdn', 'backblaze_b2'], true) && $source) {
             return route('episode-sources.player', $source);
         }
 
@@ -64,7 +68,7 @@ class VideoSource
 
     public static function playerType(?string $provider): string
     {
-        return 'iframe';
+        return $provider === 'backblaze_b2' ? 'video' : 'iframe';
     }
 
     public static function directVideoUrl(?string $provider, string $videoUrl): string

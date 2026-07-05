@@ -1,20 +1,21 @@
 <?php
 
-use App\Http\Controllers\CatalogController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\EpisodeSourcePlayerController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminPermissionController;
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
+use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContentSubmissionController;
+use App\Http\Controllers\EpisodeSourcePlayerController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
@@ -42,7 +43,6 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-
 Route::middleware(['auth'])
     ->group(function () {
         Route::get('/profile', [AdminProfileController::class, 'show'])->name('profile.edit');
@@ -67,6 +67,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+    Route::get('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'edit'])->name('admin.settings.backblaze-b2.edit');
+    Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->name('admin.settings.backblaze-b2.update');
+    Route::post('/configuracion/backblaze-b2/verificar', [BackblazeB2SettingController::class, 'verify'])->name('admin.settings.backblaze-b2.verify');
 
     Route::redirect('/users', '/admin/usuarios');
     Route::redirect('/genres', '/admin/generos');

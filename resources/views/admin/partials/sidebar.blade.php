@@ -114,6 +114,13 @@
                             <span class="menu-title">Validación</span>
                         </a>
                     </div>
+
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('admin.settings.backblaze-b2.*') ? 'active' : '' }}" href="{{ route('admin.settings.backblaze-b2.edit') }}">
+                            <span class="menu-icon"><i class="ki-outline ki-cloud fs-2"></i></span>
+                            <span class="menu-title">Backblaze B2</span>
+                        </a>
+                    </div>
                 @endif
             </div>
             <!--end::Sidebar menu-->

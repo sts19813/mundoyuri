@@ -34,5 +34,8 @@ return [
         'pixeldrain_cdn' => [
             'label' => 'Pixeldrain CDN',
         ],
+        'backblaze_b2' => [
+            'label' => 'Backblaze B2',
+        ],
     ],
 ];
