@@ -22,6 +22,16 @@ class BackblazeB2UrlTest extends TestCase
                 'mundoyuri',
                 'series/Fulfill.S01E01.mp4',
             ],
+            'friendly URL with spaces encoded as plus signs' => [
+                'https://f005.backblazeb2.com/file/mundoyuri/el+fuego/The.Fire.4.Elements.S01e01.Iq.X264.1080P.mp4',
+                'mundoyuri',
+                'el fuego/The.Fire.4.Elements.S01e01.Iq.X264.1080P.mp4',
+            ],
+            'friendly URL with a literal plus sign' => [
+                'https://f005.backblazeb2.com/file/mundoyuri/el%2Bfuego/video.mp4',
+                'mundoyuri',
+                'el+fuego/video.mp4',
+            ],
             'virtual-hosted S3 URL' => [
                 'https://mundoyuri.s3.us-east-005.backblazeb2.com/Fulfill.S01E01.mp4',
                 'mundoyuri',

@@ -73,8 +73,8 @@ final class BackblazeB2Url
      */
     private static function result(string $bucket, string $file): ?array
     {
-        $bucket = rawurldecode(trim($bucket));
-        $file = rawurldecode(ltrim($file, '/'));
+        $bucket = urldecode(trim($bucket));
+        $file = urldecode(ltrim($file, '/'));
 
         if ($bucket === '' || $file === '' || str_contains($file, "\0")) {
             return null;
