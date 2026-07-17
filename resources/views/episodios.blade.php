@@ -153,6 +153,14 @@
                             {{ $episode->duration_minutes ? $episode->duration_minutes.' min' : 'Sin duración' }}
                         </div>
                         <div class="ep-meta-dot"></div>
+                        <div class="ep-meta-item" title="Vistas">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            {{ number_format($episode->views_count) }} {{ $episode->views_count === 1 ? 'vista' : 'vistas' }}
+                        </div>
+                        <div class="ep-meta-dot"></div>
                         <div class="ep-meta-item">{{ $series->country_of_origin ?: 'País no definido' }}</div>
                     </div>
                 </div>

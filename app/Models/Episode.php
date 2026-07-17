@@ -23,6 +23,7 @@ class Episode extends Model
         'episode_number',
         'release_date',
         'duration_minutes',
+        'views_count',
         'thumbnail_image',
         'description',
         'moderation_status',
@@ -35,7 +36,13 @@ class Episode extends Model
         return [
             'release_date' => 'date',
             'published_at' => 'datetime',
+            'views_count' => 'integer',
         ];
+    }
+
+    public function recordView(): void
+    {
+        $this->increment('views_count');
     }
 
     public function series(): BelongsTo

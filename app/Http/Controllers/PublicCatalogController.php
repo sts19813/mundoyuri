@@ -97,6 +97,8 @@ class PublicCatalogController extends Controller
             ]);
         }
 
+        $episode->recordView();
+
         $episode->load([
             'sources',
             'series',

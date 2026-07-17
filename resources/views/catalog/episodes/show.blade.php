@@ -23,6 +23,13 @@
         </div>
 
         <h1 class="section-title">{{ $series->title }} · S{{ $episode->season_number }}E{{ $episode->episode_number }} · {{ $episode->title }}</h1>
+        <div class="d-flex align-items-center gap-1 text-muted small mb-2" title="Vistas">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span>{{ number_format($episode->views_count) }} {{ $episode->views_count === 1 ? 'vista' : 'vistas' }}</span>
+        </div>
         <p class="text-muted">{{ $episode->description ?: 'Sin descripcion disponible.' }}</p>
 
         <div class="card mb-4">

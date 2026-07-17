@@ -169,6 +169,8 @@ class CatalogController extends Controller
         abort_unless($episode->series_id === $series->id, 404);
         abort_unless($episode->moderation_status === 'approved', 404);
 
+        $episode->recordView();
+
         $episode->load([
             'sources',
             'comments' => fn ($query) => $query
