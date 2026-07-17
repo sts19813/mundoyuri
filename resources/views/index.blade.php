@@ -131,11 +131,11 @@
                         <a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card">
                             <div class="episode-thumb">
                                 <x-media-preview
-                                    :src="$episode->previewMediaUrl('400/250')"
-                                    :type="$episode->previewMediaType()"
+                                    :src="$episode->series?->bannerMediaUrl() ?: $episode->previewMediaUrl('640/360')"
+                                    :type="$episode->series?->bannerMediaUrl() ? $episode->series->bannerMediaType() : $episode->previewMediaType()"
                                     :alt="$episode->title"
                                     class="episode-thumb-media"
-                                    :hover-play="$episode->previewMediaType() === 'video'"
+                                    :hover-play="($episode->series?->bannerMediaUrl() ? $episode->series->bannerMediaType() : $episode->previewMediaType()) === 'video'"
                                 />
                                 @if(optional($episode->published_at)->gte(now()->subDays(7)))
                                     <span class="ep-badge-new">Nuevo</span>

@@ -563,11 +563,14 @@
 
     .featured-card {
         flex: 0 0 300px;
+        display: block;
         border-radius: 16px;
         overflow: hidden;
         position: relative;
         cursor: pointer;
         transition: transform 0.3s;
+        color: inherit;
+        text-decoration: none;
     }
 
     .featured-card:hover {
@@ -578,8 +581,10 @@
     .featured-card video,
     .featured-card .featured-card-media {
         width: 100%;
-        height: 200px;
+        height: auto;
+        aspect-ratio: 16 / 9;
         object-fit: cover;
+        object-position: center;
         display: block;
     }
 
@@ -652,12 +657,16 @@
     }
 
     .episode-card {
+        display: block;
+        height: 100%;
         background: var(--dark-card);
         border-radius: 14px;
         overflow: hidden;
         transition: transform 0.25s, box-shadow 0.25s;
         cursor: pointer;
         border: 1px solid rgba(244, 63, 142, 0.08);
+        color: inherit;
+        text-decoration: none;
     }
 
     .episode-card:hover {
@@ -668,14 +677,17 @@
     .episode-thumb {
         position: relative;
         overflow: hidden;
+        aspect-ratio: 16 / 9;
+        background: var(--dark-surface);
     }
 
     .episode-thumb img,
     .episode-thumb video,
     .episode-thumb .episode-thumb-media {
         width: 100%;
-        height: 170px;
+        height: 100%;
         object-fit: cover;
+        object-position: center;
         display: block;
         transition: transform 0.35s;
     }
@@ -761,21 +773,28 @@
     }
 
     .catalog-card {
+        display: block;
+        height: 100%;
         cursor: pointer;
+        color: inherit;
+        text-decoration: none;
     }
 
     .catalog-poster {
         border-radius: 12px;
         overflow: hidden;
         position: relative;
+        aspect-ratio: 2 / 3;
+        background: var(--dark-surface);
     }
 
     .catalog-poster img,
     .catalog-poster video,
     .catalog-poster .catalog-poster-media {
         width: 100%;
-        height: 240px;
+        height: 100%;
         object-fit: cover;
+        object-position: center;
         display: block;
         transition: transform 0.35s;
     }
