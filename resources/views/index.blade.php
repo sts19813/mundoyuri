@@ -21,8 +21,6 @@
         $featuredSeries = $featuredSeries ?? collect();
         $latestEpisodes = $latestEpisodes ?? collect();
         $seriesCount = $seriesCount ?? $featuredSeries->count();
-        $episodesCount = $episodesCount ?? $latestEpisodes->count();
-        $genresCount = $genresCount ?? 0;
     @endphp
 
     <!-- ══ HERO ══ -->
@@ -49,20 +47,6 @@
                     Explorar ahora
                 </a>
                 <a href="{{ route('legacy.episodios') }}" class="btn-ghost">Ver novedades</a>
-            </div>
-            <div class="hero-stats">
-                <div>
-                    <div class="hero-stat-num">{{ $seriesCount }}+</div>
-                    <div class="hero-stat-label">Series activas</div>
-                </div>
-                <div>
-                    <div class="hero-stat-num">{{ $episodesCount }}+</div>
-                    <div class="hero-stat-label">Episodios</div>
-                </div>
-                <div>
-                    <div class="hero-stat-num">{{ $genresCount }}</div>
-                    <div class="hero-stat-label">Géneros</div>
-                </div>
             </div>
         </div>
     </section>

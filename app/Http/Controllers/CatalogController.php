@@ -33,9 +33,12 @@ class CatalogController extends Controller
         $latestEpisodes = Episode::query()
             ->with(['series.genre'])
             ->where('moderation_status', 'approved')
-            ->latest('release_date')
+            ->orderByRaw('COALESCE(release_date, published_at, created_at) DESC')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('series_id')
             ->take(12)
-            ->get();
+            ->values();
 
         $genres = Genre::query()
             ->where('is_active', true)

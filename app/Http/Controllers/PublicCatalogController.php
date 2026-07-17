@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Episode;
-use App\Models\Genre;
 use App\Models\Series;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -18,8 +17,6 @@ class PublicCatalogController extends Controller
                 'featuredSeries' => collect(),
                 'latestEpisodes' => collect(),
                 'seriesCount' => 0,
-                'episodesCount' => 0,
-                'genresCount' => 0,
             ]);
         }
 
@@ -34,30 +31,22 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->latest('published_at')
+            ->orderByRaw('COALESCE(release_date, published_at, created_at) DESC')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('series_id')
             ->take(12)
-            ->get();
+            ->values();
 
         $seriesCount = Series::query()
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
             ->count();
 
-        $episodesCount = Episode::query()
-            ->where('moderation_status', 'approved')
-            ->whereNotNull('published_at')
-            ->count();
-
-        $genresCount = Genre::query()
-            ->where('is_active', true)
-            ->count();
-
         return view('index', compact(
             'featuredSeries',
             'latestEpisodes',
-            'seriesCount',
-            'episodesCount',
-            'genresCount'
+            'seriesCount'
         ));
     }
 
