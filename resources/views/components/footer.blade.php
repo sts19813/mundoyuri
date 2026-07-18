@@ -54,7 +54,7 @@
         </div>
         <hr class="footer-divider">
         <p class="footer-copy">© {{ date('Y') }} Series GL · Ningún de los derechos reservados</p>
-        <p class="footer-copy">Hecho con ❤️ y por amor por
+        <p class="footer-copy">Hecho con ❤️ por
             <a href="https://github.com/sts19813" target="_blank" rel="noopener noreferrer">
                 sts19813
             </a>
