@@ -100,6 +100,92 @@
         </div>
     </div>
 
+    <div class="row g-5 g-xl-8 mt-3">
+        <div class="col-xl-6">
+            <div class="card h-100">
+                <div class="card-header border-0 pt-6">
+                    <div class="card-title d-flex flex-column">
+                        <h3 class="fw-bold mb-1">Episodios con más vistas</h3>
+                        <span class="text-muted fs-7">Ranking por reproducciones registradas</span>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed gy-4 mb-0">
+                            <thead>
+                                <tr class="text-muted fw-bold fs-7 text-uppercase">
+                                    <th>Episodio</th>
+                                    <th class="text-end">Vistas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($mostViewedEpisodes as $episode)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('admin.episodes.show', $episode) }}" class="text-gray-900 text-hover-primary fw-bold">
+                                                {{ $episode->title }}
+                                            </a>
+                                            <div class="text-muted fs-7">
+                                                {{ $episode->series?->title ?: 'Sin serie' }} · T{{ $episode->season_number }} E{{ $episode->episode_number }}
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge badge-light-primary fs-7">{{ number_format($episode->views_count) }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="2" class="text-center text-muted py-8">Aún no hay episodios con vistas.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="card h-100">
+                <div class="card-header border-0 pt-6">
+                    <div class="card-title d-flex flex-column">
+                        <h3 class="fw-bold mb-1">Series y películas con más vistas</h3>
+                        <span class="text-muted fs-7">Suma de las vistas de todos sus episodios</span>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed gy-4 mb-0">
+                            <thead>
+                                <tr class="text-muted fw-bold fs-7 text-uppercase">
+                                    <th>Título</th>
+                                    <th class="text-end">Vistas totales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($mostViewedSeries as $series)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('admin.series.show', $series) }}" class="text-gray-900 text-hover-primary fw-bold">
+                                                {{ $series->title }}
+                                            </a>
+                                            <div class="text-muted fs-7">
+                                                {{ $series->content_type === 'movie' ? 'Película' : 'Serie' }}
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge badge-light-success fs-7">{{ number_format((int) $series->total_views) }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="2" class="text-center text-muted py-8">Aún no hay series o películas con vistas.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @can('moderate content')
         <div class="card mt-8">
             <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">

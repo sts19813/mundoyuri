@@ -123,6 +123,8 @@ class PanelPermissionsTest extends TestCase
             ->assertSee('Series y películas')
             ->assertSee('Episodios')
             ->assertSee('Géneros')
+            ->assertSee('Episodios con más vistas')
+            ->assertSee('Series y películas con más vistas')
             ->assertDontSee('Inicio portal')
             ->assertDontSee('Dashboard admin')
             ->assertDontSee('Usuarios y permisos')

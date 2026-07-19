@@ -37,6 +37,22 @@ class AdminDashboardController extends Controller
             'comments' => $user->can('manage users') ? Comment::count() : $user->comments()->count(),
         ];
 
-        return view('admin.dashboard', compact('stats'));
+        $mostViewedEpisodes = Episode::query()
+            ->with('series:id,title')
+            ->when(! $canModerate, fn ($query) => $query->where('created_by', $user->id))
+            ->orderByDesc('views_count')
+            ->orderByDesc('id')
+            ->take(10)
+            ->get();
+
+        $mostViewedSeries = Series::query()
+            ->withSum('episodes as total_views', 'views_count')
+            ->when(! $canModerate, fn ($query) => $query->where('created_by', $user->id))
+            ->orderByDesc('total_views')
+            ->orderBy('title')
+            ->take(10)
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'mostViewedEpisodes', 'mostViewedSeries'));
     }
 }
