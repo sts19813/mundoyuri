@@ -15,41 +15,101 @@
     <style>
         body.auth-portal-page {
             min-height: 100vh;
+            margin: 0;
+            color: #f7eef8;
             background: linear-gradient(90deg, rgba(8, 5, 11, .72), rgba(8, 5, 11, .4) 52%, rgba(8, 5, 11, .68)),
                 url('{{ asset('assets/img/wallpaper-login.jpg') }}') center center / cover fixed no-repeat;
         }
 
-        .auth-portal-page #kt_app_root { min-height: calc(100vh - 78px); padding-top: 78px; }
-        .auth-portal-intro { min-height: 560px; text-shadow: 0 3px 22px rgba(0, 0, 0, .75); }
+        .auth-portal-page .gl-nav { top: 0 !important; }
+        .auth-portal-page #kt_app_root { min-height: 100vh; padding: 110px 40px 40px; }
+        .auth-portal-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(390px, 500px);
+            align-items: center;
+            gap: clamp(40px, 7vw, 110px);
+            width: min(1240px, 100%);
+            margin: auto;
+        }
+        .auth-portal-intro { text-align: left; text-shadow: 0 3px 22px rgba(0, 0, 0, .75); }
         .auth-portal-intro h1, .auth-portal-description { color: #fff !important; }
         .auth-portal-intro h1 {
-            max-width: 720px;
+            max-width: 650px;
+            margin: 0 0 20px;
             font-family: 'Playfair Display', serif;
             font-size: clamp(2.4rem, 5vw, 4.8rem) !important;
+            line-height: 1.04;
         }
-        .auth-portal-description { max-width: 560px; font-size: 1.05rem !important; }
+        .auth-portal-description { max-width: 520px; font-size: 1.05rem !important; line-height: 1.75; }
         .auth-portal-panel {
-            background: rgba(255, 255, 255, .94) !important;
+            width: 100%;
+            padding: clamp(30px, 4vw, 48px);
+            border: 1px solid rgba(244, 63, 142, .24);
+            border-radius: 24px;
+            background: linear-gradient(145deg, rgba(29, 18, 33, .96), rgba(15, 10, 18, .97)) !important;
             box-shadow: 0 28px 80px rgba(0, 0, 0, .38);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
         }
-        [data-bs-theme="dark"] .auth-portal-panel { background: rgba(20, 16, 24, .94) !important; }
+
+        .auth-portal-panel > div,
+        .auth-portal-panel .bg-body,
+        .auth-portal-panel .flex-column-fluid,
+        .auth-portal-panel .flex-column-fluid > div {
+            width: 100% !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .auth-portal-panel .pb-15,
+        .auth-portal-panel .pb-lg-20 { padding-bottom: 0 !important; }
+        .auth-portal-panel h1 { color: #fff !important; font-family: 'Playfair Display', serif; }
+        .auth-portal-panel .text-gray-500,
+        .auth-portal-panel .text-muted,
+        .auth-portal-panel .form-check-label { color: #aa9aae !important; }
+        .auth-portal-panel .form-control {
+            min-height: 50px;
+            border: 1px solid rgba(255, 255, 255, .12) !important;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .055) !important;
+            color: #fff !important;
+        }
+        .auth-portal-panel .form-control::placeholder { color: #89798e; }
+        .auth-portal-panel .form-control:focus {
+            border-color: rgba(244, 63, 142, .72) !important;
+            box-shadow: 0 0 0 3px rgba(244, 63, 142, .12);
+        }
+        .auth-portal-panel .btn-primary {
+            min-height: 50px;
+            border-color: #f43f8e !important;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f43f8e, #d92d78) !important;
+            box-shadow: 0 10px 26px rgba(244, 63, 142, .24);
+        }
+        .auth-portal-panel .link-primary,
+        .auth-portal-panel a { color: #f56aa5 !important; }
+        .auth-portal-panel .form-check-input:checked { border-color: #f43f8e; background-color: #f43f8e; }
+        .auth-portal-panel .d-flex.flex-stack.px-lg-10 { display: none !important; }
 
         .google-auth-btn {
-            border-color: var(--bs-gray-300) !important;
-            background: linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%);
-            color: var(--bs-gray-800) !important;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            min-height: 50px;
+            border-color: rgba(255, 255, 255, .12) !important;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .07) !important;
+            color: #f7eef8 !important;
+            box-shadow: none;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
         .google-auth-btn:hover,
         .google-auth-btn:focus {
             transform: translateY(-1px);
-            border-color: var(--bs-primary) !important;
-            box-shadow: 0 14px 30px rgba(54, 153, 255, 0.16);
-            color: var(--bs-gray-900) !important;
+            border-color: rgba(244, 63, 142, .6) !important;
+            background: rgba(244, 63, 142, .1) !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .2);
+            color: #fff !important;
         }
 
         [data-bs-theme="dark"] .google-auth-btn {
@@ -67,10 +127,10 @@
 
         @media (max-width: 991.98px) {
             body.auth-portal-page { background-position: 43% center; background-attachment: scroll; }
-            .auth-portal-page #kt_app_root { padding-top: 88px; }
-            .auth-portal-intro { min-height: auto; padding: 48px 24px 20px !important; }
+            .auth-portal-page #kt_app_root { padding: 108px 18px 38px; }
+            .auth-portal-shell { display: block; width: min(520px, 100%); }
+            .auth-portal-intro { padding: 0 8px 28px; text-align: center; }
             .auth-portal-intro h1 { font-size: clamp(2rem, 9vw, 3.2rem) !important; margin-bottom: 12px !important; }
-            .auth-portal-form-wrap { padding: 20px 18px 54px !important; }
             .auth-portal-panel { width: 100%; padding: 28px 22px !important; }
         }
     </style>
@@ -101,37 +161,18 @@
     </script>
 
     <div class="d-flex flex-column flex-root" id="kt_app_root">
-        <div class="d-flex flex-column flex-lg-row flex-column-fluid">
-            <div class="d-flex flex-lg-row-fluid">
-                <div class="auth-portal-intro d-flex flex-column flex-center pb-0 pb-lg-10 p-10 w-100">
-                    <h1 class="fw-bold text-center mb-7">Historias que te harán sentir</h1>
-                    <div class="auth-portal-description fs-base text-center fw-semibold">
-                        Inicia sesión o crea tu cuenta para formar parte de Mundo Yuri.
-                    </div>
+        <div class="auth-portal-shell">
+            <div class="auth-portal-intro">
+                <h1 class="fw-bold">Historias que te harán sentir</h1>
+                <div class="auth-portal-description fw-semibold">
+                    Tu espacio para descubrir y compartir historias Girls' Love de todo el mundo.
                 </div>
             </div>
-
-            <div class="auth-portal-form-wrap d-flex flex-column-fluid flex-lg-row-auto justify-content-center justify-content-lg-end p-12">
-                <div class="auth-portal-panel bg-body d-flex flex-column flex-center rounded-4 w-md-600px p-10">
-                    <div class="d-flex flex-center flex-column align-items-stretch h-lg-100 w-md-400px">
-                        <div class="d-flex flex-center flex-column flex-column-fluid pb-15 pb-lg-20">
-                            @yield('auth_content')
-                        </div>
-
-                        <div class="d-flex flex-stack">
-                            <div class="d-flex fw-semibold text-primary fs-base gap-5">
-                                <a href="https://keenthemes.com" target="_blank" rel="noopener">Terms</a>
-                                <a href="https://keenthemes.com/metronic" target="_blank" rel="noopener">Plans</a>
-                                <a href="https://keenthemes.com/support" target="_blank" rel="noopener">Contact Us</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <main class="auth-portal-panel">
+                @yield('auth_content')
+            </main>
         </div>
     </div>
-
-    <x-footer />
 
     <script>var hostUrl = "assets/";</script>
     <script src="assets/plugins/global/plugins.bundle.js"></script>

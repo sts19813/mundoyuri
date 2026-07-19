@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Crear cuenta | Holos')
+@section('title', 'Crear cuenta · Mundo Yuri')
 
 @section('auth_content')
     <div class="d-flex flex-column-fluid flex-lg-row-auto justify-content-center justify-content-lg-end p-12 p-lg-20">
