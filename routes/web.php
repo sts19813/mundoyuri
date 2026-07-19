@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
 Route::get('/index', [PublicCatalogController::class, 'home'])->name('legacy.index');
+Route::view('/quienes-somos', 'about')->name('about');
 Route::get('/test', function () {
     $template = file_get_contents(resource_path('views/index.blade.20260524-191213.bak.php'));
 

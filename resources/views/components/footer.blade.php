@@ -5,7 +5,7 @@
             <div class="col-md-4">
                 <a href="{{ route('home') }}" class="brand">
                     <span class="brand-heart"></span>
-                    Mundo GL
+                    Mundo Yuri
                 </a>
                 <p class="footer-desc">Tu espacio para descubrir historias GL de todo el mundo. Series, doramas y
                     películas actualizadas cada día.</p>
@@ -41,6 +41,7 @@
             <div class="col-6 col-md-2">
                 <div class="footer-heading">Info</div>
                 <ul class="footer-links">
+                    <li><a href="{{ route('about') }}">Quiénes somos</a></li>
                     <li><a href="{{ route('catalog.series.index') }}">Catalogo</a></li>
                     @auth
                         <li><a href="{{ route('submissions.create') }}">Aportar contenido</a></li>
@@ -53,7 +54,7 @@
             </div>
         </div>
         <hr class="footer-divider">
-        <p class="footer-copy">© {{ date('Y') }} Series GL · Ningún de los derechos reservados</p>
+        <p class="footer-copy">© {{ date('Y') }} Mundo Yuri · Ninguno de los derechos reservados</p>
         <p class="footer-copy">Hecho con ❤️ por
             <a href="https://github.com/sts19813" target="_blank" rel="noopener noreferrer">
                 sts19813
