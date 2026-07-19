@@ -1,6 +1,7 @@
   /* layout */
   .ep-layout {
-      max-width: 1200px;
+      width: 100%;
+      max-width: 1320px;
       margin: 0 auto;
       padding: 90px 24px 64px;
       display: grid;

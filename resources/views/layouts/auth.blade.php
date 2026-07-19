@@ -2,15 +2,16 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <base href="{{ asset('metronic') }}/" />
-    <title>@yield('title', config('app.name', 'Kiro Dashboard'))</title>
+    <title>@yield('title', 'Mundo Yuri')</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <link rel="shortcut icon" href="assets/media/logos/favicon.ico" />
+    <x-portal-favicon />
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
     <style>
         .google-auth-btn {
             border-color: var(--bs-gray-300) !important;
@@ -45,6 +46,7 @@
     @stack('styles')
 </head>
 <body id="kt_body" class="app-blank bgi-size-cover bgi-attachment-fixed bgi-position-center">
+    <x-navbar />
     <script>
         var defaultThemeMode = "light";
         var themeMode;
@@ -78,10 +80,9 @@
                     <img class="theme-light-show mx-auto mw-100 w-150px w-lg-300px mb-10 mb-lg-20" src="assets/media/auth/agency.png" alt="Auth Illustration" />
                     <img class="theme-dark-show mx-auto mw-100 w-150px w-lg-300px mb-10 mb-lg-20" src="assets/media/auth/agency-dark.png" alt="Auth Illustration" />
 
-                    <h1 class="text-gray-800 fs-2qx fw-bold text-center mb-7">Fast, Efficient and Productive</h1>
+                    <h1 class="text-gray-800 fs-2qx fw-bold text-center mb-7">Historias que te harán sentir</h1>
                     <div class="text-gray-600 fs-base text-center fw-semibold">
-                        Administra tu dashboard con una experiencia visual limpia, segura y moderna.
-                        <br />Tu autenticacion ahora usa layout Metronic Overlay compartido.
+                        Inicia sesión o crea tu cuenta para formar parte de Mundo Yuri.
                     </div>
                 </div>
             </div>
@@ -105,6 +106,8 @@
             </div>
         </div>
     </div>
+
+    <x-footer />
 
     <script>var hostUrl = "assets/";</script>
     <script src="assets/plugins/global/plugins.bundle.js"></script>

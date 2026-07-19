@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
     <title>{{ $source->label ?: 'Reproductor Pixeldrain' }}</title>
+    <x-portal-favicon />
     <style>
         html, body {
             margin: 0;

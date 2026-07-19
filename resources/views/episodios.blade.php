@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $episode ? ($series->title.' · '.$episode->title.' - Series GL') : 'Episodios - Series GL' }}</title>
+    <title>{{ $episode ? ($series->title.' · '.$episode->title.' - Mundo Yuri') : 'Episodios - Mundo Yuri' }}</title>
+    <x-portal-favicon />
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet">
