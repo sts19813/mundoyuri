@@ -14,6 +14,7 @@
         href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
     <link rel="stylesheet"
         href="{{ asset('assets/css/episodios.css') }}?v={{ filemtime(public_path('assets/css/episodios.css')) }}">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
 </head>
 
 <body>
@@ -58,7 +59,9 @@
                             referrerpolicy="strict-origin-when-cross-origin"
                             loading="lazy"
                             @if($primarySource->player_type !== 'iframe') style="display:none;" @endif></iframe>
-                        <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata" style="background:#000; @if($primarySource->player_type !== 'video') display:none; @endif">
+                        <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata"
+                            data-provider="{{ $primarySource->provider }}"
+                            style="background:#000; @if($primarySource->player_type !== 'video') display:none; @endif">
                             <source src="{{ $primarySource->player_type === 'video' ? $primarySource->playable_url : '' }}">
                         </video>
                     @else
@@ -89,7 +92,7 @@
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($partSources as $part)
-                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-video-url="{{ $part->playable_url }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-player-type="{{ $part->player_type }}">
+                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-video-url="{{ $part->playable_url }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-provider-key="{{ $part->provider }}" data-player-type="{{ $part->player_type }}">
                                     {{ $part->label ?: 'Parte '.($part->sort_order ?: $loop->iteration) }}
                                 </button>
                             @endforeach
@@ -114,6 +117,8 @@
                                 class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
                                 data-video-url="{{ $source->playable_url }}"
                                 data-provider="{{ strtoupper($source->provider) }}"
+                                data-provider-key="{{ $source->provider }}"
+                                data-quality="{{ preg_match('/\b(360|480|720|1080|1440|2160)p\b/i', (string) $source->label, $qualityMatch) ? $qualityMatch[1] : '' }}"
                                 data-player-type="{{ $source->player_type }}">
                                 <div class="server-icon">⚡</div>
                                 <div class="server-info">
@@ -335,6 +340,7 @@
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
         window.addEventListener('scroll', () => {
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
@@ -344,8 +350,48 @@
         const playerVideo = document.getElementById('episodeVideoPlayer');
         const activeSourceLabel = document.getElementById('activeSourceLabel');
         const sourceButtons = document.querySelectorAll('.source-switcher');
+        const backblazeQualityButtons = Array.from(sourceButtons).filter((button) =>
+            button.dataset.providerKey === 'backblaze_b2' && button.dataset.quality
+        );
+        let directPlayer = null;
 
-        function switchEpisodePlayer(type, url) {
+        if (playerVideo && window.Plyr) {
+            directPlayer = new Plyr(playerVideo, {
+                controls: ['play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
+                settings: ['quality', 'speed'],
+                seekTime: 10,
+                speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+                quality: { default: 1080, options: [2160, 1440, 1080, 720, 480, 360] },
+                i18n: {
+                    restart: 'Reiniciar', rewind: 'Retroceder {seektime}s', play: 'Reproducir', pause: 'Pausar',
+                    fastForward: 'Adelantar {seektime}s', seek: 'Buscar', played: 'Reproducido', buffered: 'Cargado',
+                    currentTime: 'Tiempo actual', duration: 'Duración', volume: 'Volumen', mute: 'Silenciar',
+                    unmute: 'Activar sonido', enableCaptions: 'Activar subtítulos', disableCaptions: 'Desactivar subtítulos',
+                    enterFullscreen: 'Pantalla completa', exitFullscreen: 'Salir de pantalla completa', frameTitle: 'Reproductor de {title}',
+                    captions: 'Subtítulos', settings: 'Ajustes', pip: 'Imagen en imagen', menuBack: 'Volver al menú anterior',
+                    speed: 'Velocidad', normal: 'Normal', quality: 'Calidad', loop: 'Repetir'
+                }
+            });
+            directPlayer.elements.container.style.display = @json($primarySource?->player_type === 'video' ? '' : 'none');
+        }
+
+        function backblazeSources(fallbackUrl) {
+            const sources = backblazeQualityButtons.map((button) => ({
+                src: button.dataset.videoUrl,
+                type: 'video/mp4',
+                size: Number(button.dataset.quality)
+            }));
+
+            return sources.length > 1 ? sources : [{ src: fallbackUrl, type: 'video/mp4' }];
+        }
+
+        @if($primarySource?->provider === 'backblaze_b2')
+            if (directPlayer && backblazeQualityButtons.length > 1) {
+                directPlayer.source = { type: 'video', sources: backblazeSources(@json($primarySource->playable_url)) };
+            }
+        @endif
+
+        function switchEpisodePlayer(type, url, providerKey = '') {
             if (!url) {
                 return;
             }
@@ -356,20 +402,29 @@
                     playerFrame.style.display = 'none';
                 }
                 if (playerVideo) {
-                    playerVideo.pause();
-                    playerVideo.src = url;
-                    playerVideo.load();
-                    playerVideo.style.display = 'block';
+                    const sources = providerKey === 'backblaze_b2' ? backblazeSources(url) : [{ src: url, type: 'video/mp4' }];
+                    if (directPlayer) {
+                        directPlayer.source = { type: 'video', sources };
+                        directPlayer.elements.container.style.display = '';
+                    } else {
+                        playerVideo.pause();
+                        playerVideo.src = url;
+                        playerVideo.load();
+                        playerVideo.style.display = 'block';
+                    }
                 }
 
                 return;
             }
 
             if (playerVideo) {
-                playerVideo.pause();
+                directPlayer ? directPlayer.pause() : playerVideo.pause();
                 playerVideo.removeAttribute('src');
                 playerVideo.load();
                 playerVideo.style.display = 'none';
+                if (directPlayer) {
+                    directPlayer.elements.container.style.display = 'none';
+                }
             }
             if (playerFrame) {
                 playerFrame.src = url;
@@ -383,8 +438,9 @@
                     const nextUrl = button.getAttribute('data-video-url');
                     const provider = button.getAttribute('data-provider');
                     const playerType = button.getAttribute('data-player-type') || 'iframe';
+                    const providerKey = button.getAttribute('data-provider-key') || '';
 
-                    switchEpisodePlayer(playerType, nextUrl);
+                    switchEpisodePlayer(playerType, nextUrl, providerKey);
 
                     sourceButtons.forEach((item) => {
                         item.classList.remove('active');

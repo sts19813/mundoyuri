@@ -57,6 +57,44 @@
       background: #000;
   }
 
+  .player-wrap .plyr,
+  .player-wrap .plyr__video-wrapper {
+      width: 100%;
+      height: 100%;
+  }
+
+  .player-wrap .plyr {
+      --plyr-color-main: #f43f8e;
+      --plyr-video-control-color: #fff;
+      --plyr-video-control-background-hover: #f43f8e;
+      --plyr-menu-background: rgba(24, 13, 28, 0.96);
+      --plyr-menu-color: #fff;
+      --plyr-tooltip-background: rgba(24, 13, 28, 0.96);
+      --plyr-tooltip-color: #fff;
+      border-radius: inherit;
+  }
+
+  .player-wrap .plyr video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+  }
+
+  .player-wrap .plyr__controls {
+      padding: 38px 18px 14px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.88));
+  }
+
+  .player-wrap .plyr__control--overlaid {
+      background: rgba(244, 63, 142, 0.92);
+      box-shadow: 0 0 0 10px rgba(244, 63, 142, 0.14);
+  }
+
+  .player-wrap .plyr__menu__container {
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(244, 63, 142, 0.22);
+  }
+
   .player-poster {
       width: 100%;
       height: 100%;
