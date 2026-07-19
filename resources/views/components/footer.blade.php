@@ -49,7 +49,9 @@
                         <li><a href="{{ route('register') }}">Crear cuenta</a></li>
                     @endauth
                     <li><a href="{{ route('login') }}">Acceso</a></li>
-                    <li><a href="{{ route('admin.dashboard') }}">Panel admin</a></li>
+                    @if(auth()->user()?->shouldEnterAdminPanel())
+                        <li><a href="{{ route('admin.dashboard') }}">Panel admin</a></li>
+                    @endif
                 </ul>
             </div>
         </div>

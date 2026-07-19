@@ -14,8 +14,10 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        $this->rememberPublicReturnUrl($request);
+
         return view('auth.login');
     }
 
@@ -28,7 +30,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($request->user()->shouldEnterAdminPanel()) {
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**
@@ -43,5 +51,30 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function rememberPublicReturnUrl(Request $request): void
+    {
+        $returnUrl = $request->query('return');
+
+        if (! is_string($returnUrl) || $returnUrl === '') {
+            return;
+        }
+
+        $parts = parse_url($returnUrl);
+        $requestHost = $request->getHost();
+
+        if ($parts === false || (isset($parts['host']) && $parts['host'] !== $requestHost)) {
+            return;
+        }
+
+        $path = '/'.ltrim($parts['path'] ?? '/', '/');
+
+        if (str_starts_with($path, '/admin') || in_array($path, ['/login', '/register'], true)) {
+            return;
+        }
+
+        $query = isset($parts['query']) ? '?'.$parts['query'] : '';
+        $request->session()->put('url.intended', $path.$query);
     }
 }

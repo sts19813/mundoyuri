@@ -64,7 +64,7 @@ class GoogleAuthenticationTest extends TestCase
         $user->refresh();
 
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('home', absolute: false));
         $this->assertSame('google-user-123', $user->google_id);
         $this->assertSame('https://example.com/avatar.png', $user->google_avatar);
         $this->assertNotNull($user->email_verified_at);
@@ -97,7 +97,7 @@ class GoogleAuthenticationTest extends TestCase
 
         $this->assertNotNull($user);
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('home', absolute: false));
         $this->assertSame('google-user-999', $user->google_id);
         $this->assertSame('https://example.com/nuevo.png', $user->google_avatar);
         $this->assertNotNull($user->email_verified_at);

@@ -63,7 +63,13 @@ class GoogleAuthController extends Controller
         Auth::login($user, remember: true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($user->shouldEnterAdminPanel()) {
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->intended(route('home', absolute: false));
     }
 
     private function resolveUser(GoogleUser $googleUser): User

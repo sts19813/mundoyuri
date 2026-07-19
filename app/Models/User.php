@@ -54,6 +54,12 @@ class User extends Authenticatable
         return $this->role === 'admin' || $this->hasRole('admin');
     }
 
+    public function shouldEnterAdminPanel(): bool
+    {
+        return in_array($this->role, ['admin', 'moderator'], true)
+            || $this->hasAnyRole(['admin', 'moderator']);
+    }
+
     public function getIsAdminAttribute(): bool
     {
         return $this->isAdmin();

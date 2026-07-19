@@ -42,7 +42,7 @@ Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('le
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 
 Route::get('/dashboard', [AdminDashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'admin.panel'])
     ->name('dashboard');
 
 Route::middleware(['auth'])
@@ -52,21 +52,21 @@ Route::middleware(['auth'])
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
 
-        Route::get('/aportes/nuevo', fn() => redirect()->route('admin.series.create'))->name('submissions.create');
+        Route::get('/aportes/nuevo', [ContentSubmissionController::class, 'create'])->name('submissions.create');
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])
             ->middleware('can:create series')
             ->name('submissions.store');
     });
 
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin.panel'])->prefix('admin')->group(function () {
     Route::get('/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
     Route::get('/profile/edit', fn() => redirect()->route('admin.profile.show'))->name('admin.profile.edit');
     Route::put('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.updatePassword');
 });
 
-// Panel compartido: cada controlador protege sus acciones mediante permisos.
-Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
+// El panel administrativo solo está disponible para administradores y moderadores.
+Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(function () {
     Route::redirect('/', '/admin/dashboard');
 
     // Dashboard

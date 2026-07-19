@@ -23,22 +23,23 @@ class PanelPermissionsTest extends TestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
-    public function test_regular_user_uses_shared_content_views_with_creation_permissions(): void
+    public function test_regular_user_cannot_access_any_admin_route(): void
     {
         $user = $this->userWithRole('user');
         $genre = $this->genre();
         $series = $this->series($user, $genre, 'approved');
 
-        $this->actingAs($user)->get(route('dashboard'))->assertOk();
-        $this->actingAs($user)->get(route('admin.series.index'))->assertOk();
-        $this->actingAs($user)->get(route('admin.series.create'))->assertOk();
-        $this->actingAs($user)->get(route('admin.episodes.create'))->assertOk();
-        $this->actingAs($user)->get(route('admin.genres.index'))->assertOk();
-
-        $this->actingAs($user)->get(route('admin.series.edit', $series))->assertForbidden();
-        $this->actingAs($user)->get(route('admin.moderation.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('dashboard'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.series.index'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.series.create'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.episodes.create'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.genres.index'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.series.edit', $series))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.moderation.index'))->assertRedirect('/');
         $this->actingAs($user)->get(route('admin.settings.backblaze-b2.edit'))->assertRedirect('/');
         $this->actingAs($user)->get(route('admin.users.index'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('admin.profile.show'))->assertRedirect('/');
+        $this->actingAs($user)->get(route('submissions.create'))->assertOk();
     }
 
     public function test_regular_user_submission_is_always_pending_even_with_forged_moderation_fields(): void
@@ -46,7 +47,7 @@ class PanelPermissionsTest extends TestCase
         $user = $this->userWithRole('user');
         $genre = $this->genre();
 
-        $response = $this->actingAs($user)->post(route('admin.series.store'), [
+        $response = $this->actingAs($user)->post(route('submissions.store'), [
             'genre_id' => $genre->id,
             'title' => 'Aporte de usuario',
             'content_type' => 'series',
@@ -57,7 +58,7 @@ class PanelPermissionsTest extends TestCase
             'is_featured' => '1',
         ]);
 
-        $response->assertRedirect(route('admin.series.index'));
+        $response->assertRedirect(route('submissions.create'));
 
         $series = Series::query()->where('title', 'Aporte de usuario')->firstOrFail();
         $this->assertSame('pending', $series->moderation_status);
@@ -66,14 +67,14 @@ class PanelPermissionsTest extends TestCase
         $this->assertFalse($series->is_featured);
     }
 
-    public function test_regular_user_can_add_a_pending_episode_to_published_content(): void
+    public function test_regular_user_cannot_post_to_admin_episode_routes(): void
     {
         $user = $this->userWithRole('user');
         $admin = $this->userWithRole('admin');
         $genre = $this->genre();
         $series = $this->series($admin, $genre, 'approved');
 
-        $response = $this->actingAs($user)->postJson(route('admin.episodes.store'), [
+        $response = $this->actingAs($user)->post(route('admin.episodes.store'), [
             'series_id' => $series->id,
             'title' => 'Episodio aportado',
             'season_number' => 1,
@@ -86,12 +87,8 @@ class PanelPermissionsTest extends TestCase
             'source_sort_order' => [],
         ]);
 
-        $episode = Episode::query()->where('title', 'Episodio aportado')->firstOrFail();
-        $response->assertOk()->assertJsonPath('redirect', route('admin.episodes.show', $episode));
-
-        $this->assertSame($user->id, $episode->created_by);
-        $this->assertSame('pending', $episode->moderation_status);
-        $this->assertNull($episode->published_at);
+        $response->assertRedirect('/');
+        $this->assertDatabaseMissing('episodes', ['title' => 'Episodio aportado']);
     }
 
     public function test_moderator_can_edit_and_moderate_content_but_not_administer_system(): void
@@ -115,7 +112,7 @@ class PanelPermissionsTest extends TestCase
 
     public function test_sidebar_uses_one_permission_aware_content_navigation(): void
     {
-        $user = $this->userWithRole('user');
+        $user = $this->userWithRole('moderator');
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 

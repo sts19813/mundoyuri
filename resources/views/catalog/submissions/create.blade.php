@@ -1,16 +1,29 @@
-@extends('layouts.admin')
-
-@section('title', 'Subir contenido')
-
-@section('toolbar')
-    <div class="page-title d-flex flex-column justify-content-center me-3">
-        <h1 class="page-heading fw-bold fs-3 m-0">Subir contenido</h1>
-        <span class="text-muted fs-7">Carga de títulos y episodios</span>
-    </div>
-@endsection
-
-@section('content')
-    <div class="d-flex flex-column gap-5">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Subir contenido · Mundo Yuri</title>
+    <x-portal-favicon />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+    <style>
+        .submission-page { min-height: 100vh; padding: 120px 0 72px; background: var(--dark); color: #fff; }
+        .submission-page .card { border: 1px solid rgba(244,63,142,.15); background: var(--dark-card); color: #fff; }
+        .submission-page .text-muted, .submission-page .form-text { color: var(--muted) !important; }
+        .submission-page .form-control, .submission-page .form-select { border-color: rgba(255,255,255,.12); background-color: rgba(255,255,255,.06); color: #fff; }
+        .submission-page .form-control:focus, .submission-page .form-select:focus { border-color: var(--rose); box-shadow: 0 0 0 .2rem rgba(244,63,142,.12); }
+        .submission-page .form-select option { color: #111; }
+        .submission-page .btn-primary { border-color: var(--rose); background: var(--rose); }
+        .submission-page .card-footer { border-color: rgba(255,255,255,.08); }
+    </style>
+</head>
+<body>
+    <x-navbar />
+    <main class="submission-page">
+        <div class="container-xl px-4 d-flex flex-column gap-5">
         <div class="card">
             <div class="card-body">
                 <h1 class="fs-2hx fw-bold mb-2">Subir contenido</h1>
@@ -140,9 +153,13 @@
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-3">
-                <a href="{{ route('dashboard') }}" class="btn btn-light">Cancelar</a>
+                <a href="{{ route('home') }}" class="btn btn-light">Cancelar</a>
                 <button class="btn btn-primary" type="submit">Enviar a validación</button>
             </div>
         </form>
-    </div>
-@endsection
+        </div>
+    </main>
+    <x-footer />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
