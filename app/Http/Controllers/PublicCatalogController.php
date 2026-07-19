@@ -23,7 +23,13 @@ class PublicCatalogController extends Controller
         $featuredSeries = Series::query()
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->latest('published_at')
+            ->withSum([
+                'episodes as total_episode_views' => fn ($query) => $query
+                    ->where('moderation_status', 'approved')
+                    ->whereNotNull('published_at'),
+            ], 'views_count')
+            ->orderByDesc('total_episode_views')
+            ->orderByDesc('published_at')
             ->take(12)
             ->get();
 
@@ -31,7 +37,7 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->orderByRaw('COALESCE(release_date, published_at, created_at) DESC')
+            ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get()
             ->unique('series_id')

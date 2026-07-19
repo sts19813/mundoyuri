@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo GL</title>
+    <title>Mundo Yuri</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/logos/favicon-flor.png') }}">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet">
@@ -47,57 +48,6 @@
                     Explorar ahora
                 </a>
                 <a href="{{ route('legacy.episodios') }}" class="btn-ghost">Ver novedades</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- ══ CARRUSEL DESTACADO ══ -->
-    <section>
-        <div class="container-xl px-4">
-            <div class="section-header">
-                <h2 class="section-title">Doramas destacados</h2>
-                <a href="{{ route('catalog.series.index') }}" class="section-link">Ver todo →</a>
-            </div>
-
-            <!-- Controles -->
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button onclick="scrollRail(-1)"
-                    style="background:var(--dark-card);border:1px solid rgba(244,63,142,0.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;">‹</button>
-                <button onclick="scrollRail(1)"
-                    style="background:var(--dark-card);border:1px solid rgba(244,63,142,0.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;">›</button>
-            </div>
-
-            <div class="featured-rail" id="featuredRail">
-                @forelse($featuredSeries as $series)
-                    <a href="{{ route('catalog.series.show', $series->slug) }}" class="featured-card">
-                        <x-media-preview
-                            :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/800/400?'.$series->id"
-                            :type="$series->bannerMediaUrl() ? $series->bannerMediaType() : 'image'"
-                            :alt="$series->title"
-                            class="featured-card-media"
-                            :hover-play="$series->bannerMediaType() === 'video'"
-                        />
-                        <div class="featured-card-overlay"></div>
-                        @if($series->status === 'ongoing')
-                            <div class="live-dot"></div>
-                        @endif
-                        <div class="featured-card-body">
-                            <span class="featured-card-badge">{{ ucfirst($series->content_type) }}</span>
-                            <h5>{{ $series->title }}</h5>
-                            <small>{{ $series->release_year ?: 'S/F' }} · {{ $series->status === 'completed' ? 'Completada' : 'En curso' }}</small>
-                        </div>
-                    </a>
-                @empty
-                    <div class="featured-card">
-                        <x-media-preview src="https://picsum.photos/800/400?empty-featured" type="image" alt="Sin contenido" class="featured-card-media" />
-                        <div class="featured-card-overlay"></div>
-                        <div class="featured-card-body">
-                            <span class="featured-card-badge">Catálogo</span>
-                            <h5>Aún no hay series publicadas</h5>
-                            <small>Vuelve más tarde</small>
-                        </div>
-                    </div>
-                @endforelse
             </div>
         </div>
     </section>
@@ -145,6 +95,56 @@
                     </div>
                 @endforelse
 
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ CARRUSEL DESTACADO ══ -->
+    <section>
+        <div class="container-xl px-4">
+            <div class="section-header">
+                <h2 class="section-title">Doramas destacados</h2>
+                <a href="{{ route('catalog.series.index') }}" class="section-link">Ver todo →</a>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button onclick="scrollRail(-1)" aria-label="Ver destacados anteriores"
+                    style="background:var(--dark-card);border:1px solid rgba(244,63,142,0.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;">‹</button>
+                <button onclick="scrollRail(1)" aria-label="Ver más destacados"
+                    style="background:var(--dark-card);border:1px solid rgba(244,63,142,0.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;">›</button>
+            </div>
+
+            <div class="featured-rail" id="featuredRail">
+                @forelse($featuredSeries as $series)
+                    <a href="{{ route('catalog.series.show', $series->slug) }}" class="featured-card">
+                        <x-media-preview
+                            :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/800/400?'.$series->id"
+                            :type="$series->bannerMediaUrl() ? $series->bannerMediaType() : 'image'"
+                            :alt="$series->title"
+                            class="featured-card-media"
+                            :hover-play="$series->bannerMediaType() === 'video'"
+                        />
+                        <div class="featured-card-overlay"></div>
+                        @if($series->status === 'ongoing')
+                            <div class="live-dot"></div>
+                        @endif
+                        <div class="featured-card-body">
+                            <span class="featured-card-badge">{{ ucfirst($series->content_type) }}</span>
+                            <h5>{{ $series->title }}</h5>
+                            <small>{{ $series->release_year ?: 'S/F' }} · {{ $series->status === 'completed' ? 'Completada' : 'En curso' }}</small>
+                        </div>
+                    </a>
+                @empty
+                    <div class="featured-card">
+                        <x-media-preview src="https://picsum.photos/800/400?empty-featured" type="image" alt="Sin contenido" class="featured-card-media" />
+                        <div class="featured-card-overlay"></div>
+                        <div class="featured-card-body">
+                            <span class="featured-card-badge">Catálogo</span>
+                            <h5>Aún no hay series publicadas</h5>
+                            <small>Vuelve más tarde</small>
+                        </div>
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>

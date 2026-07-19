@@ -67,7 +67,15 @@
             <label class="form-label">Slug (opcional)</label>
             <input class="form-control" name="slug" value="{{ old('slug', $episode->slug ?? '') }}">
         </div>
-        <div class="col-md-4"><label class="form-label">Fecha publicacion</label><input class="form-control" type="date" name="release_date" value="{{ old('release_date', isset($episode->release_date) ? $episode->release_date->format('Y-m-d') : '') }}"></div>
+        <div class="col-md-4"><label class="form-label">Fecha de estreno</label><input class="form-control" type="date" name="release_date" value="{{ old('release_date', isset($episode->release_date) ? $episode->release_date->format('Y-m-d') : '') }}"></div>
+        @can('moderate content')
+            <div class="col-md-4">
+                <label class="form-label">Fecha y hora de publicación</label>
+                <input class="form-control @error('published_at') is-invalid @enderror" type="datetime-local" name="published_at" value="{{ old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : '') }}">
+                <div class="form-text">Define el orden de “Últimos episodios”. Si se deja vacío al aprobar, se usará la fecha y hora actual.</div>
+                @error('published_at')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+        @endcan
         <div class="col-md-4"><label class="form-label">Duracion min</label><input class="form-control" type="number" name="duration_minutes" value="{{ old('duration_minutes', $episode->duration_minutes ?? '') }}"></div>
         <div class="col-md-4">
             <label class="form-label">Thumbnail</label>
