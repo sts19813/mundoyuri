@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 
@@ -5,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Conoce la historia, el propósito y los valores detrás de Mundo Yuri.">
-    <title>Quiénes somos · Mundo Yuri</title>
+    <title>Quién soy · Mundo Yuri</title>
     <x-portal-favicon />
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
@@ -25,35 +26,74 @@
         <div class="container-xl px-4 position-relative">
             <header class="about-hero">
                 <span class="about-eyebrow">Conoce el proyecto</span>
-                <h1>¿Quiénes <em>somos?</em></h1>
-                <p>Bienvenido.</p>
+                <h1>¿Quién <em>soy?</em></h1>
+                <p>La historia detrás de Mundo Yuri.</p>
             </header>
 
             <article class="about-card">
-                <p>Este sitio nació de una idea muy simple: crear un lugar donde cualquier persona pueda descubrir, disfrutar y enamorarse del género <strong>Girls' Love (GL)</strong>, sin importar si apenas está comenzando o si lleva años siguiéndolo.</p>
+                <p>
+                    Mundo Yuri nació de una idea muy simple: crear un lugar donde cualquier persona pueda descubrir,
+                    disfrutar y enamorarse del género <strong>Girls' Love</strong>.
+                    Un espacio creado con pasión, donde la experiencia siempre sea lo más importante:
+                    <strong>0 publicidad. 0 membresías. 0 donativos.</strong>
+                </p>
 
-                <p>Todo lo que ves aquí ha sido creado por una sola persona. Desde el diseño y la programación hasta el mantenimiento diario, cada detalle ha sido desarrollado con dedicación y mucho cariño por la comunidad GL.</p>
+                <p>
+                    Todo lo que ves aquí ha sido diseñado, programado y es mantenido por una sola persona.
+                    Desde la primera línea de código hasta el último detalle visual, cada parte del sitio ha sido
+                    desarrollada con dedicación y cariño por la comunidad GL.
+                </p>
 
-                <p>El propósito de este proyecto nunca ha sido competir con las plataformas oficiales ni obtener ganancias. Al contrario, busca acercar a más personas a este maravilloso género y apoyar a quienes hacen posible cada historia.</p>
+                <p>
+                    Mi propósito nunca ha sido competir con las plataformas oficiales ni obtener ganancias.
+                    Al contrario, busco acercar este maravilloso género a más personas y apoyar a quienes hacen posible
+                    cada historia.
+                </p>
 
                 <aside class="about-highlight">
                     <span class="about-highlight-icon" aria-hidden="true">♡</span>
-                    <p>Por eso, <strong>ningún video está alojado en nuestros servidores</strong>. El sitio únicamente recopila enlaces disponibles en otras plataformas para facilitar el acceso al contenido.</p>
+                    <p>
+                        <strong>Ningún video está alojado en mis servidores.</strong>
+                        Mundo Yuri únicamente recopila enlaces disponibles en otras plataformas para facilitar el acceso
+                        al contenido.
+                    </p>
                 </aside>
 
-                <p>Siempre que exista una opción oficial, se procurará dirigir a los usuarios hacia ella e invitarles a apoyar a los creadores mediante suscripciones, visualizaciones o cualquier medio oficial disponible. Creemos que apoyar a las productoras, actrices, directores y plataformas es la mejor forma de que sigan naciendo nuevas historias.</p>
+                <p>
+                    Siempre que exista una opción oficial, procuraré dirigir a los usuarios hacia ella e invitarlos a
+                    apoyar a los creadores mediante suscripciones, reproducciones o cualquier medio oficial disponible.
+                    Estoy convencido de que apoyar a las productoras, plataformas, directoras, directores, actrices y
+                    todo el equipo creativo es la mejor manera de que continúen naciendo nuevas historias.
+                </p>
 
-                <p>Este proyecto es completamente gratuito. No vendemos membresías, no solicitamos donativos y no mostramos publicidad invasiva. Queremos que puedas navegar con tranquilidad, sin anuncios molestos y sin preocuparte por software malicioso.</p>
+                <p>
+                    Este proyecto es completamente gratuito. No vendo membresías, no solicito donativos y no muestro
+                    publicidad. Mi objetivo es ofrecer un espacio limpio, seguro y agradable, donde puedas disfrutar del
+                    contenido sin interrupciones ni preocuparte por software malicioso.
+                </p>
 
-                <p>Además, creemos en la transparencia. Todo el desarrollo del portal es <strong>código abierto</strong> y puede consultarse libremente en GitHub. Compartir el código es nuestra forma de aportar un poco a la comunidad de desarrolladores y demostrar que este proyecto está construido con honestidad.</p>
+                <p>
+                    También creo en la transparencia y la honestidad. Todo el desarrollo del portal es
+                    <strong>código abierto</strong> y puede consultarse libremente en GitHub. Compartir el código es mi
+                    forma de aportar a la comunidad de desarrolladores y demostrar que este proyecto ha sido construido
+                    con total transparencia.
+                </p>
 
-                <p>Más que una página web, este es un pequeño proyecto hecho con pasión. Si gracias a este sitio descubres una nueva serie, apoyas una plataforma oficial o simplemente encuentras una historia que te haga sonreír, entonces habrá cumplido su propósito.</p>
+                <p>
+                    Más que una página web, este es un proyecto personal hecho con pasión. Si gracias a Mundo Yuri
+                    descubres una nueva serie, decides apoyar una plataforma oficial o simplemente encuentras una
+                    historia que te haga sonreír, entonces todo el esfuerzo habrá valido la pena.
+                </p>
 
-                <p>Gracias por formar parte de esta comunidad.</p>
+                <p>
+                    Gracias por formar parte de esta comunidad.
+                </p>
 
                 <footer class="about-signature">
                     <span>Hecho con ❤️ para todos los fans del Girls' Love.</span>
-                    <a href="https://github.com/sts19813" target="_blank" rel="noopener noreferrer">sts19813</a>
+                    <a href="https://github.com/sts19813" target="_blank" rel="noopener noreferrer">
+                        sts19813
+                    </a>
                 </footer>
             </article>
         </div>
@@ -74,3 +114,4 @@
 </body>
 
 </html>
+```
