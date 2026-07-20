@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
 </head>
 <body>
-<x-navbar />
+<x-navbar :transparent="true" />
 
 <section class="hero">
     <div class="hero-overlay"></div>

@@ -1,4 +1,6 @@
-<nav class="gl-nav scrolled" id="navbar">
+@props(['transparent' => false])
+
+<nav class="gl-nav{{ $transparent ? '' : ' scrolled' }}" id="navbar">
     <div class="nav-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="Mundo Yuri">
             <img src="{{ asset('assets/img/logos/Logo_default.png') }}" alt="Mundo Yuri" class="brand-logo">

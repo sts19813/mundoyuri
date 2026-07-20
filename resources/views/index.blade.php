@@ -20,7 +20,7 @@
 
 <body>
 
-    <x-navbar />
+    <x-navbar :transparent="true" />
 
     @php
         $featuredSeries = $featuredSeries ?? collect();

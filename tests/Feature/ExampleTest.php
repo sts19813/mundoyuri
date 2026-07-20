@@ -19,6 +19,8 @@ class ExampleTest extends TestCase
             ->assertDontSee('youtube.com/embed', false)
             ->assertDontSee('googlevideo.com', false)
             ->assertSee('youtube-nocookie.com/embed/3Q7eEPBE5ZI', false)
-            ->assertSee('controls=0', false);
+            ->assertSee('controls=0', false)
+            ->assertSee('<nav class="gl-nav" id="navbar">', false)
+            ->assertDontSee('gl-nav scrolled', false);
     }
 }
