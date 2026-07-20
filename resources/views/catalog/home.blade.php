@@ -16,9 +16,6 @@
 <x-navbar />
 
 <section class="hero">
-    <video class="hero-video" autoplay muted loop playsinline>
-        <source src="/assets/video/BG.mp4" type="video/mp4">
-    </video>
     <div class="hero-overlay"></div>
     <div class="hero-grain"></div>
     <div class="hero-content container-xl px-4 pt-5">

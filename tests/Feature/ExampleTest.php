@@ -14,6 +14,9 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertDontSee('BG.mp4', false)
+            ->assertDontSee('youtube.com/embed', false)
+            ->assertDontSee('googlevideo.com', false);
     }
 }

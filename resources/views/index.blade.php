@@ -30,18 +30,6 @@
 
     <!-- ══ HERO ══ -->
     <section class="hero">
-        <video class="hero-video-fallback" autoplay muted loop playsinline aria-hidden="true">
-            <source src="/assets/video/BG.mp4" type="video/mp4">
-        </video>
-        <iframe
-            id="heroYoutubeVideo"
-            class="hero-video"
-            src="https://www.youtube.com/embed/3Q7eEPBE5ZI?autoplay=1&mute=1&loop=1&playlist=3Q7eEPBE5ZI&controls=0&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1"
-            title="Video de fondo de Mundo Yuri"
-            allow="autoplay; encrypted-media"
-            tabindex="-1"
-            aria-hidden="true">
-        </iframe>
         <div class="hero-overlay"></div>
         <div class="hero-grain"></div>
 
@@ -215,13 +203,6 @@
         // Navbar scroll
         window.addEventListener('scroll', () => {
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
-        });
-
-        // YouTube muestra su interfaz durante los primeros instantes de carga.
-        // Conservamos el video local debajo y revelamos el iframe cuando ya desapareció.
-        document.getElementById('heroYoutubeVideo').addEventListener('load', function () {
-            const youtubeVideo = this;
-            window.setTimeout(() => youtubeVideo.classList.add('is-ready'), 2500);
         });
 
         // Rail scroll

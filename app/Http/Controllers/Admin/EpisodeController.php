@@ -407,7 +407,7 @@ class EpisodeController extends Controller
             }
         }
 
-        $embedUrl = 'https://www.youtube.com/embed/'.$videoId;
+        $embedUrl = 'https://www.youtube-nocookie.com/embed/'.$videoId;
 
         if (! empty($embedParams)) {
             $embedUrl .= '?'.http_build_query($embedParams);

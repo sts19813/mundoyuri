@@ -14,7 +14,7 @@
             'muted' => true,
             'loop' => true,
             'playsinline' => true,
-            'preload' => 'metadata',
+            'preload' => $autoplay ? 'metadata' : 'none',
         ]) !!}
         @if($autoplay) autoplay @endif
     >

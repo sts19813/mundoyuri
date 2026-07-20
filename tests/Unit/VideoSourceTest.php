@@ -8,6 +8,14 @@ use PHPUnit\Framework\TestCase;
 
 class VideoSourceTest extends TestCase
 {
+    public function test_it_uses_youtube_privacy_enhanced_mode(): void
+    {
+        $this->assertSame(
+            'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+            VideoSource::normalizeUrl('youtube', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+        );
+    }
+
     #[DataProvider('dailymotionUrls')]
     public function test_it_normalizes_dailymotion_urls_for_embedding(string $url): void
     {
