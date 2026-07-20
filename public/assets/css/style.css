@@ -404,6 +404,24 @@
         background: rgba(182, 32, 98, .16);
     }
 
+    .hero-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 0;
+        width: max(120vw, 213.34vh);
+        height: max(67.5vw, 120vh);
+        border: 0;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        transition: opacity .8s ease;
+    }
+
+    .hero-video.is-ready {
+        opacity: 1;
+    }
+
     .hero-overlay {
         position: absolute;
         inset: 0;

@@ -30,6 +30,16 @@
 
     <!-- ══ HERO ══ -->
     <section class="hero">
+        <iframe
+            id="heroYoutubeVideo"
+            class="hero-video"
+            src="https://www.youtube-nocookie.com/embed/3Q7eEPBE5ZI?autoplay=1&mute=1&loop=1&playlist=3Q7eEPBE5ZI&controls=0&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1"
+            title="Video de fondo de Mundo Yuri"
+            allow="autoplay; encrypted-media"
+            referrerpolicy="strict-origin-when-cross-origin"
+            tabindex="-1"
+            aria-hidden="true">
+        </iframe>
         <div class="hero-overlay"></div>
         <div class="hero-grain"></div>
 
@@ -203,6 +213,13 @@
         // Navbar scroll
         window.addEventListener('scroll', () => {
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        // YouTube muestra información de su reproductor al arrancar. El fondo CSS
+        // permanece visible hasta que esa interfaz inicial ya desapareció.
+        const heroYoutubeVideo = document.getElementById('heroYoutubeVideo');
+        heroYoutubeVideo.addEventListener('load', () => {
+            window.setTimeout(() => heroYoutubeVideo.classList.add('is-ready'), 3000);
         });
 
         // Rail scroll
