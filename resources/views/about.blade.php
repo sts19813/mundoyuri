@@ -41,7 +41,7 @@
                 <p>
                     Todo lo que ves aquí ha sido diseñado, programado y es mantenido por una sola persona.
                     Desde la primera línea de código hasta el último detalle visual, cada parte del sitio ha sido
-                    desarrollada con dedicación y cariño por la comunidad GL.
+                    desarrollada con dedicación y cariño para la comunidad GL.
                 </p>
 
                 <p>

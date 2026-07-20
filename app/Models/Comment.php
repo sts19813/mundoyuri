@@ -66,6 +66,8 @@ class Comment extends Model
 
     public function displayTime(): string
     {
-        return $this->created_at->format('d M Y · g:i a');
+        return $this->created_at
+            ->timezone('America/Merida')
+            ->format('d M Y · g:i a');
     }
 }
