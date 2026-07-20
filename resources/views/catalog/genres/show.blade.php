@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $genre->name }} · Mundo Yuri</title>
+    <x-seo
+        :title="$genre->name.' GL: series y películas'"
+        :description="$genre->description ?: 'Descubre series, películas y doramas Girls’ Love del género '.$genre->name.' en Mundo Yuri.'"
+        :canonical="route('catalog.genres.show', $genre->slug)"
+    />
     <x-portal-favicon />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">

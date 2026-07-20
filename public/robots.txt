@@ -1,2 +1,13 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /perfil
+Disallow: /player/
+Disallow: /login
+Disallow: /register
+Disallow: /password/
+Disallow: /test
+
+Sitemap: https://www.mundoyuri.com/sitemap.xml

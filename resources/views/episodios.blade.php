@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $episode ? ($series->title.' · '.$episode->title.' - Mundo Yuri') : 'Episodios - Mundo Yuri' }}</title>
+    <x-seo
+        :title="$episode ? $series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title : 'Últimos episodios GL'"
+        :description="$episode ? \Illuminate\Support\Str::limit($episode->description ?: 'Mira '.$episode->title.' de '.$series->title.' online en Mundo Yuri.', 155) : 'Mira los episodios más recientes de series y doramas Girls’ Love en Mundo Yuri.'"
+        :canonical="$episode ? route('public.episodes.show', $episode->slug) : route('legacy.episodios')"
+        :image="$episode ? $episode->imageUrl('1200/630') : null"
+        :type="$episode ? 'video.episode' : 'website'"
+    />
     <x-portal-favicon />
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"

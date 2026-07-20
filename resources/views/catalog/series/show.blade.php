@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $series->title }} · Mundo Yuri</title>
+    <x-seo
+        :title="$series->title.' online'"
+        :description="\Illuminate\Support\Str::limit($series->description ?: 'Mira '.$series->title.', episodios e información de esta historia Girls’ Love en Mundo Yuri.', 155)"
+        :canonical="route('catalog.series.show', $series->slug)"
+        :image="$series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null"
+        type="video.tv_show"
+    />
     <x-portal-favicon />
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"

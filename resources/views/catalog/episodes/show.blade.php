@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $series->title }} · {{ $episode->title }} · Mundo Yuri</title>
+    <x-seo
+        :title="$series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title"
+        :description="\Illuminate\Support\Str::limit($episode->description ?: 'Mira '.$episode->title.' de '.$series->title.' online en Mundo Yuri.', 155)"
+        :canonical="route('public.episodes.show', $episode->slug)"
+        :image="$episode->imageUrl('1200/630')"
+        type="video.episode"
+    />
     <x-portal-favicon />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">

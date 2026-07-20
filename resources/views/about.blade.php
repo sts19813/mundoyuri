@@ -1,12 +1,14 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Conoce la historia, el propósito y los valores detrás de Mundo Yuri.">
-    <title>Quién soy · Mundo Yuri</title>
+    <x-seo
+        title="Quién soy"
+        description="Conoce la historia, el propósito y los valores detrás de Mundo Yuri, una plataforma independiente dedicada a las historias Girls' Love."
+        :canonical="route('about')"
+    />
     <x-portal-favicon />
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
@@ -114,4 +116,3 @@
 </body>
 
 </html>
-```

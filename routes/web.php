@@ -16,10 +16,12 @@ use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/index', [PublicCatalogController::class, 'home'])->name('legacy.index');
 Route::view('/quienes-somos', 'about')->name('about');
 Route::get('/test', function () {

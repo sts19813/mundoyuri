@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo de series y películas · Mundo Yuri</title>
+    <x-seo
+        title="Catálogo de series y películas GL"
+        description="Encuentra series, películas y doramas Girls' Love por título, tipo o género. Explora todo el catálogo de Mundo Yuri."
+        :canonical="route('catalog.series.index')"
+    />
     <x-portal-favicon />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
