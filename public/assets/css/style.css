@@ -373,13 +373,32 @@
         overflow: hidden;
     }
 
+    .hero-video-fallback,
     .hero-video {
         position: absolute;
-        inset: 0;
+        top: 45%;
+        left: 50%;
+        z-index: 0;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+    }
+
+    .hero-video-fallback {
         width: 100%;
         height: 90%;
         object-fit: cover;
-        z-index: 0;
+    }
+
+    .hero-video {
+        width: max(120vw, 213.34vh);
+        height: max(67.5vw, 120vh);
+        border: 0;
+        opacity: 0;
+        transition: opacity 0.45s ease;
+    }
+
+    .hero-video.is-ready {
+        opacity: 1;
     }
 
     .hero-overlay {
