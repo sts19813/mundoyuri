@@ -29,40 +29,76 @@ class EpisodeController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Episode::query()->with(['series', 'sources']);
+        $accessibleEpisodes = function ($query) use ($request): void {
+            if (! $request->user()->can('moderate content')) {
+                $query->where(function ($scope) use ($request): void {
+                    $scope->where('moderation_status', 'approved')
+                        ->orWhere('created_by', $request->user()->id);
+                });
+            }
+        };
 
-        if (! $request->user()->can('moderate content')) {
-            $query->where(function ($scope) use ($request): void {
-                $scope->where('moderation_status', 'approved')
-                    ->orWhere('created_by', $request->user()->id);
-            });
-        }
+        $visibleEpisodes = function ($query) use ($request, $accessibleEpisodes): void {
+            $accessibleEpisodes($query);
 
-        if ($request->filled('series_id')) {
-            $query->where('series_id', $request->integer('series_id'));
-        }
+            if ($request->filled('moderation_status')) {
+                $query->where('moderation_status', $request->string('moderation_status'));
+            }
+        };
 
-        if ($request->filled('moderation_status')) {
-            $query->where('moderation_status', $request->string('moderation_status'));
-        }
-
-        $episodes = $query
-            ->orderByDesc('release_date')
-            ->orderByDesc('id')
+        $seriesGroups = $this->availableSeries()
+            ->when($request->filled('series_id'), fn (Builder $query) => $query->whereKey($request->integer('series_id')))
+            ->when($request->filled('q'), fn (Builder $query) => $query->where('title', 'like', '%'.$request->string('q').'%'))
+            ->when($request->filled('moderation_status'), fn (Builder $query) => $query->whereHas('episodes', $visibleEpisodes))
+            ->withCount(['episodes as loaded_episodes_count' => $accessibleEpisodes])
+            ->with([
+                'episodes' => function ($query) use ($visibleEpisodes): void {
+                    $visibleEpisodes($query);
+                    $query->with('sources')
+                        ->orderBy('season_number')
+                        ->orderBy('episode_number');
+                },
+            ])
             ->paginate(20)
             ->withQueryString();
 
         $seriesOptions = $this->availableSeries()->get();
 
-        return view('admin.episodes.index', compact('episodes', 'seriesOptions'));
+        return view('admin.episodes.index', compact('seriesGroups', 'seriesOptions'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $seriesOptions = $this->availableSeries()->get();
         $sourceProviders = $this->sourceProviders();
+        $seriesIds = $seriesOptions->pluck('id');
+        $nextEpisodeNumbers = Episode::query()
+            ->whereIn('series_id', $seriesIds)
+            ->selectRaw('series_id, season_number, MAX(episode_number) as max_episode_number')
+            ->groupBy('series_id', 'season_number')
+            ->get()
+            ->groupBy('series_id')
+            ->map(fn ($episodes) => $episodes->mapWithKeys(
+                fn (Episode $episode) => [(string) $episode->season_number => ((int) $episode->max_episode_number) + 1]
+            )->all())
+            ->all();
 
-        return view('admin.episodes.create', compact('seriesOptions', 'sourceProviders'));
+        $requestedSeriesId = $request->integer('series_id');
+        $selectedSeriesId = $seriesOptions->contains('id', $requestedSeriesId)
+            ? $requestedSeriesId
+            : $seriesOptions->first()?->id;
+        $knownSeasons = array_map('intval', array_keys($nextEpisodeNumbers[$selectedSeriesId] ?? []));
+        $suggestedSeason = max(1, $request->integer('season_number') ?: ($knownSeasons ? max($knownSeasons) : 1));
+        $suggestedEpisodeNumber = $nextEpisodeNumbers[$selectedSeriesId][(string) $suggestedSeason] ?? 1;
+
+        return view('admin.episodes.create', compact(
+            'seriesOptions',
+            'sourceProviders',
+            'nextEpisodeNumbers',
+            'selectedSeriesId',
+            'suggestedSeason',
+            'suggestedEpisodeNumber'
+        ));
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
@@ -83,9 +119,7 @@ class EpisodeController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Episodio guardado.',
-                'redirect' => $request->user()->can('edit episodes')
-                    ? route('admin.episodes.edit', $episode)
-                    : route('admin.episodes.show', $episode),
+                'redirect' => route('admin.episodes.index', ['series_id' => $episode->series_id]),
             ]);
         }
 
@@ -171,7 +205,7 @@ class EpisodeController extends Controller
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'thumbnail_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
             'description' => ['nullable', 'string'],
-            'moderation_status' => [Rule::requiredIf($request->user()->can('moderate content')), 'nullable', 'in:pending,approved,rejected'],
+            'moderation_status' => [Rule::requiredIf($request->user()->can('moderate content') && ! $request->user()->isAdmin()), 'nullable', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
             'source_provider' => ['nullable', 'array'],
             'source_provider.*' => ['nullable', Rule::in(array_keys($this->sourceProviders()))],
@@ -520,7 +554,9 @@ class EpisodeController extends Controller
 
     private function syncModeration(Episode $episode, string $status, ?string $notes): void
     {
-        if (! auth()->user()->can('moderate content')) {
+        if (auth()->user()->isAdmin()) {
+            $status = 'approved';
+        } elseif (! auth()->user()->can('moderate content')) {
             $status = 'pending';
             $notes = null;
         }

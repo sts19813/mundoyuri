@@ -26,6 +26,10 @@
     }
 
     $primaryIndex = (int) old('source_primary', isset($episode) ? ($episode->sources->search(fn($s) => $s->is_primary) ?: 0) : 0);
+    $isCreating = !isset($episode);
+    $currentSeriesId = old('series_id', $episode->series_id ?? ($selectedSeriesId ?? request('series_id')));
+    $currentSeason = old('season_number', $episode->season_number ?? ($suggestedSeason ?? 1));
+    $currentEpisodeNumber = old('episode_number', $episode->episode_number ?? ($suggestedEpisodeNumber ?? 1));
 @endphp
 <div class="card">
     <div class="card-body row g-4">
@@ -41,11 +45,14 @@
         @endif
         <div class="col-md-6">
             <label class="form-label">Serie</label>
-            <select class="form-select @error('series_id') is-invalid @enderror" name="series_id" required>
+            <select class="form-select @error('series_id') is-invalid @enderror" name="series_id" id="episode-series-id" required>
                 @foreach($seriesOptions as $option)
-                    <option value="{{ $option->id }}" @selected(old('series_id', $episode->series_id ?? request('series_id')) == $option->id)>{{ $option->title }}</option>
+                    <option value="{{ $option->id }}" @selected($currentSeriesId == $option->id)>{{ $option->title }}</option>
                 @endforeach
             </select>
+            @if($isCreating && request()->filled('series_id'))
+                <div class="form-text text-primary">Serie seleccionada desde el listado. Puedes cambiarla si lo necesitas.</div>
+            @endif
             @error('series_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-6">
@@ -55,12 +62,15 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Temporada</label>
-            <input class="form-control @error('season_number') is-invalid @enderror" type="number" name="season_number" value="{{ old('season_number', $episode->season_number ?? 1) }}" required>
+            <input class="form-control @error('season_number') is-invalid @enderror" type="number" min="1" name="season_number" id="episode-season-number" value="{{ $currentSeason }}" required>
             @error('season_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-4">
             <label class="form-label">Numero de episodio</label>
-            <input class="form-control @error('episode_number') is-invalid @enderror" type="number" name="episode_number" value="{{ old('episode_number', $episode->episode_number ?? 1) }}" required>
+            <input class="form-control @error('episode_number') is-invalid @enderror" type="number" min="1" name="episode_number" id="episode-number" value="{{ $currentEpisodeNumber }}" required>
+            @if($isCreating)
+                <div class="form-text">Se propone el siguiente número disponible; puedes cambiarlo.</div>
+            @endif
             @error('episode_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-4">
@@ -89,7 +99,12 @@
             @endif
         </div>
         <div class="col-12"><label class="form-label">Descripcion</label><textarea class="form-control" rows="4" name="description">{{ old('description', $episode->description ?? '') }}</textarea></div>
-        @can('moderate content')
+        @if(auth()->user()->isAdmin())
+            <input type="hidden" name="moderation_status" value="approved">
+            <div class="col-12">
+                <div class="alert alert-light-success mb-0 py-3">Como administrador, el episodio se guardará siempre como aprobado.</div>
+            </div>
+        @elseif(auth()->user()->can('moderate content'))
             <div class="col-md-6">
                 <label class="form-label">Moderación</label>
                 <select class="form-select" name="moderation_status" required>
@@ -104,7 +119,7 @@
             <div class="col-12">
                 <div class="alert alert-light-primary mb-0">El episodio y sus fuentes se enviarán a moderación antes de publicarse.</div>
             </div>
-        @endcan
+        @endif
 
         <div class="col-12">
             <hr>
@@ -220,6 +235,30 @@
     const addButton = document.getElementById('add-source-row');
     const template = document.getElementById('episode-source-template');
     const form = document.getElementById('episode-form');
+    const isCreating = @js($isCreating);
+    const nextEpisodeNumbers = @js($nextEpisodeNumbers ?? []);
+    const seriesSelect = document.getElementById('episode-series-id');
+    const seasonInput = document.getElementById('episode-season-number');
+    const episodeInput = document.getElementById('episode-number');
+
+    const suggestNextEpisode = () => {
+        if (!isCreating || !seriesSelect || !seasonInput || !episodeInput) {
+            return;
+        }
+
+        const seriesNumbers = nextEpisodeNumbers[String(seriesSelect.value)] || {};
+        const season = String(Math.max(1, Number.parseInt(seasonInput.value || '1', 10)));
+        episodeInput.value = seriesNumbers[season] || 1;
+    };
+
+    seriesSelect?.addEventListener('change', () => {
+        const seriesNumbers = nextEpisodeNumbers[String(seriesSelect.value)] || {};
+        const seasons = Object.keys(seriesNumbers).map(Number).filter(Number.isFinite);
+
+        seasonInput.value = seasons.length ? Math.max(...seasons) : 1;
+        suggestNextEpisode();
+    });
+    seasonInput?.addEventListener('change', suggestNextEpisode);
 
     if (!list || !addButton || !template) {
         return;
