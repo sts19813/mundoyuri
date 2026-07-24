@@ -175,6 +175,11 @@
                         <div class="ep-meta-dot"></div>
                         <div class="ep-meta-item">{{ $series->country_of_origin ?: 'País no definido' }}</div>
                     </div>
+                    <x-episode-share
+                        :url="$shareUrl"
+                        :title="$series->title.' · Temporada '.$episode->season_number.' Episodio '.$episode->episode_number"
+                        :text="'Mira '.$series->title.' · Episodio '.$episode->episode_number.' en Mundo Yuri.'"
+                    />
                 </div>
 
                 <div class="ep-nav">
@@ -229,14 +234,6 @@
                             </div>
                         </a>
                     @endif
-                </div>
-
-                <div class="share-section">
-                    <span class="share-label">Compartir</span>
-                    <span class="share-count">{{ $comments->count() }}</span>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($shareUrl) }}" target="_blank" rel="noopener" class="share-btn share-fb">Facebook</a>
-                    <a href="https://twitter.com/intent/tweet?url={{ urlencode($shareUrl) }}&text={{ urlencode($series->title.' - Episodio '.$episode->episode_number) }}" target="_blank" rel="noopener" class="share-btn share-tw">Twitter</a>
-                    <a href="https://wa.me/?text={{ urlencode($series->title.' - '.$shareUrl) }}" target="_blank" rel="noopener" class="share-btn share-wa">WhatsApp</a>
                 </div>
 
                 <div class="ep-list-section">

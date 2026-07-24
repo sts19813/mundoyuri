@@ -4,10 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @php
+        $homeSeoDescription = 'Descubre series, doramas y películas Girls’ Love (GL) online, subtituladas en español. Encuentra nuevos episodios y estrenos cada semana en Mundo Yuri.';
+        $homeSeoSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => 'Mundo Yuri',
+            'alternateName' => 'Mundo Yuri GL',
+            'url' => route('home'),
+            'description' => $homeSeoDescription,
+            'inLanguage' => 'es-MX',
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => 'Mundo Yuri',
+                'url' => route('home'),
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => asset('assets/img/logos/Logo Mundo yuri Original.png'),
+                ],
+            ],
+        ];
+    @endphp
     <x-seo
-        title="Series y películas GL online"
-        description="Descubre series, doramas y películas Girls' Love de todo el mundo en Mundo Yuri. Estrenos y episodios nuevos, subtitulados en español."
+        title="Mundo Yuri: series GL y Girls’ Love online"
+        :description="$homeSeoDescription"
         :canonical="route('home')"
+        :schema="$homeSeoSchema"
     />
     <x-portal-favicon />
     <link
@@ -48,9 +70,9 @@
                 <span class="brand-heart" style="width:14px;height:14px;"></span>
                 Contenido GL · Actualizado diario
             </div>
-            <h1>Descubre <em>nuevas historias</em> que te harán sentir</h1>
-            <p class="hero-desc">Series, doramas y películas GL de todo el mundo. Subtituladas con amor, actualizadas
-                cada día.</p>
+            <h1>Historias <em>Girls’ Love</em> para descubrir, sentir y compartir</h1>
+            <p class="hero-desc">Mira series, doramas y películas GL de todo el mundo, subtituladas en español y con
+                nuevos episodios cada semana.</p>
             <div class="hero-actions">
                 <a href="{{ route('legacy.episodios') }}" class="btn-rose">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

@@ -38,6 +38,11 @@
             <span>{{ number_format($episode->views_count) }} {{ $episode->views_count === 1 ? 'vista' : 'vistas' }}</span>
         </div>
         <p class="text-muted">{{ $episode->description ?: 'Sin descripcion disponible.' }}</p>
+        <x-episode-share
+            :url="route('public.episodes.show', $episode->slug)"
+            :title="$series->title.' · Temporada '.$episode->season_number.' Episodio '.$episode->episode_number"
+            :text="'Mira '.$series->title.' · Episodio '.$episode->episode_number.' en Mundo Yuri.'"
+        />
 
         <div class="card mb-4">
             <div class="card-body">

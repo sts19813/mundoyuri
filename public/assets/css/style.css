@@ -507,6 +507,58 @@
         color: #fff;
     }
 
+    /* ── EPISODE SHARING ── */
+    .episode-share {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin: 16px 0 20px;
+    }
+
+    .episode-share__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        font: 500 0.78rem 'DM Sans', sans-serif;
+        line-height: 1;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+
+    .episode-share__button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(244, 63, 142, 0.42);
+        background: rgba(244, 63, 142, 0.1);
+        color: #fff;
+    }
+
+    .episode-share__button--primary {
+        gap: 7px;
+        border-color: var(--rose);
+        background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+        box-shadow: 0 8px 22px rgba(244, 63, 142, 0.2);
+        color: #fff;
+    }
+
+    .episode-share__button--whatsapp {
+        border-color: rgba(37, 211, 102, 0.35);
+        color: #83eeaa;
+    }
+
+    .episode-share__feedback {
+        min-width: 90px;
+        color: #83eeaa;
+        font-size: 0.75rem;
+    }
+
     .hero-stats {
         display: flex;
         gap: 32px;
