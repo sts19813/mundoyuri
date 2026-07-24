@@ -24,6 +24,8 @@ class AssistantMessageTest extends TestCase
             ->assertSee('¿Hay alguna serie o película que te encantaría ver aquí?')
             ->assertSee('Crea una cuenta gratis para preparar tu lista de favoritas y descubrir las próximas novedades.')
             ->assertSee('data-miyu-peek', false)
+            ->assertSee("const startsMinimized = storedState !== 'expanded';", false)
+            ->assertSee("localStorage.setItem(storageKey, 'expanded');", false)
             ->assertSee('¿Quieres mandarnos un mensaje?')
             ->assertDontSee('Dime otra cosa');
     }

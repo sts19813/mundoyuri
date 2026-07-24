@@ -621,7 +621,7 @@
         const minimize = () => {
             root.classList.add('is-minimized');
             root.classList.remove('is-speaking');
-            localStorage.setItem(storageKey, '1');
+            localStorage.setItem(storageKey, 'minimized');
             window.clearTimeout(bubbleTimer);
             hidePeek();
             scheduleMessage();
@@ -630,7 +630,7 @@
         const expandAssistant = () => {
             hidePeek();
             root.classList.remove('is-minimized');
-            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'expanded');
             setSpeaking(false);
             scheduleBlink();
             scheduleMessage();
@@ -771,14 +771,15 @@
         document.addEventListener('pointermove', followPointer, { passive: true });
         reducedMotion.addEventListener?.('change', scheduleBlink);
 
-        const startsMinimized = localStorage.getItem(storageKey) === '1';
+        const storedState = localStorage.getItem(storageKey);
+        const startsMinimized = storedState !== 'expanded';
 
         if (startsMinimized) {
             root.classList.add('is-minimized');
         }
 
         root.setAttribute('data-ready', '');
-        startsMinimized ? showPeek(0) : showMessage(0);
+        startsMinimized ? hidePeek() : showMessage(0);
         scheduleBlink();
         scheduleMessage();
     })();

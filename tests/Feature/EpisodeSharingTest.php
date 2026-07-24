@@ -42,14 +42,16 @@ class EpisodeSharingTest extends TestCase
         $response = $this->get(route('public.episodes.show', $episode->slug));
 
         $response->assertOk()
-            ->assertSee('Compartir episodio')
-            ->assertSee('WhatsApp')
-            ->assertSee('Facebook')
-            ->assertSee('Instagram')
-            ->assertSee('aria-label="Compartir episodio en X"', false)
-            ->assertSee('Copiar enlace')
-            ->assertSee('https://x.com/intent/post', false)
-            ->assertSee('data-instagram-share', false)
+            ->assertSee('aria-label="Compartir episodio"', false)
+            ->assertSee('aria-label="Compartir por WhatsApp"', false)
+            ->assertSee('aria-label="Compartir en Facebook"', false)
+            ->assertSee('aria-label="Compartir en X"', false)
+            ->assertSee('aria-label="Compartir en Instagram"', false)
+            ->assertSee('aria-label="Copiar enlace del episodio"', false)
+            ->assertSee('data-share-network="wa"', false)
+            ->assertSee('data-share-network="fb"', false)
+            ->assertSee('data-share-network="x"', false)
+            ->assertSee('data-share-network="ig"', false)
             ->assertSee(route('public.episodes.show', $episode->slug), false);
     }
 }
