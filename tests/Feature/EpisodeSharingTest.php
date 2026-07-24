@@ -45,8 +45,11 @@ class EpisodeSharingTest extends TestCase
             ->assertSee('Compartir episodio')
             ->assertSee('WhatsApp')
             ->assertSee('Facebook')
+            ->assertSee('Instagram')
+            ->assertSee('aria-label="Compartir episodio en X"', false)
             ->assertSee('Copiar enlace')
-            ->assertSee('data-native-share', false)
+            ->assertSee('https://x.com/intent/post', false)
+            ->assertSee('data-instagram-share', false)
             ->assertSee(route('public.episodes.show', $episode->slug), false);
     }
 }

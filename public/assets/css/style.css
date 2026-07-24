@@ -512,8 +512,18 @@
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 9px;
+        gap: 10px;
         margin: 16px 0 20px;
+    }
+
+    .episode-share__label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-right: 2px;
+        color: var(--text);
+        font-size: 0.82rem;
+        font-weight: 500;
     }
 
     .episode-share__button {
@@ -533,28 +543,49 @@
         transition: transform 0.2s, border-color 0.2s, background 0.2s;
     }
 
-    .episode-share__button:hover {
+    .episode-share__button:not(.episode-share__button--platform):hover {
         transform: translateY(-1px);
         border-color: rgba(244, 63, 142, 0.42);
         background: rgba(244, 63, 142, 0.1);
         color: #fff;
     }
 
-    .episode-share__button--primary {
+    .episode-share__button--platform {
         gap: 7px;
-        border-color: var(--rose);
-        background: linear-gradient(135deg, var(--rose), var(--rose-deep));
-        box-shadow: 0 8px 22px rgba(244, 63, 142, 0.2);
+        min-width: 44px;
+        border-color: transparent;
         color: #fff;
     }
 
     .episode-share__button--whatsapp {
-        border-color: rgba(37, 211, 102, 0.35);
-        color: #83eeaa;
+        background: #168c49;
+    }
+
+    .episode-share__button--facebook {
+        background: #1877f2;
+    }
+
+    .episode-share__button--x {
+        background: #050505;
+    }
+
+    .episode-share__button--instagram {
+        background: linear-gradient(135deg, #833ab4, #e1306c 58%, #f77737);
+    }
+
+    .episode-share__button--platform:hover {
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.26);
+        filter: brightness(1.12);
+        color: #fff;
+    }
+
+    .episode-share__button--copy {
+        color: var(--muted);
     }
 
     .episode-share__feedback {
-        min-width: 90px;
+        min-width: 120px;
         color: #83eeaa;
         font-size: 0.75rem;
     }
