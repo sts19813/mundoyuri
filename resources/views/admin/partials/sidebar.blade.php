@@ -30,6 +30,14 @@
                     </div>
                 @endcan
 
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.assistant-messages.*') ? 'active' : '' }}"
+                        href="{{ route('admin.assistant-messages.index') }}">
+                        <span class="menu-icon"><i class="ki-outline ki-message-text-2 fs-2"></i></span>
+                        <span class="menu-title">Mensajes de Miyu</span>
+                    </a>
+                </div>
+
                 @if($hasContentAccess)
                     <div class="menu-item mt-6 mb-2">
                         <div class="menu-content">

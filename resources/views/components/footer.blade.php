@@ -64,3 +64,5 @@
         </p>
     </div>
 </footer>
+
+<x-neko-assistant />

@@ -5,11 +5,13 @@ use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AssistantMessageController as AdminAssistantMessageController;
 use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
+use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContentSubmissionController;
@@ -40,6 +42,9 @@ Route::get('/series/{series:slug}', [CatalogController::class, 'showSeries'])->n
 Route::get('/series/{series:slug}/episodios/{episode:slug}', [CatalogController::class, 'showEpisode'])->name('catalog.episodes.show');
 Route::get('/player/episode-sources/{source}', EpisodeSourcePlayerController::class)->name('episode-sources.player');
 Route::post('/comentarios', [CommentController::class, 'store'])->name('comments.store');
+Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
+    ->middleware('throttle:5,10')
+    ->name('assistant-messages.store');
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 
@@ -62,7 +67,7 @@ Route::middleware(['auth'])
 
 Route::middleware(['auth', 'admin.panel'])->prefix('admin')->group(function () {
     Route::get('/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
-    Route::get('/profile/edit', fn() => redirect()->route('admin.profile.show'))->name('admin.profile.edit');
+    Route::get('/profile/edit', fn () => redirect()->route('admin.profile.show'))->name('admin.profile.edit');
     Route::put('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.updatePassword');
 });
@@ -73,6 +78,10 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
 
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/mensajes-miyu', [AdminAssistantMessageController::class, 'index'])
+        ->name('admin.assistant-messages.index');
+    Route::patch('/mensajes-miyu/{assistantMessage}', [AdminAssistantMessageController::class, 'update'])
+        ->name('admin.assistant-messages.update');
 
     Route::get('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'edit'])->middleware('admin')->name('admin.settings.backblaze-b2.edit');
     Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->middleware('admin')->name('admin.settings.backblaze-b2.update');
@@ -162,4 +171,4 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     Route::post('/validacion/episodios/{episode}/reject', [ModerationController::class, 'rejectEpisode'])->name('admin.moderation.episodes.reject');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

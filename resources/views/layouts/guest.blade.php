@@ -27,5 +27,6 @@
                 {{ $slot }}
             </div>
         </div>
+        <x-neko-assistant />
     </body>
 </html>

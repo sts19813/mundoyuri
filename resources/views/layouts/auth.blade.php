@@ -180,5 +180,6 @@
     <script src="assets/js/scripts.bundle.js"></script>
 
     @stack('scripts')
+    <x-neko-assistant />
 </body>
 </html>
