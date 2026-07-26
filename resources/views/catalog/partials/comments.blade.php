@@ -16,17 +16,23 @@
             <div class="card-body">
                 <div class="d-flex gap-3">
                     <div class="flex-shrink-0">
-                        @if($comment->avatarUrl())
-                            <img src="{{ $comment->avatarUrl() }}" alt="{{ $comment->display_alias }}" class="rounded-circle" width="42" height="42" style="object-fit:cover;">
-                        @else
-                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width:42px;height:42px;">
-                                {{ $comment->initials() }}
-                            </div>
-                        @endif
+                        @if($comment->user)<a href="{{ $comment->user->publicProfileUrl() }}" aria-label="Ver perfil de {{ $comment->display_alias }}">@endif
+                            @if($comment->avatarUrl())
+                                <img src="{{ $comment->avatarUrl() }}" alt="{{ $comment->display_alias }}" class="rounded-circle" width="42" height="42" style="object-fit:cover;">
+                            @else
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width:42px;height:42px;">
+                                    {{ $comment->initials() }}
+                                </div>
+                            @endif
+                        @if($comment->user)</a>@endif
                     </div>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>{{ $comment->display_alias }}</strong>
+                            @if($comment->user)
+                                <a class="fw-bold text-decoration-none" href="{{ $comment->user->publicProfileUrl() }}">{{ $comment->display_alias }}</a>
+                            @else
+                                <strong>{{ $comment->display_alias }}</strong>
+                            @endif
                             <small class="text-muted">{{ $comment->displayTime() }}</small>
                         </div>
                         <p class="mb-2">{{ $comment->body }}</p>
@@ -79,17 +85,23 @@
                                 @foreach($comment->replies as $reply)
                                     <div class="d-flex gap-3 mb-3">
                                         <div class="flex-shrink-0">
-                                            @if($reply->avatarUrl())
-                                                <img src="{{ $reply->avatarUrl() }}" alt="{{ $reply->display_alias }}" class="rounded-circle" width="32" height="32" style="object-fit:cover;">
-                                            @else
-                                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;font-size:.8rem;">
-                                                    {{ $reply->initials() }}
-                                                </div>
-                                            @endif
+                                            @if($reply->user)<a href="{{ $reply->user->publicProfileUrl() }}" aria-label="Ver perfil de {{ $reply->display_alias }}">@endif
+                                                @if($reply->avatarUrl())
+                                                    <img src="{{ $reply->avatarUrl() }}" alt="{{ $reply->display_alias }}" class="rounded-circle" width="32" height="32" style="object-fit:cover;">
+                                                @else
+                                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;font-size:.8rem;">
+                                                        {{ $reply->initials() }}
+                                                    </div>
+                                                @endif
+                                            @if($reply->user)</a>@endif
                                         </div>
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between">
-                                                <strong class="fs-8">{{ $reply->display_alias }}</strong>
+                                                @if($reply->user)
+                                                    <a class="fw-bold fs-8 text-decoration-none" href="{{ $reply->user->publicProfileUrl() }}">{{ $reply->display_alias }}</a>
+                                                @else
+                                                    <strong class="fs-8">{{ $reply->display_alias }}</strong>
+                                                @endif
                                                 <small class="text-muted">{{ $reply->displayTime() }}</small>
                                             </div>
                                             <div class="fs-7">{{ $reply->body }}</div>

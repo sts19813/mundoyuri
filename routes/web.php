@@ -48,6 +48,7 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
     ->name('assistant-messages.store');
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
+Route::get('/usuarios/{user}/{alias?}', [ProfileController::class, 'show'])->name('profiles.show');
 
 Route::get('/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin.panel'])

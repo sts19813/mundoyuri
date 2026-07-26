@@ -11,14 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'google_id', 'google_avatar', 'profile_image'])]
+#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -81,6 +82,21 @@ class User extends Authenticatable
     public function hasProfileAvatar(): bool
     {
         return filled($this->profile_image) || filled($this->google_avatar);
+    }
+
+    public function coverImageUrl(): ?string
+    {
+        return $this->cover_image
+            ? Storage::disk('public')->url($this->cover_image)
+            : null;
+    }
+
+    public function publicProfileUrl(): string
+    {
+        return route('profiles.show', [
+            'user' => $this,
+            'alias' => Str::slug($this->alias ?: $this->name),
+        ]);
     }
 
     public function initials(): string

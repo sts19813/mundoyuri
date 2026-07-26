@@ -24,6 +24,23 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display a user's public profile.
+     */
+    public function show(User $user, ?string $alias = null): View
+    {
+        abort_unless($user->is_active, 404);
+
+        $user->loadCount([
+            'comments' => fn ($query) => $query->where('is_approved', true),
+        ]);
+
+        return view('profile.show', [
+            'profileUser' => $user,
+            'isOwner' => auth()->id() === $user->id,
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
@@ -36,6 +53,7 @@ class ProfileController extends Controller
             'name' => $validated['name'],
             'alias' => $validated['alias'] ?? null,
             'email' => $validated['email'],
+            'biography' => $validated['biography'] ?? null,
         ]);
 
         if ($user->isDirty('email')) {
@@ -50,6 +68,16 @@ class ProfileController extends Controller
         if ($request->hasFile('profile_image')) {
             $this->deleteProfileImage($user);
             $user->profile_image = $request->file('profile_image')->store('profile-images', 'public');
+        }
+
+        if ($request->boolean('cover_remove')) {
+            $this->deleteCoverImage($user);
+            $user->cover_image = null;
+        }
+
+        if ($request->hasFile('cover_image')) {
+            $this->deleteCoverImage($user);
+            $user->cover_image = $request->file('cover_image')->store('profile-covers', 'public');
         }
 
         $user->save();
@@ -70,6 +98,8 @@ class ProfileController extends Controller
 
         Auth::logout();
 
+        $this->deleteProfileImage($user);
+        $this->deleteCoverImage($user);
         $user->delete();
 
         $request->session()->invalidate();
@@ -82,6 +112,13 @@ class ProfileController extends Controller
     {
         if ($user->profile_image) {
             Storage::disk('public')->delete($user->profile_image);
+        }
+    }
+
+    private function deleteCoverImage(User $user): void
+    {
+        if ($user->cover_image) {
+            Storage::disk('public')->delete($user->cover_image);
         }
     }
 }

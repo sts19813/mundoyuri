@@ -33,7 +33,20 @@
             @endif
 
             <section class="profile-hero-card">
+                @if($user->coverImageUrl())
+                    <img src="{{ $user->coverImageUrl() }}" alt="" class="profile-cover-media" data-cover-preview>
+                @else
+                    <img src="" alt="" class="profile-cover-media d-none" data-cover-preview>
+                @endif
+                <div class="profile-cover-overlay"></div>
                 <div class="profile-hero-pattern"></div>
+                <label class="profile-cover-edit" for="cover_image">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.5 4h-5L7.8 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2.8z"/>
+                        <circle cx="12" cy="13" r="3"/>
+                    </svg>
+                    Cambiar portada
+                </label>
                 <div class="profile-identity">
                     <div class="profile-avatar-wrap">
                         @if($user->hasProfileAvatar())
@@ -54,9 +67,12 @@
                         <p>{{ $user->alias ? '@'.$user->alias : $user->email }}</p>
                     </div>
                 </div>
-                <div class="profile-status-chip">
-                    <span></span>
-                    {{ $user->email_verified_at ? 'Cuenta verificada' : 'Verificación pendiente' }}
+                <div class="profile-hero-actions">
+                    <a class="profile-btn profile-btn-soft" href="{{ $user->publicProfileUrl() }}">Ver perfil público</a>
+                    <div class="profile-status-chip">
+                        <span></span>
+                        {{ $user->email_verified_at ? 'Cuenta verificada' : 'Verificación pendiente' }}
+                    </div>
                 </div>
             </section>
 
@@ -75,8 +91,22 @@
                         @method('PATCH')
                         <input type="file" id="profile_image" name="profile_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-avatar-input>
                         <input type="hidden" name="avatar_remove" value="0" data-avatar-remove>
+                        <input type="file" id="cover_image" name="cover_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-cover-input>
+                        <input type="hidden" name="cover_remove" value="0" data-cover-remove>
 
                         <div class="profile-photo-controls">
+                            <div>
+                                <strong>Foto de portada</strong>
+                                <span>JPG, PNG o WebP · máximo 5 MB · recomendado 1600 × 600 px</span>
+                            </div>
+                            <div class="profile-photo-actions">
+                                <label for="cover_image" class="profile-btn profile-btn-soft">Elegir portada</label>
+                                <button type="button" class="profile-btn profile-btn-text" data-cover-clear>Quitar portada</button>
+                            </div>
+                            @error('cover_image')<span class="profile-field-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="profile-photo-controls profile-photo-controls-bordered">
                             <div>
                                 <strong>Foto de perfil</strong>
                                 <span>JPG, PNG o WebP · máximo 2 MB</span>
@@ -108,6 +138,14 @@
                                 <label for="email">Correo electrónico</label>
                                 <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" autocomplete="email" required class="@error('email') is-invalid @enderror">
                                 @error('email')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+
+                            <div class="profile-field profile-field-wide">
+                                <label for="biography">Biografía <span>Máximo 600 caracteres</span></label>
+                                <textarea id="biography" name="biography" rows="5" maxlength="600"
+                                    placeholder="Cuéntale a la comunidad algo sobre ti, tus gustos y tus series favoritas…"
+                                    class="@error('biography') is-invalid @enderror">{{ old('biography', $user->biography) }}</textarea>
+                                @error('biography')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>
                         </div>
 
@@ -160,6 +198,9 @@
         const avatarPreview = document.querySelector('[data-avatar-preview]');
         const avatarFallback = document.querySelector('[data-avatar-fallback]');
         const avatarRemove = document.querySelector('[data-avatar-remove]');
+        const coverInput = document.querySelector('[data-cover-input]');
+        const coverPreview = document.querySelector('[data-cover-preview]');
+        const coverRemove = document.querySelector('[data-cover-remove]');
 
         avatarInput?.addEventListener('change', function () {
             const file = this.files?.[0];
@@ -177,6 +218,22 @@
             avatarPreview.classList.add('d-none');
             avatarFallback.classList.remove('d-none');
             avatarRemove.value = '1';
+        });
+
+        coverInput?.addEventListener('change', function () {
+            const file = this.files?.[0];
+            if (!file) return;
+
+            coverPreview.src = URL.createObjectURL(file);
+            coverPreview.classList.remove('d-none');
+            coverRemove.value = '0';
+        });
+
+        document.querySelector('[data-cover-clear]')?.addEventListener('click', function () {
+            coverInput.value = '';
+            coverPreview.removeAttribute('src');
+            coverPreview.classList.add('d-none');
+            coverRemove.value = '1';
         });
     </script>
 </body>

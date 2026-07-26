@@ -34,6 +34,9 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'avatar_remove' => ['nullable', 'boolean'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'cover_remove' => ['nullable', 'boolean'],
+            'biography' => ['nullable', 'string', 'max:600'],
         ];
     }
 }

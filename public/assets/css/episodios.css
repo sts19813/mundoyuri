@@ -869,6 +869,27 @@
       color: #fff;
   }
 
+  .comment-user-link {
+      text-decoration: none;
+      transition: color .2s ease;
+  }
+
+  .comment-user-link:hover,
+  .comment-user-link:focus-visible {
+      color: var(--rose);
+  }
+
+  .comment-avatar-link {
+      text-decoration: none;
+      transition: transform .2s ease, box-shadow .2s ease;
+  }
+
+  .comment-avatar-link:hover,
+  .comment-avatar-link:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 3px rgba(244, 63, 142, .18);
+  }
+
   .comment-date {
       font-size: 0.72rem;
       color: var(--muted);

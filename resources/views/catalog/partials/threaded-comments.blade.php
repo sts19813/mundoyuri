@@ -25,16 +25,29 @@
             $replyFormId = 'reply-form-'.$comment->id;
         @endphp
         <div class="comment-item">
-            <div class="comment-avatar {{ $avatarClass }}">
+            @if($comment->user)
+                <a class="comment-avatar comment-avatar-link {{ $avatarClass }}" href="{{ $comment->user->publicProfileUrl() }}"
+                    aria-label="Ver perfil de {{ $comment->display_alias }}">
+            @else
+                <div class="comment-avatar {{ $avatarClass }}">
+            @endif
                 @if($comment->avatarUrl())
                     <img src="{{ $comment->avatarUrl() }}" alt="{{ $comment->display_alias }}">
                 @else
                     {{ $comment->initials() }}
                 @endif
-            </div>
+            @if($comment->user)
+                </a>
+            @else
+                </div>
+            @endif
             <div class="comment-body">
                 <div class="comment-meta">
-                    <span class="comment-user">{{ $comment->display_alias }}</span>
+                    @if($comment->user)
+                        <a class="comment-user comment-user-link" href="{{ $comment->user->publicProfileUrl() }}">{{ $comment->display_alias }}</a>
+                    @else
+                        <span class="comment-user">{{ $comment->display_alias }}</span>
+                    @endif
                     <span class="comment-date">{{ $comment->displayTime() }}</span>
                 </div>
                 <p class="comment-text">{{ $comment->body }}</p>
@@ -100,16 +113,29 @@
                 @foreach($comment->replies as $reply)
                     <div class="comment-reply">
                         <div class="comment-reply-inner">
-                            <div class="comment-avatar av2">
+                            @if($reply->user)
+                                <a class="comment-avatar comment-avatar-link av2" href="{{ $reply->user->publicProfileUrl() }}"
+                                    aria-label="Ver perfil de {{ $reply->display_alias }}">
+                            @else
+                                <div class="comment-avatar av2">
+                            @endif
                                 @if($reply->avatarUrl())
                                     <img src="{{ $reply->avatarUrl() }}" alt="{{ $reply->display_alias }}">
                                 @else
                                     {{ $reply->initials() }}
                                 @endif
-                            </div>
+                            @if($reply->user)
+                                </a>
+                            @else
+                                </div>
+                            @endif
                             <div class="comment-reply-body">
                                 <div class="comment-meta">
-                                    <span class="comment-user">{{ $reply->display_alias }}</span>
+                                    @if($reply->user)
+                                        <a class="comment-user comment-user-link" href="{{ $reply->user->publicProfileUrl() }}">{{ $reply->display_alias }}</a>
+                                    @else
+                                        <span class="comment-user">{{ $reply->display_alias }}</span>
+                                    @endif
                                     <span class="comment-date">{{ $reply->displayTime() }}</span>
                                 </div>
                                 <p class="comment-text mb-1">{{ $reply->body }}</p>

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Genre;
+use App\Models\Series;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -45,7 +47,7 @@ class ProfileTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
-    public function test_profile_image_and_alias_can_be_updated_from_the_portal(): void
+    public function test_profile_images_biography_and_alias_can_be_updated_from_the_portal(): void
     {
         Storage::fake('public');
         $user = User::factory()->create();
@@ -57,14 +59,107 @@ class ProfileTest extends TestCase
                 'alias' => 'yuri-fan',
                 'email' => $user->email,
                 'profile_image' => UploadedFile::fake()->image('avatar.webp'),
+                'cover_image' => UploadedFile::fake()->image('cover.jpg', 1600, 600),
+                'biography' => 'Me encantan las historias GL, el café y descubrir nuevas series.',
             ]);
 
         $response->assertSessionHasNoErrors()->assertRedirect('/profile');
 
         $user->refresh();
         $this->assertSame('yuri-fan', $user->alias);
+        $this->assertSame('Me encantan las historias GL, el café y descubrir nuevas series.', $user->biography);
         $this->assertNotNull($user->profile_image);
+        $this->assertNotNull($user->cover_image);
         Storage::disk('public')->assertExists($user->profile_image);
+        Storage::disk('public')->assertExists($user->cover_image);
+    }
+
+    public function test_public_profile_is_visible_without_exposing_private_email(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Luna Rivera',
+            'alias' => 'luna-yuri',
+            'email' => 'private@example.com',
+            'biography' => 'Fan de las historias románticas y el cine asiático.',
+        ]);
+
+        $this->get($user->publicProfileUrl())
+            ->assertOk()
+            ->assertSee('Luna Rivera')
+            ->assertSee('@luna-yuri')
+            ->assertSee('Fan de las historias románticas y el cine asiático.')
+            ->assertDontSee('private@example.com')
+            ->assertDontSee('Editar mi perfil');
+
+        $this->actingAs($user)
+            ->get($user->publicProfileUrl())
+            ->assertOk()
+            ->assertSee('Editar mi perfil')
+            ->assertSee(route('profile.edit'), false);
+    }
+
+    public function test_cover_image_can_be_removed(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('profile-covers/old-cover.jpg', 'cover');
+        $user = User::factory()->create([
+            'cover_image' => 'profile-covers/old-cover.jpg',
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'email' => $user->email,
+                'cover_remove' => '1',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.edit'));
+
+        $this->assertNull($user->refresh()->cover_image);
+        Storage::disk('public')->assertMissing('profile-covers/old-cover.jpg');
+    }
+
+    public function test_authenticated_comment_author_links_to_public_profile(): void
+    {
+        $author = User::factory()->create([
+            'name' => 'Autora registrada',
+            'alias' => 'autora-yuri',
+        ]);
+        $genre = Genre::query()->create([
+            'name' => 'Romance',
+            'slug' => 'romance',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $author->id,
+            'approved_by' => $author->id,
+            'title' => 'Serie con comentarios',
+            'slug' => 'serie-con-comentarios',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripción suficientemente completa para mostrar la serie.',
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
+
+        $series->comments()->create([
+            'user_id' => $author->id,
+            'alias' => $author->alias,
+            'body' => 'Comentario de una persona con sesión iniciada.',
+            'is_approved' => true,
+        ]);
+        $series->comments()->create([
+            'alias' => 'Visitante anónima',
+            'body' => 'Comentario publicado sin iniciar sesión.',
+            'is_approved' => true,
+        ]);
+
+        $this->get(route('catalog.series.show', $series))
+            ->assertOk()
+            ->assertSee($author->publicProfileUrl(), false)
+            ->assertSee('Ver perfil de autora-yuri')
+            ->assertSee('<span class="comment-user">Visitante anónima</span>', false);
     }
 
     public function test_portal_navigation_changes_with_the_session_state(): void
