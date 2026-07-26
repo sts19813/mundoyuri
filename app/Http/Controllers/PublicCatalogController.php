@@ -12,7 +12,7 @@ class PublicCatalogController extends Controller
 {
     public function home(): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             return view('index', [
                 'featuredSeries' => collect(),
                 'latestEpisodes' => collect(),
@@ -58,7 +58,7 @@ class PublicCatalogController extends Controller
 
     public function episodes(?Episode $episode = null): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             return view('episodios', [
                 'episode' => null,
                 'series' => null,
@@ -81,7 +81,7 @@ class PublicCatalogController extends Controller
                 ->first();
         }
 
-        if (!$episode) {
+        if (! $episode) {
             return view('episodios', [
                 'episode' => null,
                 'series' => null,
@@ -92,7 +92,7 @@ class PublicCatalogController extends Controller
             ]);
         }
 
-        $episode->recordView();
+        $episode->recordView(auth()->user());
 
         $episode->load([
             'sources',
@@ -157,7 +157,7 @@ class PublicCatalogController extends Controller
     private function ensureApprovedEpisode(Episode $episode): void
     {
         abort_unless($episode->moderation_status === 'approved', 404);
-        abort_unless(!is_null($episode->published_at), 404);
+        abort_unless(! is_null($episode->published_at), 404);
     }
 
     private function catalogTablesReady(): bool

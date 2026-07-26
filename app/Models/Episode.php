@@ -40,8 +40,12 @@ class Episode extends Model
         ];
     }
 
-    public function recordView(): void
+    public function recordView(?User $viewer): void
     {
+        if ($viewer?->isAdmin()) {
+            return;
+        }
+
         $this->increment('views_count');
     }
 

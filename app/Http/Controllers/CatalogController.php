@@ -14,7 +14,7 @@ class CatalogController extends Controller
 {
     public function home(): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             return view('catalog.home', [
                 'featuredSeries' => collect(),
                 'latestEpisodes' => collect(),
@@ -53,7 +53,7 @@ class CatalogController extends Controller
 
     public function series(Request $request): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             return view('catalog.series.index', [
                 'series' => new LengthAwarePaginator([], 0, 12),
                 'genres' => collect(),
@@ -89,7 +89,7 @@ class CatalogController extends Controller
 
     public function genres(): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             return view('catalog.genres.index', [
                 'genres' => new LengthAwarePaginator([], 0, 24),
             ]);
@@ -108,7 +108,7 @@ class CatalogController extends Controller
 
     public function genre(Genre $genre): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             abort(404);
         }
 
@@ -125,7 +125,7 @@ class CatalogController extends Controller
 
     public function showSeries(Series $series): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             abort(404);
         }
 
@@ -164,7 +164,7 @@ class CatalogController extends Controller
 
     public function showEpisode(Series $series, Episode $episode): View
     {
-        if (!$this->catalogTablesReady()) {
+        if (! $this->catalogTablesReady()) {
             abort(404);
         }
 
@@ -172,7 +172,7 @@ class CatalogController extends Controller
         abort_unless($episode->series_id === $series->id, 404);
         abort_unless($episode->moderation_status === 'approved', 404);
 
-        $episode->recordView();
+        $episode->recordView(auth()->user());
 
         $episode->load([
             'sources',

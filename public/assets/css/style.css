@@ -290,7 +290,7 @@
         min-width: 0;
     }
 
-    .portal-user-summary > div {
+    .portal-user-summary>div {
         min-width: 0;
     }
 
@@ -308,7 +308,7 @@
         font-weight: 500;
     }
 
-    .portal-user-summary > div > span {
+    .portal-user-summary>div>span {
         margin-top: 2px;
         color: var(--muted);
         font-size: .73rem;
@@ -509,7 +509,7 @@
 
     /* ── EPISODE SHARING ── */
     .episode-share {
-        margin: 14px 0 20px;
+        margin: 30px 0 20px;
     }
 
     .episode-share__sr-only {
@@ -1217,7 +1217,7 @@
         font-weight: 500;
     }
 
-    .profile-photo-controls > div > span {
+    .profile-photo-controls>div>span {
         margin-top: 3px;
         color: var(--muted);
         font-size: .72rem;
@@ -1319,7 +1319,7 @@
         position: relative;
     }
 
-    .profile-input-prefix > span {
+    .profile-input-prefix>span {
         position: absolute;
         top: 50%;
         left: 14px;
@@ -1348,7 +1348,7 @@
         border-top: 1px solid rgba(255, 255, 255, .07);
     }
 
-    .profile-form-footer > span {
+    .profile-form-footer>span {
         color: var(--muted);
         font-size: .71rem;
     }
@@ -1367,7 +1367,7 @@
         margin: 22px 0 0;
     }
 
-    .profile-details-list > div {
+    .profile-details-list>div {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1565,7 +1565,7 @@
         box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
     }
 
-    .about-card > p {
+    .about-card>p {
         margin: 0 0 24px;
         color: #c8bacd;
         font-size: 1rem;
@@ -1632,7 +1632,7 @@
             margin-bottom: 28px;
         }
 
-        .about-card > p {
+        .about-card>p {
             font-size: .94rem;
             line-height: 1.78;
         }
