@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AssistantMessageController as AdminAssistantMessageController;
+use App\Http\Controllers\Admin\AssistantSettingController;
 use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
@@ -82,6 +83,12 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
         ->name('admin.assistant-messages.index');
     Route::patch('/mensajes-miyu/{assistantMessage}', [AdminAssistantMessageController::class, 'update'])
         ->name('admin.assistant-messages.update');
+    Route::get('/configuracion/miyu', [AssistantSettingController::class, 'edit'])
+        ->middleware('admin')
+        ->name('admin.settings.assistant.edit');
+    Route::put('/configuracion/miyu', [AssistantSettingController::class, 'update'])
+        ->middleware('admin')
+        ->name('admin.settings.assistant.update');
 
     Route::get('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'edit'])->middleware('admin')->name('admin.settings.backblaze-b2.edit');
     Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->middleware('admin')->name('admin.settings.backblaze-b2.update');

@@ -1,47 +1,10 @@
 @php
-    $assistantMessages = [
-        [
-            'text' => '¡Hola! Soy tu asistente Miyu.',
-            'peek' => '¡Hola! Soy tu asistente Miyu.',
-        ],
-        [
-            'text' => '¿Encontraste un problema en la página? Ayúdanos a mejorar.',
-            'peek' => '¿Encontraste un problema en la página? Ayúdanos a mejorar.',
-            'label' => 'Reportar un problema',
-            'formType' => 'report',
-        ],
-        [
-            'text' => '¿Hay alguna serie o película que te encantaría ver aquí? Coméntanos para subirla.',
-            'peek' => '¿Hay alguna serie o película que te gustaría ver aquí?',
-            'label' => 'Coméntanos cuál',
-            'formType' => 'request',
-        ],
-    ];
-
-    if (auth()->guest()) {
-        $assistantMessages[] = [
-            'text' => 'Crea una cuenta gratis para preparar tu lista de favoritas y descubrir las próximas novedades.',
-            'peek' => 'Crea una cuenta gratis para guardar tus favoritas y descubrir novedades.',
-            'label' => 'Crear cuenta gratis',
-            'url' => route('register'),
-        ];
-    }
-
-    $assistantMessages[] = [
-        'text' => '¿Quieres mandarnos un mensaje? Puedes hacerlo sin salir de esta página.',
-        'peek' => '¿Quieres mandarnos un mensaje?',
-        'label' => 'Escribir mensaje',
-        'formType' => 'message',
-    ];
-
-    $assistantMessages[] = [
-        'text' => '¿No sabes qué ver? Explora nuestras series y películas disponibles.',
-        'peek' => '¿Buscas algo nuevo para ver?',
-        'label' => 'Explorar el catálogo',
-        'url' => route('catalog.series.index'),
-    ];
+    $assistantSettings = \App\Models\AssistantSetting::current();
+    $assistantMessages = $assistantSettings->messagesFor(auth()->user());
+    $assistantConfig = $assistantSettings->clientConfig();
 @endphp
 
+@if($assistantSettings->enabled && count($assistantMessages) > 0)
 <aside class="miyu-assistant" data-miyu-assistant aria-label="Miyu, asistente de Mundo Yuri">
     <div class="miyu-assistant__stage">
         <section class="miyu-assistant__bubble" data-miyu-bubble aria-live="polite">
@@ -519,6 +482,7 @@
         window.__miyuAssistantLoaded = true;
 
         const messages = @js($assistantMessages);
+        const config = @js($assistantConfig);
         const storageKey = 'mundoyuri.miyu.minimized';
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         const mascot = root.querySelector('[data-miyu-mascot]');
@@ -546,7 +510,7 @@
             window.clearTimeout(bubbleTimer);
 
             if (speaking && form.hidden) {
-                bubbleTimer = window.setTimeout(() => setSpeaking(false), 7000);
+                bubbleTimer = window.setTimeout(() => setSpeaking(false), config.bubbleDurationMs);
             }
         };
 
@@ -596,7 +560,7 @@
             peek.dataset.formType = peekMessage.formType || '';
             root.classList.add('is-peeking');
             window.clearTimeout(peekTimer);
-            peekTimer = window.setTimeout(hidePeek, 7000);
+            peekTimer = window.setTimeout(hidePeek, config.peekDurationMs);
         };
 
         const showForm = (type) => {
@@ -621,7 +585,9 @@
         const minimize = () => {
             root.classList.add('is-minimized');
             root.classList.remove('is-speaking');
-            localStorage.setItem(storageKey, 'minimized');
+            if (config.rememberUserState) {
+                localStorage.setItem(storageKey, 'minimized');
+            }
             window.clearTimeout(bubbleTimer);
             hidePeek();
             scheduleMessage();
@@ -630,7 +596,9 @@
         const expandAssistant = () => {
             hidePeek();
             root.classList.remove('is-minimized');
-            localStorage.setItem(storageKey, 'expanded');
+            if (config.rememberUserState) {
+                localStorage.setItem(storageKey, 'expanded');
+            }
             setSpeaking(false);
             scheduleBlink();
             scheduleMessage();
@@ -669,7 +637,7 @@
             });
         };
 
-        const scheduleMessage = () => {
+        const scheduleMessage = (delay = config.messageIntervalMs) => {
             window.clearTimeout(messageTimer);
             messageTimer = window.setTimeout(() => {
                 if (root.classList.contains('is-minimized')) {
@@ -679,7 +647,7 @@
                 }
 
                 scheduleMessage();
-            }, 20000);
+            }, delay);
         };
 
         root.querySelector('[data-miyu-minimize]').addEventListener('click', minimize);
@@ -771,16 +739,22 @@
         document.addEventListener('pointermove', followPointer, { passive: true });
         reducedMotion.addEventListener?.('change', scheduleBlink);
 
-        const storedState = localStorage.getItem(storageKey);
-        const startsMinimized = storedState !== 'expanded';
+        const storedState = config.rememberUserState ? localStorage.getItem(storageKey) : null;
+        const startsMinimized = storedState === 'minimized'
+            || (storedState !== 'expanded' && config.initialState === 'minimized');
+
+        if (!config.rememberUserState) {
+            localStorage.removeItem(storageKey);
+        }
 
         if (startsMinimized) {
             root.classList.add('is-minimized');
         }
 
         root.setAttribute('data-ready', '');
-        startsMinimized ? hidePeek() : showMessage(0);
+        startsMinimized ? hidePeek() : setSpeaking(false);
         scheduleBlink();
-        scheduleMessage();
+        scheduleMessage(config.initialDelayMs);
     })();
 </script>
+@endif

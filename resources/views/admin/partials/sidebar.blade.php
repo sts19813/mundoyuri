@@ -100,6 +100,12 @@
 
                     @if($panelUser?->isAdmin())
                         <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.settings.assistant.*') ? 'active' : '' }}" href="{{ route('admin.settings.assistant.edit') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-setting-3 fs-2"></i></span>
+                                <span class="menu-title">Configurar Miyu</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.settings.backblaze-b2.*') ? 'active' : '' }}" href="{{ route('admin.settings.backblaze-b2.edit') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-cloud fs-2"></i></span>
                                 <span class="menu-title">Backblaze B2</span>
