@@ -47,14 +47,24 @@ class ProfileController extends Controller
             ->take(12)
             ->get();
         $viewer = auth()->user();
+        $viewerHasBlocked = $viewer !== null
+            && ! $viewer->is($user)
+            && $viewer->hasBlocked($user);
+        $viewerIsBlocked = $viewer !== null
+            && ! $viewer->is($user)
+            && $viewer->isBlockedBy($user);
+        $interactionBlocked = $viewerHasBlocked || $viewerIsBlocked;
         $isFollowing = $viewer !== null
             && ! $viewer->is($user)
+            && ! $interactionBlocked
             && $viewer->following()->whereKey($user->id)->exists();
 
         return view('profile.show', [
             'profileUser' => $user,
             'isOwner' => auth()->id() === $user->id,
             'isFollowing' => $isFollowing,
+            'interactionBlocked' => $interactionBlocked,
+            'viewerHasBlocked' => $viewerHasBlocked,
             'favoriteSeries' => $favoriteSeries,
         ]);
     }

@@ -68,17 +68,34 @@
                         <a class="profile-btn profile-btn-primary" href="{{ route('profile.edit') }}">
                             Editar mi perfil
                         </a>
+                        <a class="profile-btn profile-btn-soft" href="{{ route('messages.index') }}">Mensajes</a>
                     @else
                         @auth
-                            <form method="POST" action="{{ $isFollowing ? route('users.follow.destroy', $profileUser) : route('users.follow.store', $profileUser) }}">
-                                @csrf
-                                @if($isFollowing)
+                            @unless($interactionBlocked)
+                                <form method="POST" action="{{ $isFollowing ? route('users.follow.destroy', $profileUser) : route('users.follow.store', $profileUser) }}">
+                                    @csrf
+                                    @if($isFollowing)
+                                        @method('DELETE')
+                                    @endif
+                                    <button class="profile-btn {{ $isFollowing ? 'profile-btn-soft' : 'profile-btn-primary' }}" type="submit">
+                                        {{ $isFollowing ? 'Siguiendo' : 'Seguir' }}
+                                    </button>
+                                </form>
+                                <a class="profile-btn profile-btn-soft" href="{{ route('messages.show', $profileUser) }}">Mensaje</a>
+                            @endunless
+
+                            @if($viewerHasBlocked)
+                                <form method="POST" action="{{ route('users.block.destroy', $profileUser) }}">
+                                    @csrf
                                     @method('DELETE')
-                                @endif
-                                <button class="profile-btn {{ $isFollowing ? 'profile-btn-soft' : 'profile-btn-primary' }}" type="submit">
-                                    {{ $isFollowing ? 'Siguiendo' : 'Seguir' }}
-                                </button>
-                            </form>
+                                    <button class="profile-btn profile-btn-soft" type="submit">Desbloquear</button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('users.block.store', $profileUser) }}" onsubmit="return confirm('¿Quieres bloquear a esta persona? Ya no podrán seguirse ni enviarse mensajes.')">
+                                    @csrf
+                                    <button class="profile-btn profile-btn-danger-soft" type="submit">Bloquear</button>
+                                </form>
+                            @endif
                         @else
                             <a class="profile-btn profile-btn-primary" href="{{ route('login') }}">Inicia sesión para seguir</a>
                         @endauth
@@ -174,6 +191,21 @@
                             </div>
                         </dl>
                     </section>
+
+                    @if($isOwner)
+                        <section class="profile-panel profile-security-card public-profile-social-card">
+                            <div class="profile-security-icon" aria-hidden="true">✉</div>
+                            <div>
+                                <h3>Tu comunidad</h3>
+                                <p>Revisa tus conversaciones y la actividad reciente de tu perfil.</p>
+                                <div class="public-profile-social-links">
+                                    <a href="{{ route('messages.index') }}">Mensajes</a>
+                                    <a href="{{ route('notifications.index') }}">Notificaciones</a>
+                                    <a href="{{ route('blocks.index') }}">Cuentas bloqueadas</a>
+                                </div>
+                            </div>
+                        </section>
+                    @endif
                 </aside>
             </div>
         </div>

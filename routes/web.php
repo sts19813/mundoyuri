@@ -16,11 +16,14 @@ use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContentSubmissionController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserFollowController;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
@@ -74,6 +77,27 @@ Route::middleware(['auth'])
             ->name('users.follow.store');
         Route::delete('/usuarios/{user}/seguir', [UserFollowController::class, 'destroy'])
             ->name('users.follow.destroy');
+        Route::post('/usuarios/{user}/bloquear', [UserBlockController::class, 'store'])
+            ->name('users.block.store');
+        Route::delete('/usuarios/{user}/bloquear', [UserBlockController::class, 'destroy'])
+            ->name('users.block.destroy');
+        Route::get('/bloqueos', [UserBlockController::class, 'index'])
+            ->name('blocks.index');
+
+        Route::get('/mensajes', [ConversationController::class, 'index'])
+            ->name('messages.index');
+        Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
+            ->name('messages.show');
+        Route::post('/mensajes/{user}', [ConversationController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('messages.store');
+
+        Route::get('/notificaciones', [NotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::get('/notificaciones/{notification}', [NotificationController::class, 'open'])
+            ->name('notifications.open');
+        Route::patch('/notificaciones', [NotificationController::class, 'readAll'])
+            ->name('notifications.read-all');
 
         Route::get('/aportes/nuevo', [ContentSubmissionController::class, 'create'])->name('submissions.create');
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])

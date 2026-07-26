@@ -28,6 +28,27 @@
                 </a>
             @else
                 @php($portalUser = auth()->user())
+                @php($portalUnreadMessages = $portalUser->receivedMessages()->whereNull('read_at')->count())
+                @php($portalUnreadNotifications = $portalUser->unreadNotifications()->count())
+
+                <a href="{{ route('messages.index') }}" class="portal-nav-shortcut" aria-label="Mensajes{{ $portalUnreadMessages ? ': '.$portalUnreadMessages.' sin leer' : '' }}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                    </svg>
+                    @if($portalUnreadMessages)
+                        <span class="portal-nav-badge">{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('notifications.index') }}" class="portal-nav-shortcut" aria-label="Notificaciones{{ $portalUnreadNotifications ? ': '.$portalUnreadNotifications.' sin leer' : '' }}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                        <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+                    </svg>
+                    @if($portalUnreadNotifications)
+                        <span class="portal-nav-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
+                    @endif
+                </a>
+
                 <div class="portal-user-menu" data-user-menu>
                     <button type="button" class="portal-user-trigger" data-user-menu-trigger aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de {{ $portalUser->name }}">
                         @if($portalUser->hasProfileAvatar())
@@ -57,6 +78,20 @@
                         <a href="{{ route('profile.edit') }}" class="portal-dropdown-item" role="menuitem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
                             Mi perfil
+                        </a>
+                        <a href="{{ route('messages.index') }}" class="portal-dropdown-item" role="menuitem">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+                            Mensajes
+                            @if($portalUnreadMessages)
+                                <span class="portal-dropdown-badge">{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('notifications.index') }}" class="portal-dropdown-item" role="menuitem">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                            Notificaciones
+                            @if($portalUnreadNotifications)
+                                <span class="portal-dropdown-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
+                            @endif
                         </a>
                         <a href="{{ route('submissions.create') }}" class="portal-dropdown-item" role="menuitem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>

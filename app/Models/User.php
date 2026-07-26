@@ -77,6 +77,61 @@ class User extends Authenticatable
         )->withTimestamps();
     }
 
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_blocks',
+            'blocker_id',
+            'blocked_id'
+        )->withTimestamps();
+    }
+
+    public function blockedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_blocks',
+            'blocked_id',
+            'blocker_id'
+        )->withTimestamps();
+    }
+
+    public function conversationsAsUserOne(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_one_id');
+    }
+
+    public function conversationsAsUserTwo(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_two_id');
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(DirectMessage::class, 'sender_id');
+    }
+
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(DirectMessage::class, 'recipient_id');
+    }
+
+    public function hasBlocked(User $user): bool
+    {
+        return $this->blockedUsers()->whereKey($user->id)->exists();
+    }
+
+    public function isBlockedBy(User $user): bool
+    {
+        return $this->blockedByUsers()->whereKey($user->id)->exists();
+    }
+
+    public function cannotInteractWith(User $user): bool
+    {
+        return $this->hasBlocked($user) || $this->isBlockedBy($user);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin' || $this->hasRole('admin');
