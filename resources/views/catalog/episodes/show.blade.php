@@ -43,6 +43,7 @@
             :title="$series->title.' · Temporada '.$episode->season_number.' Episodio '.$episode->episode_number"
             :text="'Mira '.$series->title.' · Episodio '.$episode->episode_number.' en Mundo Yuri.'"
         />
+        <x-favorite-series-button :series="$series" />
 
         <div class="card mb-4">
             <div class="card-body">

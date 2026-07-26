@@ -76,7 +76,10 @@
             </section>
 
             <div class="ep-title-section">
-                <h1>{{ $series->title }}</h1>
+                <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+                    <h1>{{ $series->title }}</h1>
+                    <x-favorite-series-button :series="$series" />
+                </div>
                 <p style="color:var(--muted);margin-top:10px;line-height:1.7;">{{ $series->description ?: 'Sin descripción disponible.' }}</p>
                 <div class="ep-meta-row mt-3">
                     <div class="ep-meta-item">Duración: {{ $series->duration_minutes ? $series->duration_minutes.' min' : 'N/D' }}</div>

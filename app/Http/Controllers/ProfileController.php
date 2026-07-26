@@ -32,11 +32,57 @@ class ProfileController extends Controller
 
         $user->loadCount([
             'comments' => fn ($query) => $query->where('is_approved', true),
+            'followers' => fn ($query) => $query->where('users.is_active', true),
+            'following' => fn ($query) => $query->where('users.is_active', true),
+            'favoriteSeries' => fn ($query) => $query
+                ->where('moderation_status', 'approved')
+                ->whereNotNull('published_at'),
         ]);
+
+        $favoriteSeries = $user->favoriteSeries()
+            ->with('genre')
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->orderByPivot('created_at', 'desc')
+            ->take(12)
+            ->get();
+        $viewer = auth()->user();
+        $isFollowing = $viewer !== null
+            && ! $viewer->is($user)
+            && $viewer->following()->whereKey($user->id)->exists();
 
         return view('profile.show', [
             'profileUser' => $user,
             'isOwner' => auth()->id() === $user->id,
+            'isFollowing' => $isFollowing,
+            'favoriteSeries' => $favoriteSeries,
+        ]);
+    }
+
+    public function followers(User $user): View
+    {
+        return $this->connectionsView($user, 'followers');
+    }
+
+    public function following(User $user): View
+    {
+        return $this->connectionsView($user, 'following');
+    }
+
+    public function favorites(User $user): View
+    {
+        abort_unless($user->is_active, 404);
+
+        $favorites = $user->favoriteSeries()
+            ->with('genre')
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->orderByPivot('created_at', 'desc')
+            ->paginate(24);
+
+        return view('profile.favorites', [
+            'profileUser' => $user,
+            'favorites' => $favorites,
         ]);
     }
 
@@ -120,5 +166,21 @@ class ProfileController extends Controller
         if ($user->cover_image) {
             Storage::disk('public')->delete($user->cover_image);
         }
+    }
+
+    private function connectionsView(User $user, string $type): View
+    {
+        abort_unless($user->is_active, 404);
+
+        $connections = $user->{$type}()
+            ->where('users.is_active', true)
+            ->orderByPivot('created_at', 'desc')
+            ->paginate(24);
+
+        return view('profile.connections', [
+            'profileUser' => $user,
+            'connections' => $connections,
+            'type' => $type,
+        ]);
     }
 }

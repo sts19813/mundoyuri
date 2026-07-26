@@ -19,7 +19,9 @@ use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
+use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\UserFollowController;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +50,9 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
     ->name('assistant-messages.store');
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
+Route::get('/usuarios/{user}/seguidores', [ProfileController::class, 'followers'])->name('profiles.followers');
+Route::get('/usuarios/{user}/siguiendo', [ProfileController::class, 'following'])->name('profiles.following');
+Route::get('/usuarios/{user}/favoritas', [ProfileController::class, 'favorites'])->name('profiles.favorites');
 Route::get('/usuarios/{user}/{alias?}', [ProfileController::class, 'show'])->name('profiles.show');
 
 Route::get('/dashboard', [AdminDashboardController::class, 'index'])
@@ -60,6 +65,15 @@ Route::middleware(['auth'])
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
+
+        Route::post('/series/{series}/favorita', [SeriesFavoriteController::class, 'store'])
+            ->name('series.favorites.store');
+        Route::delete('/series/{series}/favorita', [SeriesFavoriteController::class, 'destroy'])
+            ->name('series.favorites.destroy');
+        Route::post('/usuarios/{user}/seguir', [UserFollowController::class, 'store'])
+            ->name('users.follow.store');
+        Route::delete('/usuarios/{user}/seguir', [UserFollowController::class, 'destroy'])
+            ->name('users.follow.destroy');
 
         Route::get('/aportes/nuevo', [ContentSubmissionController::class, 'create'])->name('submissions.create');
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])
