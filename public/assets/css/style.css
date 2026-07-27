@@ -72,9 +72,9 @@
     .nav-inner {
         margin: 0 auto;
         padding: 0 24px;
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
     }
 
     ul.nav-links {
@@ -90,6 +90,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        justify-self: start;
     }
 
     .brand-logo {
@@ -112,6 +113,7 @@
         display: flex;
         gap: 32px;
         list-style: none;
+        justify-self: center;
     }
 
     .nav-links a {
@@ -170,6 +172,7 @@
         align-items: center;
         justify-content: flex-end;
         gap: 12px;
+        justify-self: end;
     }
 
     .nav-search-form {
@@ -2497,49 +2500,75 @@
     }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-
-        .about-page {
-            padding: 112px 0 60px;
+    @media (max-width: 960px) {
+        .gl-nav {
+            padding: 12px 0;
         }
 
-        .about-hero {
-            margin-bottom: 28px;
+        .gl-nav.scrolled {
+            padding: 10px 0;
         }
 
-        .about-card>p {
-            font-size: .94rem;
-            line-height: 1.78;
-        }
-
-        .about-highlight {
-            padding: 21px 20px;
-        }
-
-        .about-signature {
-            align-items: flex-start;
-            flex-direction: column;
+        .nav-inner {
+            display: flex;
+            gap: 10px;
+            padding: 0 16px;
         }
 
         .nav-links {
-            display: none;
+            display: flex;
             position: absolute;
-            top: 77px;
-            left: 0;
-            right: 0;
-            background: var(--dark-card);
-            border-bottom: 1px solid rgba(244, 63, 142, 0.2);
-            flex-direction: column;
-            padding: 10px 0;
+            top: calc(100% + 8px);
+            left: 12px;
+            right: 12px;
             z-index: 1000;
+            flex-direction: column;
+            gap: 2px;
+            padding: 8px;
+            border: 1px solid rgba(244, 63, 142, 0.22);
+            border-radius: 16px;
+            background: rgba(22, 13, 24, 0.98);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42);
+            backdrop-filter: blur(16px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-8px);
+            transition: opacity .2s, visibility .2s, transform .2s;
         }
 
         .nav-links.active {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
         }
 
         .nav-links li {
-            padding: 10px 20px;
+            width: 100%;
+            padding: 0;
+        }
+
+        .nav-links a {
+            width: 100%;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: .95rem;
+            text-align: center;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus-visible {
+            color: #fff;
+            background: rgba(244, 63, 142, .11);
+            outline: 0;
+        }
+
+        .nav-links a::after {
+            display: none;
         }
 
         .nav-search {
@@ -2578,7 +2607,39 @@
         }
 
         .nav-toggler {
-            display: block;
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+
+        .about-page {
+            padding: 112px 0 60px;
+        }
+
+        .about-hero {
+            margin-bottom: 28px;
+        }
+
+        .about-card>p {
+            font-size: .94rem;
+            line-height: 1.78;
+        }
+
+        .about-highlight {
+            padding: 21px 20px;
+        }
+
+        .about-signature {
+            align-items: flex-start;
+            flex-direction: column;
         }
 
         .hero h1 {
@@ -2714,7 +2775,8 @@
         }
 
         .nav-inner {
-            padding: 0 14px;
+            gap: 7px;
+            padding: 0 12px;
         }
 
         .profile-identity {

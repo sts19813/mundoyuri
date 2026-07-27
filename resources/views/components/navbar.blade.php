@@ -109,13 +109,37 @@
                 </div>
             @endguest
         </div>
-        <button class="nav-toggler" id="navToggler" aria-label="Toggle menu">&#9776;</button>
+        <button class="nav-toggler" id="navToggler" type="button" aria-label="Abrir menú principal" aria-controls="navLinks" aria-expanded="false">&#9776;</button>
     </div>
 </nav>
 
 @once
     <script>
+        const portalNavbar = document.getElementById('navbar');
+        const portalNavToggler = document.getElementById('navToggler');
+        const portalNavLinks = document.getElementById('navLinks');
+
+        function closePortalNav() {
+            portalNavLinks?.classList.remove('active');
+            portalNavToggler?.setAttribute('aria-expanded', 'false');
+            portalNavToggler?.setAttribute('aria-label', 'Abrir menú principal');
+        }
+
+        portalNavToggler?.addEventListener('click', function () {
+            const isOpen = portalNavLinks?.classList.toggle('active') ?? false;
+            portalNavToggler.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            portalNavToggler.setAttribute('aria-label', isOpen ? 'Cerrar menú principal' : 'Abrir menú principal');
+        });
+
+        portalNavLinks?.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', closePortalNav);
+        });
+
         document.addEventListener('click', function (event) {
+            if (portalNavLinks?.classList.contains('active') && portalNavbar && !portalNavbar.contains(event.target)) {
+                closePortalNav();
+            }
+
             document.querySelectorAll('[data-user-menu]').forEach(function (menu) {
                 const trigger = menu.querySelector('[data-user-menu-trigger]');
                 const clickedTrigger = trigger && trigger.contains(event.target);
@@ -140,6 +164,7 @@
 
         document.addEventListener('keydown', function (event) {
             if (event.key !== 'Escape') return;
+            closePortalNav();
             document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
                 menu.classList.remove('is-open');
                 const trigger = menu.querySelector('[data-user-menu-trigger]');

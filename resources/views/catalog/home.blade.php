@@ -121,10 +121,6 @@ window.addEventListener('scroll', () => {
     const nav = document.getElementById('navbar');
     if (nav) nav.classList.toggle('scrolled', window.scrollY > 10);
 });
-const toggler = document.getElementById('navToggler');
-if (toggler) {
-    toggler.addEventListener('click', () => document.getElementById('navLinks')?.classList.toggle('active'));
-}
 </script>
 @include('partials.hover-media-script')
 </body>
