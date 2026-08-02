@@ -1,5 +1,6 @@
 <?php
  /*test codigo comentado */
+/* edición de archivos en Mobile*/
 namespace App\Http\Controllers;
 
 use App\Models\AssistantMessage;
