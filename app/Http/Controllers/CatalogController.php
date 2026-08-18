@@ -60,28 +60,14 @@ class CatalogController extends Controller
             ]);
         }
 
-        $query = Series::query()
+        // The public catalogue is intentionally rendered as one complete list.
+        // Its filters run client-side, so changing a field is immediate and does
+        // not leave the visitor on a partial paginator result set.
+        $series = Series::query()
             ->with('genre')
-            ->where('moderation_status', 'approved');
-
-        if ($request->filled('q')) {
-            $query->where(function ($inner) use ($request): void {
-                $inner->where('title', 'like', '%'.$request->string('q').'%')
-                    ->orWhere('description', 'like', '%'.$request->string('q').'%');
-            });
-        }
-
-        if ($request->filled('type')) {
-            $query->where('content_type', $request->string('type'));
-        }
-
-        if ($request->filled('genre')) {
-            $query->whereHas('genre', function ($inner) use ($request): void {
-                $inner->where('slug', $request->string('genre'));
-            });
-        }
-
-        $series = $query->latest('published_at')->paginate(12)->withQueryString();
+            ->where('moderation_status', 'approved')
+            ->latest('published_at')
+            ->get();
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
 
         return view('catalog.series.index', compact('series', 'genres'));

@@ -935,6 +935,97 @@
         padding: 48px 0 64px;
     }
 
+    .catalog-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 25px;
+    }
+
+    .catalog-heading .section-title {
+        margin: 0;
+    }
+
+    .catalog-eyebrow {
+        margin: 0 0 6px;
+        color: var(--rose);
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+
+    .catalog-results {
+        margin: 0 0 5px;
+        color: var(--muted);
+        font-size: .82rem;
+    }
+
+    .catalog-filters {
+        display: grid;
+        grid-template-columns: minmax(240px, 1.4fr) minmax(170px, .6fr) minmax(190px, .7fr);
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .catalog-filter {
+        position: relative;
+    }
+
+    .catalog-filter input,
+    .catalog-filter select {
+        width: 100%;
+        height: 48px;
+        border: 1px solid rgba(244, 63, 142, .25);
+        border-radius: 12px;
+        outline: none;
+        color: var(--text);
+        background: rgba(30, 17, 37, .9);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+        font: 400 .9rem 'DM Sans', sans-serif;
+        transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+
+    .catalog-filter input {
+        padding: 0 16px 0 44px;
+    }
+
+    .catalog-filter select {
+        padding: 0 40px 0 15px;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23cbbcd1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.8'%3E%3Cpath d='m3 6 5 5 5-5'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 15px;
+    }
+
+    .catalog-filter input::placeholder {
+        color: var(--muted);
+    }
+
+    .catalog-filter input:focus,
+    .catalog-filter select:focus {
+        border-color: var(--rose);
+        background-color: rgba(30, 17, 37, 1);
+        box-shadow: 0 0 0 3px rgba(244, 63, 142, .13);
+    }
+
+    .catalog-filter select option {
+        color: var(--text);
+        background: var(--dark-surface);
+    }
+
+    .catalog-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 16px;
+        z-index: 1;
+        color: var(--rose);
+        pointer-events: none;
+        transform: translateY(-50%);
+    }
+
     .catalog-card {
         display: block;
         height: 100%;
@@ -1010,6 +1101,33 @@
     .catalog-info small {
         color: var(--muted);
         font-size: 0.75rem;
+    }
+
+    .catalog-empty {
+        margin-top: 4px;
+        padding: 54px 24px;
+        border: 1px dashed rgba(244, 63, 142, .28);
+        border-radius: 14px;
+        color: var(--muted);
+        background: rgba(30, 17, 37, .42);
+        text-align: center;
+    }
+
+    .catalog-empty span {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--rose);
+        font-size: 1.35rem;
+    }
+
+    .catalog-empty p {
+        margin: 0 0 4px;
+        color: var(--text);
+        font-size: .95rem;
+    }
+
+    .catalog-empty small {
+        font-size: .78rem;
     }
 
     /* ── FOOTER ── */
@@ -2620,6 +2738,30 @@
 
     @media (max-width: 768px) {
 
+        .catalog-section {
+            padding: 35px 0 52px;
+        }
+
+        .catalog-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .catalog-results {
+            margin-bottom: 0;
+        }
+
+        .catalog-filters {
+            grid-template-columns: 1fr 1fr;
+            margin-bottom: 22px;
+        }
+
+        .catalog-filter-search {
+            grid-column: 1 / -1;
+        }
+
         .about-page {
             padding: 112px 0 60px;
         }
@@ -2769,6 +2911,14 @@
     }
 
     @media (max-width: 430px) {
+
+        .catalog-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .catalog-filter-search {
+            grid-column: auto;
+        }
         .brand-logo {
             height: 38px;
             max-width: 135px;
