@@ -22,7 +22,7 @@
             : []);
 
     if (count($sources) === 0) {
-        $sources[] = ['provider' => '', 'video_url' => '', 'label' => ''];
+        $sources[] = ['provider' => 'backblaze_b2', 'video_url' => '', 'label' => ''];
     }
 
     $primaryIndex = (int) old('source_primary', isset($episode) ? ($episode->sources->search(fn($s) => $s->is_primary) ?: 0) : 0);
@@ -30,6 +30,9 @@
     $currentSeriesId = old('series_id', $episode->series_id ?? ($selectedSeriesId ?? request('series_id')));
     $currentSeason = old('season_number', $episode->season_number ?? ($suggestedSeason ?? 1));
     $currentEpisodeNumber = old('episode_number', $episode->episode_number ?? ($suggestedEpisodeNumber ?? 1));
+    $currentTitle = 'Episodio '.$currentEpisodeNumber;
+    $selectedSeries = $seriesOptions->firstWhere('id', (int) $currentSeriesId);
+    $seriesIsLocked = $isCreating && request()->filled('series_id') && $selectedSeries;
 @endphp
 <div class="card">
     <div class="card-body row g-4">
@@ -45,19 +48,23 @@
         @endif
         <div class="col-md-6">
             <label class="form-label">Serie</label>
-            <select class="form-select @error('series_id') is-invalid @enderror" name="series_id" id="episode-series-id" required>
-                @foreach($seriesOptions as $option)
-                    <option value="{{ $option->id }}" @selected($currentSeriesId == $option->id)>{{ $option->title }}</option>
-                @endforeach
-            </select>
-            @if($isCreating && request()->filled('series_id'))
-                <div class="form-text text-primary">Serie seleccionada desde el listado. Puedes cambiarla si lo necesitas.</div>
+            @if($seriesIsLocked)
+                <input class="form-control" value="{{ $selectedSeries->title }}" readonly>
+                <input type="hidden" name="series_id" id="episode-series-id" value="{{ $selectedSeries->id }}">
+                <div class="form-text text-primary">El episodio se agregará a esta serie.</div>
+            @else
+                <select class="form-select @error('series_id') is-invalid @enderror" name="series_id" id="episode-series-id" required>
+                    @foreach($seriesOptions as $option)
+                        <option value="{{ $option->id }}" @selected($currentSeriesId == $option->id)>{{ $option->title }}</option>
+                    @endforeach
+                </select>
             @endif
             @error('series_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-6">
             <label class="form-label">Titulo</label>
-            <input class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title', $episode->title ?? '') }}" required>
+            <input class="form-control @error('title') is-invalid @enderror" name="title" id="episode-title" value="{{ $currentTitle }}" readonly required>
+            <div class="form-text">Se genera automáticamente con el número de episodio.</div>
             @error('title')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-4">
@@ -73,31 +80,15 @@
             @endif
             @error('episode_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Slug (opcional)</label>
-            <input class="form-control" name="slug" value="{{ old('slug', $episode->slug ?? '') }}">
-        </div>
-        <div class="col-md-4"><label class="form-label">Fecha de estreno</label><input class="form-control" type="date" name="release_date" value="{{ old('release_date', isset($episode->release_date) ? $episode->release_date->format('Y-m-d') : '') }}"></div>
+        <div class="col-md-6"><label class="form-label">Fecha de estreno</label><input class="form-control" type="date" name="release_date" value="{{ old('release_date', isset($episode) && $episode->release_date ? $episode->release_date->format('Y-m-d') : ($suggestedReleaseDate ?? '')) }}"></div>
         @can('moderate content')
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label">Fecha y hora de publicación</label>
-                <input class="form-control @error('published_at') is-invalid @enderror" type="datetime-local" name="published_at" value="{{ old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : '') }}">
-                <div class="form-text">Define el orden de “Últimos episodios”. Si se deja vacío al aprobar, se usará la fecha y hora actual.</div>
+                <input class="form-control @error('published_at') is-invalid @enderror" type="datetime-local" name="published_at" value="{{ old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : ($suggestedPublishedAt ?? '')) }}">
+                <div class="form-text">Se propone una semana después del episodio anterior.</div>
                 @error('published_at')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
         @endcan
-        <div class="col-md-4"><label class="form-label">Duracion min</label><input class="form-control" type="number" name="duration_minutes" value="{{ old('duration_minutes', $episode->duration_minutes ?? '') }}"></div>
-        <div class="col-md-4">
-            <label class="form-label">Thumbnail</label>
-            <input class="form-control @error('thumbnail_image') is-invalid @enderror" type="file" name="thumbnail_image" accept="image/*">
-            <div class="form-text">Sube una imagen JPG, PNG, WEBP o GIF. Si no subes una nueva, se conserva la actual.</div>
-            @error('thumbnail_image')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            @if(isset($episode) && $episode->thumbnailUrl())
-                <div class="mt-3">
-                    <img src="{{ $episode->thumbnailUrl() }}" alt="{{ $episode->title }}" class="w-100 rounded" style="max-height: 150px; object-fit: cover;">
-                </div>
-            @endif
-        </div>
         <div class="col-12"><label class="form-label">Descripcion</label><textarea class="form-control" rows="4" name="description">{{ old('description', $episode->description ?? '') }}</textarea></div>
         @if(auth()->user()->isAdmin())
             <input type="hidden" name="moderation_status" value="approved">
@@ -194,7 +185,7 @@
                 <select class="form-select" name="source_provider[]">
                     <option value="">Selecciona</option>
                     @foreach($sourceProviders as $providerKey => $providerConfig)
-                        <option value="{{ $providerKey }}">{{ $providerConfig['label'] }}</option>
+                        <option value="{{ $providerKey }}" @selected($providerKey === 'backblaze_b2')>{{ $providerConfig['label'] }}</option>
                     @endforeach
                 </select>
             </div>
@@ -240,6 +231,16 @@
     const seriesSelect = document.getElementById('episode-series-id');
     const seasonInput = document.getElementById('episode-season-number');
     const episodeInput = document.getElementById('episode-number');
+    const titleInput = document.getElementById('episode-title');
+
+    const updateEpisodeTitle = () => {
+        if (!titleInput || !episodeInput) {
+            return;
+        }
+
+        const episodeNumber = Math.max(1, Number.parseInt(episodeInput.value || '1', 10));
+        titleInput.value = `Episodio ${episodeNumber}`;
+    };
 
     const suggestNextEpisode = () => {
         if (!isCreating || !seriesSelect || !seasonInput || !episodeInput) {
@@ -249,6 +250,7 @@
         const seriesNumbers = nextEpisodeNumbers[String(seriesSelect.value)] || {};
         const season = String(Math.max(1, Number.parseInt(seasonInput.value || '1', 10)));
         episodeInput.value = seriesNumbers[season] || 1;
+        updateEpisodeTitle();
     };
 
     seriesSelect?.addEventListener('change', () => {
@@ -259,6 +261,9 @@
         suggestNextEpisode();
     });
     seasonInput?.addEventListener('change', suggestNextEpisode);
+    episodeInput?.addEventListener('input', updateEpisodeTitle);
+    episodeInput?.addEventListener('change', updateEpisodeTitle);
+    updateEpisodeTitle();
 
     if (!list || !addButton || !template) {
         return;

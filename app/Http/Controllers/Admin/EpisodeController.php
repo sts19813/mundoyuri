@@ -90,6 +90,17 @@ class EpisodeController extends Controller
         $knownSeasons = array_map('intval', array_keys($nextEpisodeNumbers[$selectedSeriesId] ?? []));
         $suggestedSeason = max(1, $request->integer('season_number') ?: ($knownSeasons ? max($knownSeasons) : 1));
         $suggestedEpisodeNumber = $nextEpisodeNumbers[$selectedSeriesId][(string) $suggestedSeason] ?? 1;
+        $previousEpisode = $selectedSeriesId
+            ? Episode::query()
+                ->where('series_id', $selectedSeriesId)
+                ->orderByDesc('season_number')
+                ->orderByDesc('episode_number')
+                ->first()
+            : null;
+        $suggestedReleaseDate = $previousEpisode?->release_date?->copy()->addWeek()->toDateString()
+            ?? now()->addWeek()->toDateString();
+        $suggestedPublishedAt = $previousEpisode?->published_at?->copy()->addWeek()->format('Y-m-d\TH:i')
+            ?? now()->addWeek()->format('Y-m-d\TH:i');
 
         return view('admin.episodes.create', compact(
             'seriesOptions',
@@ -97,19 +108,22 @@ class EpisodeController extends Controller
             'nextEpisodeNumbers',
             'selectedSeriesId',
             'suggestedSeason',
-            'suggestedEpisodeNumber'
+            'suggestedEpisodeNumber',
+            'suggestedReleaseDate',
+            'suggestedPublishedAt'
         ));
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $this->validateEpisode($request);
+        $validated['title'] = $this->episodeTitle($validated['episode_number']);
         $episodeData = $this->episodeData($validated);
 
         $episode = Episode::create([
             ...$episodeData,
             'thumbnail_image' => SeriesMedia::syncUploadedField($request, 'thumbnail_image'),
-            'slug' => $this->resolveUniqueSlug($validated['slug'] ?? $this->buildDefaultSlug($validated)),
+            'slug' => $this->resolveUniqueSlug($this->buildDefaultSlug($validated)),
             'created_by' => auth()->id(),
         ]);
 
@@ -146,12 +160,13 @@ class EpisodeController extends Controller
     public function update(Request $request, Episode $episode): JsonResponse|RedirectResponse
     {
         $validated = $this->validateEpisode($request, $episode->id);
+        $validated['title'] = $this->episodeTitle($validated['episode_number']);
         $episodeData = $this->episodeData($validated);
 
         $episode->update([
             ...$episodeData,
             'thumbnail_image' => SeriesMedia::syncUploadedField($request, 'thumbnail_image', $episode->thumbnail_image),
-            'slug' => $this->resolveUniqueSlug($validated['slug'] ?? $this->buildDefaultSlug($validated), $episode->id),
+            'slug' => $this->resolveUniqueSlug($this->buildDefaultSlug($validated), $episode->id),
         ]);
 
         $this->syncSources($episode, $request);
@@ -188,8 +203,7 @@ class EpisodeController extends Controller
 
         return $request->validate([
             'series_id' => ['required', $seriesExists],
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:episodes,slug,'.$exceptId],
+            'title' => ['nullable', 'string', 'max:255'],
             'season_number' => ['required', 'integer', 'min:1', 'max:999'],
             'episode_number' => [
                 'required',
@@ -550,6 +564,11 @@ class EpisodeController extends Controller
         return Str::slug(
             $series?->title.'-s'.$validated['season_number'].'e'.$validated['episode_number']
         );
+    }
+
+    private function episodeTitle(int $episodeNumber): string
+    {
+        return 'Episodio '.$episodeNumber;
     }
 
     private function syncModeration(Episode $episode, string $status, ?string $notes): void
