@@ -17,7 +17,7 @@ class PublicCatalogController extends Controller
             return view('index', $this->emptyHomeData($this->fallbackSection()));
         }
 
-        $section = $this->resolveSection('anime') ?? $this->fallbackSection();
+        $section = $this->resolveSection('series-gl') ?? $this->fallbackSection();
 
         return view('index', $this->homeData($section));
     }
@@ -206,14 +206,14 @@ class PublicCatalogController extends Controller
     private function fallbackSection(): CatalogSection
     {
         return CatalogSection::make([
-            'slug' => 'anime',
-            'name' => 'Anime',
-            'label' => 'Anime',
-            'hero_eyebrow' => 'Anime · Actualizado diario',
-            'hero_title' => 'Historias de anime para descubrir, sentir y compartir',
-            'hero_description' => 'Explora animes y películas de anime seleccionados por la comunidad de Mundo Yuri.',
-            'hero_video_url' => 'https://www.youtube.com/watch?v=YD90os92IM0',
-            'hero_primary_label' => 'Explorar anime',
+            'slug' => 'series-gl',
+            'name' => 'Series GL',
+            'label' => 'Serie GL',
+            'hero_eyebrow' => 'Contenido GL · Actualizado diario',
+            'hero_title' => 'Historias Girls’ Love para descubrir, sentir y compartir',
+            'hero_description' => 'Mira series, doramas y películas GL de todo el mundo, subtituladas en español y con nuevos episodios cada semana.',
+            'hero_video_url' => null,
+            'hero_primary_label' => 'Explorar series GL',
             'hero_secondary_label' => 'Ver novedades',
         ]);
     }
