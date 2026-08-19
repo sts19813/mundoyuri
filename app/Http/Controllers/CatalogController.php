@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
@@ -57,6 +58,8 @@ class CatalogController extends Controller
             return view('catalog.series.index', [
                 'series' => new LengthAwarePaginator([], 0, 12),
                 'genres' => collect(),
+                'catalogSections' => collect(),
+                'activeSection' => null,
             ]);
         }
 
@@ -66,11 +69,17 @@ class CatalogController extends Controller
         $series = Series::query()
             ->with('genre')
             ->where('moderation_status', 'approved')
+            ->when($request->filled('section'), fn ($query) => $query->where('catalog_section', $request->string('section')))
+            ->when($request->filled('type'), fn ($query) => $query->where('content_type', $request->string('type')))
             ->latest('published_at')
             ->get();
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
+        $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+        $activeSection = $request->filled('section')
+            ? CatalogSection::query()->where('slug', $request->string('section'))->first()
+            : null;
 
-        return view('catalog.series.index', compact('series', 'genres'));
+        return view('catalog.series.index', compact('series', 'genres', 'catalogSections', 'activeSection'));
     }
 
     public function genres(): View

@@ -7,8 +7,9 @@
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="{{ route('home') }}">Inicio</a></li>
-            <li><a href="{{ route('catalog.series.index', ['type' => 'series']) }}">Series</a></li>
-            <li><a href="{{ route('catalog.series.index', ['type' => 'movie']) }}">Peliculas</a></li>
+            <li><a href="{{ route('catalog.sections.show', 'anime') }}">Anime</a></li>
+            <li><a href="{{ route('catalog.sections.show', 'series-gl') }}">Series GL</a></li>
+            <li><a href="{{ route('catalog.series.index', ['type' => 'movie']) }}">Películas</a></li>
             <li><a href="{{ route('catalog.genres.index') }}">Generos</a></li>
             <li><a href="{{ route('about') }}">Nosotros</a></li>
         </ul>

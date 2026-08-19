@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <x-seo
-        title="Catálogo de series y películas GL"
-        description="Encuentra series, películas y doramas Girls' Love por título, tipo o género. Explora todo el catálogo de Mundo Yuri."
+        :title="'Catálogo'.($activeSection ? ' de '.$activeSection->name : '')"
+        :description="$activeSection ? 'Explora el catálogo de '.$activeSection->name.' de Mundo Yuri.' : 'Explora las series, películas y animes de Mundo Yuri.'"
         :canonical="route('catalog.series.index')"
     />
     <x-portal-favicon />
@@ -19,8 +19,8 @@
     <div class="container-xl px-4">
         <div class="catalog-heading">
             <div>
-                <p class="catalog-eyebrow">Explora Mundo Yuri</p>
-                <h1 class="section-title">Catálogo</h1>
+                <p class="catalog-eyebrow">{{ $activeSection ? 'Explora '.$activeSection->name : 'Explora Mundo Yuri' }}</p>
+                <h1 class="section-title">{{ $activeSection ? 'Catálogo '.$activeSection->name : 'Catálogo' }}</h1>
             </div>
             <p class="catalog-results" id="catalogResults" aria-live="polite"></p>
         </div>
@@ -72,7 +72,8 @@
                             </div>
                             <div class="catalog-info">
                                 <h6>{{ $item->title }}</h6>
-                                <small>{{ $item->genre?->name ?? 'Sin género' }} · {{ $item->content_type === 'series' ? 'Serie' : 'Película' }}</small>
+                                @php($itemSection = $catalogSections->firstWhere('slug', $item->catalog_section))
+                                <small>{{ $itemSection?->label ?: $itemSection?->name ?: $item->catalog_section }} · {{ $item->content_type === 'series' ? 'Serie' : 'Película' }}</small>
                             </div>
                         </div>
                     </a>

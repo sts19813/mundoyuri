@@ -60,6 +60,14 @@
                         </select>
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label required">Sección</label>
+                        <select class="form-select form-select-solid" name="catalog_section" required>
+                            @foreach($catalogSections as $catalogSection)
+                                <option value="{{ $catalogSection->slug }}" @selected(old('catalog_section', 'series-gl') === $catalogSection->slug)>{{ $catalogSection->name }}{{ $catalogSection->label ? ' · '.$catalogSection->label : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label required">Tipo</label>
                         <select class="form-select form-select-solid" name="content_type" required>
                             <option value="series">Serie</option>

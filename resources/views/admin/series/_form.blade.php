@@ -11,6 +11,15 @@
             </select>
         </div>
         <div class="col-md-4">
+            <label class="form-label">Sección del catálogo</label>
+            <select class="form-select" name="catalog_section" required>
+                @foreach($catalogSections as $catalogSection)
+                    <option value="{{ $catalogSection->slug }}" @selected(old('catalog_section', $series->catalog_section ?? 'series-gl') === $catalogSection->slug)>{{ $catalogSection->name }}{{ $catalogSection->label ? ' · '.$catalogSection->label : '' }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">Ej.: Serie GL, Anime o la sección que crees más adelante.</div>
+        </div>
+        <div class="col-md-4">
             <label class="form-label">Tipo</label>
             <select class="form-select" name="content_type" required>
                 <option value="series" @selected(old('content_type', $series->content_type ?? 'series') === 'series')>Serie</option>

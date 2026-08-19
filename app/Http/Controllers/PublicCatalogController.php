@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Series;
 use Illuminate\Contracts\View\View;
@@ -13,16 +14,32 @@ class PublicCatalogController extends Controller
     public function home(): View
     {
         if (! $this->catalogTablesReady()) {
-            return view('index', [
-                'featuredSeries' => collect(),
-                'latestEpisodes' => collect(),
-                'seriesCount' => 0,
-            ]);
+            return view('index', $this->emptyHomeData($this->fallbackSection()));
         }
 
+        $section = $this->resolveSection('anime') ?? $this->fallbackSection();
+
+        return view('index', $this->homeData($section));
+    }
+
+    public function section(string $sectionSlug): View
+    {
+        abort_unless($this->catalogTablesReady(), 404);
+
+        $section = $this->resolveSection($sectionSlug);
+
+        abort_unless($section, 404);
+
+        return view('index', $this->homeData($section));
+    }
+
+    /** @return array<string, mixed> */
+    private function homeData(CatalogSection $section): array
+    {
         $featuredSeries = Series::query()
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
+            ->where('catalog_section', $section->slug)
             ->withSum([
                 'episodes as total_episode_views' => fn ($query) => $query
                     ->where('moderation_status', 'approved')
@@ -37,6 +54,7 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
+            ->whereHas('series', fn ($query) => $query->where('catalog_section', $section->slug))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get()
@@ -47,13 +65,15 @@ class PublicCatalogController extends Controller
         $seriesCount = Series::query()
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
+            ->where('catalog_section', $section->slug)
             ->count();
 
-        return view('index', compact(
+        return compact(
+            'section',
             'featuredSeries',
             'latestEpisodes',
             'seriesCount'
-        ));
+        );
     }
 
     public function episodes(?Episode $episode = null): View
@@ -164,8 +184,48 @@ class PublicCatalogController extends Controller
     {
         return Schema::hasTable('genres')
             && Schema::hasTable('series')
+            && Schema::hasColumn('series', 'catalog_section')
+            && Schema::hasTable('catalog_sections')
             && Schema::hasTable('episodes')
             && Schema::hasTable('comments')
             && Schema::hasTable('episode_sources');
+    }
+
+    private function resolveSection(string $slug): ?CatalogSection
+    {
+        if (! Schema::hasTable('catalog_sections')) {
+            return null;
+        }
+
+        return CatalogSection::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    private function fallbackSection(): CatalogSection
+    {
+        return CatalogSection::make([
+            'slug' => 'anime',
+            'name' => 'Anime',
+            'label' => 'Anime',
+            'hero_eyebrow' => 'Anime · Actualizado diario',
+            'hero_title' => 'Historias de anime para descubrir, sentir y compartir',
+            'hero_description' => 'Explora animes y películas de anime seleccionados por la comunidad de Mundo Yuri.',
+            'hero_video_url' => 'https://www.youtube.com/watch?v=YD90os92IM0',
+            'hero_primary_label' => 'Explorar anime',
+            'hero_secondary_label' => 'Ver novedades',
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function emptyHomeData(CatalogSection $section): array
+    {
+        return [
+            'section' => $section,
+            'featuredSeries' => collect(),
+            'latestEpisodes' => collect(),
+            'seriesCount' => 0,
+        ];
     }
 }

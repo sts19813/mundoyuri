@@ -21,6 +21,7 @@ class Series extends Model
         'title',
         'slug',
         'content_type',
+        'catalog_section',
         'status',
         'description',
         'country_of_origin',

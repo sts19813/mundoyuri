@@ -100,6 +100,12 @@
 
                     @if($panelUser?->isAdmin())
                         <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.catalog-sections.*') ? 'active' : '' }}" href="{{ route('admin.catalog-sections.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-abstract-26 fs-2"></i></span>
+                                <span class="menu-title">Secciones y hero</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.settings.assistant.*') ? 'active' : '' }}" href="{{ route('admin.settings.assistant.edit') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-setting-3 fs-2"></i></span>
                                 <span class="menu-title">Configurar Miyu</span>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CatalogSection;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Support\SeriesMedia;
@@ -28,6 +29,10 @@ class SeriesController extends Controller
     {
         $query = Series::query()->with(['genre', 'creator']);
 
+        if ($request->filled('catalog_section')) {
+            $query->where('catalog_section', $request->string('catalog_section'));
+        }
+
         if (! $request->user()->can('moderate content')) {
             $query->where(function ($scope) use ($request): void {
                 $scope->where('moderation_status', 'approved')
@@ -45,14 +50,18 @@ class SeriesController extends Controller
 
         $series = $query->latest()->paginate(20)->withQueryString();
 
-        return view('admin.series.index', compact('series'));
+        $catalogSections = CatalogSection::query()->orderBy('sort_order')->orderBy('name')->get();
+
+        return view('admin.series.index', compact('series', 'catalogSections'));
     }
 
     public function create(): View
     {
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.series.create', compact('genres'));
+        $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+
+        return view('admin.series.create', compact('genres', 'catalogSections'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -105,7 +114,9 @@ class SeriesController extends Controller
     {
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.series.edit', compact('series', 'genres'));
+        $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+
+        return view('admin.series.edit', compact('series', 'genres', 'catalogSections'));
     }
 
     public function update(Request $request, Series $series): RedirectResponse
@@ -141,6 +152,7 @@ class SeriesController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:series,slug,'.$exceptId],
             'content_type' => ['required', 'in:series,movie'],
+            'catalog_section' => ['required', 'exists:catalog_sections,slug'],
             'status' => ['required', 'in:ongoing,completed,upcoming'],
             'description' => ['required', 'string'],
             'country_of_origin' => ['nullable', 'string', 'max:120'],

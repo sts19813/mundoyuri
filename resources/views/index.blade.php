@@ -1,258 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $homeSeoDescription = 'Descubre series, doramas y películas Girls’ Love (GL) online, subtituladas en español. Encuentra nuevos episodios y estrenos cada semana en Mundo Yuri.';
-        $homeSeoSchema = [
-            '@context' => 'https://schema.org',
-            '@type' => 'WebSite',
-            'name' => 'Mundo Yuri',
-            'alternateName' => 'Mundo Yuri GL',
-            'url' => route('home'),
-            'description' => $homeSeoDescription,
-            'inLanguage' => 'es-MX',
-            'publisher' => [
-                '@type' => 'Organization',
-                'name' => 'Mundo Yuri',
-                'url' => route('home'),
-                'logo' => [
-                    '@type' => 'ImageObject',
-                    'url' => asset('assets/img/logos/Logo Mundo yuri Original.png'),
-                ],
-            ],
-        ];
-    @endphp
-    <x-seo
-        title="Mundo Yuri: series GL y Girls’ Love online"
-        :description="$homeSeoDescription"
-        :canonical="route('home')"
-        :schema="$homeSeoSchema"
-    />
-    <x-portal-favicon />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
-        rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
-</head>
-
-<body>
-
-    <x-navbar :transparent="true" />
-
-    @php
         $featuredSeries = $featuredSeries ?? collect();
         $latestEpisodes = $latestEpisodes ?? collect();
-        $seriesCount = $seriesCount ?? $featuredSeries->count();
+        $seriesCount = $seriesCount ?? 0;
+        $section = $section ?? null;
+        $sectionName = $section?->name ?? 'Anime';
+        $sectionLabel = $section?->label ?: $sectionName;
+        $sectionUrl = $section?->slug ? route('catalog.sections.show', $section->slug) : route('home');
+        $catalogUrl = route('catalog.series.index', ['section' => $section?->slug]);
+        $homeSeoDescription = $section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.';
     @endphp
+    <x-seo title="Mundo Yuri: {{ $sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" />
+    <x-portal-favicon />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+</head>
+<body>
+    <x-navbar :transparent="true" />
 
-    <!-- ══ HERO ══ -->
     <section class="hero">
-        <iframe
-            id="heroYoutubeVideo"
-            class="hero-video"
-            src="https://www.youtube-nocookie.com/embed/3Q7eEPBE5ZI?autoplay=1&mute=1&loop=1&playlist=3Q7eEPBE5ZI&controls=0&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1"
-            title="Video de fondo de Mundo Yuri"
-            allow="autoplay; encrypted-media"
-            referrerpolicy="strict-origin-when-cross-origin"
-            tabindex="-1"
-            aria-hidden="true">
-        </iframe>
-        <div class="hero-overlay"></div>
-        <div class="hero-grain"></div>
-
+        @if($section?->heroVideoEmbedUrl())
+            <iframe id="heroYoutubeVideo" class="hero-video" src="{{ $section->heroVideoEmbedUrl() }}" title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>
+        @elseif($section?->hasDirectVideo())
+            <video class="hero-video is-ready" autoplay muted loop playsinline aria-hidden="true"><source src="{{ $section->hero_video_url }}"></video>
+        @endif
+        <div class="hero-overlay"></div><div class="hero-grain"></div>
         <div class="hero-content container-xl px-4 pt-5">
-            <div class="hero-tag">
-                <span class="brand-heart" style="width:14px;height:14px;"></span>
-                Contenido GL · Actualizado diario
-            </div>
-            <h1>Historias <em>Girls’ Love</em> para descubrir, sentir y compartir</h1>
-            <p class="hero-desc">Mira series, doramas y películas GL de todo el mundo, subtituladas en español y con
-                nuevos episodios cada semana.</p>
+            <div class="hero-tag"><span class="brand-heart" style="width:14px;height:14px;"></span>{{ $section?->hero_eyebrow ?: $sectionName }}</div>
+            <h1>{{ $section?->hero_title ?: 'Historias para descubrir, sentir y compartir' }}</h1>
+            @if($section?->hero_description)<p class="hero-desc">{{ $section->hero_description }}</p>@endif
             <div class="hero-actions">
-                <a href="{{ route('legacy.episodios') }}" class="btn-rose">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
-                    Explorar ahora
-                </a>
-                <a href="{{ route('legacy.episodios') }}" class="btn-ghost">Ver novedades</a>
+                <a href="{{ $catalogUrl }}" class="btn-rose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>{{ $section?->hero_primary_label ?: 'Explorar catálogo' }}</a>
+                <a href="#novedades" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
             </div>
         </div>
     </section>
 
-    <!-- ══ ÚLTIMOS EPISODIOS ══ -->
-    <section class="episodes-section">
+    <section class="episodes-section" id="novedades">
         <div class="container-xl px-4">
-            <div class="section-header">
-                <h2 class="section-title">Últimos episodios</h2>
-                <a href="{{ route('legacy.episodios') }}" class="section-link">Ver todo →</a>
-            </div>
+            <div class="section-header"><h2 class="section-title">Últimos episodios</h2><a href="{{ route('legacy.episodios') }}" class="section-link">Ver todo →</a></div>
             <div class="row g-3">
                 @forelse($latestEpisodes->take(4) as $episode)
-                    <div class="col-6 col-md-3">
-                        <a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card">
-                            <div class="episode-thumb">
-                                <x-media-preview
-                                    :src="$episode->series?->bannerMediaUrl() ?: $episode->previewMediaUrl('640/360')"
-                                    :type="$episode->series?->bannerMediaUrl() ? $episode->series->bannerMediaType() : $episode->previewMediaType()"
-                                    :alt="$episode->title"
-                                    class="episode-thumb-media"
-                                    :hover-play="($episode->series?->bannerMediaUrl() ? $episode->series->bannerMediaType() : $episode->previewMediaType()) === 'video'"
-                                />
-                                @if(optional($episode->published_at)->gte(now()->subDays(7)))
-                                    <span class="ep-badge-new">Nuevo</span>
-                                @endif
-                                <span class="ep-live"></span>
-                                <div class="ep-play-btn">
-                                    <div class="ep-play-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                                            <path d="M8 5v14l11-7z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="episode-info">
-                                <h6>Episodio {{ $episode->episode_number }}</h6>
-                                <small>{{ $episode->series->title ?? 'Serie desconocida' }}</small>
-                            </div>
-                        </a>
-                    </div>
+                    <div class="col-6 col-md-3"><a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card"><div class="episode-thumb"><x-media-preview :src="$episode->series?->bannerMediaUrl() ?: $episode->previewMediaUrl('640/360')" :type="$episode->series?->bannerMediaUrl() ? $episode->series->bannerMediaType() : $episode->previewMediaType()" :alt="$episode->title" class="episode-thumb-media" /><span class="ep-live"></span><div class="ep-play-btn"><div class="ep-play-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg></div></div></div><div class="episode-info"><h6>Episodio {{ $episode->episode_number }}</h6><small>{{ $episode->series->title ?? 'Serie desconocida' }}</small></div></a></div>
                 @empty
-                    <div class="col-12">
-                        <div class="episode-card p-4">Aún no hay episodios publicados.</div>
-                    </div>
+                    <div class="col-12"><div class="episode-card p-4">Aún no hay episodios publicados de {{ $sectionName }}.</div></div>
                 @endforelse
-
             </div>
         </div>
     </section>
 
-    <!-- ══ CARRUSEL DESTACADO ══ -->
     <section>
         <div class="container-xl px-4">
-            <div class="section-header">
-                <h2 class="section-title">Doramas destacados</h2>
-                <a href="{{ route('catalog.series.index') }}" class="section-link">Ver todo →</a>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button onclick="scrollRail(-1)" aria-label="Ver destacados anteriores"
-                    style="background:var(--dark-card);border:1px solid rgba(244,63,142,0.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;">‹</button>
-                <button onclick="scrollRail(1)" aria-label="Ver más destacados"
-                    style="background:var(--dark-card);border:1px solid rgba(244,63,142,0.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;">›</button>
-            </div>
-
+            <div class="section-header"><h2 class="section-title">Destacados de {{ $sectionName }}</h2><a href="{{ $catalogUrl }}" class="section-link">Ver catálogo →</a></div>
             <div class="featured-rail" id="featuredRail">
-                @forelse($featuredSeries as $series)
-                    <a href="{{ route('catalog.series.show', $series->slug) }}" class="featured-card">
-                        <x-media-preview
-                            :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/800/400?'.$series->id"
-                            :type="$series->bannerMediaUrl() ? $series->bannerMediaType() : 'image'"
-                            :alt="$series->title"
-                            class="featured-card-media"
-                            :hover-play="$series->bannerMediaType() === 'video'"
-                        />
-                        <div class="featured-card-overlay"></div>
-                        @if($series->status === 'ongoing')
-                            <div class="live-dot"></div>
-                        @endif
-                        <div class="featured-card-body">
-                            <span class="featured-card-badge">{{ ucfirst($series->content_type) }}</span>
-                            <h5>{{ $series->title }}</h5>
-                            <small>{{ $series->release_year ?: 'S/F' }} · {{ $series->status === 'completed' ? 'Completada' : 'En curso' }}</small>
-                        </div>
-                    </a>
+                @forelse($featuredSeries as $item)
+                    <a href="{{ route('catalog.series.show', $item->slug) }}" class="featured-card"><x-media-preview :src="$item->bannerMediaUrl() ?: 'https://picsum.photos/800/400?'.$item->id" :type="$item->bannerMediaUrl() ? $item->bannerMediaType() : 'image'" :alt="$item->title" class="featured-card-media" :hover-play="$item->bannerMediaType() === 'video'" /><div class="featured-card-overlay"></div><div class="featured-card-body"><span class="featured-card-badge">{{ $sectionLabel }} · {{ $item->content_type === 'movie' ? 'Película' : 'Serie' }}</span><h5>{{ $item->title }}</h5><small>{{ $item->release_year ?: 'S/F' }} · {{ $item->status === 'completed' ? 'Completada' : 'En curso' }}</small></div></a>
                 @empty
-                    <div class="featured-card">
-                        <x-media-preview src="https://picsum.photos/800/400?empty-featured" type="image" alt="Sin contenido" class="featured-card-media" />
-                        <div class="featured-card-overlay"></div>
-                        <div class="featured-card-body">
-                            <span class="featured-card-badge">Catálogo</span>
-                            <h5>Aún no hay series publicadas</h5>
-                            <small>Vuelve más tarde</small>
-                        </div>
-                    </div>
+                    <div class="featured-card"><x-media-preview src="https://picsum.photos/800/400?empty-featured" type="image" alt="Sin contenido" class="featured-card-media" /><div class="featured-card-overlay"></div><div class="featured-card-body"><span class="featured-card-badge">{{ $sectionLabel }}</span><h5>Próximamente</h5><small>Esta sección aún no tiene títulos publicados.</small></div></div>
                 @endforelse
             </div>
         </div>
     </section>
 
-    <!-- ══ CATÁLOGO ══ -->
     <section class="catalog-section">
         <div class="container-xl px-4">
-            <div class="section-header">
-                <h2 class="section-title">Series GL</h2>
-                <div style="display:flex;align-items:center;gap:16px;">
-                    <span style="color:var(--muted);font-size:0.85rem;">{{ $seriesCount }} series</span>
-                    <a href="{{ route('catalog.series.index') }}" class="section-link">Ver todo →</a>
-                </div>
-            </div>
+            <div class="section-header"><h2 class="section-title">{{ $sectionName }}</h2><div style="display:flex;align-items:center;gap:16px;"><span style="color:var(--muted);font-size:.85rem;">{{ $seriesCount }} {{ $seriesCount === 1 ? 'título' : 'títulos' }}</span><a href="{{ $catalogUrl }}" class="section-link">Ver todo →</a></div></div>
             <div class="row g-3">
-                @forelse($featuredSeries as $series)
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <a href="{{ route('catalog.series.show', $series->slug) }}" class="catalog-card">
-                            <div class="catalog-poster">
-                                <x-media-preview
-                                    :src="$series->coverMediaUrl() ?: 'https://picsum.photos/300/420?series-'.$series->id"
-                                    :type="$series->coverMediaUrl() ? $series->coverMediaType() : 'image'"
-                                    :alt="$series->title"
-                                    class="catalog-poster-media"
-                                    :hover-play="$series->coverMediaType() === 'video'"
-                                />
-                                <div class="catalog-poster-overlay">
-                                    <div class="cat-play">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                                            <path d="M8 5v14l11-7z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="catalog-info">
-                                <h6>{{ $series->title }}</h6>
-                                <small>{{ optional($series->published_at)->format('d/m/Y') ?: 'Sin fecha' }}</small>
-                            </div>
-                        </a>
-                    </div>
+                @forelse($featuredSeries as $item)
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2"><a href="{{ route('catalog.series.show', $item->slug) }}" class="catalog-card"><div class="catalog-poster"><x-media-preview :src="$item->coverMediaUrl() ?: 'https://picsum.photos/300/420?series-'.$item->id" :type="$item->coverMediaUrl() ? $item->coverMediaType() : 'image'" :alt="$item->title" class="catalog-poster-media" :hover-play="$item->coverMediaType() === 'video'" /></div><div class="catalog-info"><h6>{{ $item->title }}</h6><small>{{ $sectionLabel }} · {{ $item->content_type === 'movie' ? 'Película' : 'Serie' }}</small></div></a></div>
                 @empty
-                    <div class="col-12">
-                        <div class="catalog-card p-4">Aún no hay series publicadas.</div>
-                    </div>
+                    <div class="col-12"><div class="catalog-card p-4">Aún no hay títulos publicados de {{ $sectionName }}.</div></div>
                 @endforelse
-
             </div>
         </div>
     </section>
 
     <x-footer />
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Navbar scroll
-        window.addEventListener('scroll', () => {
-            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
-        });
-
-        // YouTube muestra información de su reproductor al arrancar. El fondo CSS
-        // permanece visible hasta que esa interfaz inicial ya desapareció.
+        window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
         const heroYoutubeVideo = document.getElementById('heroYoutubeVideo');
-        heroYoutubeVideo.addEventListener('load', () => {
-            window.setTimeout(() => heroYoutubeVideo.classList.add('is-ready'), 3000);
-        });
-
-        // Rail scroll
-        function scrollRail(dir) {
-            const rail = document.getElementById('featuredRail');
-            rail.scrollBy({ left: dir * 320, behavior: 'smooth' });
-        }
-
-
+        heroYoutubeVideo?.addEventListener('load', () => window.setTimeout(() => heroYoutubeVideo.classList.add('is-ready'), 3000));
     </script>
     @include('partials.hover-media-script')
 </body>
-
 </html>

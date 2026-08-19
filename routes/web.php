@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AssistantMessageController as AdminAssistantMessageController;
 use App\Http\Controllers\Admin\AssistantSettingController;
 use App\Http\Controllers\Admin\BackblazeB2SettingController;
+use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\ModerationController;
@@ -133,6 +134,17 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->middleware('admin')->name('admin.settings.backblaze-b2.update');
     Route::post('/configuracion/backblaze-b2/verificar', [BackblazeB2SettingController::class, 'verify'])->middleware('admin')->name('admin.settings.backblaze-b2.verify');
 
+    Route::resource('secciones-catalogo', AdminCatalogSectionController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['secciones-catalogo' => 'catalogSection'])
+        ->names([
+            'index' => 'admin.catalog-sections.index',
+            'create' => 'admin.catalog-sections.create',
+            'store' => 'admin.catalog-sections.store',
+            'edit' => 'admin.catalog-sections.edit',
+            'update' => 'admin.catalog-sections.update',
+        ]);
+
     Route::redirect('/users', '/admin/usuarios');
     Route::redirect('/genres', '/admin/generos');
     Route::redirect('/episodes', '/admin/episodios');
@@ -218,3 +230,9 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
 });
 
 require __DIR__.'/auth.php';
+
+// Las secciones del catálogo viven directamente en el dominio: /anime, /series-gl,
+// y las que se creen desde el panel. Se declara al final para no interceptar rutas del sitio.
+Route::get('/{sectionSlug}', [PublicCatalogController::class, 'section'])
+    ->where('sectionSlug', '[A-Za-z0-9-]+')
+    ->name('catalog.sections.show');

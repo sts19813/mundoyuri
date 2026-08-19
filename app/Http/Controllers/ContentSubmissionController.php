@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
@@ -10,9 +11,9 @@ use App\Support\VideoSource;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ContentSubmissionController extends Controller
 {
@@ -24,9 +25,10 @@ class ContentSubmissionController extends Controller
     public function create(): View
     {
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
+        $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
         $sourceProviders = config('episode_sources.providers', []);
 
-        return view('catalog.submissions.create', compact('genres', 'sourceProviders'));
+        return view('catalog.submissions.create', compact('genres', 'catalogSections', 'sourceProviders'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -35,6 +37,7 @@ class ContentSubmissionController extends Controller
             'genre_id' => ['required', 'exists:genres,id'],
             'title' => ['required', 'string', 'max:255'],
             'content_type' => ['required', 'in:series,movie'],
+            'catalog_section' => ['required', 'exists:catalog_sections,slug'],
             'status' => ['required', 'in:ongoing,completed,upcoming'],
             'description' => ['required', 'string', 'min:30'],
             'country_of_origin' => ['nullable', 'string', 'max:120'],
@@ -104,6 +107,7 @@ class ContentSubmissionController extends Controller
             'title' => $seriesData['title'],
             'slug' => $this->resolveUniqueSlug($seriesData['title']),
             'content_type' => $seriesData['content_type'],
+            'catalog_section' => $seriesData['catalog_section'],
             'status' => $seriesData['status'],
             'description' => $seriesData['description'],
             'country_of_origin' => $seriesData['country_of_origin'] ?? null,

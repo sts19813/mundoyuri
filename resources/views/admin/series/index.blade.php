@@ -16,8 +16,16 @@
 <div class="card mb-5">
     <div class="card-body">
         <form class="row g-3" method="GET" action="{{ route('admin.series.index') }}">
-            <div class="col-md-5"><input class="form-control" name="q" value="{{ request('q') }}" placeholder="Buscar titulo"></div>
-            <div class="col-md-4">
+            <div class="col-md-4"><input class="form-control" name="q" value="{{ request('q') }}" placeholder="Buscar titulo"></div>
+            <div class="col-md-3">
+                <select class="form-select" name="catalog_section">
+                    <option value="">Todas las secciones</option>
+                    @foreach($catalogSections as $catalogSection)
+                        <option value="{{ $catalogSection->slug }}" @selected(request('catalog_section') === $catalogSection->slug)>{{ $catalogSection->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
                 <select class="form-select" name="moderation_status">
                     <option value="">Todos los estados</option>
                     <option value="pending" @selected(request('moderation_status')==='pending')>Pendiente</option>
@@ -25,7 +33,7 @@
                     <option value="rejected" @selected(request('moderation_status')==='rejected')>Rechazado</option>
                 </select>
             </div>
-            <div class="col-md-3 d-grid"><button class="btn btn-light-primary" type="submit">Filtrar</button></div>
+            <div class="col-md-2 d-grid"><button class="btn btn-light-primary" type="submit">Filtrar</button></div>
         </form>
     </div>
 </div>
@@ -33,11 +41,12 @@
 <div class="card">
     <div class="card-body table-responsive">
         <table class="table table-row-dashed gy-5">
-            <thead><tr><th>Titulo</th><th>Genero</th><th>Tipo</th><th>Estado</th><th>Moderacion</th><th></th></tr></thead>
+            <thead><tr><th>Titulo</th><th>Sección</th><th>Genero</th><th>Tipo</th><th>Estado</th><th>Moderacion</th><th></th></tr></thead>
             <tbody>
             @forelse($series as $item)
                 <tr>
                     <td>{{ $item->title }}</td>
+                    <td>{{ $item->catalog_section === 'anime' ? 'Anime' : 'Serie GL' }}</td>
                     <td>{{ $item->genre->name }}</td>
                     <td>{{ $item->content_type === 'series' ? 'Serie' : 'Pelicula' }}</td>
                     <td>{{ ucfirst($item->status) }}</td>
@@ -56,7 +65,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
+                <tr><td colspan="7" class="text-center text-muted">Sin resultados</td></tr>
             @endforelse
             </tbody>
         </table>
