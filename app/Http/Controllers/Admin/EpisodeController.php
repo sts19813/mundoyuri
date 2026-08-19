@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Services\EpisodeAvailabilityNotifier;
 use App\Support\SeriesMedia;
 use App\Support\VideoSource;
 use Illuminate\Database\Eloquent\Builder;
@@ -129,6 +130,7 @@ class EpisodeController extends Controller
 
         $this->syncSources($episode, $request);
         $this->syncModeration($episode, $validated['moderation_status'] ?? 'pending', $validated['moderation_notes'] ?? null);
+        app(EpisodeAvailabilityNotifier::class)->sendFor($episode->load('series'));
 
         if ($request->expectsJson()) {
             return response()->json([

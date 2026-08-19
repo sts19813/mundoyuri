@@ -67,8 +67,10 @@ class AdminEpisodeWorkflowTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.episodes.create', ['series_id' => $series->id]));
 
         $response->assertOk()
-            ->assertSee('value="'.$series->id.'" selected', false)
+            ->assertSee('name="series_id" id="episode-series-id" value="'.$series->id.'"', false)
             ->assertSee('id="episode-number" value="4"', false)
+            ->assertSee('id="episode-title" value="Episodio 4"', false)
+            ->assertSee('backblaze_b2" selected', false)
             ->assertSee('siguiente número disponible');
     }
 

@@ -257,7 +257,7 @@ class AdminEpisodeSourcesTest extends TestCase
 
         $response->assertRedirect(route('admin.episodes.index'));
 
-        $episode = Episode::query()->with('sources')->where('title', 'Episodio Pixeldrain')->firstOrFail();
+        $episode = Episode::query()->with('sources')->where('series_id', $series->id)->where('episode_number', 2)->firstOrFail();
 
         $this->assertCount(1, $episode->sources);
         $this->assertSame('pixeldrain_cdn', $episode->sources[0]->provider);
@@ -316,7 +316,7 @@ class AdminEpisodeSourcesTest extends TestCase
 
         $response->assertRedirect(route('admin.episodes.index'));
 
-        $episode = Episode::query()->with('sources')->where('title', 'Episodio Bunny')->firstOrFail();
+        $episode = Episode::query()->with('sources')->where('series_id', $series->id)->where('episode_number', 3)->firstOrFail();
 
         $this->assertCount(1, $episode->sources);
         $this->assertSame('bunny_stream', $episode->sources[0]->provider);
@@ -381,7 +381,7 @@ class AdminEpisodeSourcesTest extends TestCase
 
         $response->assertRedirect(route('admin.episodes.index'));
 
-        $episode = Episode::query()->with('sources')->where('title', 'Episodio Bunny Privado')->firstOrFail();
+        $episode = Episode::query()->with('sources')->where('series_id', $series->id)->where('episode_number', 4)->firstOrFail();
         $playableUrl = $episode->sources[0]->playable_url;
         $expectedExpires = Carbon::now()->addMinutes(120)->timestamp;
         $expectedToken = hash('sha256', 'secret-token-key'.'550e8400-e29b-41d4-a716-446655440000'.$expectedExpires);

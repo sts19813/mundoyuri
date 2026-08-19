@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Services\EpisodeAvailabilityNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -60,13 +61,14 @@ class ModerationController extends Controller
         return back()->with('success', 'Serie rechazada.');
     }
 
-    public function approveEpisode(Episode $episode): RedirectResponse
+    public function approveEpisode(Episode $episode, EpisodeAvailabilityNotifier $notifier): RedirectResponse
     {
         $episode->update([
             'moderation_status' => 'approved',
             'approved_by' => auth()->id(),
             'published_at' => now(),
         ]);
+        $notifier->sendFor($episode->load('series'));
 
         return back()->with('success', 'Episodio aprobado.');
     }
