@@ -5,7 +5,7 @@
             <a href="{{ $catalogUrl }}" class="section-link">Ver todo →</a>
         </div>
         <div class="row g-3">
-            @forelse($episodes->take(4) as $episode)
+            @forelse($episodes->take(8) as $episode)
                 <div class="col-6 col-md-3">
                     <a href="{{ route('public.episodes.show', $episode->slug) }}" class="episode-card">
                         <div class="episode-thumb">

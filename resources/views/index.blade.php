@@ -6,6 +6,7 @@
     @php
         $featuredSeries = $featuredSeries ?? collect();
         $latestEpisodes = $latestEpisodes ?? collect();
+        $mixedSeries = $mixedSeries ?? collect();
         $seriesCount = $seriesCount ?? 0;
         $section = $section ?? null;
         $isMixedHome = $isMixedHome ?? false;
@@ -39,51 +40,31 @@
             @if($section?->hero_description)<p class="hero-desc">{{ $section->hero_description }}</p>@endif
             <div class="hero-actions">
                 <a href="{{ $catalogUrl }}" class="btn-rose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>{{ $section?->hero_primary_label ?: 'Explorar catálogo' }}</a>
-                <a href="{{ $isMixedHome ? '#novedades-gl' : '#novedades' }}" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
+                <a href="#novedades" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
             </div>
         </div>
     </section>
 
     @if($isMixedHome)
         @include('partials.home.episodes-section', [
-            'sectionId' => 'novedades-gl',
-            'title' => 'Últimos episodios GL',
-            'label' => 'Series GL',
-            'episodes' => $latestGlEpisodes,
-            'catalogUrl' => route('catalog.series.index', ['section' => 'series-gl']),
-        ])
-        @include('partials.home.episodes-section', [
-            'sectionId' => 'novedades-anime',
-            'title' => 'Últimos episodios Anime',
-            'label' => 'Anime',
-            'episodes' => $latestAnimeEpisodes,
-            'catalogUrl' => route('catalog.series.index', ['section' => 'anime']),
+            'sectionId' => 'novedades',
+            'title' => 'Últimos episodios',
+            'label' => 'Anime y Series GL',
+            'episodes' => $latestEpisodes,
+            'catalogUrl' => route('catalog.series.index'),
         ])
         @include('partials.home.featured-section', [
-            'sectionId' => 'destacados-gl',
-            'title' => 'Destacados de Series GL',
-            'label' => 'Series GL',
-            'series' => $featuredGlSeries,
-            'catalogUrl' => route('catalog.series.index', ['section' => 'series-gl']),
-        ])
-        @include('partials.home.featured-section', [
-            'sectionId' => 'destacados-anime',
-            'title' => 'Destacados de Anime',
-            'label' => 'Anime',
-            'series' => $featuredAnimeSeries,
-            'catalogUrl' => route('catalog.series.index', ['section' => 'anime']),
+            'sectionId' => 'destacados',
+            'title' => 'Destacados',
+            'label' => 'Anime y Series GL',
+            'series' => $featuredSeries,
+            'catalogUrl' => route('catalog.series.index'),
         ])
         @include('partials.home.catalog-section', [
-            'title' => 'Series GL',
-            'label' => 'Series GL',
-            'series' => $glSeries,
-            'catalogUrl' => route('catalog.series.index', ['section' => 'series-gl']),
-        ])
-        @include('partials.home.catalog-section', [
-            'title' => 'Series de Anime',
-            'label' => 'Anime',
-            'series' => $animeSeries,
-            'catalogUrl' => route('catalog.series.index', ['section' => 'anime']),
+            'title' => 'Títulos',
+            'label' => 'Anime y Series GL',
+            'series' => $mixedSeries,
+            'catalogUrl' => route('catalog.series.index'),
         ])
     @else
     <section class="episodes-section" id="novedades">

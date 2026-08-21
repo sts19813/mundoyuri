@@ -77,16 +77,38 @@ class PublicCatalogController extends Controller
     /** @return array<string, mixed> */
     private function mixedHomeData(): array
     {
+        $latestGlEpisodes = $this->latestEpisodesForSection('series-gl');
+        $latestAnimeEpisodes = $this->latestEpisodesForSection('anime');
+        $featuredGlSeries = $this->featuredSeriesForSection('series-gl');
+        $featuredAnimeSeries = $this->featuredSeriesForSection('anime');
+        $glSeries = $this->seriesForSection('series-gl');
+        $animeSeries = $this->seriesForSection('anime');
+
         return [
             'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
             'isMixedHome' => true,
-            'latestGlEpisodes' => $this->latestEpisodesForSection('series-gl'),
-            'latestAnimeEpisodes' => $this->latestEpisodesForSection('anime'),
-            'featuredGlSeries' => $this->featuredSeriesForSection('series-gl'),
-            'featuredAnimeSeries' => $this->featuredSeriesForSection('anime'),
-            'glSeries' => $this->seriesForSection('series-gl'),
-            'animeSeries' => $this->seriesForSection('anime'),
+            'latestEpisodes' => $this->interleave($latestGlEpisodes, $latestAnimeEpisodes),
+            'featuredSeries' => $this->interleave($featuredGlSeries, $featuredAnimeSeries),
+            'mixedSeries' => $this->interleave($glSeries, $animeSeries),
         ];
+    }
+
+    private function interleave(Collection $first, Collection $second): Collection
+    {
+        $items = collect();
+        $total = max($first->count(), $second->count());
+
+        for ($index = 0; $index < $total; $index++) {
+            if ($first->has($index)) {
+                $items->push($first->get($index));
+            }
+
+            if ($second->has($index)) {
+                $items->push($second->get($index));
+            }
+        }
+
+        return $items;
     }
 
     private function latestEpisodesForSection(string $sectionSlug): Collection
@@ -293,12 +315,9 @@ class PublicCatalogController extends Controller
         return [
             'section' => $this->fallbackSection(),
             'isMixedHome' => true,
-            'latestGlEpisodes' => collect(),
-            'latestAnimeEpisodes' => collect(),
-            'featuredGlSeries' => collect(),
-            'featuredAnimeSeries' => collect(),
-            'glSeries' => collect(),
-            'animeSeries' => collect(),
+            'latestEpisodes' => collect(),
+            'featuredSeries' => collect(),
+            'mixedSeries' => collect(),
         ];
     }
 }
