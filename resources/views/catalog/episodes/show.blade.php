@@ -89,7 +89,7 @@
                 <h4 class="mb-3">Lista de episodios</h4>
                 <div class="list-group">
                     @foreach($episodes as $item)
-                        <a href="{{ route('catalog.episodes.show', [$series->slug, $item->slug]) }}" class="list-group-item list-group-item-action {{ $item->id === $episode->id ? 'active' : '' }}">
+                        <a href="{{ route('public.episodes.show', $item->slug) }}" class="list-group-item list-group-item-action {{ $item->id === $episode->id ? 'active' : '' }}">
                             S{{ $item->season_number }}E{{ $item->episode_number }} · {{ $item->title }}
                             <small class="d-block {{ $item->id === $episode->id ? 'text-white-50' : 'text-muted' }}">{{ optional($item->release_date)->format('d/m/Y') ?: 'Sin fecha' }}</small>
                         </a>

@@ -76,7 +76,7 @@
         <div class="row g-3">
             @forelse($latestEpisodes as $episode)
                 <div class="col-6 col-md-3">
-                    <a href="{{ route('catalog.episodes.show', [$episode->series->slug, $episode->slug]) }}" class="text-decoration-none">
+                    <a href="{{ route('public.episodes.show', $episode->slug) }}" class="text-decoration-none">
                         <div class="episode-card">
                             <div class="episode-thumb">
                                 <img src="{{ $episode->imageUrl('400/250') }}" alt="{{ $episode->title }}">

@@ -30,7 +30,7 @@ class EpisodeViewCountingTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('catalog.episodes.show', [$series, $episode]))
-            ->assertOk();
+            ->assertRedirect(route('public.episodes.show', $episode));
 
         $this->actingAs($admin)
             ->get(route('public.episodes.show', $episode))
@@ -47,7 +47,7 @@ class EpisodeViewCountingTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('catalog.episodes.show', [$series, $episode]))
-            ->assertOk();
+            ->assertRedirect(route('public.episodes.show', $episode));
 
         $this->assertSame(0, $episode->fresh()->views_count);
     }
@@ -59,6 +59,9 @@ class EpisodeViewCountingTest extends TestCase
         [$series, $episode] = $this->publishedEpisode($creator);
 
         $this->get(route('catalog.episodes.show', [$series, $episode]))
+            ->assertRedirect(route('public.episodes.show', $episode));
+
+        $this->get(route('public.episodes.show', $episode))
             ->assertOk();
 
         $this->actingAs($viewer)

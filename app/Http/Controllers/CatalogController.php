@@ -7,6 +7,7 @@ use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
@@ -157,7 +158,7 @@ class CatalogController extends Controller
         return view('catalog.series.show', compact('series', 'recentEpisodes'));
     }
 
-    public function showEpisode(Series $series, Episode $episode): View
+    public function showEpisode(Series $series, Episode $episode): RedirectResponse
     {
         if (! $this->catalogTablesReady()) {
             abort(404);
@@ -166,31 +167,9 @@ class CatalogController extends Controller
         abort_unless($series->moderation_status === 'approved', 404);
         abort_unless($episode->series_id === $series->id, 404);
         abort_unless($episode->moderation_status === 'approved', 404);
+        abort_unless($episode->published_at, 404);
 
-        $episode->recordView(auth()->user());
-
-        $episode->load([
-            'sources',
-            'comments' => fn ($query) => $query
-                ->where('is_approved', true)
-                ->whereNull('parent_id')
-                ->latest()
-                ->with([
-                    'user',
-                    'replies' => fn ($replyQuery) => $replyQuery
-                        ->where('is_approved', true)
-                        ->oldest()
-                        ->with('user'),
-                ]),
-        ]);
-
-        $episodes = $series->episodes()
-            ->where('moderation_status', 'approved')
-            ->orderBy('season_number')
-            ->orderBy('episode_number')
-            ->get();
-
-        return view('catalog.episodes.show', compact('series', 'episode', 'episodes'));
+        return redirect()->route('public.episodes.show', $episode->slug, 301);
     }
 
     private function catalogTablesReady(): bool
