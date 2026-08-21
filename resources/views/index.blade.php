@@ -8,13 +8,16 @@
         $latestEpisodes = $latestEpisodes ?? collect();
         $seriesCount = $seriesCount ?? 0;
         $section = $section ?? null;
+        $isMixedHome = $isMixedHome ?? false;
         $sectionName = $section?->name ?? 'Anime';
         $sectionLabel = $section?->label ?: $sectionName;
-        $sectionUrl = $section?->slug ? route('catalog.sections.show', $section->slug) : route('home');
+        $sectionUrl = $isMixedHome ? route('home') : ($section?->slug ? route('catalog.sections.show', $section->slug) : route('home'));
         $catalogUrl = route('catalog.series.index', ['section' => $section?->slug]);
-        $homeSeoDescription = $section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.';
+        $homeSeoDescription = $isMixedHome
+            ? 'Explora anime y series GL con nuevos episodios, destacados y colecciones seleccionadas en Mundo Yuri.'
+            : ($section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.');
     @endphp
-    <x-seo title="Mundo Yuri: {{ $sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" />
+    <x-seo title="{{ $isMixedHome ? 'Mundo Yuri: Anime y Series GL' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" />
     <x-portal-favicon />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -36,11 +39,53 @@
             @if($section?->hero_description)<p class="hero-desc">{{ $section->hero_description }}</p>@endif
             <div class="hero-actions">
                 <a href="{{ $catalogUrl }}" class="btn-rose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>{{ $section?->hero_primary_label ?: 'Explorar catálogo' }}</a>
-                <a href="#novedades" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
+                <a href="{{ $isMixedHome ? '#novedades-gl' : '#novedades' }}" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
             </div>
         </div>
     </section>
 
+    @if($isMixedHome)
+        @include('partials.home.episodes-section', [
+            'sectionId' => 'novedades-gl',
+            'title' => 'Últimos episodios GL',
+            'label' => 'Series GL',
+            'episodes' => $latestGlEpisodes,
+            'catalogUrl' => route('catalog.series.index', ['section' => 'series-gl']),
+        ])
+        @include('partials.home.episodes-section', [
+            'sectionId' => 'novedades-anime',
+            'title' => 'Últimos episodios Anime',
+            'label' => 'Anime',
+            'episodes' => $latestAnimeEpisodes,
+            'catalogUrl' => route('catalog.series.index', ['section' => 'anime']),
+        ])
+        @include('partials.home.featured-section', [
+            'sectionId' => 'destacados-gl',
+            'title' => 'Destacados de Series GL',
+            'label' => 'Series GL',
+            'series' => $featuredGlSeries,
+            'catalogUrl' => route('catalog.series.index', ['section' => 'series-gl']),
+        ])
+        @include('partials.home.featured-section', [
+            'sectionId' => 'destacados-anime',
+            'title' => 'Destacados de Anime',
+            'label' => 'Anime',
+            'series' => $featuredAnimeSeries,
+            'catalogUrl' => route('catalog.series.index', ['section' => 'anime']),
+        ])
+        @include('partials.home.catalog-section', [
+            'title' => 'Series GL',
+            'label' => 'Series GL',
+            'series' => $glSeries,
+            'catalogUrl' => route('catalog.series.index', ['section' => 'series-gl']),
+        ])
+        @include('partials.home.catalog-section', [
+            'title' => 'Series de Anime',
+            'label' => 'Anime',
+            'series' => $animeSeries,
+            'catalogUrl' => route('catalog.series.index', ['section' => 'anime']),
+        ])
+    @else
     <section class="episodes-section" id="novedades">
         <div class="container-xl px-4">
             <div class="section-header"><h2 class="section-title">Últimos episodios</h2><a href="{{ route('legacy.episodios') }}" class="section-link">Ver todo →</a></div>
@@ -79,6 +124,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     <x-footer />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

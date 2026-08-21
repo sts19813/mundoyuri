@@ -14,12 +14,10 @@ class PublicCatalogController extends Controller
     public function home(): View
     {
         if (! $this->catalogTablesReady()) {
-            return view('index', $this->emptyHomeData($this->fallbackSection()));
+            return view('index', $this->emptyMixedHomeData());
         }
 
-        $section = $this->resolveSection('series-gl') ?? $this->fallbackSection();
-
-        return view('index', $this->homeData($section));
+        return view('index', $this->mixedHomeData());
     }
 
     public function section(string $sectionSlug): View
@@ -74,6 +72,66 @@ class PublicCatalogController extends Controller
             'latestEpisodes',
             'seriesCount'
         );
+    }
+
+    /** @return array<string, mixed> */
+    private function mixedHomeData(): array
+    {
+        return [
+            'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
+            'isMixedHome' => true,
+            'latestGlEpisodes' => $this->latestEpisodesForSection('series-gl'),
+            'latestAnimeEpisodes' => $this->latestEpisodesForSection('anime'),
+            'featuredGlSeries' => $this->featuredSeriesForSection('series-gl'),
+            'featuredAnimeSeries' => $this->featuredSeriesForSection('anime'),
+            'glSeries' => $this->seriesForSection('series-gl'),
+            'animeSeries' => $this->seriesForSection('anime'),
+        ];
+    }
+
+    private function latestEpisodesForSection(string $sectionSlug): Collection
+    {
+        return Episode::query()
+            ->with('series')
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->whereHas('series', fn ($query) => $query->where('catalog_section', $sectionSlug))
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('series_id')
+            ->take(12)
+            ->values();
+    }
+
+    private function featuredSeriesForSection(string $sectionSlug): Collection
+    {
+        return Series::query()
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->where('catalog_section', $sectionSlug)
+            ->where('content_type', 'series')
+            ->withSum([
+                'episodes as total_episode_views' => fn ($query) => $query
+                    ->where('moderation_status', 'approved')
+                    ->whereNotNull('published_at'),
+            ], 'views_count')
+            ->orderByDesc('total_episode_views')
+            ->orderByDesc('published_at')
+            ->take(12)
+            ->get();
+    }
+
+    private function seriesForSection(string $sectionSlug): Collection
+    {
+        return Series::query()
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->where('catalog_section', $sectionSlug)
+            ->where('content_type', 'series')
+            ->orderByDesc('published_at')
+            ->take(12)
+            ->get();
     }
 
     public function episodes(?Episode $episode = null): View
@@ -226,6 +284,21 @@ class PublicCatalogController extends Controller
             'featuredSeries' => collect(),
             'latestEpisodes' => collect(),
             'seriesCount' => 0,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function emptyMixedHomeData(): array
+    {
+        return [
+            'section' => $this->fallbackSection(),
+            'isMixedHome' => true,
+            'latestGlEpisodes' => collect(),
+            'latestAnimeEpisodes' => collect(),
+            'featuredGlSeries' => collect(),
+            'featuredAnimeSeries' => collect(),
+            'glSeries' => collect(),
+            'animeSeries' => collect(),
         ];
     }
 }
