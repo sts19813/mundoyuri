@@ -18,7 +18,7 @@
                         </td></tr>
                     </table>
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:999px;background:#f43f8f;">
-                        <a href="{{ route('catalog.episodes.show', ['series' => $episode->series->slug, 'episode' => $episode->slug]) }}" style="display:inline-block;padding:15px 25px;color:#fff;font-size:15px;font-weight:700;text-decoration:none;">Ver {{ $episode->title }} →</a>
+                        <a href="{{ route('public.episodes.show', $episode->slug) }}" style="display:inline-block;padding:15px 25px;color:#fff;font-size:15px;font-weight:700;text-decoration:none;">Ver {{ $episode->title }} →</a>
                     </td></tr></table>
                     <p style="margin:30px 0 0;color:#a58b9d;font-size:12px;line-height:1.5;">Recibes este correo porque tienes una cuenta en Mundo Yuri. Pronto podrás elegir qué avisos deseas recibir.</p>
                 </td></tr>

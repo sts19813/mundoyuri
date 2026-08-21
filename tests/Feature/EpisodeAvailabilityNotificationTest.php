@@ -53,7 +53,9 @@ class EpisodeAvailabilityNotificationTest extends TestCase
 
         $this->assertSame('Episodio 4', $episode->title);
         Mail::assertSent(EpisodeAvailableMail::class, function (EpisodeAvailableMail $mail) use ($episode): bool {
-            return $mail->hasTo('sts19813@gmail.com') && $mail->episode->is($episode);
+            return $mail->hasTo('sts19813@gmail.com')
+                && $mail->episode->is($episode)
+                && str_contains($mail->render(), route('public.episodes.show', $episode->slug));
         });
         $this->assertDatabaseHas('episode_email_notifications', [
             'episode_id' => $episode->id,
