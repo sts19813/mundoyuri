@@ -29,6 +29,7 @@ class Episode extends Model
         'moderation_status',
         'moderation_notes',
         'published_at',
+        'notify_subscribers',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class Episode extends Model
         return [
             'release_date' => 'date',
             'published_at' => 'datetime',
+            'notify_subscribers' => 'boolean',
             'views_count' => 'integer',
         ];
     }

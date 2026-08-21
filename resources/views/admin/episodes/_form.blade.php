@@ -31,6 +31,9 @@
     $currentSeason = old('season_number', $episode->season_number ?? ($suggestedSeason ?? 1));
     $currentEpisodeNumber = old('episode_number', $episode->episode_number ?? ($suggestedEpisodeNumber ?? 1));
     $currentTitle = 'Episodio '.$currentEpisodeNumber;
+    $currentPublishedAt = old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : ($suggestedPublishedAt ?? ''));
+    $notificationEligible = $isCreating && str_starts_with($currentPublishedAt, now()->toDateString());
+    $notifySubscribers = old('notify_subscribers', $notificationEligible);
     $selectedSeries = $seriesOptions->firstWhere('id', (int) $currentSeriesId);
     $seriesIsLocked = $isCreating && request()->filled('series_id') && $selectedSeries;
 @endphp
@@ -84,10 +87,29 @@
         @can('moderate content')
             <div class="col-md-6">
                 <label class="form-label">Fecha y hora de publicación</label>
-                <input class="form-control @error('published_at') is-invalid @enderror" type="datetime-local" name="published_at" value="{{ old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : ($suggestedPublishedAt ?? '')) }}">
+                <input class="form-control @error('published_at') is-invalid @enderror" type="datetime-local" name="published_at" id="episode-published-at" value="{{ $currentPublishedAt }}">
                 <div class="form-text">Se propone una semana después del episodio anterior.</div>
                 @error('published_at')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
+            @if($isCreating)
+                <div class="col-md-6">
+                    <label class="form-check form-switch form-check-custom form-check-solid mt-8">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="notify_subscribers"
+                            id="episode-notify-subscribers"
+                            value="1"
+                            @checked($notifySubscribers)
+                            @disabled(! $notificationEligible)
+                        >
+                        <span class="form-check-label fw-semibold">Notificar por correo a todos los usuarios</span>
+                    </label>
+                    <div class="form-text" id="episode-notification-help">
+                        {{ $notificationEligible ? 'Al guardar te pediremos confirmar el envío.' : 'Solo se puede notificar cuando la fecha de publicación es hoy.' }}
+                    </div>
+                </div>
+            @endif
         @endcan
         <div class="col-12"><label class="form-label">Descripcion</label><textarea class="form-control" rows="4" name="description">{{ old('description', $episode->description ?? '') }}</textarea></div>
         @if(auth()->user()->isAdmin())
@@ -232,6 +254,10 @@
     const seasonInput = document.getElementById('episode-season-number');
     const episodeInput = document.getElementById('episode-number');
     const titleInput = document.getElementById('episode-title');
+    const publishedAtInput = document.getElementById('episode-published-at');
+    const notifySubscribersInput = document.getElementById('episode-notify-subscribers');
+    const notificationHelp = document.getElementById('episode-notification-help');
+    const today = @js(now()->toDateString());
 
     const updateEpisodeTitle = () => {
         if (!titleInput || !episodeInput) {
@@ -264,6 +290,39 @@
     episodeInput?.addEventListener('input', updateEpisodeTitle);
     episodeInput?.addEventListener('change', updateEpisodeTitle);
     updateEpisodeTitle();
+
+    const updateNotificationOption = () => {
+        if (!isCreating || !publishedAtInput || !notifySubscribersInput) {
+            return;
+        }
+
+        const canNotify = publishedAtInput.value.slice(0, 10) === today;
+        notifySubscribersInput.disabled = !canNotify;
+
+        if (!canNotify) {
+            notifySubscribersInput.checked = false;
+
+            if (notificationHelp) {
+                notificationHelp.textContent = 'Solo se puede notificar cuando la fecha de publicación es hoy.';
+            }
+
+            return;
+        }
+
+        if (notifySubscribersInput.dataset.userChoice !== 'true') {
+            notifySubscribersInput.checked = true;
+        }
+
+        if (notificationHelp) {
+            notificationHelp.textContent = 'Al guardar te pediremos confirmar el envío.';
+        }
+    };
+
+    publishedAtInput?.addEventListener('change', updateNotificationOption);
+    notifySubscribersInput?.addEventListener('change', () => {
+        notifySubscribersInput.dataset.userChoice = 'true';
+    });
+    updateNotificationOption();
 
     if (!list || !addButton || !template) {
         return;
@@ -383,6 +442,33 @@
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        if (isCreating && notifySubscribersInput?.checked && !notifySubscribersInput.disabled) {
+            if (typeof Swal === 'undefined') {
+                notifySubscribersInput.checked = window.confirm('¿Quieres enviar el correo a todos los usuarios?');
+            } else {
+                const confirmation = await Swal.fire({
+                    icon: 'question',
+                    title: '¿Enviar correo a todos?',
+                    text: 'Se notificará que este episodio ya está disponible.',
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, enviar correo',
+                    denyButtonText: 'Guardar sin correo',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#009ef7',
+                });
+
+                if (confirmation.isDismissed) {
+                    return;
+                }
+
+                if (confirmation.isDenied) {
+                    notifySubscribersInput.checked = false;
+                }
+            }
+        }
+
         clearValidation();
 
         const submitButton = form.querySelector('button[type="submit"]');

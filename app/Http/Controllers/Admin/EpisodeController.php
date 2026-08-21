@@ -218,6 +218,7 @@ class EpisodeController extends Controller
             ],
             'release_date' => ['nullable', 'date'],
             'published_at' => ['nullable', 'date'],
+            'notify_subscribers' => ['nullable', 'boolean'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'thumbnail_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
             'description' => ['nullable', 'string'],
