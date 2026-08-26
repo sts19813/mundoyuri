@@ -163,6 +163,8 @@ class AdminUserController extends Controller
             'roles' => $roleNames,
             'permissions' => $user->getDirectPermissions()->pluck('name')->values(),
             'is_active' => (bool) $user->is_active,
+            'email_notifications_enabled' => (bool) $user->episode_email_notifications_enabled,
+            'last_login_at' => $user->last_login_at?->format('d/m/Y H:i'),
             'created_at' => optional($user->created_at)->format('d/m/Y'),
             'avatar_url' => $user->avatarUrl(),
             'initials' => $user->initials(),

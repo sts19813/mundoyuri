@@ -70,6 +70,7 @@ class GoogleAuthenticationTest extends TestCase
         $this->assertSame('google-user-123', $user->google_id);
         $this->assertSame('https://example.com/avatar.png', $user->google_avatar);
         $this->assertNotNull($user->email_verified_at);
+        $this->assertNotNull($user->last_login_at);
     }
 
     public function test_new_users_can_register_with_google(): void
@@ -106,6 +107,7 @@ class GoogleAuthenticationTest extends TestCase
         $this->assertSame('https://example.com/nuevo.png', $user->google_avatar);
         $this->assertNotNull($user->email_verified_at);
         $this->assertTrue($user->episode_email_notifications_enabled);
+        $this->assertNotNull($user->last_login_at);
         Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail): bool => $mail->hasTo('nuevo@example.com'));
     }
 }

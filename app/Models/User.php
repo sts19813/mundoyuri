@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography'])]
+#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'last_login_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -38,6 +38,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'episode_email_notifications_enabled' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 

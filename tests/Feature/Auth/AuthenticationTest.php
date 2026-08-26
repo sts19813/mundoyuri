@@ -28,6 +28,7 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('home', absolute: false));
+        $this->assertNotNull($user->refresh()->last_login_at);
     }
 
     public function test_regular_users_return_to_the_public_page_they_visited_before_login(): void

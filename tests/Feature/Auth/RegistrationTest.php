@@ -35,6 +35,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'episode_email_notifications_enabled' => true,
         ]);
+        $this->assertNotNull(auth()->user()->last_login_at);
         Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail): bool => $mail->hasTo('test@example.com')
             && str_contains($mail->render(), 'Qué gusto tenerte aquí, Test User'));
     }

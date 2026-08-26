@@ -136,6 +136,8 @@
                                     <th>Rol</th>
                                     <th>Permisos directos</th>
                                     <th>Estado</th>
+                                    <th>Correos</th>
+                                    <th>Última sesión</th>
                                     <th>Registro</th>
                                     <th class="text-end">Acciones</th>
                                 </tr>
@@ -461,6 +463,17 @@
                                 ${user.is_active ? 'Activo' : 'Inactivo'}
                             </span>
                         </td>
+                        <td>
+                            <span class="badge ${user.email_notifications_enabled ? 'badge-light-success' : 'badge-light-secondary'}">
+                                <i class="ki-outline ki-sms fs-6 me-1"></i>
+                                ${user.email_notifications_enabled ? 'Habilitados' : 'Desactivados'}
+                            </span>
+                        </td>
+                        <td>
+                            ${user.last_login_at
+                                ? `<span class="fw-semibold text-gray-800 text-nowrap">${escapeHtml(user.last_login_at)}</span>`
+                                : '<span class="text-muted">Sin acceso registrado</span>'}
+                        </td>
                         <td>${escapeHtml(user.created_at || '-')}</td>
                         <td class="text-end">
                             <button type="button" class="btn btn-sm btn-light-primary me-1" data-action="edit-user" data-id="${user.id}">
@@ -470,7 +483,7 @@
                         </td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="6" class="text-center text-muted py-10">No hay usuarios</td></tr>';
+            }).join('') || '<tr><td colspan="8" class="text-center text-muted py-10">No hay usuarios</td></tr>';
         };
 
         const renderRoles = () => {

@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Listeners\RecordUserLogin;
 use App\Listeners\SendWelcomeEmail;
 use App\Models\User;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(Login::class, RecordUserLogin::class);
         Event::listen(Registered::class, SendWelcomeEmail::class);
 
         Gate::before(function (User $user): ?bool {
