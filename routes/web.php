@@ -18,6 +18,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -69,6 +70,8 @@ Route::middleware(['auth'])
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
+        Route::patch('/preferencias/correos-de-episodios', [EmailEpisodeNotificationPreferenceController::class, 'update'])
+            ->name('email-episode-notifications.update');
 
         Route::post('/series/{series}/favorita', [SeriesFavoriteController::class, 'store'])
             ->name('series.favorites.store');

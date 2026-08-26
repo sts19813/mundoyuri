@@ -15,12 +15,16 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography'])]
+#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
+
+    protected $attributes = [
+        'episode_email_notifications_enabled' => true,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -33,6 +37,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'episode_email_notifications_enabled' => 'boolean',
         ];
     }
 

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Services\Auth\GoogleOAuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use League\OAuth2\Client\Provider\GoogleUser;
 use Mockery;
 use Tests\TestCase;
@@ -72,6 +74,8 @@ class GoogleAuthenticationTest extends TestCase
 
     public function test_new_users_can_register_with_google(): void
     {
+        Mail::fake();
+
         $service = Mockery::mock(GoogleOAuthService::class);
         $service->shouldReceive('getUserFromCode')
             ->once()
@@ -101,5 +105,7 @@ class GoogleAuthenticationTest extends TestCase
         $this->assertSame('google-user-999', $user->google_id);
         $this->assertSame('https://example.com/nuevo.png', $user->google_avatar);
         $this->assertNotNull($user->email_verified_at);
+        $this->assertTrue($user->episode_email_notifications_enabled);
+        Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail): bool => $mail->hasTo('nuevo@example.com'));
     }
 }

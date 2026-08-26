@@ -405,6 +405,58 @@
         text-align: center;
     }
 
+    .portal-email-preference-form {
+        margin: 0;
+    }
+
+    .portal-email-preference-copy {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .portal-email-preference-copy span,
+    .portal-email-preference-copy small {
+        display: block;
+    }
+
+    .portal-email-preference-copy small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: .64rem;
+    }
+
+    .portal-preference-switch {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        flex: 0 0 32px;
+        border: 1px solid rgba(255, 255, 255, .16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .08);
+        transition: border-color .2s, background .2s;
+    }
+
+    .portal-preference-switch span {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .65);
+        transition: left .2s, background .2s;
+    }
+
+    .portal-preference-switch.is-active {
+        border-color: rgba(244, 63, 142, .65);
+        background: rgba(244, 63, 142, .35);
+    }
+
+    .portal-preference-switch.is-active span {
+        left: 17px;
+        background: #fff;
+    }
+
     .portal-dropdown-logout:hover {
         color: #ff96bf;
     }
@@ -1614,6 +1666,110 @@
     .profile-form-footer>span {
         color: var(--muted);
         font-size: .71rem;
+    }
+
+    .profile-email-settings {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 17px;
+        margin-top: 28px;
+        padding: 22px;
+        border: 1px solid rgba(244, 63, 142, .2);
+        border-radius: 15px;
+        scroll-margin-top: 105px;
+        background: linear-gradient(135deg, rgba(244, 63, 142, .1), rgba(122, 55, 171, .07));
+    }
+
+    .profile-email-settings-icon {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        color: #ff9bc9;
+        background: rgba(244, 63, 142, .14);
+        box-shadow: inset 0 0 0 1px rgba(244, 63, 142, .12);
+    }
+
+    .profile-email-settings-copy h3 {
+        margin: 5px 0 5px;
+        color: #fff;
+        font: 700 1.12rem 'Playfair Display', serif;
+    }
+
+    .profile-email-settings-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: .75rem;
+        line-height: 1.55;
+    }
+
+    .profile-email-settings form {
+        margin: 0;
+    }
+
+    .profile-email-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 13px;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 999px;
+        color: var(--muted);
+        background: rgba(13, 8, 16, .5);
+        font: 500 .72rem 'DM Sans', sans-serif;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color .2s, border-color .2s, background .2s, transform .2s;
+    }
+
+    .profile-email-toggle:hover {
+        color: #fff;
+        border-color: rgba(244, 63, 142, .45);
+        transform: translateY(-1px);
+    }
+
+    .profile-email-toggle.is-active {
+        color: #ffd4e7;
+        border-color: rgba(244, 63, 142, .35);
+        background: rgba(244, 63, 142, .12);
+    }
+
+    .profile-email-toggle-track {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .12);
+    }
+
+    .profile-email-toggle-track span {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .66);
+        transition: left .2s, background .2s;
+    }
+
+    .profile-email-toggle.is-active .profile-email-toggle-track {
+        background: var(--rose);
+    }
+
+    .profile-email-toggle.is-active .profile-email-toggle-track span {
+        left: 17px;
+        background: #fff;
+    }
+
+    .profile-preference-status {
+        color: #e7b7cb !important;
+    }
+
+    .profile-preference-status.is-active {
+        color: #86efac !important;
     }
 
     .profile-sidebar {
@@ -2883,6 +3039,19 @@
         .profile-form-footer {
             align-items: stretch;
             flex-direction: column;
+        }
+
+        .profile-email-settings {
+            grid-template-columns: auto minmax(0, 1fr);
+        }
+
+        .profile-email-settings form {
+            grid-column: 1 / -1;
+        }
+
+        .profile-email-toggle {
+            width: 100%;
+            justify-content: center;
         }
 
         .social-hub-heading {

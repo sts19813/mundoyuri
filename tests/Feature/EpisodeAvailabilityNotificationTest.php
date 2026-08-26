@@ -31,6 +31,7 @@ class EpisodeAvailabilityNotificationTest extends TestCase
             'content_type' => 'series',
             'status' => 'ongoing',
             'description' => 'Descripción para probar el correo de nuevo episodio.',
+            'cover_image' => 'https://cdn.example.com/serie-de-prueba-portada.jpg',
             'moderation_status' => 'approved',
         ]);
 
@@ -55,7 +56,8 @@ class EpisodeAvailabilityNotificationTest extends TestCase
         Mail::assertSent(EpisodeAvailableMail::class, function (EpisodeAvailableMail $mail) use ($episode): bool {
             return $mail->hasTo('sts19813@gmail.com')
                 && $mail->episode->is($episode)
-                && str_contains($mail->render(), route('public.episodes.show', $episode->slug));
+                && str_contains($mail->render(), route('public.episodes.show', $episode->slug))
+                && str_contains($mail->render(), 'https://cdn.example.com/serie-de-prueba-portada.jpg');
         });
         $this->assertDatabaseHas('episode_email_notifications', [
             'episode_id' => $episode->id,

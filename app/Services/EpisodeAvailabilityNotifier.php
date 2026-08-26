@@ -58,6 +58,7 @@ class EpisodeAvailabilityNotifier
         if (config('episode_notifications.mode') === 'all') {
             return User::query()
                 ->where('is_active', true)
+                ->where('episode_email_notifications_enabled', true)
                 ->whereNotNull('email')
                 ->orderBy('id')
                 ->get(['id', 'email'])
@@ -70,9 +71,12 @@ class EpisodeAvailabilityNotifier
             return [];
         }
 
-        return [[
-            'email' => $email,
-            'user_id' => User::query()->where('email', $email)->value('id'),
-        ]];
+        $user = User::query()->where('email', $email)->first(['id', 'episode_email_notifications_enabled']);
+
+        if ($user && ! $user->episode_email_notifications_enabled) {
+            return [];
+        }
+
+        return [['email' => $email, 'user_id' => $user?->id]];
     }
 }

@@ -154,6 +154,28 @@
                             <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
                         </div>
                     </form>
+
+                    <section class="profile-email-settings" id="email-notifications" aria-labelledby="email-notifications-title">
+                        <div class="profile-email-settings-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                        </div>
+                        <div class="profile-email-settings-copy">
+                            <span class="profile-panel-kicker">Preferencias de correo</span>
+                            <h3 id="email-notifications-title">Avisos de nuevos episodios</h3>
+                            <p>{{ $user->episode_email_notifications_enabled
+                                ? 'Te avisaremos por correo en cuanto publiquemos un episodio nuevo.'
+                                : 'Estos avisos están pausados. Puedes reactivarlos cuando quieras.' }}</p>
+                        </div>
+                        <form method="POST" action="{{ route('email-episode-notifications.update') }}" data-email-preference-form @if($user->episode_email_notifications_enabled) data-confirm-disable="¿Seguro que quieres pausar los avisos? Podrías perderte nuevos episodios cuando estén disponibles." @endif>
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="enabled" value="{{ $user->episode_email_notifications_enabled ? 0 : 1 }}">
+                            <button type="submit" class="profile-email-toggle{{ $user->episode_email_notifications_enabled ? ' is-active' : '' }}" aria-pressed="{{ $user->episode_email_notifications_enabled ? 'true' : 'false' }}">
+                                <span class="profile-email-toggle-track" aria-hidden="true"><span></span></span>
+                                {{ $user->episode_email_notifications_enabled ? 'Activados' : 'Activar avisos' }}
+                            </button>
+                        </form>
+                    </section>
                 </section>
 
                 <aside class="profile-sidebar">
@@ -172,6 +194,10 @@
                             <div>
                                 <dt>Comentarios</dt>
                                 <dd>{{ $user->comments()->count() }}</dd>
+                            </div>
+                            <div>
+                                <dt>Correos de episodios</dt>
+                                <dd class="profile-preference-status{{ $user->episode_email_notifications_enabled ? ' is-active' : '' }}">{{ $user->episode_email_notifications_enabled ? 'Activos' : 'Pausados' }}</dd>
                             </div>
                         </dl>
                     </section>

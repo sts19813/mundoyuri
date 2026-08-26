@@ -92,6 +92,19 @@
                                 <span class="portal-dropdown-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
                             @endif
                         </a>
+                        <form method="POST" action="{{ route('email-episode-notifications.update') }}" class="portal-email-preference-form" data-email-preference-form @if($portalUser->episode_email_notifications_enabled) data-confirm-disable="¿Seguro que quieres pausar los avisos? Podrías perderte nuevos episodios cuando estén disponibles." @endif>
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="enabled" value="{{ $portalUser->episode_email_notifications_enabled ? 0 : 1 }}">
+                            <button type="submit" class="portal-dropdown-item portal-email-preference" role="menuitemcheckbox" aria-checked="{{ $portalUser->episode_email_notifications_enabled ? 'true' : 'false' }}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                                <span class="portal-email-preference-copy">
+                                    <span>Correos de episodios</span>
+                                    <small>{{ $portalUser->episode_email_notifications_enabled ? 'Activados' : 'Pausados' }}</small>
+                                </span>
+                                <span class="portal-preference-switch{{ $portalUser->episode_email_notifications_enabled ? ' is-active' : '' }}" aria-hidden="true"><span></span></span>
+                            </button>
+                        </form>
                         <a href="{{ route('submissions.create') }}" class="portal-dropdown-item" role="menuitem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                             Subir contenido
@@ -170,6 +183,15 @@
                 trigger?.setAttribute('aria-expanded', 'false');
                 trigger?.focus();
             });
+        });
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target.closest?.('[data-email-preference-form]');
+            const message = form?.dataset.confirmDisable;
+
+            if (message && !window.confirm(message)) {
+                event.preventDefault();
+            }
         });
     </script>
 @endonce
