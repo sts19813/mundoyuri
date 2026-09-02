@@ -130,6 +130,32 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Usuario actualizado exitosamente');
     }
 
+    public function updateEmailNotifications(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'enabled' => ['required', 'boolean'],
+        ]);
+
+        $enabled = (bool) $validated['enabled'];
+
+        $user->update([
+            'episode_email_notifications_enabled' => $enabled,
+        ]);
+
+        $message = $enabled
+            ? 'Las notificaciones por correo quedaron habilitadas para este usuario.'
+            : 'Las notificaciones por correo quedaron desactivadas para este usuario.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'email_notifications_enabled' => $enabled,
+            ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {

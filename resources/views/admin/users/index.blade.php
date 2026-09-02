@@ -339,6 +339,7 @@
             usersStore: @js(route('admin.users.store')),
             usersUpdate: @js(route('admin.users.update', ['user' => '__ID__'])),
             usersDestroy: @js(route('admin.users.destroy', ['user' => '__ID__'])),
+            usersEmailNotificationsUpdate: @js(route('admin.users.email-notifications.update', ['user' => '__ID__'])),
             rolesStore: @js(route('admin.roles.store')),
             rolesUpdate: @js(route('admin.roles.update', ['role' => '__ID__'])),
             rolesDestroy: @js(route('admin.roles.destroy', ['role' => '__ID__'])),
@@ -464,10 +465,15 @@
                             </span>
                         </td>
                         <td>
-                            <span class="badge ${user.email_notifications_enabled ? 'badge-light-success' : 'badge-light-secondary'}">
-                                <i class="ki-outline ki-sms fs-6 me-1"></i>
-                                ${user.email_notifications_enabled ? 'Habilitados' : 'Desactivados'}
-                            </span>
+                            <label class="form-check form-switch form-check-custom form-check-solid mb-0">
+                                <input class="form-check-input h-20px w-30px" type="checkbox"
+                                    data-action="toggle-email-notifications" data-id="${user.id}"
+                                    aria-label="Notificaciones por correo de ${escapeHtml(user.name)}"
+                                    ${user.email_notifications_enabled ? 'checked' : ''}>
+                                <span class="form-check-label badge ${user.email_notifications_enabled ? 'badge-light-success' : 'badge-light-secondary'}">
+                                    ${user.email_notifications_enabled ? 'Habilitados' : 'Desactivados'}
+                                </span>
+                            </label>
                         </td>
                         <td>
                             ${user.last_login_at
@@ -785,6 +791,48 @@
                 permissionForm.reset();
                 renderAll();
             });
+        });
+
+        document.addEventListener('change', async (event) => {
+            const toggle = event.target.closest('[data-action="toggle-email-notifications"]');
+            if (!toggle) {
+                return;
+            }
+
+            const id = Number(toggle.dataset.id || 0);
+            const user = users.find((item) => item.id === id);
+            if (!user) {
+                return;
+            }
+
+            const previousValue = Boolean(user.email_notifications_enabled);
+            toggle.disabled = true;
+
+            try {
+                const response = await fetch(endpoint(routes.usersEmailNotificationsUpdate, id), {
+                    method: 'PATCH',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ enabled: toggle.checked }),
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'No se pudo actualizar la preferencia.');
+                }
+
+                user.email_notifications_enabled = Boolean(data.email_notifications_enabled);
+                renderUsers();
+                toast('success', data.message || 'Preferencia actualizada.');
+            } catch (error) {
+                user.email_notifications_enabled = previousValue;
+                renderUsers();
+                toast('error', error.message || 'No se pudo actualizar la preferencia.');
+            }
         });
 
         document.addEventListener('click', (event) => {

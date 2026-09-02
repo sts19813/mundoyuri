@@ -154,6 +154,9 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     Route::redirect('/moderation', '/admin/validacion');
 
     // Gestión de Usuarios
+    Route::patch('/usuarios/{user}/notificaciones-por-correo', [AdminUserController::class, 'updateEmailNotifications'])
+        ->name('admin.users.email-notifications.update');
+
     Route::resource('usuarios', AdminUserController::class)->parameters([
         'usuarios' => 'user',
     ])->names([
