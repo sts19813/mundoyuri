@@ -28,7 +28,7 @@ class ProfileController extends Controller
      */
     public function show(User $user, ?string $alias = null): View
     {
-        abort_unless($user->is_active, 404);
+        $this->authorize('viewProfile', $user);
 
         $user->loadCount([
             'comments' => fn ($query) => $query->where('is_approved', true),
@@ -81,7 +81,7 @@ class ProfileController extends Controller
 
     public function favorites(User $user): View
     {
-        abort_unless($user->is_active, 404);
+        $this->authorize('viewFavorites', $user);
 
         $favorites = $user->favoriteSeries()
             ->with('genre')
@@ -180,7 +180,7 @@ class ProfileController extends Controller
 
     private function connectionsView(User $user, string $type): View
     {
-        abort_unless($user->is_active, 404);
+        $this->authorize('viewProfile', $user);
 
         $connections = $user->{$type}()
             ->where('users.is_active', true)

@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
 use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
@@ -55,6 +56,7 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
     ->name('assistant-messages.store');
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
+Route::get('/comunidad', [CommunityController::class, 'index'])->name('community.index');
 Route::get('/usuarios/{user}/seguidores', [ProfileController::class, 'followers'])->name('profiles.followers');
 Route::get('/usuarios/{user}/siguiendo', [ProfileController::class, 'following'])->name('profiles.following');
 Route::get('/usuarios/{user}/favoritas', [ProfileController::class, 'favorites'])->name('profiles.favorites');

@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -231,6 +232,13 @@ class User extends Authenticatable
         }
 
         return $this->created_at;
+    }
+
+    public function scopeVisibleInCommunityDirectory(Builder $query): Builder
+    {
+        return $query
+            ->where('is_active', true)
+            ->where('profile_visibility', 'public');
     }
 
     public function initials(): string
