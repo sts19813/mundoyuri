@@ -74,6 +74,11 @@ class User extends Authenticatable
         return $this->belongsTo(CommunityRank::class);
     }
 
+    public function claimedLegacyProfiles(): HasMany
+    {
+        return $this->hasMany(LegacyProfile::class, 'claimed_by_user_id');
+    }
+
     public function badges(): BelongsToMany
     {
         return $this->belongsToMany(Badge::class, 'badge_user')

@@ -733,7 +733,7 @@ El rol `admin` obtiene todos mediante el patrón actual. `moderator` recibe mode
 
 ### Separación segura
 
-`historical_profiles` es un archivo de identidad, no un proveedor de autenticación. Esto permite importar perfiles sin email ni password y evita tocar columnas críticas de `users`.
+`legacy_profiles` es un archivo de identidad, no un proveedor de autenticación. Esto permite importar perfiles sin email ni password y evita tocar columnas críticas de `users`.
 
 ### Importación
 
@@ -746,7 +746,7 @@ El rol `admin` obtiene todos mediante el patrón actual. `moderator` recibe mode
 
 ### URLs y presentación
 
-- URL canónica: `/miembros/historicos/{slug}`.
+- URL canónica: `/miembros/historicos/{slug}`; archivo público: `/comunidad/historicos`.
 - Mostrar “Miembro histórico de Mundo Yuri”, fecha histórica, antiguo rango/post count y datos archivados disponibles.
 - `created_at` indica importación; `historical_joined_at` indica ingreso al foro original.
 - La página debe distinguir claramente información archivada de actividad actual.

@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Listeners\RecordUserLogin;
 use App\Listeners\SendWelcomeEmail;
 use App\Models\Badge;
+use App\Models\LegacyProfile;
 use App\Models\User;
 use App\Policies\BadgePolicy;
+use App\Policies\LegacyProfilePolicy;
 use App\Services\CommunityRankResolver;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Registered;
@@ -33,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Registered::class, SendWelcomeEmail::class);
 
         Gate::policy(Badge::class, BadgePolicy::class);
+        Gate::policy(LegacyProfile::class, LegacyProfilePolicy::class);
 
         Gate::before(function (User $user): ?bool {
             return $user->isAdmin() ? true : null;

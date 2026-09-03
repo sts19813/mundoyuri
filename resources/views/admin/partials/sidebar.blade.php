@@ -106,6 +106,12 @@
                             </a>
                         </div>
                         <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.legacy-profiles.*') ? 'active' : '' }}" href="{{ route('admin.legacy-profiles.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-book-open fs-2"></i></span>
+                                <span class="menu-title">Archivo histórico</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.badges.*') ? 'active' : '' }}" href="{{ route('admin.badges.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-medal-star fs-2"></i></span>
                                 <span class="menu-title">Insignias comunitarias</span>

@@ -2447,6 +2447,43 @@
         margin: 5px 0 30px;
     }
 
+    .legacy-profile-notice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        align-items: center;
+        margin-bottom: 24px;
+        padding: 13px 16px;
+        border: 1px solid rgba(192, 132, 252, .24);
+        border-radius: 12px;
+        background: rgba(124, 58, 237, .08);
+        color: #ded1e8;
+        font-size: .78rem;
+    }
+
+    .legacy-profile-notice strong {
+        color: #e9d5ff;
+        font-size: .74rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .legacy-profile-card {
+        border-color: rgba(192, 132, 252, .18);
+    }
+
+    .legacy-profile-detail-hero .profile-cover-overlay {
+        background: linear-gradient(120deg, rgba(71, 32, 107, .94), rgba(51, 18, 68, .86));
+    }
+
+    .legacy-profile-details > div {
+        grid-template-columns: minmax(130px, .8fr) minmax(0, 2fr);
+    }
+
+    .legacy-profile-prewrap {
+        white-space: pre-wrap;
+    }
+
     .community-directory-hero h1 {
         margin: 8px 0 9px;
         color: #fff;

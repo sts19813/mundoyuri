@@ -24,6 +24,7 @@ use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
+use App\Http\Controllers\LegacyProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
@@ -60,6 +61,8 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 Route::get('/comunidad', [CommunityController::class, 'index'])->name('community.index');
+Route::get('/comunidad/historicos', [LegacyProfileController::class, 'index'])->name('legacy-profiles.index');
+Route::get('/miembros/historicos/{legacyProfile:slug}', [LegacyProfileController::class, 'show'])->name('legacy-profiles.show');
 Route::get('/usuarios/{user}/seguidores', [ProfileController::class, 'followers'])->name('profiles.followers');
 Route::get('/usuarios/{user}/siguiendo', [ProfileController::class, 'following'])->name('profiles.following');
 Route::get('/usuarios/{user}/favoritas', [ProfileController::class, 'favorites'])->name('profiles.favorites');
@@ -192,6 +195,17 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'edit' => 'admin.community-ranks.edit',
             'update' => 'admin.community-ranks.update',
             'destroy' => 'admin.community-ranks.destroy',
+        ]);
+
+    Route::resource('perfiles-historicos', App\Http\Controllers\Admin\LegacyProfileController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['perfiles-historicos' => 'legacyProfile'])
+        ->names([
+            'index' => 'admin.legacy-profiles.index',
+            'create' => 'admin.legacy-profiles.create',
+            'store' => 'admin.legacy-profiles.store',
+            'edit' => 'admin.legacy-profiles.edit',
+            'update' => 'admin.legacy-profiles.update',
         ]);
 
     Route::resource('insignias-comunidad', AdminBadgeController::class)

@@ -28,6 +28,7 @@
                 <span class="profile-eyebrow">Nuestro punto de encuentro</span>
                 <h1>Comunidad <em>Mundo Yuri</em></h1>
                 <p>Descubre perfiles, reencuentra miembros históricos y conoce a quienes mantienen viva la comunidad.</p>
+                <a class="profile-btn profile-btn-soft mt-3" href="{{ route('legacy-profiles.index') }}">Explorar archivo histórico</a>
             </header>
 
             <section class="profile-panel community-directory-tools" aria-label="Buscar y filtrar miembros">
