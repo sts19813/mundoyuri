@@ -158,6 +158,90 @@
                     <!--end::Col-->
                 </div>
                 <!--end::Row-->
+
+                <div class="separator separator-dashed my-8"></div>
+
+                <div class="mb-7">
+                    <h3 class="fw-bold text-gray-900 mb-2">Perfil comunitario</h3>
+                    <div class="text-muted">Gestiona visibilidad, procedencia histórica, rango e insignias sin exponer las notas privadas.</div>
+                </div>
+
+                <div class="row g-6 mb-6">
+                    <div class="col-xl-6">
+                        <label class="form-label fw-bold text-gray-900">Visibilidad</label>
+                        <select name="profile_visibility" class="form-select form-select-solid @error('profile_visibility') is-invalid @enderror">
+                            <option value="public" @selected(old('profile_visibility', $user->profile_visibility) === 'public')>Público</option>
+                            <option value="members" @selected(old('profile_visibility', $user->profile_visibility) === 'members')>Solo miembros</option>
+                            <option value="private" @selected(old('profile_visibility', $user->profile_visibility) === 'private')>Privado / oculto</option>
+                        </select>
+                        @error('profile_visibility')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-xl-6">
+                        <label class="form-label fw-bold text-gray-900">Rango especial</label>
+                        <select name="community_rank_id" class="form-select form-select-solid @error('community_rank_id') is-invalid @enderror">
+                            <option value="">Rango automático</option>
+                            @foreach($communityRanks as $communityRank)
+                                <option value="{{ $communityRank->id }}" @selected((string) old('community_rank_id', $user->community_rank_id) === (string) $communityRank->id)>{{ $communityRank->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('community_rank_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <div class="row g-6 mb-6">
+                    <div class="col-xl-6">
+                        <input type="hidden" name="is_legacy" value="0">
+                        <label class="form-check form-switch form-check-custom form-check-solid">
+                            <input class="form-check-input" type="checkbox" name="is_legacy" value="1" @checked((bool) old('is_legacy', $user->is_legacy))>
+                            <span class="form-check-label">Miembro histórico de Mundo Yuri</span>
+                        </label>
+                    </div>
+                    <div class="col-xl-6">
+                        <input type="hidden" name="legacy_verified" value="0">
+                        <label class="form-check form-switch form-check-custom form-check-solid">
+                            <input class="form-check-input" type="checkbox" name="legacy_verified" value="1" @checked((bool) old('legacy_verified', $user->legacy_verified))>
+                            <span class="form-check-label">Identidad histórica verificada</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row g-6 mb-6">
+                    <div class="col-xl-4">
+                        <label class="form-label fw-bold text-gray-900">Fecha histórica de ingreso</label>
+                        <input type="date" name="legacy_joined_at" value="{{ old('legacy_joined_at', $user->legacy_joined_at?->format('Y-m-d')) }}" class="form-control form-control-solid @error('legacy_joined_at') is-invalid @enderror">
+                    </div>
+                    <div class="col-xl-4">
+                        <label class="form-label fw-bold text-gray-900">Fuente histórica</label>
+                        <input type="text" name="legacy_source" maxlength="255" value="{{ old('legacy_source', $user->legacy_source) }}" class="form-control form-control-solid @error('legacy_source') is-invalid @enderror">
+                    </div>
+                    <div class="col-xl-4">
+                        <label class="form-label fw-bold text-gray-900">Perfil reclamado</label>
+                        <input type="date" name="profile_claimed_at" value="{{ old('profile_claimed_at', $user->profile_claimed_at?->format('Y-m-d')) }}" class="form-control form-control-solid @error('profile_claimed_at') is-invalid @enderror">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="form-label fw-bold text-gray-900">Notas históricas privadas</label>
+                    <textarea name="legacy_notes" rows="4" maxlength="2000" class="form-control form-control-solid @error('legacy_notes') is-invalid @enderror">{{ old('legacy_notes', $user->legacy_notes) }}</textarea>
+                    <div class="form-text">Nunca se muestran en el perfil público.</div>
+                </div>
+
+                <div>
+                    <input type="hidden" name="community_badges_present" value="1">
+                    <label class="form-label fw-bold text-gray-900 d-block">Insignias</label>
+                    <div class="row g-4">
+                        @forelse($communityBadges as $communityBadge)
+                            <div class="col-md-6 col-xl-4">
+                                <label class="form-check form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" name="community_badges[]" value="{{ $communityBadge->id }}" @checked(in_array($communityBadge->id, old('community_badges', $user->communityBadges->pluck('id')->all())))>
+                                    <span class="form-check-label">{{ $communityBadge->icon }} {{ $communityBadge->name }}</span>
+                                </label>
+                            </div>
+                        @empty
+                            <div class="col-12 text-muted">No hay insignias activas.</div>
+                        @endforelse
+                    </div>
+                </div>
             </div>
             <!--end::Card body-->
 

@@ -61,6 +61,30 @@
             </div>
             <!--end::Row-->
 
+            <div class="row mb-6">
+                <label class="col-lg-4 col-form-label fw-bold fs-6">Perfil comunitario</label>
+                <div class="col-lg-8 d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge badge-light-info">{{ ucfirst($user->profile_visibility) }}</span>
+                    @if($user->communityRank)<span class="badge badge-light-primary">{{ $user->communityRank->name }}</span>@endif
+                    @if($user->is_legacy)<span class="badge badge-light-warning">Miembro histórico</span>@endif
+                    @foreach($user->communityBadges as $badge)
+                        <span class="badge badge-light-success">{{ $badge->icon }} {{ $badge->name }}</span>
+                    @endforeach
+                </div>
+            </div>
+
+            @if($user->is_legacy)
+                <div class="row mb-6">
+                    <label class="col-lg-4 col-form-label fw-bold fs-6">Datos históricos</label>
+                    <div class="col-lg-8">
+                        <div class="fw-semibold">Ingreso: {{ $user->legacy_joined_at?->format('d/m/Y') ?: 'Sin fecha' }}</div>
+                        <div class="text-muted">Fuente: {{ $user->legacy_source ?: 'Sin especificar' }}</div>
+                        <div class="text-muted">Verificado: {{ $user->legacy_verified ? 'Sí' : 'No' }}</div>
+                        @if($user->legacy_notes)<div class="mt-3 p-3 bg-light rounded">{{ $user->legacy_notes }}</div>@endif
+                    </div>
+                </div>
+            @endif
+
             <!--begin::Row-->
             <div class="row mb-6">
                 <!--begin::Label-->

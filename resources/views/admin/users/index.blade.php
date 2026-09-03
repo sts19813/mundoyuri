@@ -254,7 +254,80 @@
 
                         <div>
                             <h6 class="fw-bold text-gray-900 mb-4">Permisos directos</h6>
+                            <input type="hidden" name="permissions_present" value="1">
                             <div class="row g-3" data-permissions-checklist="user"></div>
+                        </div>
+
+                        <div class="mt-8 pt-7 border-top" data-community-fields>
+                            <h6 class="fw-bold text-gray-900 mb-4">Perfil comunitario</h6>
+                            <div class="row g-5">
+                                <div class="col-lg-6">
+                                    <label class="form-label">Visibilidad</label>
+                                    <select name="profile_visibility" class="form-select form-select-solid">
+                                        <option value="public">Público</option>
+                                        <option value="members">Solo miembros</option>
+                                        <option value="private">Privado / oculto</option>
+                                    </select>
+                                    <div class="invalid-feedback" data-error-for="profile_visibility"></div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <label class="form-label">Rango especial</label>
+                                    <select name="community_rank_id" class="form-select form-select-solid">
+                                        <option value="">Rango automático</option>
+                                        @foreach($communityRanks as $communityRank)
+                                            <option value="{{ $communityRank->id }}">{{ $communityRank->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="invalid-feedback" data-error-for="community_rank_id"></div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <input type="hidden" name="is_legacy" value="0">
+                                    <label class="form-check form-switch form-check-custom form-check-solid mt-8">
+                                        <input class="form-check-input" type="checkbox" name="is_legacy" value="1">
+                                        <span class="form-check-label">Miembro histórico</span>
+                                    </label>
+                                </div>
+                                <div class="col-lg-6">
+                                    <input type="hidden" name="legacy_verified" value="0">
+                                    <label class="form-check form-switch form-check-custom form-check-solid mt-8">
+                                        <input class="form-check-input" type="checkbox" name="legacy_verified" value="1">
+                                        <span class="form-check-label">Identidad histórica verificada</span>
+                                    </label>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label class="form-label">Fecha histórica</label>
+                                    <input type="date" name="legacy_joined_at" class="form-control form-control-solid">
+                                </div>
+                                <div class="col-lg-4">
+                                    <label class="form-label">Fuente histórica</label>
+                                    <input type="text" name="legacy_source" class="form-control form-control-solid" maxlength="255">
+                                </div>
+                                <div class="col-lg-4">
+                                    <label class="form-label">Perfil reclamado</label>
+                                    <input type="date" name="profile_claimed_at" class="form-control form-control-solid">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Notas históricas privadas</label>
+                                    <textarea name="legacy_notes" class="form-control form-control-solid" rows="3" maxlength="2000"></textarea>
+                                    <div class="form-text">Solo visibles en administración; nunca se publican en el perfil.</div>
+                                </div>
+                                <div class="col-12">
+                                    <input type="hidden" name="community_badges_present" value="1">
+                                    <label class="form-label d-block">Insignias</label>
+                                    <div class="row g-3">
+                                        @forelse($communityBadges as $communityBadge)
+                                            <div class="col-md-6 col-xl-4">
+                                                <label class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="checkbox" name="community_badges[]" value="{{ $communityBadge->id }}">
+                                                    <span class="form-check-label">{{ $communityBadge->icon }} {{ $communityBadge->name }}</span>
+                                                </label>
+                                            </div>
+                                        @empty
+                                            <div class="col-12 text-muted">No hay insignias activas.</div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -432,7 +505,7 @@
             const tbody = document.getElementById('usersTableBody');
             const query = normalize(filters.users);
             const visibleUsers = users.filter((user) => {
-                const haystack = normalize(`${user.name} ${user.email} ${user.role} ${(user.permissions || []).join(' ')}`);
+                const haystack = normalize(`${user.name} ${user.email} ${user.role} ${user.community_rank || ''} ${(user.permissions || []).join(' ')}`);
                 return !query || haystack.includes(query);
             });
 
@@ -463,6 +536,10 @@
                             <span class="badge ${user.is_active ? 'badge-light-success' : 'badge-light-danger'}">
                                 ${user.is_active ? 'Activo' : 'Inactivo'}
                             </span>
+                            <div class="mt-1">
+                                <span class="badge badge-light-secondary">${escapeHtml(titleCase(user.profile_visibility || 'public'))}</span>
+                                ${user.is_legacy ? '<span class="badge badge-light-warning">Histórico</span>' : ''}
+                            </div>
                         </td>
                         <td>
                             <label class="form-check form-switch form-check-custom form-check-solid mb-0">
@@ -720,10 +797,29 @@
             userForm.querySelector('[name="password"]').required = !user;
             userForm.querySelector('[name="password_confirmation"]').required = !user;
 
+            const communityFields = userForm.querySelector('[data-community-fields]');
+            communityFields.classList.toggle('d-none', !user);
+            communityFields.querySelectorAll('input, select, textarea').forEach((field) => {
+                field.disabled = !user;
+            });
+
             if (user) {
                 userForm.querySelector('[name="name"]').value = user.name || '';
                 userForm.querySelector('[name="email"]').value = user.email || '';
                 userForm.querySelector('[name="is_active"]').checked = Boolean(user.is_active);
+                userForm.querySelector('[name="profile_visibility"]').value = user.profile_visibility || 'public';
+                userForm.querySelector('[name="community_rank_id"]').value = user.community_rank_id || '';
+                userForm.querySelector('[name="is_legacy"][type="checkbox"]').checked = Boolean(user.is_legacy);
+                userForm.querySelector('[name="legacy_verified"][type="checkbox"]').checked = Boolean(user.legacy_verified);
+                userForm.querySelector('[name="legacy_joined_at"]').value = user.legacy_joined_at || '';
+                userForm.querySelector('[name="legacy_source"]').value = user.legacy_source || '';
+                userForm.querySelector('[name="legacy_notes"]').value = user.legacy_notes || '';
+                userForm.querySelector('[name="profile_claimed_at"]').value = user.profile_claimed_at || '';
+
+                const selectedBadges = new Set((user.community_badges || []).map(Number));
+                userForm.querySelectorAll('[name="community_badges[]"]').forEach((field) => {
+                    field.checked = selectedBadges.has(Number(field.value));
+                });
             } else {
                 userForm.querySelector('[name="is_active"]').checked = true;
             }
