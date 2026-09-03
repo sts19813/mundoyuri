@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AssistantMessageController as AdminAssistantMessa
 use App\Http\Controllers\Admin\AssistantSettingController;
 use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
+use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\ModerationController;
@@ -170,6 +171,18 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
         'update' => 'admin.users.update',
         'destroy' => 'admin.users.destroy',
     ]);
+
+    Route::resource('rangos-comunidad', AdminCommunityRankController::class)
+        ->except('show')
+        ->parameters(['rangos-comunidad' => 'communityRank'])
+        ->names([
+            'index' => 'admin.community-ranks.index',
+            'create' => 'admin.community-ranks.create',
+            'store' => 'admin.community-ranks.store',
+            'edit' => 'admin.community-ranks.edit',
+            'update' => 'admin.community-ranks.update',
+            'destroy' => 'admin.community-ranks.destroy',
+        ]);
 
     Route::resource('roles', AdminRoleController::class)->parameters([
         'roles' => 'role',
