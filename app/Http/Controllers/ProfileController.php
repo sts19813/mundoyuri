@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
+use App\Services\CommunityRankResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,9 +27,14 @@ class ProfileController extends Controller
     /**
      * Display a user's public profile.
      */
-    public function show(User $user, ?string $alias = null): View
+    public function show(User $user, CommunityRankResolver $rankResolver, ?string $alias = null): View
     {
-        abort_unless($user->is_active, 404);
+        $this->authorize('viewProfile', $user);
+
+        $user->load([
+            'communityRank',
+            'badges' => fn ($query) => $query->active()->ordered(),
+        ]);
 
         $user->loadCount([
             'comments' => fn ($query) => $query->where('is_approved', true),
@@ -39,14 +45,28 @@ class ProfileController extends Controller
                 ->whereNotNull('published_at'),
         ]);
 
-        $favoriteSeries = $user->favoriteSeries()
-            ->with('genre')
-            ->where('moderation_status', 'approved')
-            ->whereNotNull('published_at')
-            ->orderByPivot('created_at', 'desc')
-            ->take(12)
-            ->get();
         $viewer = auth()->user();
+        $isOwner = $viewer?->is($user) ?? false;
+        $viewerIsStaff = $viewer?->shouldEnterAdminPanel() ?? false;
+        $canViewFavorites = $user->show_favorites || $isOwner || $viewerIsStaff;
+        $canViewActivity = $user->show_activity || $isOwner || $viewerIsStaff;
+        $favoriteSeries = $canViewFavorites
+            ? $user->favoriteSeries()
+                ->with('genre')
+                ->where('moderation_status', 'approved')
+                ->whereNotNull('published_at')
+                ->orderByPivot('created_at', 'desc')
+                ->take(12)
+                ->get()
+            : collect();
+        $recentActivity = $canViewActivity
+            ? $user->comments()
+                ->with('commentable')
+                ->where('is_approved', true)
+                ->latest()
+                ->take(6)
+                ->get()
+            : collect();
         $viewerHasBlocked = $viewer !== null
             && ! $viewer->is($user)
             && $viewer->hasBlocked($user);
@@ -61,11 +81,15 @@ class ProfileController extends Controller
 
         return view('profile.show', [
             'profileUser' => $user,
-            'isOwner' => auth()->id() === $user->id,
+            'isOwner' => $isOwner,
             'isFollowing' => $isFollowing,
             'interactionBlocked' => $interactionBlocked,
             'viewerHasBlocked' => $viewerHasBlocked,
             'favoriteSeries' => $favoriteSeries,
+            'recentActivity' => $recentActivity,
+            'canViewFavorites' => $canViewFavorites,
+            'canViewActivity' => $canViewActivity,
+            'communityRank' => $rankResolver->resolve($user),
         ]);
     }
 
@@ -81,7 +105,7 @@ class ProfileController extends Controller
 
     public function favorites(User $user): View
     {
-        abort_unless($user->is_active, 404);
+        $this->authorize('viewFavorites', $user);
 
         $favorites = $user->favoriteSeries()
             ->with('genre')
@@ -112,6 +136,24 @@ class ProfileController extends Controller
             'biography' => $validated['biography'] ?? null,
         ]);
 
+        foreach (['location', 'website', 'occupation', 'interests'] as $field) {
+            if ($request->exists($field)) {
+                $user->{$field} = $validated[$field] ?? null;
+            }
+        }
+
+        if ($request->exists('signature_text') && ! $user->signatureIsSuspended()) {
+            $user->signature_text = $this->sanitizeSignatureText($validated['signature_text'] ?? null);
+        }
+
+        foreach (['profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_enabled', 'show_signatures'] as $field) {
+            if ($request->exists($field)) {
+                $user->{$field} = str_starts_with($field, 'show_')
+                    ? $request->boolean($field)
+                    : $validated[$field];
+            }
+        }
+
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
@@ -136,6 +178,16 @@ class ProfileController extends Controller
             $user->cover_image = $request->file('cover_image')->store('profile-covers', 'public');
         }
 
+        if ($request->boolean('signature_remove')) {
+            $this->deleteSignatureImage($user);
+            $user->signature_image = null;
+        }
+
+        if ($request->hasFile('signature_image')) {
+            $this->deleteSignatureImage($user);
+            $user->signature_image = $request->file('signature_image')->store('profile-signatures', 'public');
+        }
+
         $user->save();
 
         return Redirect::route('profile.edit')->with('success', 'Tu perfil se actualizó correctamente.');
@@ -156,6 +208,7 @@ class ProfileController extends Controller
 
         $this->deleteProfileImage($user);
         $this->deleteCoverImage($user);
+        $this->deleteSignatureImage($user);
         $user->delete();
 
         $request->session()->invalidate();
@@ -178,12 +231,33 @@ class ProfileController extends Controller
         }
     }
 
+    private function deleteSignatureImage(User $user): void
+    {
+        if ($user->signature_image) {
+            Storage::disk('public')->delete($user->signature_image);
+        }
+    }
+
+    private function sanitizeSignatureText(?string $signature): ?string
+    {
+        if ($signature === null) {
+            return null;
+        }
+
+        $signature = preg_replace('#<(script|style)\b[^>]*>.*?</\1>#is', '', $signature) ?? '';
+        $signature = strip_tags($signature);
+        $signature = preg_replace('/[^\P{C}\n\t]/u', '', $signature) ?? '';
+        $signature = trim($signature);
+
+        return $signature === '' ? null : $signature;
+    }
+
     private function connectionsView(User $user, string $type): View
     {
-        abort_unless($user->is_active, 404);
+        $this->authorize('viewProfile', $user);
 
         $connections = $user->{$type}()
-            ->where('users.is_active', true)
+            ->visibleToProfileViewer(auth()->user())
             ->orderByPivot('created_at', 'desc')
             ->paginate(24);
 

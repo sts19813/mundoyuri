@@ -100,6 +100,18 @@
 
                     @if($panelUser?->isAdmin())
                         <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.community-ranks.*') ? 'active' : '' }}" href="{{ route('admin.community-ranks.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-award fs-2"></i></span>
+                                <span class="menu-title">Rangos comunitarios</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.badges.*') ? 'active' : '' }}" href="{{ route('admin.badges.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-medal-star fs-2"></i></span>
+                                <span class="menu-title">Insignias comunitarias</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.catalog-sections.*') ? 'active' : '' }}" href="{{ route('admin.catalog-sections.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-abstract-26 fs-2"></i></span>
                                 <span class="menu-title">Secciones y hero</span>

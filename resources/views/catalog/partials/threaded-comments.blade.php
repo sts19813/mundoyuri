@@ -2,6 +2,7 @@
     $avatarClasses = $avatarClasses ?? ['', 'av2', 'av3'];
     $commentCount = $comments->sum(fn ($comment) => 1 + $comment->replies->count());
     $replyTo = (int) old('parent_id');
+    $previousRootSignatureUserId = null;
 @endphp
 
 <div class="comments-section">
@@ -45,12 +46,15 @@
                 <div class="comment-meta">
                     @if($comment->user)
                         <a class="comment-user comment-user-link" href="{{ $comment->user->publicProfileUrl() }}">{{ $comment->display_alias }}</a>
+                        <x-community.rank :rank="$rankResolver->resolve($comment->user)" />
+                        <x-community.user-badges :user="$comment->user" />
                     @else
                         <span class="comment-user">{{ $comment->display_alias }}</span>
                     @endif
                     <span class="comment-date">{{ $comment->displayTime() }}</span>
                 </div>
                 <p class="comment-text">{{ $comment->body }}</p>
+                <x-community.signature :user="$comment->user" :previous-user-id="$previousRootSignatureUserId" />
 
                 <div class="comment-actions">
                     <button class="comment-action-btn" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $replyFormId }}"
@@ -110,6 +114,7 @@
                     </form>
                 </div>
 
+                @php($previousReplySignatureUserId = null)
                 @foreach($comment->replies as $reply)
                     <div class="comment-reply">
                         <div class="comment-reply-inner">
@@ -133,18 +138,23 @@
                                 <div class="comment-meta">
                                     @if($reply->user)
                                         <a class="comment-user comment-user-link" href="{{ $reply->user->publicProfileUrl() }}">{{ $reply->display_alias }}</a>
+                                        <x-community.rank :rank="$rankResolver->resolve($reply->user)" />
+                                        <x-community.user-badges :user="$reply->user" />
                                     @else
                                         <span class="comment-user">{{ $reply->display_alias }}</span>
                                     @endif
                                     <span class="comment-date">{{ $reply->displayTime() }}</span>
                                 </div>
                                 <p class="comment-text mb-1">{{ $reply->body }}</p>
+                                <x-community.signature :user="$reply->user" :previous-user-id="$previousReplySignatureUserId" />
                             </div>
                         </div>
                     </div>
+                    @php($previousReplySignatureUserId = $reply->user_id)
                 @endforeach
             </div>
         </div>
+        @php($previousRootSignatureUserId = $comment->user_id)
     @empty
         <div class="text-muted small mb-4">Todavía no hay comentarios. Sé la primera persona en comentar.</div>
     @endforelse

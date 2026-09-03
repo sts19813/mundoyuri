@@ -93,6 +93,8 @@
                         <input type="hidden" name="avatar_remove" value="0" data-avatar-remove>
                         <input type="file" id="cover_image" name="cover_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-cover-input>
                         <input type="hidden" name="cover_remove" value="0" data-cover-remove>
+                        <input type="file" id="signature_image" name="signature_image" accept="image/png,image/jpeg,image/webp,image/gif" class="visually-hidden" data-signature-input @disabled($user->signatureIsSuspended())>
+                        <input type="hidden" name="signature_remove" value="0" data-signature-remove>
 
                         <div class="profile-photo-controls">
                             <div>
@@ -147,7 +149,97 @@
                                     class="@error('biography') is-invalid @enderror">{{ old('biography', $user->biography) }}</textarea>
                                 @error('biography')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>
+
+                            <div class="profile-field">
+                                <label for="location">Localización <span>Opcional</span></label>
+                                <input id="location" name="location" type="text" maxlength="120" value="{{ old('location', $user->location) }}" autocomplete="address-level2" class="@error('location') is-invalid @enderror">
+                                @error('location')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+
+                            <div class="profile-field">
+                                <label for="occupation">Ocupación <span>Opcional</span></label>
+                                <input id="occupation" name="occupation" type="text" maxlength="160" value="{{ old('occupation', $user->occupation) }}" class="@error('occupation') is-invalid @enderror">
+                                @error('occupation')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+
+                            <div class="profile-field profile-field-wide">
+                                <label for="website">Sitio web <span>Debe comenzar con http:// o https://</span></label>
+                                <input id="website" name="website" type="url" maxlength="2048" value="{{ old('website', $user->website) }}" placeholder="https://" autocomplete="url" class="@error('website') is-invalid @enderror">
+                                @error('website')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+
+                            <div class="profile-field profile-field-wide">
+                                <label for="interests">Intereses <span>Máximo 1000 caracteres</span></label>
+                                <textarea id="interests" name="interests" rows="4" maxlength="1000" placeholder="Anime, manga, arte, escritura…" class="@error('interests') is-invalid @enderror">{{ old('interests', $user->interests) }}</textarea>
+                                @error('interests')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
                         </div>
+
+                        <fieldset class="community-profile-settings">
+                            <legend>Privacidad del perfil</legend>
+                            <p>El directorio muestra únicamente perfiles públicos. Tu perfil seguirá disponible para ti y para el equipo de moderación.</p>
+                            <div class="profile-field">
+                                <label for="profile_visibility">Quién puede consultar tu perfil</label>
+                                <select id="profile_visibility" name="profile_visibility">
+                                    <option value="public" @selected(old('profile_visibility', $user->profile_visibility) === 'public')>Cualquier persona</option>
+                                    <option value="members" @selected(old('profile_visibility', $user->profile_visibility) === 'members')>Solo miembros con sesión iniciada</option>
+                                    <option value="private" @selected(old('profile_visibility', $user->profile_visibility) === 'private')>Solo yo y el equipo de moderación</option>
+                                </select>
+                                @error('profile_visibility')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+
+                            <div class="community-privacy-grid">
+                                @foreach([
+                                    'show_last_seen' => ['Mostrar última visita', 'Permite ver cuándo visitaste Mundo Yuri por última vez.'],
+                                    'show_join_date' => ['Mostrar fecha de ingreso', 'Incluye tu fecha de registro o fecha histórica.'],
+                                    'show_favorites' => ['Mostrar favoritas', 'Comparte tus series favoritas en el perfil.'],
+                                    'show_activity' => ['Mostrar actividad reciente', 'Muestra tus participaciones públicas más recientes.'],
+                                    'show_signatures' => ['Mostrar firmas', 'Oculta todas las firmas de las conversaciones para ti.'],
+                                ] as $field => [$label, $description])
+                                    <label class="community-privacy-option">
+                                        <input type="hidden" name="{{ $field }}" value="0">
+                                        <input type="checkbox" name="{{ $field }}" value="1" @checked((bool) old($field, $user->{$field}))>
+                                        <span><strong>{{ $label }}</strong><small>{{ $description }}</small></span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="community-profile-settings">
+                            <legend>Firma comunitaria</legend>
+                            <p>Se muestra debajo de tus participaciones cuando la persona que lee tenga activadas las firmas.</p>
+                            @if($user->signatureIsSuspended())
+                                <div class="portal-alert portal-alert-error" role="alert">
+                                    Tu firma está suspendida hasta {{ $user->signature_suspended_until->translatedFormat('d M Y, H:i') }}.
+                                </div>
+                            @endif
+                            <label class="community-privacy-option mb-4">
+                                <input type="hidden" name="signature_enabled" value="0" @disabled($user->signatureIsSuspended())>
+                                <input type="checkbox" name="signature_enabled" value="1" @checked((bool) old('signature_enabled', $user->signature_enabled)) @disabled($user->signatureIsSuspended())>
+                                <span><strong>Activar mi firma</strong><small>Conserva el texto y la imagen cuando la desactives.</small></span>
+                            </label>
+                            <div class="profile-field">
+                                <label for="signature_text">Texto de firma <span>Máximo 500 caracteres</span></label>
+                                <textarea id="signature_text" name="signature_text" rows="4" maxlength="500" @disabled($user->signatureIsSuspended()) class="@error('signature_text') is-invalid @enderror">{{ old('signature_text', $user->signature_text) }}</textarea>
+                                @error('signature_text')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+                            <div class="community-signature-upload">
+                                <div>
+                                    <strong>Imagen de firma</strong>
+                                    <span>JPG, PNG, WebP o GIF · máximo 2 MB y 600 × 180 px</span>
+                                </div>
+                                @if($user->signatureImageUrl())
+                                    <img src="{{ $user->signatureImageUrl() }}" alt="Tu firma actual" data-signature-preview>
+                                @else
+                                    <img src="" alt="Vista previa de la firma" class="d-none" data-signature-preview>
+                                @endif
+                                <div class="profile-photo-actions">
+                                    <label for="signature_image" class="profile-btn profile-btn-soft @if($user->signatureIsSuspended()) disabled @endif">Elegir imagen</label>
+                                    <button type="button" class="profile-btn profile-btn-text" data-signature-clear @disabled($user->signatureIsSuspended())>Quitar imagen</button>
+                                </div>
+                                @error('signature_image')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+                        </fieldset>
 
                         <div class="profile-form-footer">
                             <span>Los cambios se aplican también al menú del portal.</span>
@@ -227,6 +319,9 @@
         const coverInput = document.querySelector('[data-cover-input]');
         const coverPreview = document.querySelector('[data-cover-preview]');
         const coverRemove = document.querySelector('[data-cover-remove]');
+        const signatureInput = document.querySelector('[data-signature-input]');
+        const signaturePreview = document.querySelector('[data-signature-preview]');
+        const signatureRemove = document.querySelector('[data-signature-remove]');
 
         avatarInput?.addEventListener('change', function () {
             const file = this.files?.[0];
@@ -260,6 +355,22 @@
             coverPreview.removeAttribute('src');
             coverPreview.classList.add('d-none');
             coverRemove.value = '1';
+        });
+
+        signatureInput?.addEventListener('change', function () {
+            const file = this.files?.[0];
+            if (!file) return;
+
+            signaturePreview.src = URL.createObjectURL(file);
+            signaturePreview.classList.remove('d-none');
+            signatureRemove.value = '0';
+        });
+
+        document.querySelector('[data-signature-clear]')?.addEventListener('click', function () {
+            signatureInput.value = '';
+            signaturePreview.removeAttribute('src');
+            signaturePreview.classList.add('d-none');
+            signatureRemove.value = '1';
         });
     </script>
 </body>
