@@ -17,12 +17,12 @@ class CommunityRankResolver
             ? $user->communityRank
             : $user->communityRank()->first();
 
-        if ($assignedRank?->is_active) {
+        if ($assignedRank?->is_active && $assignedRank->is_special) {
             return $assignedRank;
         }
 
         return $this->automaticRanks()
-            ->first(fn (CommunityRank $rank): bool => $user->community_message_count >= $rank->minimum_messages);
+            ->first(fn (CommunityRank $rank): bool => $user->community_message_count >= $rank->minimum_posts);
     }
 
     /** @return Collection<int, CommunityRank> */
@@ -31,7 +31,8 @@ class CommunityRankResolver
         return $this->automaticRanks ??= CommunityRank::query()
             ->active()
             ->automatic()
-            ->orderByDesc('minimum_messages')
+            ->orderByDesc('minimum_posts')
+            ->orderByDesc('priority')
             ->get();
     }
 }

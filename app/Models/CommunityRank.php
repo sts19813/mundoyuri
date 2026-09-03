@@ -15,20 +15,24 @@ class CommunityRank extends Model
         'name',
         'slug',
         'description',
-        'minimum_messages',
+        'minimum_posts',
+        'priority',
+        'icon',
+        'css_class',
         'is_special',
+        'is_legacy',
         'is_active',
         'color',
-        'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
-            'minimum_messages' => 'integer',
+            'minimum_posts' => 'integer',
+            'priority' => 'integer',
             'is_special' => 'boolean',
+            'is_legacy' => 'boolean',
             'is_active' => 'boolean',
-            'sort_order' => 'integer',
         ];
     }
 
@@ -44,7 +48,7 @@ class CommunityRank extends Model
 
     public function scopeAutomatic(Builder $query): Builder
     {
-        return $query->where('is_special', false)->whereNotNull('minimum_messages');
+        return $query->where('is_special', false)->whereNotNull('minimum_posts');
     }
 
     public function scopeSpecial(Builder $query): Builder

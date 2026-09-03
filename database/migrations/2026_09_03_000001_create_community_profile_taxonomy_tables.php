@@ -14,14 +14,17 @@ return new class extends Migration
             $table->string('name', 100);
             $table->string('slug', 100)->unique();
             $table->text('description')->nullable();
-            $table->unsignedInteger('minimum_messages')->nullable();
+            $table->unsignedInteger('minimum_posts')->nullable();
+            $table->unsignedSmallInteger('priority')->default(0);
+            $table->string('icon', 50)->nullable();
+            $table->string('css_class', 120)->nullable();
             $table->boolean('is_special')->default(false);
+            $table->boolean('is_legacy')->default(false);
             $table->boolean('is_active')->default(true);
             $table->string('color', 20)->nullable();
-            $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();
 
-            $table->index(['is_active', 'is_special', 'minimum_messages'], 'community_ranks_resolution_index');
+            $table->index(['is_active', 'is_special', 'minimum_posts', 'priority'], 'community_ranks_resolution_index');
         });
 
         Schema::create('community_badges', function (Blueprint $table): void {
@@ -51,11 +54,11 @@ return new class extends Migration
         $now = now();
 
         DB::table('community_ranks')->insert([
-            ['name' => 'Nuevo miembro', 'slug' => 'nuevo-miembro', 'description' => 'Primeros pasos en la comunidad.', 'minimum_messages' => 0, 'is_special' => false, 'is_active' => true, 'color' => '#a08faa', 'sort_order' => 10, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Kohai', 'slug' => 'kohai', 'description' => 'Miembro que comienza a participar.', 'minimum_messages' => 10, 'is_special' => false, 'is_active' => true, 'color' => '#c084fc', 'sort_order' => 20, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Yuri Fan', 'slug' => 'yuri-fan', 'description' => 'Participante habitual de Mundo Yuri.', 'minimum_messages' => 50, 'is_special' => false, 'is_active' => true, 'color' => '#f472b6', 'sort_order' => 30, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Yuri Senpai', 'slug' => 'yuri-senpai', 'description' => 'Miembro con una trayectoria destacada.', 'minimum_messages' => 200, 'is_special' => false, 'is_active' => true, 'color' => '#fb7185', 'sort_order' => 40, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Onee-sama', 'slug' => 'onee-sama', 'description' => 'Rango superior de participación comunitaria.', 'minimum_messages' => 500, 'is_special' => false, 'is_active' => true, 'color' => '#f43f8e', 'sort_order' => 50, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Nuevo miembro', 'slug' => 'nuevo-miembro', 'description' => 'Primeros pasos en la comunidad.', 'minimum_posts' => 0, 'priority' => 10, 'icon' => '✦', 'is_special' => false, 'is_legacy' => false, 'is_active' => true, 'color' => '#a08faa', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Kohai', 'slug' => 'kohai', 'description' => 'Miembro que comienza a participar.', 'minimum_posts' => 10, 'priority' => 20, 'icon' => '♡', 'is_special' => false, 'is_legacy' => false, 'is_active' => true, 'color' => '#c084fc', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Yuri Fan', 'slug' => 'yuri-fan', 'description' => 'Participante habitual de Mundo Yuri.', 'minimum_posts' => 50, 'priority' => 30, 'icon' => '❀', 'is_special' => false, 'is_legacy' => false, 'is_active' => true, 'color' => '#f472b6', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Yuri Senpai', 'slug' => 'yuri-senpai', 'description' => 'Miembro con una trayectoria destacada.', 'minimum_posts' => 200, 'priority' => 40, 'icon' => '✧', 'is_special' => false, 'is_legacy' => false, 'is_active' => true, 'color' => '#fb7185', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Onee-sama', 'slug' => 'onee-sama', 'description' => 'Rango superior de participación comunitaria.', 'minimum_posts' => 500, 'priority' => 50, 'icon' => '♛', 'is_special' => false, 'is_legacy' => false, 'is_active' => true, 'color' => '#f43f8e', 'created_at' => $now, 'updated_at' => $now],
         ]);
 
         DB::table('community_badges')->insert([

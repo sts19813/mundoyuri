@@ -2228,6 +2228,10 @@
         --community-accent: #f43f8e;
     }
 
+    .community-rank-legacy {
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--community-accent) 16%, transparent);
+    }
+
     .community-profile-labels,
     .community-member-badges {
         display: flex;

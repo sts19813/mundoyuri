@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Listeners\RecordUserLogin;
 use App\Listeners\SendWelcomeEmail;
 use App\Models\User;
+use App\Services\CommunityRankResolver;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -18,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(CommunityRankResolver::class);
     }
 
     /**

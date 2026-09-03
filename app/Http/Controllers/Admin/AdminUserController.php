@@ -276,7 +276,7 @@ class AdminUserController extends Controller
         return CommunityRank::query()
             ->active()
             ->special()
-            ->orderBy('sort_order')
+            ->orderByDesc('priority')
             ->orderBy('name')
             ->get();
     }

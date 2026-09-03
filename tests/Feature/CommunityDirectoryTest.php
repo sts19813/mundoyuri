@@ -80,7 +80,7 @@ class CommunityDirectoryTest extends TestCase
             'slug' => 'fundadora',
             'is_special' => true,
             'is_active' => true,
-            'sort_order' => 100,
+            'priority' => 100,
         ]);
 
         User::factory()->create(['name' => 'Kohai Visible', 'community_message_count' => 20]);

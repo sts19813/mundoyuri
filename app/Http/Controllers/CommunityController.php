@@ -53,7 +53,7 @@ class CommunityController extends Controller
 
         return view('community.index', [
             'members' => $query->paginate(24)->withQueryString(),
-            'ranks' => CommunityRank::query()->active()->orderBy('sort_order')->get(),
+            'ranks' => CommunityRank::query()->active()->orderBy('priority')->orderBy('name')->get(),
             'rankResolver' => $rankResolver,
             'filters' => $filters,
         ]);
@@ -61,7 +61,7 @@ class CommunityController extends Controller
 
     private function applyRankFilter(Builder $query, CommunityRank $rank): void
     {
-        if ($rank->is_special || $rank->minimum_messages === null) {
+        if ($rank->is_special || $rank->minimum_posts === null) {
             $query->where('community_rank_id', $rank->id);
 
             return;
@@ -70,15 +70,15 @@ class CommunityController extends Controller
         $nextMinimum = CommunityRank::query()
             ->active()
             ->automatic()
-            ->where('minimum_messages', '>', $rank->minimum_messages)
-            ->min('minimum_messages');
+            ->where('minimum_posts', '>', $rank->minimum_posts)
+            ->min('minimum_posts');
 
         $query->where(function (Builder $query) use ($rank, $nextMinimum): void {
             $query->where('community_rank_id', $rank->id)
                 ->orWhere(function (Builder $query) use ($rank, $nextMinimum): void {
                     $query
                         ->whereNull('community_rank_id')
-                        ->where('community_message_count', '>=', $rank->minimum_messages)
+                        ->where('community_message_count', '>=', $rank->minimum_posts)
                         ->when($nextMinimum !== null, fn (Builder $query) => $query->where('community_message_count', '<', $nextMinimum));
                 });
         });
