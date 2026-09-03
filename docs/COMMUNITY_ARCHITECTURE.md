@@ -236,22 +236,24 @@ Debe sembrar, sin umbrales rígidos en código: Nuevo miembro, Kohai, Yuri Fan, 
 
 Los rangos automáticos se calculan por `forum_posts_count`; la tabla de asignaciones se usa para rangos especiales. Así no se escribe una fila por cada cambio automático.
 
-#### `community_badges`
+#### `badges`
 
 - `id`, `name`, `slug` único
-- `description`, `icon`, `image_path`, `color` nullable
-- `is_active`, `sort_order`
+- `description`, `icon`, `color` nullable
+- `type`: `legacy`, `achievement`, `staff` o `special`
+- `priority`, `is_active`
 - timestamps
 
-#### `community_badge_user`
+#### `badge_user`
 
-- `user_id`, `community_badge_id`
+- `badge_id`, `user_id`
 - `awarded_by` nullable
-- `reason` nullable
+- `note` nullable
 - `awarded_at`
-- primary `user_id + community_badge_id`
+- timestamps
+- primary `badge_id + user_id`
 
-La insignia “Miembro histórico” se entrega al usuario cuando una reclamación es aprobada. El perfil histórico sin reclamar muestra su condición histórica directamente, sin necesitar una cuenta.
+Las insignias se conceden explícitamente y no alteran rangos, roles ni permisos. Una futura aprobación de reclamación podrá conceder “Miembro Histórico” como parte explícita y auditada de esa transacción. El perfil histórico sin reclamar muestra su condición histórica directamente, sin necesitar una cuenta.
 
 #### `historical_profiles`
 
@@ -816,7 +818,7 @@ Cada migración debe probarse con SQLite y MySQL. SQLite da velocidad a la suite
 - `historical_profile_claims`: `(status, created_at)`, `(historical_profile_id, status)`, `(claimant_user_id, status)`.
 - `community_ranks`: unique `slug`, `(kind, is_active, min_posts)`.
 - asignaciones: unique `(user_id, community_rank_id)`, `(community_rank_id, expires_at)`.
-- badges: unique `slug`; pivot con primary `(user_id, community_badge_id)`.
+- `badges`: unique `slug`, índice `(is_active, type, priority)`; `badge_user` con primary `(badge_id, user_id)` e índice `(user_id, awarded_at)`.
 
 ### Foros
 

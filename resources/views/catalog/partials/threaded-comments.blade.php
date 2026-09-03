@@ -46,6 +46,7 @@
                     @if($comment->user)
                         <a class="comment-user comment-user-link" href="{{ $comment->user->publicProfileUrl() }}">{{ $comment->display_alias }}</a>
                         <x-community.rank :rank="$rankResolver->resolve($comment->user)" />
+                        <x-community.user-badges :user="$comment->user" />
                     @else
                         <span class="comment-user">{{ $comment->display_alias }}</span>
                     @endif
@@ -135,6 +136,7 @@
                                     @if($reply->user)
                                         <a class="comment-user comment-user-link" href="{{ $reply->user->publicProfileUrl() }}">{{ $reply->display_alias }}</a>
                                         <x-community.rank :rank="$rankResolver->resolve($reply->user)" />
+                                        <x-community.user-badges :user="$reply->user" />
                                     @else
                                         <span class="comment-user">{{ $reply->display_alias }}</span>
                                     @endif

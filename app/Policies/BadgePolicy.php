@@ -7,7 +7,7 @@ use App\Models\User;
 
 class BadgePolicy
 {
-    public function manage(User $user): bool
+    public function manage(User $user, ?Badge $badge = null): bool
     {
         return $user->isAdmin();
     }

@@ -141,10 +141,14 @@ class CatalogController extends Controller
                 ->latest()
                 ->with([
                     'user.communityRank',
+                    'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
                     'replies' => fn ($replyQuery) => $replyQuery
                         ->where('is_approved', true)
                         ->oldest()
-                        ->with('user.communityRank'),
+                        ->with([
+                            'user.communityRank',
+                            'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
+                        ]),
                 ]),
         ]);
 

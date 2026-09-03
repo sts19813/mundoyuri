@@ -30,6 +30,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             @if($comment->user)
                                 <a class="fw-bold text-decoration-none" href="{{ $comment->user->publicProfileUrl() }}">{{ $comment->display_alias }}</a>
+                                <x-community.user-badges :user="$comment->user" />
                             @else
                                 <strong>{{ $comment->display_alias }}</strong>
                             @endif
@@ -99,6 +100,7 @@
                                             <div class="d-flex justify-content-between">
                                                 @if($reply->user)
                                                     <a class="fw-bold fs-8 text-decoration-none" href="{{ $reply->user->publicProfileUrl() }}">{{ $reply->display_alias }}</a>
+                                                    <x-community.user-badges :user="$reply->user" :limit="2" />
                                                 @else
                                                     <strong class="fs-8">{{ $reply->display_alias }}</strong>
                                                 @endif
