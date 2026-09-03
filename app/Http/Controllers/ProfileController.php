@@ -239,7 +239,7 @@ class ProfileController extends Controller
         $this->authorize('viewProfile', $user);
 
         $connections = $user->{$type}()
-            ->where('users.is_active', true)
+            ->visibleToProfileViewer(auth()->user())
             ->orderByPivot('created_at', 'desc')
             ->paginate(24);
 

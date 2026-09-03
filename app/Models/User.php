@@ -249,6 +249,25 @@ class User extends Authenticatable
             ->where('profile_visibility', 'public');
     }
 
+    public function scopeVisibleToProfileViewer(Builder $query, ?User $viewer): Builder
+    {
+        $query->where('users.is_active', true);
+
+        if ($viewer?->shouldEnterAdminPanel()) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($viewer): void {
+            $query->where('users.profile_visibility', 'public');
+
+            if ($viewer) {
+                $query
+                    ->orWhere('users.profile_visibility', 'members')
+                    ->orWhere('users.id', $viewer->id);
+            }
+        });
+    }
+
     public function initials(): string
     {
         $name = trim($this->name ?: $this->email);

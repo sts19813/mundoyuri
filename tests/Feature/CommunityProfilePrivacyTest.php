@@ -42,6 +42,28 @@ class CommunityProfilePrivacyTest extends TestCase
         $this->actingAs($profileUser)->get(route('profiles.favorites', $profileUser))->assertOk();
     }
 
+    public function test_private_connections_are_not_exposed_in_another_members_lists(): void
+    {
+        $profileUser = User::factory()->create();
+        $publicFollower = User::factory()->create(['name' => 'Seguidora Pública']);
+        $privateFollower = User::factory()->create([
+            'name' => 'Seguidora Privada',
+            'profile_visibility' => 'private',
+        ]);
+
+        $profileUser->followers()->attach([$publicFollower->id, $privateFollower->id]);
+
+        $this->get(route('profiles.followers', $profileUser))
+            ->assertOk()
+            ->assertSee('Seguidora Pública')
+            ->assertDontSee('Seguidora Privada');
+
+        $this->actingAs($privateFollower)
+            ->get(route('profiles.followers', $profileUser))
+            ->assertOk()
+            ->assertSee('Seguidora Privada');
+    }
+
     public function test_owner_can_update_community_profile_and_privacy_preferences(): void
     {
         $user = User::factory()->create();
