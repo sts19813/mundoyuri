@@ -15,7 +15,8 @@ class LegacyProfile extends Model
     public const CLAIM_STATUSES = ['unclaimed', 'pending', 'claimed', 'rejected'];
 
     protected $attributes = [
-        'legacy_message_count' => 0,
+        'is_legacy' => true,
+        'legacy_verified' => false,
         'claim_status' => 'unclaimed',
         'is_published' => true,
     ];
@@ -32,9 +33,14 @@ class LegacyProfile extends Model
         'legacy_interests',
         'legacy_website',
         'legacy_avatar_path',
+        'legacy_avatar_url',
         'source',
+        'legacy_source_url',
+        'legacy_source_description',
         'evidence',
         'admin_notes',
+        'is_legacy',
+        'legacy_verified',
         'claim_status',
         'claimed_by_user_id',
         'claimed_at',
@@ -46,6 +52,8 @@ class LegacyProfile extends Model
         return [
             'legacy_joined_at' => 'datetime',
             'legacy_message_count' => 'integer',
+            'is_legacy' => 'boolean',
+            'legacy_verified' => 'boolean',
             'claimed_at' => 'datetime',
             'is_published' => 'boolean',
         ];

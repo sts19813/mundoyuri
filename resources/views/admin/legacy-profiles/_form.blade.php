@@ -15,9 +15,10 @@
                 @error('legacy_external_key')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-lg-6">
-                <label class="form-label required">Nickname histórico</label>
+                <label class="form-label required">Username histórico</label>
                 <input type="text" name="nickname" maxlength="120" required value="{{ old('nickname', $legacyProfile->nickname ?? '') }}"
                     class="form-control form-control-solid @error('nickname') is-invalid @enderror">
+                <div class="form-text">Se conserva exactamente como aparece en el archivo; no es un usuario actual.</div>
                 @error('nickname')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
@@ -30,17 +31,17 @@
                 @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-lg-6">
-                <label class="form-label required">Fuente</label>
-                <input type="text" name="source" maxlength="255" required value="{{ old('source', $legacyProfile->source ?? 'archivo-mundo-yuri') }}"
-                    placeholder="captura-foro-2007" class="form-control form-control-solid @error('source') is-invalid @enderror">
+                <label class="form-label required">Origen técnico del registro</label>
+                <input type="text" name="source" maxlength="255" required value="{{ old('source', $legacyProfile->source ?? 'administrative-manual-entry') }}"
+                    placeholder="administrative-manual-entry" class="form-control form-control-solid @error('source') is-invalid @enderror">
                 @error('source')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
 
         <div class="row g-6 mb-6">
             <div class="col-md-4">
-                <label class="form-label">Fecha histórica de registro</label>
-                <input type="date" name="legacy_joined_at" value="{{ old('legacy_joined_at', $legacyProfile->legacy_joined_at?->format('Y-m-d')) }}"
+                <label class="form-label required">Fecha histórica de registro</label>
+                <input type="date" name="legacy_joined_at" required value="{{ old('legacy_joined_at', $legacyProfile->legacy_joined_at?->format('Y-m-d')) }}"
                     class="form-control form-control-solid @error('legacy_joined_at') is-invalid @enderror">
                 @error('legacy_joined_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -51,8 +52,8 @@
                 @error('legacy_rank')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-4">
-                <label class="form-label required">Mensajes antiguos</label>
-                <input type="number" name="legacy_message_count" min="0" max="4294967295" required value="{{ old('legacy_message_count', $legacyProfile->legacy_message_count ?? 0) }}"
+                <label class="form-label">Mensajes antiguos</label>
+                <input type="number" name="legacy_message_count" min="0" max="4294967295" value="{{ old('legacy_message_count', $legacyProfile->legacy_message_count) }}"
                     class="form-control form-control-solid @error('legacy_message_count') is-invalid @enderror">
                 @error('legacy_message_count')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -64,6 +65,7 @@
         </div>
         <div class="mb-6"><label class="form-label">Intereses históricos</label><textarea name="legacy_interests" rows="3" maxlength="2000" class="form-control form-control-solid @error('legacy_interests') is-invalid @enderror">{{ old('legacy_interests', $legacyProfile->legacy_interests ?? '') }}</textarea>@error('legacy_interests')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
         <div class="mb-6"><label class="form-label">Sitio web histórico</label><input type="url" name="legacy_website" maxlength="2048" value="{{ old('legacy_website', $legacyProfile->legacy_website ?? '') }}" placeholder="https://" class="form-control form-control-solid @error('legacy_website') is-invalid @enderror">@error('legacy_website')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+        <div class="mb-6"><label class="form-label">URL histórica del avatar</label><input type="url" name="legacy_avatar_url" maxlength="2048" value="{{ old('legacy_avatar_url', $legacyProfile->legacy_avatar_url ?? '') }}" placeholder="https://" class="form-control form-control-solid @error('legacy_avatar_url') is-invalid @enderror"><div class="form-text">Se conserva como referencia archivada; nunca se descarga ni se muestra desde una fuente remota.</div>@error('legacy_avatar_url')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
 
         <div class="mb-6">
             <label class="form-label">Avatar histórico</label>
@@ -76,8 +78,13 @@
             @endif
         </div>
 
-        <div class="mb-6"><label class="form-label">Fuente o evidencia</label><textarea name="evidence" rows="4" maxlength="5000" class="form-control form-control-solid @error('evidence') is-invalid @enderror">{{ old('evidence', $legacyProfile->evidence ?? '') }}</textarea><div class="form-text">Referencia de captura, archivo o evidencia de procedencia. Solo para administración.</div>@error('evidence')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+        <div class="mb-6"><label class="form-label">URL de fuente histórica</label><input type="url" name="legacy_source_url" maxlength="2048" value="{{ old('legacy_source_url', $legacyProfile->legacy_source_url ?? '') }}" placeholder="https://" class="form-control form-control-solid @error('legacy_source_url') is-invalid @enderror">@error('legacy_source_url')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+        <div class="mb-6"><label class="form-label">Descripción de fuente histórica</label><textarea name="legacy_source_description" rows="3" maxlength="5000" class="form-control form-control-solid @error('legacy_source_description') is-invalid @enderror">{{ old('legacy_source_description', $legacyProfile->legacy_source_description ?? '') }}</textarea><div class="form-text">Describe únicamente la captura o archivo de procedencia.</div>@error('legacy_source_description')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+        <div class="mb-6"><label class="form-label">Evidencia privada adicional</label><textarea name="evidence" rows="4" maxlength="5000" class="form-control form-control-solid @error('evidence') is-invalid @enderror">{{ old('evidence', $legacyProfile->evidence ?? '') }}</textarea><div class="form-text">Solo para administración.</div>@error('evidence')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
         <div class="mb-7"><label class="form-label">Notas privadas de administración</label><textarea name="admin_notes" rows="4" maxlength="5000" class="form-control form-control-solid @error('admin_notes') is-invalid @enderror">{{ old('admin_notes', $legacyProfile->admin_notes ?? '') }}</textarea><div class="form-text">Nunca se muestran públicamente.</div>@error('admin_notes')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+
+        <input type="hidden" name="legacy_verified" value="0">
+        <label class="form-check form-switch form-check-custom form-check-solid mb-6"><input type="checkbox" name="legacy_verified" value="1" class="form-check-input" @checked((bool) old('legacy_verified', $legacyProfile->legacy_verified ?? false))><span class="form-check-label"><strong class="d-block">Datos históricos verificados</strong><small class="text-muted">Márcalo solo después de contrastar personalmente la fuente.</small></span></label>
 
         <input type="hidden" name="is_published" value="0">
         <label class="form-check form-switch form-check-custom form-check-solid"><input type="checkbox" name="is_published" value="1" class="form-check-input" @checked((bool) old('is_published', $legacyProfile->is_published ?? true))><span class="form-check-label"><strong class="d-block">Publicar en el archivo histórico</strong><small class="text-muted">Los perfiles no publicados solo se ven en administración.</small></span></label>

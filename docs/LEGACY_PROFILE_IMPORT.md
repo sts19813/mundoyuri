@@ -45,3 +45,25 @@ foro-2007:123,LunaRosa,2007-04-12,Yuri Fan,184,Mérida,Ilustradora,"Manga, anime
 ```
 
 No incluyas email, contraseña ni datos de inicio de sesión. `created_at` se genera al importar y conserva su significado técnico; la fecha pública de registro es `legacy_joined_at`.
+
+## Alta manual verificada
+
+Para los primeros perfiles entregados y contrastados individualmente, usa el comando separado de los seeders de desarrollo:
+
+```bash
+php artisan community:legacy-register 'Nickname exacto' 2007-04-12 \
+  --messages=184 \
+  --rank='Yuri Fan' \
+  --location='Dato público archivado' \
+  --source-url='https://web.archive.org/...' \
+  --source-description='Captura de perfil archivada' \
+  --verified
+```
+
+Los únicos argumentos obligatorios son `legacy_username` y `legacy_joined_at`. Las opciones admitidas son `--messages`, `--rank`, `--location`, `--occupation`, `--interests`, `--website`, `--avatar-url`, `--source-url` y `--source-description`; si no hay evidencia, se omiten y quedan en `null`.
+
+`--verified` marca `legacy_verified = true` únicamente cuando la persona administradora ya contrastó los datos. El comando siempre fija `is_legacy = true`, no crea un registro en `users`, no crea credenciales y deja la ficha sin publicar salvo que se indique `--publish`. Ejecuta `--dry-run` antes del alta para validar sin escribir datos.
+
+La URL de avatar se conserva como referencia archivada, pero el sitio no la descarga ni la muestra desde un host remoto. Las URLs y descripciones de fuente se mantienen para administración. Las notas privadas (`admin_notes`) nunca se renderizan públicamente.
+
+Para compatibilidad con el importador previo, el comando registra internamente el origen técnico fijo `administrative-manual-entry`; no representa una afirmación histórica sobre el miembro y no se muestra en el perfil público.

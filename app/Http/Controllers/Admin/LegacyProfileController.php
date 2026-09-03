@@ -38,7 +38,10 @@ class LegacyProfileController extends Controller
 
     public function store(StoreLegacyProfileRequest $request): RedirectResponse
     {
-        $legacyProfile = LegacyProfile::query()->create($request->safe()->except('legacy_avatar'));
+        $legacyProfile = LegacyProfile::query()->create([
+            ...$request->safe()->except('legacy_avatar'),
+            'is_legacy' => true,
+        ]);
 
         if ($request->hasFile('legacy_avatar')) {
             $legacyProfile->update([
@@ -60,7 +63,10 @@ class LegacyProfileController extends Controller
     {
         $this->authorize('manage', $legacyProfile);
 
-        $legacyProfile->update($request->safe()->except(['legacy_avatar', 'legacy_avatar_remove']));
+        $legacyProfile->update([
+            ...$request->safe()->except(['legacy_avatar', 'legacy_avatar_remove']),
+            'is_legacy' => true,
+        ]);
 
         if ($request->boolean('legacy_avatar_remove')) {
             $this->deleteAvatar($legacyProfile);

@@ -204,4 +204,55 @@ class LegacyProfileTest extends TestCase
 
         $this->assertDatabaseCount('legacy_profiles', 0);
     }
+
+    public function test_manual_registration_accepts_only_archived_data_and_never_creates_a_user(): void
+    {
+        $this->artisan('community:legacy-register', [
+            'legacy_username' => 'ArchivoPrueba',
+            'legacy_joined_at' => '2007-06-18',
+            '--messages' => '17',
+            '--rank' => 'Yuri Fan',
+            '--location' => 'Ciudad archivada',
+            '--occupation' => 'Ocupación archivada',
+            '--interests' => 'Intereses archivados',
+            '--website' => 'https://example.org/sitio-archivado',
+            '--avatar-url' => 'https://web.archive.org/avatar-prueba.png',
+            '--source-url' => 'https://web.archive.org/captura-prueba',
+            '--source-description' => 'Captura archivada de prueba',
+            '--verified' => true,
+        ])->assertExitCode(0);
+
+        $profile = LegacyProfile::query()->where('nickname', 'ArchivoPrueba')->firstOrFail();
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertTrue($profile->is_legacy);
+        $this->assertTrue($profile->legacy_verified);
+        $this->assertSame('2007-06-18', $profile->legacy_joined_at?->format('Y-m-d'));
+        $this->assertSame(17, $profile->legacy_message_count);
+        $this->assertSame('https://web.archive.org/avatar-prueba.png', $profile->legacy_avatar_url);
+        $this->assertSame('https://web.archive.org/captura-prueba', $profile->legacy_source_url);
+        $this->assertFalse($profile->is_published);
+    }
+
+    public function test_manual_registration_keeps_optional_historical_fields_null_and_dry_run_does_not_write(): void
+    {
+        $arguments = [
+            'legacy_username' => 'SoloDatosObligatorios',
+            'legacy_joined_at' => '2008-01-01',
+        ];
+
+        $this->artisan('community:legacy-register', [...$arguments, '--dry-run' => true])
+            ->expectsOutput('Validación correcta. No se guardó ningún perfil por usar --dry-run.')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseCount('legacy_profiles', 0);
+
+        $this->artisan('community:legacy-register', $arguments)->assertExitCode(0);
+
+        $profile = LegacyProfile::query()->where('nickname', 'SoloDatosObligatorios')->firstOrFail();
+        $this->assertNull($profile->legacy_message_count);
+        $this->assertNull($profile->legacy_rank);
+        $this->assertNull($profile->legacy_avatar_url);
+        $this->assertFalse($profile->legacy_verified);
+    }
 }

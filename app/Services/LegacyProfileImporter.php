@@ -115,12 +115,12 @@ class LegacyProfileImporter
     }
 
     /** @param array<string, string|null> $row */
-    private function unsignedInteger(array $row, string $field): int
+    private function unsignedInteger(array $row, string $field): ?int
     {
         $value = $this->value($row, $field);
 
         if ($value === null) {
-            return 0;
+            return null;
         }
 
         if (! ctype_digit($value) || (int) $value > 4294967295) {
