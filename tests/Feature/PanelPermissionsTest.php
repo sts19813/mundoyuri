@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\User;
@@ -51,6 +50,7 @@ class PanelPermissionsTest extends TestCase
             'genre_id' => $genre->id,
             'title' => 'Aporte de usuario',
             'content_type' => 'series',
+            'catalog_section' => 'series-gl',
             'status' => 'ongoing',
             'description' => 'Descripción suficientemente completa para el aporte del usuario.',
             'moderation_status' => 'approved',

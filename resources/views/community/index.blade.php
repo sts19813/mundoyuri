@@ -100,7 +100,7 @@
                         <div class="community-member-copy">
                             <div class="community-member-title">
                                 <div>
-                                    <h3><a href="{{ $member->publicProfileUrl() }}">{{ $member->displayName() }}</a></h3>
+                                    <h3><a href="{{ $member->publicProfileUrl() }}">{{ $member->name }}</a></h3>
                                     @if($member->alias)<small>{{ '@'.$member->alias }}</small>@endif
                                 </div>
                                 <x-community.rank :rank="$resolvedRank" />
