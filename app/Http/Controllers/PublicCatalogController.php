@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Services\CommunityRankResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -156,7 +157,7 @@ class PublicCatalogController extends Controller
             ->get();
     }
 
-    public function episodes(?Episode $episode = null): View
+    public function episodes(CommunityRankResolver $rankResolver, ?Episode $episode = null): View
     {
         if (! $this->catalogTablesReady()) {
             return view('episodios', [
@@ -202,11 +203,11 @@ class PublicCatalogController extends Controller
                 ->whereNull('parent_id')
                 ->latest()
                 ->with([
-                    'user',
+                    'user.communityRank',
                     'replies' => fn ($replyQuery) => $replyQuery
                         ->where('is_approved', true)
                         ->oldest()
-                        ->with('user'),
+                        ->with('user.communityRank'),
                 ]),
         ]);
 
@@ -236,7 +237,8 @@ class PublicCatalogController extends Controller
             'seriesEpisodes',
             'recentEpisodes',
             'previousEpisode',
-            'nextEpisode'
+            'nextEpisode',
+            'rankResolver'
         ));
     }
 

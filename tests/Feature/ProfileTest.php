@@ -124,6 +124,7 @@ class ProfileTest extends TestCase
         $author = User::factory()->create([
             'name' => 'Autora registrada',
             'alias' => 'autora-yuri',
+            'community_message_count' => 55,
         ]);
         $genre = Genre::query()->create([
             'name' => 'Romance',
@@ -159,6 +160,7 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee($author->publicProfileUrl(), false)
             ->assertSee('Ver perfil de autora-yuri')
+            ->assertSee('Yuri Fan')
             ->assertSee('<span class="comment-user">Visitante anónima</span>', false);
     }
 

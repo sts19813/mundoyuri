@@ -6,6 +6,7 @@ use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
+use App\Services\CommunityRankResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -119,7 +120,7 @@ class CatalogController extends Controller
         return view('catalog.genres.show', compact('genre', 'series'));
     }
 
-    public function showSeries(Series $series): View
+    public function showSeries(Series $series, CommunityRankResolver $rankResolver): View
     {
         if (! $this->catalogTablesReady()) {
             abort(404);
@@ -139,11 +140,11 @@ class CatalogController extends Controller
                 ->whereNull('parent_id')
                 ->latest()
                 ->with([
-                    'user',
+                    'user.communityRank',
                     'replies' => fn ($replyQuery) => $replyQuery
                         ->where('is_approved', true)
                         ->oldest()
-                        ->with('user'),
+                        ->with('user.communityRank'),
                 ]),
         ]);
 
@@ -155,7 +156,7 @@ class CatalogController extends Controller
             ->take(8)
             ->get();
 
-        return view('catalog.series.show', compact('series', 'recentEpisodes'));
+        return view('catalog.series.show', compact('series', 'recentEpisodes', 'rankResolver'));
     }
 
     public function showEpisode(Series $series, Episode $episode): RedirectResponse
