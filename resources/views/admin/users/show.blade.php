@@ -33,6 +33,8 @@
 @endsection
 
 @section('content')
+    @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+    @if(session('info'))<div class="alert alert-info">{{ session('info') }}</div>@endif
     <!--begin::Card-->
     <div class="card mb-5 mb-xl-10">
         <!--begin::Card header-->
@@ -157,4 +159,65 @@
         <!--end::Card footer-->
     </div>
     <!--end::Card-->
+
+    <div class="card mb-5 mb-xl-10">
+        <div class="card-header border-0">
+            <div class="card-title m-0">
+                <div>
+                    <h3 class="fw-bold m-0">Insignias comunitarias</h3>
+                    <div class="text-muted fs-7 mt-1">Reconocimientos independientes del rango y de los permisos.</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body border-top p-9">
+            <form method="POST" action="{{ route('admin.users.badges.store', $user) }}" class="row g-4 align-items-end mb-8">
+                @csrf
+                <div class="col-lg-4">
+                    <label class="form-label required">Insignia</label>
+                    <select name="badge_id" required class="form-select form-select-solid @error('badge_id') is-invalid @enderror">
+                        <option value="">Seleccionar…</option>
+                        @foreach($availableBadges as $availableBadge)
+                            <option value="{{ $availableBadge->id }}" @selected((string) old('badge_id') === (string) $availableBadge->id)>
+                                {{ $availableBadge->icon }} {{ $availableBadge->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('badge_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label">Nota interna de la concesión</label>
+                    <input type="text" name="note" value="{{ old('note') }}" maxlength="1000"
+                        class="form-control form-control-solid @error('note') is-invalid @enderror" placeholder="Evidencia o contexto opcional">
+                    @error('note')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-lg-2">
+                    <button type="submit" class="btn btn-primary w-100">Asignar</button>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed gy-4">
+                    <thead><tr class="text-muted fw-bold fs-7 text-uppercase"><th>Insignia</th><th>Otorgada por</th><th>Fecha</th><th>Nota interna</th><th class="text-end">Acción</th></tr></thead>
+                    <tbody>
+                        @forelse($user->badges as $badge)
+                            <tr>
+                                <td><span class="badge badge-light-info">{{ $badge->icon }} {{ $badge->name }}</span></td>
+                                <td>{{ $badgeAwarders->get($badge->pivot->awarded_by, 'Sistema / dato importado') }}</td>
+                                <td>{{ $badge->pivot->awarded_at?->format('d/m/Y H:i') ?: 'Sin fecha' }}</td>
+                                <td class="text-muted">{{ $badge->pivot->note ?: '—' }}</td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ route('admin.users.badges.destroy', [$user, $badge]) }}" onsubmit="return confirm('¿Retirar esta insignia?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-light-danger">Retirar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="text-center text-muted py-6">Esta persona no tiene insignias asignadas.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 @endsection

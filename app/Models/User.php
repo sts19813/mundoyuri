@@ -72,6 +72,7 @@ class User extends Authenticatable
     public function badges(): BelongsToMany
     {
         return $this->belongsToMany(Badge::class, 'badge_user')
+            ->using(BadgeAward::class)
             ->withPivot(['awarded_by', 'awarded_at', 'note'])
             ->withTimestamps();
     }

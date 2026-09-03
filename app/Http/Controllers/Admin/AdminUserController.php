@@ -91,9 +91,16 @@ class AdminUserController extends Controller
 
     public function show(User $user)
     {
-        $user->load(['communityRank', 'badges']);
+        $user->load([
+            'communityRank',
+            'badges' => fn ($query) => $query->ordered(),
+        ]);
+        $availableBadges = Badge::query()->active()->ordered()->get();
+        $badgeAwarders = User::query()
+            ->whereKey($user->badges->pluck('pivot.awarded_by')->filter()->unique())
+            ->pluck('name', 'id');
 
-        return view('admin.users.show', compact('user'));
+        return view('admin.users.show', compact('user', 'availableBadges', 'badgeAwarders'));
     }
 
     public function edit(User $user)

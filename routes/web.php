@@ -8,12 +8,14 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AssistantMessageController as AdminAssistantMessageController;
 use App\Http\Controllers\Admin\AssistantSettingController;
 use App\Http\Controllers\Admin\BackblazeB2SettingController;
+use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
+use App\Http\Controllers\Admin\UserBadgeController as AdminUserBadgeController;
 use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
@@ -159,6 +161,10 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     // Gestión de Usuarios
     Route::patch('/usuarios/{user}/notificaciones-por-correo', [AdminUserController::class, 'updateEmailNotifications'])
         ->name('admin.users.email-notifications.update');
+    Route::post('/usuarios/{user}/insignias', [AdminUserBadgeController::class, 'store'])
+        ->name('admin.users.badges.store');
+    Route::delete('/usuarios/{user}/insignias/{badge}', [AdminUserBadgeController::class, 'destroy'])
+        ->name('admin.users.badges.destroy');
 
     Route::resource('usuarios', AdminUserController::class)->parameters([
         'usuarios' => 'user',
@@ -182,6 +188,18 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'edit' => 'admin.community-ranks.edit',
             'update' => 'admin.community-ranks.update',
             'destroy' => 'admin.community-ranks.destroy',
+        ]);
+
+    Route::resource('insignias-comunidad', AdminBadgeController::class)
+        ->except('show')
+        ->parameters(['insignias-comunidad' => 'badge'])
+        ->names([
+            'index' => 'admin.badges.index',
+            'create' => 'admin.badges.create',
+            'store' => 'admin.badges.store',
+            'edit' => 'admin.badges.edit',
+            'update' => 'admin.badges.update',
+            'destroy' => 'admin.badges.destroy',
         ]);
 
     Route::resource('roles', AdminRoleController::class)->parameters([
