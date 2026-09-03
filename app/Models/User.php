@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'last_login_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography'])]
+#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'last_login_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography', 'profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_text', 'signature_image', 'location', 'website', 'occupation', 'interests', 'community_message_count', 'community_reputation', 'community_rank_id', 'is_legacy', 'legacy_joined_at', 'legacy_source', 'legacy_notes', 'legacy_verified', 'profile_claimed_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -24,6 +25,15 @@ class User extends Authenticatable
 
     protected $attributes = [
         'episode_email_notifications_enabled' => true,
+        'profile_visibility' => 'public',
+        'show_last_seen' => false,
+        'show_join_date' => true,
+        'show_favorites' => true,
+        'show_activity' => true,
+        'community_message_count' => 0,
+        'community_reputation' => 0,
+        'is_legacy' => false,
+        'legacy_verified' => false,
     ];
 
     /**
@@ -39,7 +49,29 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'episode_email_notifications_enabled' => 'boolean',
             'last_login_at' => 'datetime',
+            'show_last_seen' => 'boolean',
+            'show_join_date' => 'boolean',
+            'show_favorites' => 'boolean',
+            'show_activity' => 'boolean',
+            'community_message_count' => 'integer',
+            'community_reputation' => 'integer',
+            'is_legacy' => 'boolean',
+            'legacy_joined_at' => 'datetime',
+            'legacy_verified' => 'boolean',
+            'profile_claimed_at' => 'datetime',
         ];
+    }
+
+    public function communityRank(): BelongsTo
+    {
+        return $this->belongsTo(CommunityRank::class);
+    }
+
+    public function communityBadges(): BelongsToMany
+    {
+        return $this->belongsToMany(CommunityBadge::class, 'community_badge_user')
+            ->withPivot(['awarded_by', 'reason', 'awarded_at'])
+            ->withTimestamps();
     }
 
     public function submittedSeries(): HasMany
@@ -185,6 +217,20 @@ class User extends Authenticatable
             'user' => $this,
             'alias' => Str::slug($this->alias ?: $this->name),
         ]);
+    }
+
+    public function displayName(): string
+    {
+        return $this->alias ?: $this->name;
+    }
+
+    public function communityJoinDate(): mixed
+    {
+        if ($this->is_legacy && $this->legacy_joined_at) {
+            return $this->legacy_joined_at;
+        }
+
+        return $this->created_at;
     }
 
     public function initials(): string
