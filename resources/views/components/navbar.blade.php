@@ -9,6 +9,7 @@
             <li><a href="{{ route('home') }}">Inicio</a></li>
             <li><a href="{{ route('catalog.sections.show', 'anime') }}">Anime</a></li>
             <li><a href="{{ route('catalog.sections.show', 'series-gl') }}">Series GL</a></li>
+            <li><a href="{{ route('community.index') }}">Comunidad</a></li>
             <li><a href="{{ route('about') }}">Nosotros</a></li>
         </ul>
         <div class="nav-actions">

@@ -51,6 +51,17 @@
                         <span class="profile-eyebrow">Perfil de la comunidad</span>
                         <h1>{{ $profileUser->name }}</h1>
                         <p>{{ $profileUser->alias ? '@'.$profileUser->alias : 'Miembro de Mundo Yuri' }}</p>
+                        <div class="community-profile-labels">
+                            <x-community.rank :rank="$communityRank" />
+                            @if($profileUser->is_legacy)
+                                <span class="community-badge community-badge-legacy"><span aria-hidden="true">✦</span> Miembro histórico de Mundo Yuri</span>
+                            @endif
+                            @foreach($profileUser->communityBadges as $badge)
+                                @unless($profileUser->is_legacy && $badge->slug === 'miembro-historico')
+                                    <x-community.badge :badge="$badge" />
+                                @endunless
+                            @endforeach
+                        </div>
                         <div class="public-profile-social-stats">
                             <a href="{{ route('profiles.followers', $profileUser) }}">
                                 <strong>{{ $profileUser->followers_count }}</strong> seguidores
@@ -58,7 +69,10 @@
                             <a href="{{ route('profiles.following', $profileUser) }}">
                                 <strong>{{ $profileUser->following_count }}</strong> siguiendo
                             </a>
-                            <span><strong>{{ $profileUser->favorite_series_count }}</strong> favoritas</span>
+                            @if($canViewFavorites)
+                                <span><strong>{{ $profileUser->favorite_series_count }}</strong> favoritas</span>
+                            @endif
+                            <span><strong>{{ $profileUser->community_message_count }}</strong> publicaciones</span>
                         </div>
                     </div>
                 </div>
@@ -102,7 +116,7 @@
                     @endif
                     <div class="profile-status-chip">
                         <span></span>
-                        {{ $profileUser->email_verified_at ? 'Cuenta verificada' : 'Miembro de la comunidad' }}
+                        {{ $profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad' }}
                     </div>
                 </div>
             </section>
@@ -128,9 +142,27 @@
                                 @endif
                             </div>
                         @endif
+
+                        @if(filled($profileUser->location) || filled($profileUser->occupation) || filled($profileUser->interests) || filled($profileUser->website))
+                            <dl class="community-profile-about-grid">
+                                @if(filled($profileUser->location))
+                                    <div><dt>Localización</dt><dd>{{ $profileUser->location }}</dd></div>
+                                @endif
+                                @if(filled($profileUser->occupation))
+                                    <div><dt>Ocupación</dt><dd>{{ $profileUser->occupation }}</dd></div>
+                                @endif
+                                @if(filled($profileUser->interests))
+                                    <div class="is-wide"><dt>Intereses</dt><dd>{{ $profileUser->interests }}</dd></div>
+                                @endif
+                                @if(filled($profileUser->website))
+                                    <div class="is-wide"><dt>Sitio web</dt><dd><a href="{{ $profileUser->website }}" rel="nofollow noopener noreferrer" target="_blank">{{ $profileUser->website }}</a></dd></div>
+                                @endif
+                            </dl>
+                        @endif
                     </section>
 
-                    <section class="profile-panel profile-panel-main public-profile-favorites">
+                    @if($canViewFavorites)
+                        <section class="profile-panel profile-panel-main public-profile-favorites">
                         <div class="profile-panel-heading">
                             <div>
                                 <span class="profile-panel-kicker">Mi colección</span>
@@ -169,7 +201,42 @@
                                 @endif
                             </div>
                         @endif
-                    </section>
+                        </section>
+                    @endif
+
+                    @if($canViewActivity)
+                        <section class="profile-panel profile-panel-main community-profile-activity">
+                            <div class="profile-panel-heading">
+                                <div>
+                                    <span class="profile-panel-kicker">Actividad reciente</span>
+                                    <h2>Participación</h2>
+                                </div>
+                            </div>
+                            @forelse($recentActivity as $activity)
+                                <article class="community-activity-item">
+                                    <p>{{ \Illuminate\Support\Str::limit($activity->body, 220) }}</p>
+                                    <time datetime="{{ $activity->created_at?->toAtomString() }}">{{ $activity->created_at?->diffForHumans() }}</time>
+                                </article>
+                            @empty
+                                <div class="public-profile-empty">
+                                    <span aria-hidden="true">✦</span>
+                                    <p>Este perfil todavía no tiene actividad pública reciente.</p>
+                                </div>
+                            @endforelse
+                        </section>
+                    @endif
+
+                    @if(filled($profileUser->signature_text) || $profileUser->signatureImageUrl())
+                        <section class="profile-panel community-profile-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
+                            <span class="profile-panel-kicker">Firma</span>
+                            @if(filled($profileUser->signature_text))
+                                <p>{{ $profileUser->signature_text }}</p>
+                            @endif
+                            @if($profileUser->signatureImageUrl())
+                                <img src="{{ $profileUser->signatureImageUrl() }}" alt="Firma gráfica de {{ $profileUser->displayName() }}">
+                            @endif
+                        </section>
+                    @endif
                 </div>
 
                 <aside class="profile-sidebar">
@@ -177,18 +244,38 @@
                         <span class="profile-panel-kicker">Información</span>
                         <h2>Perfil</h2>
                         <dl class="profile-details-list">
+                            @if($profileUser->show_join_date || $isOwner || auth()->user()?->shouldEnterAdminPanel())
+                                <div>
+                                    <dt>Miembro desde</dt>
+                                    <dd>
+                                        @if($profileUser->is_legacy && $profileUser->legacy_joined_at)
+                                            Miembro desde {{ $profileUser->legacy_joined_at->format('Y') }}
+                                        @else
+                                            {{ optional($profileUser->created_at)->translatedFormat('M Y') }}
+                                        @endif
+                                    </dd>
+                                </div>
+                            @endif
                             <div>
-                                <dt>Miembro desde</dt>
-                                <dd>{{ optional($profileUser->created_at)->translatedFormat('M Y') }}</dd>
+                                <dt>Publicaciones</dt>
+                                <dd>{{ number_format($profileUser->community_message_count) }}</dd>
                             </div>
+                            @if($canViewFavorites)
+                                <div>
+                                    <dt>Favoritas</dt>
+                                    <dd>{{ $profileUser->favorite_series_count }}</dd>
+                                </div>
+                            @endif
                             <div>
-                                <dt>Comentarios</dt>
-                                <dd>{{ $profileUser->comments_count }}</dd>
+                                <dt>Reputación</dt>
+                                <dd>{{ number_format($profileUser->community_reputation) }}</dd>
                             </div>
-                            <div>
-                                <dt>Favoritas</dt>
-                                <dd>{{ $profileUser->favorite_series_count }}</dd>
-                            </div>
+                            @if($profileUser->show_last_seen && $profileUser->last_login_at)
+                                <div>
+                                    <dt>Última visita</dt>
+                                    <dd>{{ $profileUser->last_login_at->diffForHumans() }}</dd>
+                                </div>
+                            @endif
                         </dl>
                     </section>
 

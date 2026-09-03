@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -212,6 +213,13 @@ class User extends Authenticatable
             : null;
     }
 
+    public function signatureImageUrl(): ?string
+    {
+        return $this->signature_image
+            ? Storage::disk('public')->url($this->signature_image)
+            : null;
+    }
+
     public function publicProfileUrl(): string
     {
         return route('profiles.show', [
@@ -225,7 +233,7 @@ class User extends Authenticatable
         return $this->alias ?: $this->name;
     }
 
-    public function communityJoinDate(): mixed
+    public function communityJoinDate(): ?CarbonInterface
     {
         if ($this->is_legacy && $this->legacy_joined_at) {
             return $this->legacy_joined_at;
