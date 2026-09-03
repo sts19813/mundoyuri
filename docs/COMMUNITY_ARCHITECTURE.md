@@ -420,8 +420,11 @@ Todas son aditivas; no se propone volver nullable `email` ni `password`.
 | `show_favorites` | boolean, default true | Privacidad granular. |
 | `show_activity` | boolean, default true | Privacidad granular. |
 | `show_last_seen` | boolean, default false | Evita exponer actividad por defecto. |
-| `signature` | text nullable | Firma escapada, con límite estricto. |
+| `signature_text` | text nullable | Firma de texto saneada y escapada, máximo 500 caracteres. |
+| `signature_image` | string nullable | Ruta interna de imagen validada (JPG, PNG, WebP o GIF), máximo 2 MB y 600 × 180 px. |
 | `signature_enabled` | boolean, default true | Permite ocultarla sin borrar contenido. |
+| `show_signatures` | boolean, default true | Preferencia del lector para ocultar todas las firmas. |
+| `signature_suspended_until` | timestamp nullable | Moderación temporal de una firma; no modifica roles ni permisos. |
 | `forum_posts_count` | unsigned bigint, default 0, index | Contador visible y base de rango automático. |
 | `last_activity_at` | timestamp nullable, index | Actividad comunitaria; distinta de login. |
 
@@ -681,7 +684,7 @@ Evitar duplicados: una respuesta con mención no debe producir simultáneamente 
 - `components/forum/report-modal.blade.php`
 - `components/forum/composer.blade.php`
 
-La firma se renderiza debajo del post solo si el autor la tiene habilitada, el post permite mostrarla y el visor puede ver el perfil. Debe ser texto escapado; no usar `{!! !!}` con contenido del usuario.
+La firma se renderiza debajo del post solo si el autor la tiene habilitada, no está suspendida y el visor tiene activada la preferencia `show_signatures`. Debe ser texto saneado y escapado; no usar `{!! !!}` con contenido del usuario. No se interpreta HTML ni URLs, y las publicaciones consecutivas de la misma persona pueden omitir la firma para reducir repetición visual.
 
 El CSS comunitario nuevo puede vivir en `public/assets/css/community.css` cargado después de `style.css`, usando las variables existentes. Esto reduce el riesgo de regresiones en las 3 143 líneas del archivo principal. Más adelante se puede consolidar, pero no durante la primera entrega funcional.
 
