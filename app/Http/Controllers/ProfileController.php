@@ -33,7 +33,7 @@ class ProfileController extends Controller
 
         $user->load([
             'communityRank',
-            'communityBadges' => fn ($query) => $query->active()->orderBy('sort_order'),
+            'badges' => fn ($query) => $query->active()->ordered(),
         ]);
 
         $user->loadCount([

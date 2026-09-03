@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\CommunityBadge;
+use App\Models\Badge;
 use App\Models\CommunityRank;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -30,7 +30,7 @@ class AdminCommunityProfileTest extends TestCase
             'is_special' => true,
             'is_active' => true,
         ]);
-        $legacyBadge = CommunityBadge::query()->where('slug', 'miembro-historico')->firstOrFail();
+        $legacyBadge = Badge::query()->where('slug', 'miembro-historico')->firstOrFail();
 
         $this->actingAs($admin)
             ->putJson(route('admin.users.update', $user), [
@@ -60,9 +60,9 @@ class AdminCommunityProfileTest extends TestCase
         $this->assertTrue($user->legacy_verified);
         $this->assertSame('2007-06-15', $user->legacy_joined_at?->format('Y-m-d'));
         $this->assertSame('private', $user->profile_visibility);
-        $this->assertDatabaseHas('community_badge_user', [
+        $this->assertDatabaseHas('badge_user', [
             'user_id' => $user->id,
-            'community_badge_id' => $legacyBadge->id,
+            'badge_id' => $legacyBadge->id,
             'awarded_by' => $admin->id,
         ]);
     }

@@ -233,7 +233,7 @@
                         @forelse($communityBadges as $communityBadge)
                             <div class="col-md-6 col-xl-4">
                                 <label class="form-check form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" name="community_badges[]" value="{{ $communityBadge->id }}" @checked(in_array($communityBadge->id, old('community_badges', $user->communityBadges->pluck('id')->all())))>
+                                    <input class="form-check-input" type="checkbox" name="community_badges[]" value="{{ $communityBadge->id }}" @checked(in_array($communityBadge->id, old('community_badges', $user->badges->pluck('id')->all())))>
                                     <span class="form-check-label">{{ $communityBadge->icon }} {{ $communityBadge->name }}</span>
                                 </label>
                             </div>

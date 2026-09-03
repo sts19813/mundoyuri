@@ -110,7 +110,7 @@
                                 @if($member->is_legacy)
                                     <span class="community-badge community-badge-legacy"><span aria-hidden="true">✦</span> Miembro histórico</span>
                                 @endif
-                                @foreach($member->communityBadges as $badge)
+                                @foreach($member->badges as $badge)
                                     @unless($member->is_legacy && $badge->slug === 'miembro-historico')
                                         <x-community.badge :badge="$badge" />
                                     @endunless

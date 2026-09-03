@@ -67,7 +67,7 @@
                     <span class="badge badge-light-info">{{ ucfirst($user->profile_visibility) }}</span>
                     @if($user->communityRank)<span class="badge badge-light-primary">{{ $user->communityRank->name }}</span>@endif
                     @if($user->is_legacy)<span class="badge badge-light-warning">Miembro histórico</span>@endif
-                    @foreach($user->communityBadges as $badge)
+                    @foreach($user->badges as $badge)
                         <span class="badge badge-light-success">{{ $badge->icon }} {{ $badge->name }}</span>
                     @endforeach
                 </div>

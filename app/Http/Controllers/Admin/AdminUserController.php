@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\CommunityBadge;
+use App\Models\Badge;
 use App\Models\CommunityRank;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class AdminUserController extends Controller
     public function index()
     {
         $users = User::query()
-            ->with(['roles', 'permissions', 'communityRank', 'communityBadges'])
+            ->with(['roles', 'permissions', 'communityRank', 'badges'])
             ->latest()
             ->get();
         $roles = Role::query()->with('permissions')->orderBy('name')->get();
@@ -77,7 +77,7 @@ class AdminUserController extends Controller
         }
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $user->load(['roles', 'permissions', 'communityRank', 'communityBadges']);
+        $user->load(['roles', 'permissions', 'communityRank', 'badges']);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -91,7 +91,7 @@ class AdminUserController extends Controller
 
     public function show(User $user)
     {
-        $user->load(['communityRank', 'communityBadges']);
+        $user->load(['communityRank', 'badges']);
 
         return view('admin.users.show', compact('user'));
     }
@@ -102,7 +102,7 @@ class AdminUserController extends Controller
         $communityRanks = $this->assignableCommunityRanks();
         $communityBadges = $this->assignableCommunityBadges();
 
-        $user->load('communityBadges');
+        $user->load('badges');
 
         return view('admin.users.edit', compact('user', 'roles', 'communityRanks', 'communityBadges'));
     }
@@ -128,7 +128,7 @@ class AdminUserController extends Controller
             'community_badges' => ['sometimes', 'array'],
             'community_badges.*' => [
                 'integer',
-                Rule::exists('community_badges', 'id')->where('is_active', true),
+                Rule::exists('badges', 'id')->where('is_active', true),
             ],
             'community_badges_present' => ['sometimes', 'boolean'],
             'is_legacy' => ['sometimes', 'boolean'],
@@ -170,10 +170,12 @@ class AdminUserController extends Controller
 
         if ($request->boolean('community_badges_present')) {
             $badgeIds = collect($validated['community_badges'] ?? [])->map(fn (int|string $badgeId): int => (int) $badgeId);
-            $changes = $user->communityBadges()->sync($badgeIds);
+            $currentBadgeIds = $user->badges()->pluck('badges.id');
 
-            foreach ($changes['attached'] as $badgeId) {
-                $user->communityBadges()->updateExistingPivot($badgeId, [
+            $user->badges()->detach($currentBadgeIds->diff($badgeIds));
+
+            foreach ($badgeIds->diff($currentBadgeIds) as $badgeId) {
+                $user->badges()->attach($badgeId, [
                     'awarded_by' => $request->user()->id,
                     'awarded_at' => now(),
                 ]);
@@ -182,7 +184,7 @@ class AdminUserController extends Controller
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $user->load(['roles', 'permissions', 'communityRank', 'communityBadges']);
+        $user->load(['roles', 'permissions', 'communityRank', 'badges']);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -261,7 +263,7 @@ class AdminUserController extends Controller
             'profile_visibility' => $user->profile_visibility,
             'community_rank_id' => $user->community_rank_id,
             'community_rank' => $user->communityRank?->name,
-            'community_badges' => $user->communityBadges->pluck('id')->values(),
+            'community_badges' => $user->badges->pluck('id')->values(),
             'is_legacy' => (bool) $user->is_legacy,
             'legacy_joined_at' => $user->legacy_joined_at?->format('Y-m-d'),
             'legacy_source' => $user->legacy_source,
@@ -283,10 +285,9 @@ class AdminUserController extends Controller
 
     private function assignableCommunityBadges()
     {
-        return CommunityBadge::query()
+        return Badge::query()
             ->active()
-            ->orderBy('sort_order')
-            ->orderBy('name')
+            ->ordered()
             ->get();
     }
 

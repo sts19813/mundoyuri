@@ -56,7 +56,7 @@
                             @if($profileUser->is_legacy)
                                 <span class="community-badge community-badge-legacy"><span aria-hidden="true">✦</span> Miembro histórico de Mundo Yuri</span>
                             @endif
-                            @foreach($profileUser->communityBadges as $badge)
+                            @foreach($profileUser->badges as $badge)
                                 @unless($profileUser->is_legacy && $badge->slug === 'miembro-historico')
                                     <x-community.badge :badge="$badge" />
                                 @endunless

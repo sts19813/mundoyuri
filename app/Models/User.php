@@ -69,11 +69,17 @@ class User extends Authenticatable
         return $this->belongsTo(CommunityRank::class);
     }
 
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(Badge::class, 'badge_user')
+            ->withPivot(['awarded_by', 'awarded_at', 'note'])
+            ->withTimestamps();
+    }
+
+    /** @deprecated Use badges(). */
     public function communityBadges(): BelongsToMany
     {
-        return $this->belongsToMany(CommunityBadge::class, 'community_badge_user')
-            ->withPivot(['awarded_by', 'reason', 'awarded_at'])
-            ->withTimestamps();
+        return $this->badges();
     }
 
     public function submittedSeries(): HasMany

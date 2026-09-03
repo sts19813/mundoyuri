@@ -18,7 +18,7 @@ class CommunityController extends Controller
             ->visibleInCommunityDirectory()
             ->with([
                 'communityRank',
-                'communityBadges' => fn ($query) => $query->active()->orderBy('sort_order'),
+                'badges' => fn ($query) => $query->active()->ordered(),
             ]);
 
         if ($search = trim((string) ($filters['q'] ?? ''))) {
