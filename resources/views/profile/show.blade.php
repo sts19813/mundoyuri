@@ -226,7 +226,7 @@
                         </section>
                     @endif
 
-                    @if(filled($profileUser->signature_text) || $profileUser->signatureImageUrl())
+                    @if($profileUser->canDisplaySignatureTo(auth()->user()))
                         <section class="profile-panel community-profile-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
                             <span class="profile-panel-kicker">Firma</span>
                             @if(filled($profileUser->signature_text))

@@ -136,13 +136,17 @@ class ProfileController extends Controller
             'biography' => $validated['biography'] ?? null,
         ]);
 
-        foreach (['signature_text', 'location', 'website', 'occupation', 'interests'] as $field) {
+        foreach (['location', 'website', 'occupation', 'interests'] as $field) {
             if ($request->exists($field)) {
                 $user->{$field} = $validated[$field] ?? null;
             }
         }
 
-        foreach (['profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity'] as $field) {
+        if ($request->exists('signature_text') && ! $user->signatureIsSuspended()) {
+            $user->signature_text = $this->sanitizeSignatureText($validated['signature_text'] ?? null);
+        }
+
+        foreach (['profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_enabled', 'show_signatures'] as $field) {
             if ($request->exists($field)) {
                 $user->{$field} = str_starts_with($field, 'show_')
                     ? $request->boolean($field)
@@ -232,6 +236,20 @@ class ProfileController extends Controller
         if ($user->signature_image) {
             Storage::disk('public')->delete($user->signature_image);
         }
+    }
+
+    private function sanitizeSignatureText(?string $signature): ?string
+    {
+        if ($signature === null) {
+            return null;
+        }
+
+        $signature = preg_replace('#<(script|style)\b[^>]*>.*?</\1>#is', '', $signature) ?? '';
+        $signature = strip_tags($signature);
+        $signature = preg_replace('/[^\P{C}\n\t]/u', '', $signature) ?? '';
+        $signature = trim($signature);
+
+        return $signature === '' ? null : $signature;
     }
 
     private function connectionsView(User $user, string $type): View

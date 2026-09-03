@@ -2318,8 +2318,8 @@
     .community-profile-signature img,
     .community-signature-upload img {
         display: block;
-        max-width: min(100%, 800px);
-        max-height: 300px;
+        max-width: min(100%, 600px);
+        max-height: 180px;
         margin-top: 14px;
         border-radius: 10px;
         object-fit: contain;
@@ -2410,6 +2410,32 @@
         margin: 3px 0 12px;
         color: var(--muted);
         font-size: .68rem;
+    }
+
+    .community-post-signature {
+        max-width: 600px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(244, 114, 182, .18);
+    }
+
+    .community-post-signature p {
+        margin: 0;
+        color: rgba(232, 218, 235, .78);
+        font-size: .75rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+    }
+
+    .community-post-signature img {
+        display: block;
+        max-width: min(100%, 600px);
+        max-height: 180px;
+        width: auto;
+        height: auto;
+        margin-top: 9px;
+        border-radius: 8px;
+        object-fit: contain;
     }
 
     .community-directory-page {

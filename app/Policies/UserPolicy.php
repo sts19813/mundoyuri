@@ -40,4 +40,9 @@ class UserPolicy
 
         return Response::denyAsNotFound();
     }
+
+    public function manageSignature(User $user, User $profileUser): bool
+    {
+        return $user->isAdmin();
+    }
 }

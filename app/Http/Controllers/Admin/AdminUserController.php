@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Badge;
 use App\Models\CommunityRank;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -227,6 +229,40 @@ class AdminUserController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    public function destroySignature(User $user): RedirectResponse
+    {
+        $this->authorize('manageSignature', $user);
+
+        if ($user->signature_image) {
+            Storage::disk('public')->delete($user->signature_image);
+        }
+
+        $user->update([
+            'signature_text' => null,
+            'signature_image' => null,
+            'signature_enabled' => false,
+        ]);
+
+        return back()->with('success', 'La firma del usuario fue eliminada.');
+    }
+
+    public function updateSignatureSuspension(Request $request, User $user): RedirectResponse
+    {
+        $this->authorize('manageSignature', $user);
+
+        $validated = $request->validate([
+            'signature_suspended_until' => ['nullable', 'date', 'after:now'],
+        ]);
+
+        $user->update([
+            'signature_suspended_until' => $validated['signature_suspended_until'] ?? null,
+        ]);
+
+        return back()->with('success', filled($validated['signature_suspended_until'] ?? null)
+            ? 'La firma fue suspendida temporalmente.'
+            : 'La suspensión temporal de firma fue retirada.');
     }
 
     public function destroy(User $user)

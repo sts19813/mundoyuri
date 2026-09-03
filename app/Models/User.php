@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'last_login_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography', 'profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_text', 'signature_image', 'location', 'website', 'occupation', 'interests', 'community_message_count', 'community_reputation', 'community_rank_id', 'is_legacy', 'legacy_joined_at', 'legacy_source', 'legacy_notes', 'legacy_verified', 'profile_claimed_at'])]
+#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'last_login_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'biography', 'profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_text', 'signature_image', 'signature_enabled', 'show_signatures', 'signature_suspended_until', 'location', 'website', 'occupation', 'interests', 'community_message_count', 'community_reputation', 'community_rank_id', 'is_legacy', 'legacy_joined_at', 'legacy_source', 'legacy_notes', 'legacy_verified', 'profile_claimed_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -32,6 +32,8 @@ class User extends Authenticatable
         'show_join_date' => true,
         'show_favorites' => true,
         'show_activity' => true,
+        'signature_enabled' => true,
+        'show_signatures' => true,
         'community_message_count' => 0,
         'community_reputation' => 0,
         'is_legacy' => false,
@@ -55,6 +57,9 @@ class User extends Authenticatable
             'show_join_date' => 'boolean',
             'show_favorites' => 'boolean',
             'show_activity' => 'boolean',
+            'signature_enabled' => 'boolean',
+            'show_signatures' => 'boolean',
+            'signature_suspended_until' => 'datetime',
             'community_message_count' => 'integer',
             'community_reputation' => 'integer',
             'is_legacy' => 'boolean',
@@ -225,6 +230,23 @@ class User extends Authenticatable
         return $this->signature_image
             ? Storage::disk('public')->url($this->signature_image)
             : null;
+    }
+
+    public function signatureIsSuspended(): bool
+    {
+        return $this->signature_suspended_until?->isFuture() ?? false;
+    }
+
+    public function hasEnabledSignature(): bool
+    {
+        return $this->signature_enabled
+            && ! $this->signatureIsSuspended()
+            && (filled($this->signature_text) || filled($this->signature_image));
+    }
+
+    public function canDisplaySignatureTo(?User $viewer): bool
+    {
+        return $this->hasEnabledSignature() && ($viewer?->show_signatures ?? true);
     }
 
     public function publicProfileUrl(): string

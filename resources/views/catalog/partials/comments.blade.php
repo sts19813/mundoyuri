@@ -1,6 +1,7 @@
 @php
     $commentCount = $comments->sum(fn ($comment) => 1 + $comment->replies->count());
     $replyTo = (int) old('parent_id');
+    $previousRootSignatureUserId = null;
 @endphp
 
 <div class="comments-section mt-5">
@@ -37,6 +38,7 @@
                             <small class="text-muted">{{ $comment->displayTime() }}</small>
                         </div>
                         <p class="mb-2">{{ $comment->body }}</p>
+                        <x-community.signature :user="$comment->user" :previous-user-id="$previousRootSignatureUserId" />
                         <button class="btn btn-sm btn-light-primary" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $replyFormId }}">
                             Responder
                         </button>
@@ -83,6 +85,7 @@
 
                         @if($comment->replies->isNotEmpty())
                             <div class="mt-3 ps-3 border-start">
+                                @php($previousReplySignatureUserId = null)
                                 @foreach($comment->replies as $reply)
                                     <div class="d-flex gap-3 mb-3">
                                         <div class="flex-shrink-0">
@@ -107,8 +110,10 @@
                                                 <small class="text-muted">{{ $reply->displayTime() }}</small>
                                             </div>
                                             <div class="fs-7">{{ $reply->body }}</div>
+                                            <x-community.signature :user="$reply->user" :previous-user-id="$previousReplySignatureUserId" />
                                         </div>
                                     </div>
+                                    @php($previousReplySignatureUserId = $reply->user_id)
                                 @endforeach
                             </div>
                         @endif
@@ -116,6 +121,7 @@
                 </div>
             </div>
         </div>
+        @php($previousRootSignatureUserId = $comment->user_id)
     @empty
         <div class="text-muted mb-3">Todavía no hay comentarios.</div>
     @endforelse

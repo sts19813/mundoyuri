@@ -164,6 +164,56 @@
         <div class="card-header border-0">
             <div class="card-title m-0">
                 <div>
+                    <h3 class="fw-bold m-0">Firma comunitaria</h3>
+                    <div class="text-muted fs-7 mt-1">Puede eliminarse o suspenderse temporalmente sin afectar los permisos del usuario.</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body border-top p-9">
+            <div class="row g-6 align-items-start">
+                <div class="col-lg-7">
+                    <div class="fw-semibold mb-2">Estado actual</div>
+                    @if($user->signatureIsSuspended())
+                        <span class="badge badge-light-danger">Suspendida hasta {{ $user->signature_suspended_until->format('d/m/Y H:i') }}</span>
+                    @elseif($user->hasEnabledSignature())
+                        <span class="badge badge-light-success">Activa</span>
+                    @else
+                        <span class="badge badge-light">Sin firma activa</span>
+                    @endif
+
+                    @if(filled($user->signature_text))
+                        <p class="text-muted mt-4 mb-2" style="white-space: pre-wrap">{{ $user->signature_text }}</p>
+                    @endif
+                    @if($user->signatureImageUrl())
+                        <img src="{{ $user->signatureImageUrl() }}" alt="Firma actual" class="img-fluid rounded mt-2" style="max-width: 600px; max-height: 180px; object-fit: contain;">
+                    @endif
+                </div>
+                <div class="col-lg-5">
+                    <form method="POST" action="{{ route('admin.users.signature.suspension.update', $user) }}" class="mb-5">
+                        @csrf @method('PATCH')
+                        <label class="form-label">Suspender hasta</label>
+                        <input type="datetime-local" name="signature_suspended_until"
+                            value="{{ old('signature_suspended_until', $user->signature_suspended_until?->format('Y-m-d\\TH:i')) }}"
+                            class="form-control form-control-solid @error('signature_suspended_until') is-invalid @enderror">
+                        <div class="form-text">Déjalo vacío para retirar la suspensión.</div>
+                        @error('signature_suspended_until')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <button type="submit" class="btn btn-sm btn-light-warning mt-3">Guardar suspensión</button>
+                    </form>
+                    @if(filled($user->signature_text) || $user->signatureImageUrl())
+                        <form method="POST" action="{{ route('admin.users.signature.destroy', $user) }}" onsubmit="return confirm('¿Eliminar permanentemente esta firma?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-light-danger">Eliminar firma</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-5 mb-xl-10">
+        <div class="card-header border-0">
+            <div class="card-title m-0">
+                <div>
                     <h3 class="fw-bold m-0">Insignias comunitarias</h3>
                     <div class="text-muted fs-7 mt-1">Reconocimientos independientes del rango y de los permisos.</div>
                 </div>

@@ -93,7 +93,7 @@
                         <input type="hidden" name="avatar_remove" value="0" data-avatar-remove>
                         <input type="file" id="cover_image" name="cover_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-cover-input>
                         <input type="hidden" name="cover_remove" value="0" data-cover-remove>
-                        <input type="file" id="signature_image" name="signature_image" accept="image/png,image/jpeg,image/webp,image/gif" class="visually-hidden" data-signature-input>
+                        <input type="file" id="signature_image" name="signature_image" accept="image/png,image/jpeg,image/webp,image/gif" class="visually-hidden" data-signature-input @disabled($user->signatureIsSuspended())>
                         <input type="hidden" name="signature_remove" value="0" data-signature-remove>
 
                         <div class="profile-photo-controls">
@@ -194,6 +194,7 @@
                                     'show_join_date' => ['Mostrar fecha de ingreso', 'Incluye tu fecha de registro o fecha histórica.'],
                                     'show_favorites' => ['Mostrar favoritas', 'Comparte tus series favoritas en el perfil.'],
                                     'show_activity' => ['Mostrar actividad reciente', 'Muestra tus participaciones públicas más recientes.'],
+                                    'show_signatures' => ['Mostrar firmas', 'Oculta todas las firmas de las conversaciones para ti.'],
                                 ] as $field => [$label, $description])
                                     <label class="community-privacy-option">
                                         <input type="hidden" name="{{ $field }}" value="0">
@@ -206,16 +207,26 @@
 
                         <fieldset class="community-profile-settings">
                             <legend>Firma comunitaria</legend>
-                            <p>La firma quedará preparada para aparecer debajo de tus respuestas cuando se activen los foros.</p>
+                            <p>Se muestra debajo de tus participaciones cuando la persona que lee tenga activadas las firmas.</p>
+                            @if($user->signatureIsSuspended())
+                                <div class="portal-alert portal-alert-error" role="alert">
+                                    Tu firma está suspendida hasta {{ $user->signature_suspended_until->translatedFormat('d M Y, H:i') }}.
+                                </div>
+                            @endif
+                            <label class="community-privacy-option mb-4">
+                                <input type="hidden" name="signature_enabled" value="0" @disabled($user->signatureIsSuspended())>
+                                <input type="checkbox" name="signature_enabled" value="1" @checked((bool) old('signature_enabled', $user->signature_enabled)) @disabled($user->signatureIsSuspended())>
+                                <span><strong>Activar mi firma</strong><small>Conserva el texto y la imagen cuando la desactives.</small></span>
+                            </label>
                             <div class="profile-field">
-                                <label for="signature_text">Texto de firma <span>Máximo 1000 caracteres</span></label>
-                                <textarea id="signature_text" name="signature_text" rows="4" maxlength="1000" class="@error('signature_text') is-invalid @enderror">{{ old('signature_text', $user->signature_text) }}</textarea>
+                                <label for="signature_text">Texto de firma <span>Máximo 500 caracteres</span></label>
+                                <textarea id="signature_text" name="signature_text" rows="4" maxlength="500" @disabled($user->signatureIsSuspended()) class="@error('signature_text') is-invalid @enderror">{{ old('signature_text', $user->signature_text) }}</textarea>
                                 @error('signature_text')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>
                             <div class="community-signature-upload">
                                 <div>
                                     <strong>Imagen de firma</strong>
-                                    <span>JPG, PNG, WebP o GIF · máximo 2 MB y 800 × 300 px</span>
+                                    <span>JPG, PNG, WebP o GIF · máximo 2 MB y 600 × 180 px</span>
                                 </div>
                                 @if($user->signatureImageUrl())
                                     <img src="{{ $user->signatureImageUrl() }}" alt="Tu firma actual" data-signature-preview>
@@ -223,8 +234,8 @@
                                     <img src="" alt="Vista previa de la firma" class="d-none" data-signature-preview>
                                 @endif
                                 <div class="profile-photo-actions">
-                                    <label for="signature_image" class="profile-btn profile-btn-soft">Elegir imagen</label>
-                                    <button type="button" class="profile-btn profile-btn-text" data-signature-clear>Quitar imagen</button>
+                                    <label for="signature_image" class="profile-btn profile-btn-soft @if($user->signatureIsSuspended()) disabled @endif">Elegir imagen</label>
+                                    <button type="button" class="profile-btn profile-btn-text" data-signature-clear @disabled($user->signatureIsSuspended())>Quitar imagen</button>
                                 </div>
                                 @error('signature_image')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>

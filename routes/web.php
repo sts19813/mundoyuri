@@ -161,6 +161,10 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     // Gestión de Usuarios
     Route::patch('/usuarios/{user}/notificaciones-por-correo', [AdminUserController::class, 'updateEmailNotifications'])
         ->name('admin.users.email-notifications.update');
+    Route::delete('/usuarios/{user}/firma', [AdminUserController::class, 'destroySignature'])
+        ->name('admin.users.signature.destroy');
+    Route::patch('/usuarios/{user}/firma/suspension', [AdminUserController::class, 'updateSignatureSuspension'])
+        ->name('admin.users.signature.suspension.update');
     Route::post('/usuarios/{user}/insignias', [AdminUserBadgeController::class, 'store'])
         ->name('admin.users.badges.store');
     Route::delete('/usuarios/{user}/insignias/{badge}', [AdminUserBadgeController::class, 'destroy'])
