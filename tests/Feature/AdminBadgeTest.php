@@ -22,6 +22,12 @@ class AdminBadgeTest extends TestCase
 
     public function test_initial_badges_exist_without_automatic_assignments(): void
     {
+        User::factory()->create([
+            'is_legacy' => true,
+            'legacy_joined_at' => '2007-06-01',
+            'legacy_verified' => true,
+        ]);
+
         $this->assertDatabaseHas('badges', ['slug' => 'miembro-historico', 'type' => 'legacy']);
         $this->assertDatabaseHas('badges', ['slug' => 'pionera-2007', 'type' => 'legacy']);
         $this->assertDatabaseHas('badges', ['slug' => 'fundadora', 'type' => 'special']);
