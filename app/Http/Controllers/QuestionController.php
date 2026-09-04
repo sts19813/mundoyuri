@@ -26,6 +26,7 @@ class QuestionController extends Controller
         $questions = ForumThread::query()
             ->questions()
             ->where('is_hidden', false)
+            ->whereHas('forum', fn ($query) => $query->active()->whereHas('category', fn ($category) => $category->active()))
             ->with(['author.badges', 'author.communityRank', 'forum', 'questionTags'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
@@ -48,7 +49,7 @@ class QuestionController extends Controller
 
     public function create(): View
     {
-        $forums = Forum::query()->with('category')->whereHas('category', fn ($query) => $query->active())
+        $forums = Forum::query()->active()->with('category')->whereHas('category', fn ($query) => $query->active())
             ->where('is_locked', false)->orderBy('forum_category_id')->orderBy('sort_order')->get()
             ->filter(fn (Forum $forum) => request()->user()?->can('createTopic', $forum));
 

@@ -24,4 +24,13 @@ class ForumModerationController extends Controller
             'posts' => ForumPost::query()->with(['thread', 'author'])->latest()->paginate(20, ['*'], 'posts'),
         ]);
     }
+
+    public function threads(Request $request): View
+    {
+        abort_unless($request->user()->shouldEnterAdminPanel(), 403);
+
+        return view('admin.forum-moderation.threads', [
+            'threads' => ForumThread::query()->with(['forum', 'author'])->latest()->paginate(30),
+        ]);
+    }
 }

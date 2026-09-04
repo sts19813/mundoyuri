@@ -256,7 +256,7 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
         ]);
 
     Route::resource('categorias-foros', AdminForumCategoryController::class)
-        ->except(['show', 'destroy'])
+        ->except('show')
         ->parameters(['categorias-foros' => 'forumCategory'])
         ->names([
             'index' => 'admin.forum-categories.index',
@@ -264,6 +264,7 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'store' => 'admin.forum-categories.store',
             'edit' => 'admin.forum-categories.edit',
             'update' => 'admin.forum-categories.update',
+            'destroy' => 'admin.forum-categories.destroy',
         ]);
 
     Route::resource('foros', AdminForumController::class)
@@ -277,6 +278,7 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'update' => 'admin.forums.update',
         ]);
 
+    Route::get('/temas-foros', [AdminForumModerationController::class, 'threads'])->name('admin.forum-topics.index');
     Route::get('/moderacion-foros', [AdminForumModerationController::class, 'index'])->name('admin.forum-moderation.index');
 
     Route::resource('roles', AdminRoleController::class)->parameters([

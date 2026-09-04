@@ -15,7 +15,8 @@ class ForumController extends Controller
         $categories = ForumCategory::query()
             ->active()
             ->with(['forums' => function ($query) use ($search): void {
-                $query->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
+                $query->active()
+                    ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
                     ->withCount(['threads as visible_threads_count' => fn ($query) => $query->where('is_hidden', false)])
                     ->with(['latestVisibleThread.latestVisiblePost.author']);
             }])

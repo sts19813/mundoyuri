@@ -39,10 +39,37 @@
                 </div>
 
                 @if($panelUser?->shouldEnterAdminPanel())
+                    <div class="menu-item mt-6 mb-2">
+                        <div class="menu-content">
+                            <span class="menu-heading fw-bold text-uppercase fs-7">Comunidad</span>
+                        </div>
+                    </div>
+
+                    @if($panelUser->isAdmin())
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.forum-categories.*') ? 'active' : '' }}" href="{{ route('admin.forum-categories.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-category fs-2"></i></span>
+                                <span class="menu-title">Categorías de foros</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.forums.*') ? 'active' : '' }}" href="{{ route('admin.forums.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-message-text-2 fs-2"></i></span>
+                                <span class="menu-title">Foros</span>
+                            </a>
+                        </div>
+                    @endif
+
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('admin.forum-topics.*') ? 'active' : '' }}" href="{{ route('admin.forum-topics.index') }}">
+                            <span class="menu-icon"><i class="ki-outline ki-message-text fs-2"></i></span>
+                            <span class="menu-title">Temas</span>
+                        </a>
+                    </div>
                     <div class="menu-item">
                         <a class="menu-link {{ request()->routeIs('admin.forum-moderation.*') ? 'active' : '' }}" href="{{ route('admin.forum-moderation.index') }}">
                             <span class="menu-icon"><i class="ki-outline ki-shield-tick fs-2"></i></span>
-                            <span class="menu-title">Moderación de foros</span>
+                            <span class="menu-title">Moderación</span>
                         </a>
                     </div>
                 @endif
@@ -112,12 +139,6 @@
                             <a class="menu-link {{ request()->routeIs('admin.community-ranks.*') ? 'active' : '' }}" href="{{ route('admin.community-ranks.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-award fs-2"></i></span>
                                 <span class="menu-title">Rangos comunitarios</span>
-                            </a>
-                        </div>
-                        <div class="menu-item">
-                            <a class="menu-link {{ request()->routeIs('admin.forum-categories.*', 'admin.forums.*') ? 'active' : '' }}" href="{{ route('admin.forum-categories.index') }}">
-                                <span class="menu-icon"><i class="ki-outline ki-message-text-2 fs-2"></i></span>
-                                <span class="menu-title">Estructura de foros</span>
                             </a>
                         </div>
                         <div class="menu-item">

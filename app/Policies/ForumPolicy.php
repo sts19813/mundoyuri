@@ -9,12 +9,13 @@ class ForumPolicy
 {
     public function view(?User $user, Forum $forum): bool
     {
-        return $forum->category->is_active || $user?->isAdmin() === true;
+        return ($forum->is_active && $forum->category->is_active) || $user?->isAdmin() === true;
     }
 
     public function createTopic(User $user, Forum $forum): bool
     {
-        return ! $forum->is_locked
+        return $forum->is_active
+            && ! $forum->is_locked
             && $forum->category->is_active
             && $forum->acceptsRole($user);
     }

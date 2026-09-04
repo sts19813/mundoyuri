@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,11 +13,11 @@ class Forum extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['forum_category_id', 'name', 'slug', 'description', 'icon', 'sort_order', 'is_locked', 'minimum_role'];
+    protected $fillable = ['forum_category_id', 'name', 'slug', 'description', 'icon', 'sort_order', 'is_active', 'is_locked', 'minimum_role'];
 
     protected function casts(): array
     {
-        return ['sort_order' => 'integer', 'is_locked' => 'boolean'];
+        return ['sort_order' => 'integer', 'is_active' => 'boolean', 'is_locked' => 'boolean'];
     }
 
     public function category(): BelongsTo
@@ -32,6 +33,11 @@ class Forum extends Model
     public function latestVisibleThread(): HasOne
     {
         return $this->hasOne(ForumThread::class)->where('is_hidden', false)->latestOfMany('last_post_at');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 
     public function acceptsRole(?User $user): bool

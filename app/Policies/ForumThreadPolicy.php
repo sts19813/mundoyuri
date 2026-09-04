@@ -14,7 +14,7 @@ class ForumThreadPolicy
             return Response::allow();
         }
 
-        return ! $thread->is_hidden && ! $thread->trashed() && $thread->forum->category->is_active
+        return ! $thread->is_hidden && ! $thread->trashed() && $thread->forum->is_active && $thread->forum->category->is_active
             ? Response::allow()
             : Response::denyAsNotFound();
     }

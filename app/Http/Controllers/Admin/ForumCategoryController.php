@@ -44,4 +44,18 @@ class ForumCategoryController extends Controller
 
         return redirect()->route('admin.forum-categories.index')->with('success', 'Categoría actualizada correctamente.');
     }
+
+    public function destroy(ForumCategory $forumCategory): RedirectResponse
+    {
+        $this->authorize('manage', ForumCategory::class);
+
+        if ($forumCategory->forums()->exists()) {
+            return redirect()->route('admin.forum-categories.index')
+                ->with('error', 'No se puede eliminar una categoría que todavía contiene foros. Desactívala o mueve sus foros primero.');
+        }
+
+        $forumCategory->delete();
+
+        return redirect()->route('admin.forum-categories.index')->with('success', 'Categoría eliminada correctamente.');
+    }
 }
