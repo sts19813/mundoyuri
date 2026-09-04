@@ -110,6 +110,18 @@
 
                         <div class="profile-photo-controls profile-photo-controls-bordered">
                             <div>
+                                <strong>Video de portada de YouTube</strong>
+                                <span>Opcional. Se reproduce sin sonido en tu perfil público y tiene prioridad visual sobre la imagen.</span>
+                            </div>
+                            <div class="profile-field profile-cover-video-field">
+                                <label for="cover_video_url">Enlace de YouTube</label>
+                                <input id="cover_video_url" name="cover_video_url" type="url" maxlength="2048" value="{{ old('cover_video_url', $user->cover_video_url) }}" placeholder="https://www.youtube.com/watch?v=…" class="@error('cover_video_url') is-invalid @enderror">
+                                @error('cover_video_url')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            </div>
+                        </div>
+
+                        <div class="profile-photo-controls profile-photo-controls-bordered">
+                            <div>
                                 <strong>Foto de perfil</strong>
                                 <span>JPG, PNG o WebP · máximo 2 MB</span>
                             </div>

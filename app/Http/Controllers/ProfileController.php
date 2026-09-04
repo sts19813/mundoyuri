@@ -148,7 +148,7 @@ class ProfileController extends Controller
             'biography' => $validated['biography'] ?? null,
         ]);
 
-        foreach (['location', 'website', 'occupation', 'interests'] as $field) {
+        foreach (['location', 'website', 'occupation', 'interests', 'cover_video_url'] as $field) {
             if ($request->exists($field)) {
                 $user->{$field} = $validated[$field] ?? null;
             }

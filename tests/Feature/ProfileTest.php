@@ -77,6 +77,41 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertExists($user->cover_image);
     }
 
+    public function test_profile_can_use_a_safe_youtube_cover_video(): void
+    {
+        $user = User::factory()->create(['alias' => 'luna-yuri']);
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'email' => $user->email,
+                'cover_video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('https://youtu.be/dQw4w9WgXcQ', $user->refresh()->cover_video_url);
+
+        $this->get($user->publicProfileUrl())
+            ->assertOk()
+            ->assertSee('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertDontSee('profile-breadcrumb', false);
+    }
+
+    public function test_profile_rejects_non_youtube_cover_videos(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'email' => $user->email,
+                'cover_video_url' => 'https://example.com/video',
+            ])
+            ->assertSessionHasErrors('cover_video_url');
+
+        $this->assertNull($user->refresh()->cover_video_url);
+    }
+
     public function test_public_profile_is_visible_without_exposing_private_email(): void
     {
         $user = User::factory()->create([

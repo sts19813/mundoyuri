@@ -18,24 +18,22 @@
         <div class="profile-ambient profile-ambient-one"></div>
         <div class="profile-ambient profile-ambient-two"></div>
 
-        <div class="container-xl px-4 position-relative">
-            <nav class="profile-breadcrumb" aria-label="Migas de pan">
-                <a href="{{ route('home') }}">Inicio</a>
-                <span>›</span>
-                <span>Perfil de {{ $profileUser->alias ?: $profileUser->name }}</span>
-            </nav>
-
+        <div class="container-xl px-4 position-relative public-profile-alerts">
             @if(session('success'))
                 <div class="portal-alert portal-alert-success" role="status">{{ session('success') }}</div>
             @endif
             @if(session('error'))
                 <div class="portal-alert portal-alert-error" role="alert">{{ session('error') }}</div>
             @endif
+        </div>
 
-            <section class="profile-hero-card public-profile-hero">
-                @if($profileUser->coverImageUrl())
-                    <img src="{{ $profileUser->coverImageUrl() }}" alt="Portada de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-cover-media">
-                @endif
+        <section class="profile-hero-card public-profile-hero public-profile-hero-full">
+            @if($profileUser->coverImageUrl())
+                <img src="{{ $profileUser->coverImageUrl() }}" alt="Portada de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-cover-media">
+            @endif
+            @if($profileUser->coverVideoEmbedUrl())
+                <iframe src="{{ $profileUser->coverVideoEmbedUrl() }}" class="profile-cover-video" title="Video de portada de {{ $profileUser->alias ?: $profileUser->name }}" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+            @endif
                 <div class="profile-cover-overlay"></div>
                 <div class="profile-hero-pattern"></div>
 
@@ -120,8 +118,9 @@
                         {{ $profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad' }}
                     </div>
                 </div>
-            </section>
+        </section>
 
+        <div class="container-xl px-4 position-relative public-profile-content">
             <div class="profile-grid public-profile-grid">
                 <div class="public-profile-main">
                     <section class="profile-panel profile-panel-main public-profile-about">

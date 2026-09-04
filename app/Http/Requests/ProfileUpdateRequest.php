@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use App\Rules\SafeSignatureImage;
+use App\Support\YouTubeVideoUrl;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -39,6 +40,11 @@ class ProfileUpdateRequest extends FormRequest
             'avatar_remove' => ['nullable', 'boolean'],
             'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'cover_remove' => ['nullable', 'boolean'],
+            'cover_video_url' => ['nullable', 'string', 'max:2048', function (string $attribute, mixed $value, Closure $fail): void {
+                if (filled($value) && ! YouTubeVideoUrl::isValid($value)) {
+                    $fail('Ingresa un enlace válido de un video de YouTube.');
+                }
+            }],
             'biography' => ['nullable', 'string', 'max:600'],
             'profile_visibility' => ['sometimes', Rule::in(['public', 'members', 'private'])],
             'show_last_seen' => ['sometimes', 'boolean'],
