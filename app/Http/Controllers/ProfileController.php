@@ -16,6 +16,18 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
+     * Send the signed-in member to the same public profile presentation seen by
+     * the community. Profile changes remain deliberately separate at /profile/edit.
+     */
+    public function showCurrent(Request $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return Redirect::to($user->publicProfileUrl());
+    }
+
+    /**
      * Display the user's profile form.
      */
     public function edit(Request $request): View

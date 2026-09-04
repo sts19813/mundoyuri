@@ -77,7 +77,7 @@
                             </div>
                         </div>
                         <div class="portal-dropdown-divider"></div>
-                        <a href="{{ route('profile.edit') }}" class="portal-dropdown-item" role="menuitem">
+                        <a href="{{ route('profile.show') }}" class="portal-dropdown-item" role="menuitem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
                             Mi perfil
                         </a>

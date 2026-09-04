@@ -1969,6 +1969,17 @@
         text-decoration: none;
     }
 
+    .public-profile-badge-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .public-profile-badges-empty {
+        min-height: 130px;
+    }
+
     .public-profile-coming-soon {
         display: flex;
         align-items: flex-start;
@@ -2226,6 +2237,72 @@
 
     .community-badge-legacy {
         --community-accent: #f43f8e;
+    }
+
+    .community-badge-tooltip {
+        position: relative;
+        cursor: help;
+        outline: none;
+    }
+
+    .community-badge-tooltip:focus-visible {
+        box-shadow: 0 0 0 3px rgba(244, 114, 182, .28);
+    }
+
+    .community-badge-tooltip-copy {
+        position: absolute;
+        z-index: 15;
+        bottom: calc(100% + 10px);
+        left: 50%;
+        width: max-content;
+        max-width: min(260px, 78vw);
+        padding: 10px 12px;
+        border: 1px solid rgba(244, 114, 182, .28);
+        border-radius: 10px;
+        color: #f5edf3;
+        background: #241521;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .3);
+        font-size: .73rem;
+        font-weight: 400;
+        line-height: 1.45;
+        opacity: 0;
+        pointer-events: none;
+        text-align: left;
+        transform: translate(-50%, 5px);
+        transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+        visibility: hidden;
+        white-space: normal;
+    }
+
+    .community-badge-tooltip-copy::after {
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        width: 9px;
+        height: 9px;
+        border-right: 1px solid rgba(244, 114, 182, .28);
+        border-bottom: 1px solid rgba(244, 114, 182, .28);
+        background: #241521;
+        content: '';
+        transform: translateX(-50%) rotate(45deg);
+    }
+
+    .community-badge-tooltip-copy strong,
+    .community-badge-tooltip-copy span {
+        display: block;
+    }
+
+    .community-badge-tooltip-copy strong {
+        margin-bottom: 2px;
+        color: #fff;
+        font-size: .76rem;
+    }
+
+    .community-badge-tooltip:hover .community-badge-tooltip-copy,
+    .community-badge-tooltip:focus-visible .community-badge-tooltip-copy {
+        opacity: 1;
+        transform: translate(-50%, 0);
+        visibility: visible;
     }
 
     .community-rank-legacy {

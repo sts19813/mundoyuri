@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Badge;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\User;
@@ -14,15 +15,17 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_is_displayed(): void
+    public function test_my_profile_redirects_to_the_public_profile_presentation(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['alias' => 'luna-yuri']);
 
-        $response = $this
-            ->actingAs($user)
-            ->get('/profile');
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertRedirect($user->publicProfileUrl());
 
-        $response->assertOk();
+        $this->actingAs($user)
+            ->get('/profile/edit')
+            ->assertOk();
     }
 
     public function test_profile_information_can_be_updated(): void
@@ -38,7 +41,7 @@ class ProfileTest extends TestCase
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect(route('profile.edit'));
 
         $user->refresh();
 
@@ -63,7 +66,7 @@ class ProfileTest extends TestCase
                 'biography' => 'Me encantan las historias GL, el café y descubrir nuevas series.',
             ]);
 
-        $response->assertSessionHasNoErrors()->assertRedirect('/profile');
+        $response->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
 
         $user->refresh();
         $this->assertSame('yuri-fan', $user->alias);
@@ -96,6 +99,20 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('Editar mi perfil')
             ->assertSee(route('profile.edit'), false);
+    }
+
+    public function test_profile_displays_badges_with_an_accessible_description(): void
+    {
+        $user = User::factory()->create(['alias' => 'luna-yuri']);
+        $badge = Badge::query()->where('slug', 'fundadora')->firstOrFail();
+        $user->badges()->attach($badge, ['awarded_at' => now()]);
+
+        $this->get($user->publicProfileUrl())
+            ->assertOk()
+            ->assertSee('Insignias')
+            ->assertSee('Fundadora')
+            ->assertSee('Reconocimiento a quienes fundaron Mundo Yuri.')
+            ->assertSee('community-badge-tooltip', false);
     }
 
     public function test_cover_image_can_be_removed(): void
@@ -193,7 +210,7 @@ class ProfileTest extends TestCase
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect(route('profile.edit'));
 
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
