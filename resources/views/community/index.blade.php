@@ -32,7 +32,7 @@
             </header>
 
             <section class="profile-panel community-directory-tools" aria-label="Buscar y filtrar miembros">
-                <form action="{{ route('community.index') }}" method="GET" class="community-directory-form">
+                <form action="{{ route('community.members') }}" method="GET" class="community-directory-form">
                     <div class="profile-field community-search-field">
                         <label for="community-search">Buscar miembros</label>
                         <input id="community-search" name="q" type="search" value="{{ $filters['q'] ?? '' }}" placeholder="Nombre, alias o localización">
@@ -69,11 +69,11 @@
                 </form>
 
                 <div class="community-filter-chips" aria-label="Filtros rápidos">
-                    <a class="{{ empty($filters['filter']) ? 'is-active' : '' }}" href="{{ route('community.index') }}">Todos</a>
-                    <a class="{{ ($filters['filter'] ?? null) === 'new' ? 'is-active' : '' }}" href="{{ route('community.index', ['filter' => 'new']) }}">Miembros nuevos</a>
-                    <a class="{{ ($filters['filter'] ?? null) === 'oldest' ? 'is-active' : '' }}" href="{{ route('community.index', ['filter' => 'oldest']) }}">Más antiguos</a>
-                    <a class="{{ ($filters['filter'] ?? null) === 'active' ? 'is-active' : '' }}" href="{{ route('community.index', ['filter' => 'active']) }}">Más activos</a>
-                    <a class="{{ ($filters['filter'] ?? null) === 'legacy' ? 'is-active' : '' }}" href="{{ route('community.index', ['filter' => 'legacy']) }}">Miembros históricos</a>
+                    <a class="{{ empty($filters['filter']) ? 'is-active' : '' }}" href="{{ route('community.members') }}">Todos</a>
+                    <a class="{{ ($filters['filter'] ?? null) === 'new' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'new']) }}">Miembros nuevos</a>
+                    <a class="{{ ($filters['filter'] ?? null) === 'oldest' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'oldest']) }}">Más antiguos</a>
+                    <a class="{{ ($filters['filter'] ?? null) === 'active' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'active']) }}">Más activos</a>
+                    <a class="{{ ($filters['filter'] ?? null) === 'legacy' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'legacy']) }}">Miembros históricos</a>
                 </div>
             </section>
 
@@ -83,7 +83,7 @@
                     <h2>{{ $members->total() }} {{ $members->total() === 1 ? 'miembro' : 'miembros' }}</h2>
                 </div>
                 @if(request()->hasAny(['q', 'filter', 'rank', 'sort', 'direction']))
-                    <a href="{{ route('community.index') }}">Limpiar filtros</a>
+                    <a href="{{ route('community.members') }}">Limpiar filtros</a>
                 @endif
             </div>
 
@@ -135,7 +135,7 @@
                         <span aria-hidden="true">✦</span>
                         <h2>No encontramos miembros</h2>
                         <p>Prueba con otro nombre o elimina alguno de los filtros.</p>
-                        <a class="profile-btn profile-btn-soft" href="{{ route('community.index') }}">Ver toda la comunidad</a>
+                        <a class="profile-btn profile-btn-soft" href="{{ route('community.members') }}">Ver toda la comunidad</a>
                     </div>
                 @endforelse
             </div>

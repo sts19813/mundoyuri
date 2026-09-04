@@ -23,7 +23,7 @@ class CommunityDirectoryTest extends TestCase
         User::factory()->create(['name' => 'Perfil Privado', 'profile_visibility' => 'private']);
         User::factory()->create(['name' => 'Perfil Inactivo', 'profile_visibility' => 'public', 'is_active' => false]);
 
-        $this->get(route('community.index'))
+        $this->get(route('community.members'))
             ->assertOk()
             ->assertSee('Visible Yuri')
             ->assertSee($visible->publicProfileUrl(), false)
@@ -38,12 +38,12 @@ class CommunityDirectoryTest extends TestCase
         User::factory()->create(['name' => 'Luna Antigua', 'alias' => 'luna-rosa', 'is_legacy' => true]);
         User::factory()->create(['name' => 'Akari Moderna', 'alias' => 'akari']);
 
-        $this->get(route('community.index', ['q' => 'luna']))
+        $this->get(route('community.members', ['q' => 'luna']))
             ->assertOk()
             ->assertSee('Luna Antigua')
             ->assertDontSee('Akari Moderna');
 
-        $this->get(route('community.index', ['filter' => 'legacy']))
+        $this->get(route('community.members', ['filter' => 'legacy']))
             ->assertOk()
             ->assertSee('Luna Antigua')
             ->assertSee('Miembro histórico')
@@ -63,11 +63,11 @@ class CommunityDirectoryTest extends TestCase
             'community_message_count' => 250,
         ]);
 
-        $this->get(route('community.index', ['filter' => 'oldest']))
+        $this->get(route('community.members', ['filter' => 'oldest']))
             ->assertOk()
             ->assertSeeInOrder(['Primera Integrante', 'Integrante Activa']);
 
-        $this->get(route('community.index', ['sort' => 'messages', 'direction' => 'desc']))
+        $this->get(route('community.members', ['sort' => 'messages', 'direction' => 'desc']))
             ->assertOk()
             ->assertSeeInOrder(['Integrante Activa', 'Primera Integrante']);
     }
@@ -87,13 +87,13 @@ class CommunityDirectoryTest extends TestCase
         User::factory()->create(['name' => 'Yuri Fan Visible', 'community_message_count' => 80]);
         User::factory()->create(['name' => 'Fundadora Visible', 'community_rank_id' => $special->id]);
 
-        $this->get(route('community.index', ['rank' => $kohai->id]))
+        $this->get(route('community.members', ['rank' => $kohai->id]))
             ->assertOk()
             ->assertSee('Kohai Visible')
             ->assertDontSee('Yuri Fan Visible')
             ->assertDontSee('Fundadora Visible');
 
-        $this->get(route('community.index', ['rank' => $special->id]))
+        $this->get(route('community.members', ['rank' => $special->id]))
             ->assertOk()
             ->assertSee('Fundadora Visible')
             ->assertDontSee('Kohai Visible');

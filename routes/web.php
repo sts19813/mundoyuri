@@ -74,6 +74,7 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 Route::get('/comunidad', [CommunityController::class, 'index'])->name('community.index');
+Route::get('/comunidad/miembros', [CommunityController::class, 'members'])->name('community.members');
 Route::get('/comunidad/preguntas', [QuestionController::class, 'index'])->name('questions.index');
 Route::get('/comunidad/preguntas/nueva', [QuestionController::class, 'create'])->middleware('auth')->name('questions.create');
 Route::get('/comunidad/preguntas/{thread:slug}', [QuestionController::class, 'show'])->name('questions.show');

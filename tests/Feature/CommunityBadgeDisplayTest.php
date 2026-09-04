@@ -27,7 +27,7 @@ class CommunityBadgeDisplayTest extends TestCase
             ->assertOk()
             ->assertSee('Miembro Histórico');
 
-        $this->get(route('community.index'))
+        $this->get(route('community.members'))
             ->assertOk()
             ->assertSee('Yuri Distinguida')
             ->assertSee('Miembro Histórico');
@@ -48,7 +48,7 @@ class CommunityBadgeDisplayTest extends TestCase
         $badge->update(['is_active' => false]);
 
         $this->get($member->publicProfileUrl())->assertDontSee('Pionera 2007');
-        $this->get(route('community.index'))->assertDontSee('Pionera 2007');
+        $this->get(route('community.members'))->assertDontSee('Pionera 2007');
     }
 
     public function test_badges_are_visible_on_comments_and_replies(): void
