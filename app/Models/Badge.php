@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 
 class Badge extends Model
 {
@@ -18,6 +19,7 @@ class Badge extends Model
         'slug',
         'description',
         'icon',
+        'image_path',
         'type',
         'priority',
         'color',
@@ -46,6 +48,13 @@ class Badge extends Model
             ->using(LegacyProfileBadgeAward::class)
             ->withPivot(['awarded_by', 'awarded_at', 'note'])
             ->withTimestamps();
+    }
+
+    public function imageUrl(): ?string
+    {
+        return $this->image_path
+            ? Storage::disk('public')->url($this->image_path)
+            : null;
     }
 
     public function scopeActive(Builder $query): Builder

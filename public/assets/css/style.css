@@ -2345,6 +2345,17 @@
         font-size: .92rem;
     }
 
+    .community-badge-image {
+        width: 1.05em;
+        height: 1.05em;
+        object-fit: contain;
+    }
+
+    .community-badge-compact .community-badge-image {
+        width: 19px;
+        height: 19px;
+    }
+
     .community-rank-legacy {
         box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--community-accent) 16%, transparent);
     }

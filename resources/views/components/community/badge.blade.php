@@ -7,7 +7,11 @@
     @if($compact) aria-label="{{ $badge->name }}: {{ $badge->description ?: 'Reconocimiento de la comunidad Mundo Yuri.' }}" @endif
     @if($detailed) tabindex="0" aria-describedby="badge-description-{{ $badge->id }}" @endif
 >
-    <span aria-hidden="true">{{ $badge->icon ?: '✦' }}</span>
+    @if($badge->imageUrl())
+        <img src="{{ $badge->imageUrl() }}" alt="" class="community-badge-image">
+    @else
+        <span aria-hidden="true">{{ $badge->icon ?: '✦' }}</span>
+    @endif
     @unless($compact){{ $badge->name }}@endunless
     @if($detailed)
         <span class="community-badge-tooltip-copy" id="badge-description-{{ $badge->id }}" role="tooltip">
