@@ -1,4 +1,5 @@
 @php($editing = isset($legacyProfile))
+@php($selectedBadgeIds = old('badge_ids', $editing ? $legacyProfile->badges->pluck('id')->all() : []))
 
 <div class="card">
     <div class="card-body p-9">
@@ -88,6 +89,8 @@
 
         <input type="hidden" name="is_published" value="0">
         <label class="form-check form-switch form-check-custom form-check-solid"><input type="checkbox" name="is_published" value="1" class="form-check-input" @checked((bool) old('is_published', $legacyProfile->is_published ?? true))><span class="form-check-label"><strong class="d-block">Publicar en el archivo histórico</strong><small class="text-muted">Los perfiles no publicados solo se ven en administración.</small></span></label>
+
+        <div class="mt-7"><label class="form-label fw-bold text-gray-900 d-block">Insignias históricas</label><div class="row g-4">@foreach($badges as $badge)<div class="col-md-6"><label class="form-check form-check-custom form-check-solid"><input class="form-check-input" type="checkbox" name="badge_ids[]" value="{{ $badge->id }}" @checked(in_array($badge->id, $selectedBadgeIds))><span class="form-check-label">{{ $badge->icon }} {{ $badge->name }}</span></label></div>@endforeach</div></div>
     </div>
     <div class="card-footer d-flex justify-content-end gap-3"><a href="{{ route('admin.legacy-profiles.index') }}" class="btn btn-light">Cancelar</a><button type="submit" class="btn btn-primary">{{ $editing ? 'Guardar cambios' : 'Crear perfil histórico' }}</button></div>
 </div>

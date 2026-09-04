@@ -107,6 +107,15 @@ class LegacyProfileClaimService
             'profile_claimed_at' => $claimedAt,
         ]);
 
+        $legacyProfile->loadMissing('badges');
+        $claimant->badges()->syncWithoutDetaching(
+            $legacyProfile->badges->mapWithKeys(fn ($badge) => [$badge->id => [
+                'awarded_by' => $reviewer->id,
+                'awarded_at' => $claimedAt,
+                'note' => 'Insignia histórica preservada al aprobar la reclamación.',
+            ]])->all(),
+        );
+
         $this->log($legacyProfile, $reviewer, 'legacy_profile_claim_approved', $claim);
     }
 

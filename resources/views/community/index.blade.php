@@ -73,7 +73,7 @@
                     <a class="{{ ($filters['filter'] ?? null) === 'new' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'new']) }}">Miembros nuevos</a>
                     <a class="{{ ($filters['filter'] ?? null) === 'oldest' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'oldest']) }}">Más antiguos</a>
                     <a class="{{ ($filters['filter'] ?? null) === 'active' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'active']) }}">Más activos</a>
-                    <a class="{{ ($filters['filter'] ?? null) === 'legacy' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'legacy']) }}">Miembros históricos</a>
+                    <a href="{{ route('legacy-profiles.index') }}">Miembros históricos</a>
                 </div>
             </section>
 

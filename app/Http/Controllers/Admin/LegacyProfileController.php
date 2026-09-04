@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreLegacyProfileRequest;
 use App\Http\Requests\Admin\UpdateLegacyProfileRequest;
+use App\Models\Badge;
 use App\Models\LegacyProfile;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -22,7 +24,7 @@ class LegacyProfileController extends Controller
         $this->authorize('manage', LegacyProfile::class);
 
         $legacyProfiles = LegacyProfile::query()
-            ->with('claimedBy')
+            ->with(['claimedBy', 'badges'])
             ->latest()
             ->paginate(20);
 
@@ -33,7 +35,7 @@ class LegacyProfileController extends Controller
     {
         $this->authorize('manage', LegacyProfile::class);
 
-        return view('admin.legacy-profiles.create');
+        return view('admin.legacy-profiles.create', ['badges' => $this->availableBadges()]);
     }
 
     public function store(StoreLegacyProfileRequest $request): RedirectResponse
@@ -49,6 +51,8 @@ class LegacyProfileController extends Controller
             ]);
         }
 
+        $this->syncBadges($legacyProfile, $request->validated('badge_ids', []), $request->user());
+
         return redirect()->route('admin.legacy-profiles.index')->with('success', 'Perfil histórico creado correctamente.');
     }
 
@@ -56,7 +60,9 @@ class LegacyProfileController extends Controller
     {
         $this->authorize('manage', $legacyProfile);
 
-        return view('admin.legacy-profiles.edit', compact('legacyProfile'));
+        $legacyProfile->load('badges');
+
+        return view('admin.legacy-profiles.edit', ['legacyProfile' => $legacyProfile, 'badges' => $this->availableBadges()]);
     }
 
     public function update(UpdateLegacyProfileRequest $request, LegacyProfile $legacyProfile): RedirectResponse
@@ -80,6 +86,8 @@ class LegacyProfileController extends Controller
             ]);
         }
 
+        $this->syncBadges($legacyProfile, $request->validated('badge_ids', []), $request->user());
+
         return redirect()->route('admin.legacy-profiles.index')->with('success', 'Perfil histórico actualizado correctamente.');
     }
 
@@ -88,5 +96,23 @@ class LegacyProfileController extends Controller
         if ($legacyProfile->legacy_avatar_path) {
             Storage::disk('public')->delete($legacyProfile->legacy_avatar_path);
         }
+    }
+
+    private function availableBadges()
+    {
+        return Badge::query()->active()->ordered()->get();
+    }
+
+    /** @param array<int, int|string> $badgeIds */
+    private function syncBadges(LegacyProfile $legacyProfile, array $badgeIds, User $admin): void
+    {
+        $badgeIds = array_map('intval', $badgeIds);
+        $currentIds = $legacyProfile->badges()->pluck('badges.id')->all();
+
+        $legacyProfile->badges()->detach(array_diff($currentIds, $badgeIds));
+        $legacyProfile->badges()->attach(array_diff($badgeIds, $currentIds), [
+            'awarded_by' => $admin->id,
+            'awarded_at' => now(),
+        ]);
     }
 }

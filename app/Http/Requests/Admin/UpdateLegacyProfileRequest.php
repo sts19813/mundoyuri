@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Badge;
 use App\Models\LegacyProfile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -49,7 +50,10 @@ class UpdateLegacyProfileRequest extends FormRequest
             'legacy_source_description' => ['nullable', 'string', 'max:5000'],
             'evidence' => ['nullable', 'string', 'max:5000'],
             'admin_notes' => ['nullable', 'string', 'max:5000'],
+            'legacy_verified' => ['sometimes', 'boolean'],
             'is_published' => ['required', 'boolean'],
+            'badge_ids' => ['nullable', 'array'],
+            'badge_ids.*' => ['integer', Rule::exists(Badge::class, 'id')],
         ];
     }
 }

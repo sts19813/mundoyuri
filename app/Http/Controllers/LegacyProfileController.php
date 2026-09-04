@@ -11,6 +11,7 @@ class LegacyProfileController extends Controller
     {
         $legacyProfiles = LegacyProfile::query()
             ->published()
+            ->with('badges')
             ->orderBy('legacy_joined_at')
             ->orderBy('nickname')
             ->paginate(24);
@@ -21,6 +22,8 @@ class LegacyProfileController extends Controller
     public function show(LegacyProfile $legacyProfile): View
     {
         abort_unless($legacyProfile->is_published || auth()->user()?->isAdmin(), 404);
+
+        $legacyProfile->load('badges');
 
         return view('legacy-profiles.show', compact('legacyProfile'));
     }

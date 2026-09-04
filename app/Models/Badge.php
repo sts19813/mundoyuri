@@ -40,6 +40,14 @@ class Badge extends Model
             ->withTimestamps();
     }
 
+    public function legacyProfiles(): BelongsToMany
+    {
+        return $this->belongsToMany(LegacyProfile::class, 'badge_legacy_profile')
+            ->using(LegacyProfileBadgeAward::class)
+            ->withPivot(['awarded_by', 'awarded_at', 'note'])
+            ->withTimestamps();
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
