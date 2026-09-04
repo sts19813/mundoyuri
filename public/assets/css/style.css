@@ -1969,15 +1969,46 @@
         text-decoration: none;
     }
 
+    .public-profile-badges-card {
+        padding: 20px;
+    }
+
+    .public-profile-badges-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .public-profile-badges-heading h2 {
+        margin: 4px 0 0;
+        color: #fff;
+        font: 700 1.15rem 'Playfair Display', serif;
+    }
+
+    .public-profile-badges-count {
+        display: grid;
+        width: 22px;
+        height: 22px;
+        place-items: center;
+        border-radius: 999px;
+        color: #f6c7db;
+        background: rgba(244, 63, 142, .12);
+        font-size: .66rem;
+        font-weight: 700;
+    }
+
     .public-profile-badge-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 25px;
+        gap: 8px;
+        margin-top: 15px;
     }
 
     .public-profile-badges-empty {
-        min-height: 130px;
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: .74rem;
     }
 
     .public-profile-coming-soon {
@@ -2303,6 +2334,15 @@
         opacity: 1;
         transform: translate(-50%, 0);
         visibility: visible;
+    }
+
+    .community-badge-compact {
+        width: 30px;
+        height: 30px;
+        justify-content: center;
+        padding: 0;
+        border-radius: 10px;
+        font-size: .92rem;
     }
 
     .community-rank-legacy {

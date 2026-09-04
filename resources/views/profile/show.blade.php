@@ -162,31 +162,6 @@
                         @endif
                     </section>
 
-                    <section class="profile-panel profile-panel-main public-profile-badges" aria-labelledby="profile-badges-title">
-                        <div class="profile-panel-heading">
-                            <div>
-                                <span class="profile-panel-kicker">Reconocimientos</span>
-                                <h2 id="profile-badges-title">Insignias</h2>
-                            </div>
-                            <p>Pasa el cursor o enfoca una insignia para conocer su historia.</p>
-                        </div>
-
-                        @if($profileUser->badges->isNotEmpty())
-                            <div class="public-profile-badge-grid" role="list" aria-label="Insignias de {{ $profileUser->displayName() }}">
-                                @foreach($profileUser->badges as $badge)
-                                    <div role="listitem">
-                                        <x-community.badge :badge="$badge" detailed />
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="public-profile-empty public-profile-badges-empty">
-                                <span aria-hidden="true">✦</span>
-                                <p>{{ $isOwner ? 'Aún no tienes insignias comunitarias.' : 'Esta persona todavía no tiene insignias comunitarias.' }}</p>
-                            </div>
-                        @endif
-                    </section>
-
                     @if($canViewFavorites)
                         <section class="profile-panel profile-panel-main public-profile-favorites">
                         <div class="profile-panel-heading">
@@ -280,6 +255,30 @@
                 </div>
 
                 <aside class="profile-sidebar">
+                    <section class="profile-panel public-profile-badges-card" aria-labelledby="profile-badges-title">
+                        <div class="public-profile-badges-heading">
+                            <div>
+                                <span class="profile-panel-kicker">Reconocimientos</span>
+                                <h2 id="profile-badges-title">Insignias</h2>
+                            </div>
+                            @if($profileUser->badges->isNotEmpty())
+                                <span class="public-profile-badges-count">{{ $profileUser->badges->count() }}</span>
+                            @endif
+                        </div>
+
+                        @if($profileUser->badges->isNotEmpty())
+                            <div class="public-profile-badge-grid" role="list" aria-label="Insignias de {{ $profileUser->displayName() }}">
+                                @foreach($profileUser->badges as $badge)
+                                    <div role="listitem">
+                                        <x-community.badge :badge="$badge" detailed compact />
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="public-profile-badges-empty">{{ $isOwner ? 'Aún no tienes insignias.' : 'Sin insignias todavía.' }}</p>
+                        @endif
+                    </section>
+
                     <section class="profile-panel profile-account-card">
                         <span class="profile-panel-kicker">Información</span>
                         <h2>Perfil</h2>
