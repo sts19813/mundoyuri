@@ -41,4 +41,18 @@ class ForumThreadPolicy
     {
         return $user->shouldEnterAdminPanel();
     }
+
+    public function acceptAnswer(User $user, ForumThread $thread): bool
+    {
+        return $thread->isQuestion() && ($user->is($thread->author) || $user->shouldEnterAdminPanel());
+    }
+
+    public function vote(User $user, ForumThread $thread): bool
+    {
+        return $thread->isQuestion()
+            && ! $thread->is_hidden
+            && ! $thread->trashed()
+            && $thread->author !== null
+            && ! $user->is($thread->author);
+    }
 }

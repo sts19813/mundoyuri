@@ -16,15 +16,16 @@ class ForumThreadService
         private readonly ForumMentionService $mentions,
     ) {}
 
-    public function create(Forum $forum, User $author, string $title, string $body): ForumThread
+    public function create(Forum $forum, User $author, string $title, string $body, string $type = 'discussion'): ForumThread
     {
-        return DB::transaction(function () use ($forum, $author, $title, $body): ForumThread {
+        return DB::transaction(function () use ($forum, $author, $title, $body, $type): ForumThread {
             $thread = ForumThread::query()->create([
                 'forum_id' => $forum->id,
                 'user_id' => $author->id,
                 'author_name_snapshot' => $author->displayName(),
                 'title' => $title,
                 'slug' => $this->uniqueSlug($forum, $title),
+                'type' => $type,
                 'last_post_at' => now(),
             ]);
 

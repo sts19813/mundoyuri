@@ -1,4 +1,4 @@
-@props(['post', 'previousUserId' => null])
+@props(['post', 'previousUserId' => null, 'question' => null, 'isAccepted' => false])
 
 @php($author = $post->author)
 @php($resolvedRank = $author ? app(\App\Services\CommunityRankResolver::class)->resolve($author) : null)
@@ -12,6 +12,7 @@
             <x-community.rank :rank="$resolvedRank" />
             <x-community.user-badges :user="$author" :limit="2" />
             <dl class="forum-post-author-meta"><div><dt>Ingreso</dt><dd>{{ $author->show_join_date ? optional($author->communityJoinDate())->translatedFormat('M Y') : 'Privado' }}</dd></div><div><dt>Mensajes</dt><dd>{{ number_format($author->community_message_count) }}</dd></div></dl>
+            @if($question)<small class="question-author-reputation">{{ number_format($author->community_reputation) }} reputación</small>@endif
         @else
             <span class="forum-post-avatar"><span>?</span></span><span class="forum-post-name">{{ $post->authorName() }}</span>
         @endif
@@ -22,6 +23,20 @@
             <p class="forum-hidden-message">Este mensaje está oculto por moderación.</p>
         @else
             <div class="forum-post-body">{!! nl2br(e($post->body)) !!}</div>
+            @if($question)
+                <div class="question-post-status">
+                    @if($isAccepted)<span class="question-accepted">✓ Respuesta aceptada</span>@endif
+                    <span>{{ number_format($post->is_initial ? $question->upvotes_count : $post->upvotes_count) }} votos positivos</span>
+                    @auth
+                        @if($post->is_initial)
+                            @can('vote', $question)<form method="POST" action="{{ route('questions.votes.store', $question) }}">@csrf<button type="submit">Votar</button></form>@endcan
+                        @else
+                            @can('vote', $post)<form method="POST" action="{{ route('questions.answers.votes.store', $post) }}">@csrf<button type="submit">Votar</button></form>@endcan
+                            @can('acceptAnswer', $question)<form method="POST" action="{{ route('questions.answers.accept', [$question, $post]) }}">@csrf<button type="submit">{{ $isAccepted ? 'Aceptada' : 'Aceptar respuesta' }}</button></form>@endcan
+                        @endif
+                    @endauth
+                </div>
+            @endif
             @if($author)<x-community.signature :user="$author" :previous-user-id="$previousUserId" />@endif
         @endif
         @auth

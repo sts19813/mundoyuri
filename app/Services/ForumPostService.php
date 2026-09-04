@@ -13,6 +13,7 @@ class ForumPostService
     public function __construct(
         private readonly ForumCounterService $counters,
         private readonly ForumMentionService $mentions,
+        private readonly QuestionService $questions,
     ) {}
 
     public function reply(ForumThread $thread, User $author, string $body): ForumPost
@@ -51,6 +52,7 @@ class ForumPostService
                 return;
             }
 
+            $this->questions->removeAcceptanceFor($post);
             $post->update(['is_hidden' => true]);
             $this->counters->synchronizeThread($post->thread);
             $this->counters->synchronizeUser($post->author);
@@ -64,6 +66,10 @@ class ForumPostService
             $author = $post->author;
 
             if ($post->is_initial) {
+                $acceptedAnswer = $thread->acceptedAnswer;
+                if ($acceptedAnswer) {
+                    $this->questions->removeAcceptanceFor($acceptedAnswer);
+                }
                 $authors = $thread->visiblePosts()->with('author')->get()->pluck('author')->filter()->unique('id');
                 $thread->posts()->delete();
                 $thread->delete();
@@ -74,6 +80,7 @@ class ForumPostService
                 return;
             }
 
+            $this->questions->removeAcceptanceFor($post);
             $post->delete();
             $this->counters->synchronizeThread($thread);
             if ($author) {

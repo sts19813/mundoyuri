@@ -270,6 +270,18 @@
                                 <dt>Reputación</dt>
                                 <dd>{{ number_format($profileUser->community_reputation) }}</dd>
                             </div>
+                            <div>
+                                <dt>Preguntas</dt>
+                                <dd>{{ number_format($profileUser->forum_questions_count) }}</dd>
+                            </div>
+                            <div>
+                                <dt>Respuestas</dt>
+                                <dd>{{ number_format($profileUser->forum_answers_count) }}</dd>
+                            </div>
+                            <div>
+                                <dt>Respuestas aceptadas</dt>
+                                <dd>{{ number_format($profileUser->accepted_forum_answers_count) }}</dd>
+                            </div>
                             @if($profileUser->show_last_seen && $profileUser->last_login_at)
                                 <div>
                                     <dt>Última visita</dt>

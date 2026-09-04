@@ -30,7 +30,7 @@ class ForumReplyNotification extends Notification
             'actor_avatar' => $this->actor->avatarUrl(),
             'forum_thread_id' => $this->post->forum_thread_id,
             'forum_post_id' => $this->post->id,
-            'url' => route('forum.threads.show', $this->post->thread),
+            'url' => route($this->post->thread->isQuestion() ? 'questions.show' : 'forum.threads.show', $this->post->thread),
         ];
     }
 }

@@ -21,4 +21,14 @@ class ForumPostPolicy
     {
         return $user->shouldEnterAdminPanel();
     }
+
+    public function vote(User $user, ForumPost $post): bool
+    {
+        return ! $post->is_initial
+            && ! $post->is_hidden
+            && ! $post->trashed()
+            && $post->author !== null
+            && $post->thread->isQuestion()
+            && ! $user->is($post->author);
+    }
 }

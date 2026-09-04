@@ -6,17 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ForumPost extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['forum_thread_id', 'user_id', 'author_name_snapshot', 'body', 'edited_at', 'is_initial', 'is_hidden'];
+    protected $fillable = ['forum_thread_id', 'user_id', 'author_name_snapshot', 'body', 'edited_at', 'is_initial', 'is_hidden', 'upvotes_count'];
 
     protected function casts(): array
     {
-        return ['edited_at' => 'datetime', 'is_initial' => 'boolean', 'is_hidden' => 'boolean'];
+        return ['edited_at' => 'datetime', 'is_initial' => 'boolean', 'is_hidden' => 'boolean', 'upvotes_count' => 'integer'];
     }
 
     public function thread(): BelongsTo
@@ -32,6 +33,16 @@ class ForumPost extends Model
     public function mentions(): HasMany
     {
         return $this->hasMany(ForumMention::class);
+    }
+
+    public function votes(): HasMany
+    {
+        return $this->hasMany(ForumPostVote::class);
+    }
+
+    public function acceptedForQuestion(): HasOne
+    {
+        return $this->hasOne(ForumThread::class, 'accepted_answer_post_id');
     }
 
     public function authorName(): string

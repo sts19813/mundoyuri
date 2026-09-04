@@ -43,6 +43,9 @@ class ProfileController extends Controller
             'favoriteSeries' => fn ($query) => $query
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at'),
+            'forumQuestions',
+            'forumAnswers',
+            'acceptedForumAnswers',
         ]);
 
         $viewer = auth()->user();

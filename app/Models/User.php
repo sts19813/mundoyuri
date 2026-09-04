@@ -118,6 +118,33 @@ class User extends Authenticatable
         return $this->hasMany(ForumPost::class);
     }
 
+    public function forumQuestions(): HasMany
+    {
+        return $this->forumThreads()->where('type', 'question');
+    }
+
+    public function forumAnswers(): HasMany
+    {
+        return $this->forumPosts()
+            ->where('is_initial', false)
+            ->whereHas('thread', fn (Builder $query) => $query->where('type', 'question'));
+    }
+
+    public function acceptedForumAnswers(): HasMany
+    {
+        return $this->forumPosts()->whereHas('acceptedForQuestion');
+    }
+
+    public function forumThreadVotes(): HasMany
+    {
+        return $this->hasMany(ForumThreadVote::class);
+    }
+
+    public function forumPostVotes(): HasMany
+    {
+        return $this->hasMany(ForumPostVote::class);
+    }
+
     public function subscribedForumThreads(): BelongsToMany
     {
         return $this->belongsToMany(ForumThread::class, 'forum_thread_subscriptions')->withTimestamps();

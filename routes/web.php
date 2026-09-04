@@ -36,6 +36,7 @@ use App\Http\Controllers\LegacyProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
+use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\UserBlockController;
@@ -69,6 +70,9 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 Route::get('/comunidad', [CommunityController::class, 'index'])->name('community.index');
+Route::get('/comunidad/preguntas', [QuestionController::class, 'index'])->name('questions.index');
+Route::get('/comunidad/preguntas/nueva', [QuestionController::class, 'create'])->middleware('auth')->name('questions.create');
+Route::get('/comunidad/preguntas/{thread:slug}', [QuestionController::class, 'show'])->name('questions.show');
 Route::get('/comunidad/foros', [ForumController::class, 'index'])->name('forums.index');
 Route::get('/comunidad/foros/{forum:slug}', [ForumController::class, 'show'])->name('forums.show');
 Route::get('/comunidad/tema/{thread:slug}', [ForumThreadController::class, 'show'])->name('forum.threads.show');
@@ -135,6 +139,12 @@ Route::middleware(['auth'])
         Route::delete('/comunidad/tema/{thread:slug}/suscripcion', [ForumSubscriptionController::class, 'destroy'])->name('forum.subscriptions.destroy');
         Route::patch('/comunidad/tema/{thread:slug}/moderacion', [ForumModerationController::class, 'updateThread'])->name('forum.moderation.thread.update');
         Route::patch('/comunidad/mensaje/{post}/ocultar', [ForumModerationController::class, 'hidePost'])->name('forum.moderation.post.hide');
+
+        Route::post('/comunidad/preguntas', [QuestionController::class, 'store'])->middleware('throttle:10,1')->name('questions.store');
+        Route::post('/comunidad/preguntas/{thread:slug}/respuestas', [QuestionController::class, 'answer'])->middleware('throttle:30,1')->name('questions.answers.store');
+        Route::post('/comunidad/preguntas/{thread:slug}/respuestas/{post}/aceptar', [QuestionController::class, 'accept'])->name('questions.answers.accept');
+        Route::post('/comunidad/preguntas/{thread:slug}/votos', [QuestionController::class, 'voteQuestion'])->middleware('throttle:30,1')->name('questions.votes.store');
+        Route::post('/comunidad/preguntas/respuestas/{post}/votos', [QuestionController::class, 'voteAnswer'])->middleware('throttle:30,1')->name('questions.answers.votes.store');
 
         Route::get('/aportes/nuevo', [ContentSubmissionController::class, 'create'])->name('submissions.create');
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])

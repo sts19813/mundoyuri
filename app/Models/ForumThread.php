@@ -14,14 +14,16 @@ class ForumThread extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['forum_id', 'user_id', 'author_name_snapshot', 'title', 'slug', 'views_count', 'replies_count', 'last_post_at', 'is_pinned', 'is_locked', 'is_hidden'];
+    protected $fillable = ['forum_id', 'user_id', 'author_name_snapshot', 'title', 'slug', 'type', 'views_count', 'upvotes_count', 'replies_count', 'last_post_at', 'accepted_answer_post_id', 'accepted_answer_at', 'is_pinned', 'is_locked', 'is_hidden'];
 
     protected function casts(): array
     {
         return [
             'views_count' => 'integer',
+            'upvotes_count' => 'integer',
             'replies_count' => 'integer',
             'last_post_at' => 'datetime',
+            'accepted_answer_at' => 'datetime',
             'is_pinned' => 'boolean',
             'is_locked' => 'boolean',
             'is_hidden' => 'boolean',
@@ -61,5 +63,35 @@ class ForumThread extends Model
     public function subscribers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'forum_thread_subscriptions')->withTimestamps();
+    }
+
+    public function questionTags(): BelongsToMany
+    {
+        return $this->belongsToMany(QuestionTag::class, 'forum_thread_question_tag');
+    }
+
+    public function acceptedAnswer(): BelongsTo
+    {
+        return $this->belongsTo(ForumPost::class, 'accepted_answer_post_id');
+    }
+
+    public function votes(): HasMany
+    {
+        return $this->hasMany(ForumThreadVote::class);
+    }
+
+    public function scopeQuestions($query)
+    {
+        return $query->where('type', 'question');
+    }
+
+    public function isQuestion(): bool
+    {
+        return $this->type === 'question';
+    }
+
+    public function isResolved(): bool
+    {
+        return $this->accepted_answer_post_id !== null;
     }
 }

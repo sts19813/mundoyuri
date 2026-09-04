@@ -33,8 +33,12 @@ class ForumThreadController extends Controller
         return redirect()->route('forum.threads.show', $thread)->with('success', 'Tema publicado correctamente.');
     }
 
-    public function show(Request $request, ForumThread $thread): View
+    public function show(Request $request, ForumThread $thread): View|RedirectResponse
     {
+        if ($thread->isQuestion()) {
+            return redirect()->route('questions.show', $thread);
+        }
+
         $thread->load('forum.category');
         $this->authorize('view', $thread);
         $thread->increment('views_count');
