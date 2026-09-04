@@ -11,6 +11,7 @@ use App\Models\ForumCategory;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
 use App\Models\LegacyProfile;
+use App\Models\LegacyProfileClaim;
 use App\Models\User;
 use App\Policies\BadgePolicy;
 use App\Policies\CommunityReportPolicy;
@@ -18,6 +19,7 @@ use App\Policies\ForumCategoryPolicy;
 use App\Policies\ForumPolicy;
 use App\Policies\ForumPostPolicy;
 use App\Policies\ForumThreadPolicy;
+use App\Policies\LegacyProfileClaimPolicy;
 use App\Policies\LegacyProfilePolicy;
 use App\Services\CommunityRankResolver;
 use Illuminate\Auth\Events\Login;
@@ -51,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ForumThread::class, ForumThreadPolicy::class);
         Gate::policy(ForumPost::class, ForumPostPolicy::class);
         Gate::policy(LegacyProfile::class, LegacyProfilePolicy::class);
+        Gate::policy(LegacyProfileClaim::class, LegacyProfileClaimPolicy::class);
 
         Gate::before(function (User $user): ?bool {
             return $user->isAdmin() ? true : null;

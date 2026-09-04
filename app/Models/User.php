@@ -80,6 +80,16 @@ class User extends Authenticatable
         return $this->hasMany(LegacyProfile::class, 'claimed_by_user_id');
     }
 
+    public function legacyProfileClaims(): HasMany
+    {
+        return $this->hasMany(LegacyProfileClaim::class, 'claimant_user_id');
+    }
+
+    public function reviewedLegacyProfileClaims(): HasMany
+    {
+        return $this->hasMany(LegacyProfileClaim::class, 'reviewed_by');
+    }
+
     public function badges(): BelongsToMany
     {
         return $this->belongsToMany(Badge::class, 'badge_user')

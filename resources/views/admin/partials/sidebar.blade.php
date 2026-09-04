@@ -154,6 +154,12 @@
                             </a>
                         </div>
                         <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.legacy-profile-claims.*') ? 'active' : '' }}" href="{{ route('admin.legacy-profile-claims.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-check-circle fs-2"></i></span>
+                                <span class="menu-title">Reclamaciones históricas</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.badges.*') ? 'active' : '' }}" href="{{ route('admin.badges.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-medal-star fs-2"></i></span>
                                 <span class="menu-title">Insignias comunitarias</span>

@@ -35,6 +35,7 @@ use App\Http\Controllers\ForumModerationController;
 use App\Http\Controllers\ForumPostController;
 use App\Http\Controllers\ForumSubscriptionController;
 use App\Http\Controllers\ForumThreadController;
+use App\Http\Controllers\LegacyProfileClaimController;
 use App\Http\Controllers\LegacyProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -98,6 +99,12 @@ Route::middleware(['auth'])
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
         Route::patch('/preferencias/correos-de-episodios', [EmailEpisodeNotificationPreferenceController::class, 'update'])
             ->name('email-episode-notifications.update');
+
+        Route::get('/comunidad/historicos/reclamar', [LegacyProfileClaimController::class, 'create'])
+            ->name('legacy-profile-claims.create');
+        Route::post('/comunidad/historicos/reclamar', [LegacyProfileClaimController::class, 'store'])
+            ->middleware('throttle:5,10')
+            ->name('legacy-profile-claims.store');
 
         Route::post('/series/{series}/favorita', [SeriesFavoriteController::class, 'store'])
             ->name('series.favorites.store');
@@ -252,6 +259,13 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'edit' => 'admin.legacy-profiles.edit',
             'update' => 'admin.legacy-profiles.update',
         ]);
+
+    Route::get('/perfiles-historicos/reclamaciones', [App\Http\Controllers\Admin\LegacyProfileClaimController::class, 'index'])
+        ->middleware('admin')
+        ->name('admin.legacy-profile-claims.index');
+    Route::patch('/perfiles-historicos/reclamaciones/{legacyProfileClaim}', [App\Http\Controllers\Admin\LegacyProfileClaimController::class, 'update'])
+        ->middleware('admin')
+        ->name('admin.legacy-profile-claims.update');
 
     Route::resource('insignias-comunidad', AdminBadgeController::class)
         ->except('show')

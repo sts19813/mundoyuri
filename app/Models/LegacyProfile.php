@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Storage;
 
 class LegacyProfile extends Model
@@ -62,6 +64,21 @@ class LegacyProfile extends Model
     public function claimedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'claimed_by_user_id');
+    }
+
+    public function claims(): HasMany
+    {
+        return $this->hasMany(LegacyProfileClaim::class);
+    }
+
+    public function moderationLogs(): MorphMany
+    {
+        return $this->morphMany(CommunityModerationLog::class, 'moderatable');
+    }
+
+    public function canBeClaimed(): bool
+    {
+        return $this->is_published && in_array($this->claim_status, ['unclaimed', 'rejected'], true);
     }
 
     public function scopePublished(Builder $query): Builder
