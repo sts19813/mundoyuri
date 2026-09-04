@@ -6,10 +6,13 @@ use App\Http\Requests\MemberDirectoryRequest;
 use App\Models\CommunityRank;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Models\LegacyProfile;
 use App\Models\User;
 use App\Services\CommunityRankResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class CommunityController extends Controller
@@ -47,7 +50,7 @@ class CommunityController extends Controller
     public function members(MemberDirectoryRequest $request, CommunityRankResolver $rankResolver): View
     {
         $filters = $request->validated();
-        $query = User::query()
+        $modernMembers = User::query()
             ->visibleInCommunityDirectory()
             ->with([
                 'communityRank',
@@ -55,7 +58,7 @@ class CommunityController extends Controller
             ]);
 
         if ($search = trim((string) ($filters['q'] ?? ''))) {
-            $query->where(function (Builder $query) use ($search): void {
+            $modernMembers->where(function (Builder $query) use ($search): void {
                 $query
                     ->where('name', 'like', "%{$search}%")
                     ->orWhere('alias', 'like', "%{$search}%")
@@ -64,15 +67,15 @@ class CommunityController extends Controller
         }
 
         if ($rankId = $filters['rank'] ?? null) {
-            $this->applyRankFilter($query, CommunityRank::query()->findOrFail($rankId));
+            $this->applyRankFilter($modernMembers, CommunityRank::query()->findOrFail($rankId));
         }
 
         $filter = $filters['filter'] ?? null;
 
         if ($filter === 'new') {
-            $query->where('created_at', '>=', now()->subDays(30));
+            $modernMembers->where('created_at', '>=', now()->subDays(30));
         } elseif ($filter === 'legacy') {
-            $query->where('is_legacy', true);
+            $modernMembers->where('is_legacy', true);
         }
 
         $sort = $filters['sort'] ?? match ($filter) {
@@ -82,14 +85,69 @@ class CommunityController extends Controller
         };
         $direction = $filters['direction'] ?? ($filter === 'oldest' ? 'asc' : 'desc');
 
-        $this->applySort($query, $sort, $direction);
+        $includeArchivedProfiles = $rankId === null && ! in_array($filter, ['new', 'active'], true);
+        $legacyProfiles = collect();
+
+        if ($includeArchivedProfiles) {
+            $legacyProfiles = LegacyProfile::query()
+                ->published()
+                ->whereNull('claimed_by_user_id')
+                ->with(['badges' => fn ($query) => $query->active()->ordered()])
+                ->when($search, function (Builder $query) use ($search): void {
+                    $query->where(function (Builder $query) use ($search): void {
+                        $query
+                            ->where('nickname', 'like', "%{$search}%")
+                            ->orWhere('legacy_location', 'like', "%{$search}%");
+                    });
+                })
+                ->get();
+        }
+
+        $members = $this->paginateMembers(
+            $modernMembers->get()->concat($legacyProfiles),
+            $sort,
+            $direction,
+            $request,
+        );
 
         return view('community.index', [
-            'members' => $query->paginate(24)->withQueryString(),
+            'members' => $members,
             'ranks' => CommunityRank::query()->active()->orderBy('priority')->orderBy('name')->get(),
             'rankResolver' => $rankResolver,
             'filters' => $filters,
         ]);
+    }
+
+    /** @param Collection<int, User|LegacyProfile> $members */
+    private function paginateMembers(Collection $members, string $sort, string $direction, Request $request): LengthAwarePaginator
+    {
+        $members = $members
+            ->sortBy(function (User|LegacyProfile $member) use ($sort): array|string|int {
+                $isLegacyProfile = $member instanceof LegacyProfile;
+
+                return match ($sort) {
+                    'name' => mb_strtolower($isLegacyProfile ? $member->nickname : $member->displayName()),
+                    'messages' => $isLegacyProfile ? ($member->legacy_message_count ?? 0) : $member->community_message_count,
+                    'activity' => $isLegacyProfile ? 0 : $member->community_message_count,
+                    default => ($isLegacyProfile ? $member->legacy_joined_at : $member->communityJoinDate())?->getTimestamp() ?? 0,
+                };
+            })
+            ->values();
+
+        if ($direction === 'desc') {
+            $members = $members->reverse()->values();
+        }
+
+        $perPage = 24;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        return new LengthAwarePaginator(
+            $members->forPage($page, $perPage)->values(),
+            $members->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
     }
 
     private function constrainPublicThreads(Builder $query): Builder
@@ -125,21 +183,5 @@ class CommunityController extends Controller
                         ->when($nextMinimum !== null, fn (Builder $query) => $query->where('community_message_count', '<', $nextMinimum));
                 });
         });
-    }
-
-    private function applySort(Builder $query, string $sort, string $direction): void
-    {
-        match ($sort) {
-            'name' => $query->orderByRaw("LOWER(COALESCE(alias, name)) {$direction}"),
-            'messages' => $query->orderBy('community_message_count', $direction),
-            'activity' => $query
-                ->orderBy('community_message_count', $direction)
-                ->orderBy('updated_at', $direction),
-            default => $query->orderByRaw(
-                "CASE WHEN is_legacy = 1 AND legacy_joined_at IS NOT NULL THEN legacy_joined_at ELSE created_at END {$direction}"
-            ),
-        };
-
-        $query->orderBy('id');
     }
 }

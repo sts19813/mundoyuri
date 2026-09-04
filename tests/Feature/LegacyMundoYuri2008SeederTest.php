@@ -29,7 +29,9 @@ class LegacyMundoYuri2008SeederTest extends TestCase
         $this->assertTrue($angel->is_legacy);
         $this->assertTrue($angel->legacy_verified);
         $this->assertSame('2026-09-04', $angel->created_at?->format('Y-m-d'));
-        $this->assertSame(['miembro-historico', 'pionera-2007'], $angel->badges->sortBy('slug')->pluck('slug')->values()->all());
+        $this->assertSame(['fundadora', 'miembro-historico', 'pionera-2007'], $angel->badges->sortBy('slug')->pluck('slug')->values()->all());
+        $this->assertSame('🌸', $angel->badges->firstWhere('slug', 'miembro-historico')->icon);
+        $this->assertSame('👑', $angel->badges->firstWhere('slug', 'fundadora')->icon);
 
         $yukari = LegacyProfile::query()->with('badges')->where('nickname', 'yukari.yuri')->firstOrFail();
         $this->assertNull($yukari->legacy_location);
@@ -51,7 +53,7 @@ class LegacyMundoYuri2008SeederTest extends TestCase
         $this->seed(LegacyMundoYuri2008Seeder::class);
 
         $this->assertDatabaseCount('legacy_profiles', 21);
-        $this->assertDatabaseCount('badge_legacy_profile', 28);
+        $this->assertDatabaseCount('badge_legacy_profile', 29);
         $this->assertDatabaseCount('users', 0);
 
         $profile = LegacyProfile::query()->where('nickname', 'Miragem')->firstOrFail();

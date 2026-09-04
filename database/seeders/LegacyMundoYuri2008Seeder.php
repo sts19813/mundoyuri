@@ -7,7 +7,6 @@ use App\Models\LegacyProfile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 class LegacyMundoYuri2008Seeder extends Seeder
 {
@@ -21,14 +20,7 @@ class LegacyMundoYuri2008Seeder extends Seeder
         $updated = 0;
 
         DB::transaction(function () use (&$created, &$updated): void {
-            $badges = Badge::query()
-                ->whereIn('slug', ['miembro-historico', 'pionera-2007'])
-                ->get()
-                ->keyBy('slug');
-
-            if ($badges->count() !== 2) {
-                throw new RuntimeException('Faltan las insignias históricas requeridas. Ejecuta primero las migraciones de Comunidad.');
-            }
+            $badges = $this->historicalBadges();
 
             foreach ($this->profiles() as $position => $data) {
                 $externalKey = sprintf('mundo-yuri-wayback-2008:member-%03d', $position + 1);
@@ -53,6 +45,9 @@ class LegacyMundoYuri2008Seeder extends Seeder
                 if (str_starts_with($data['legacy_joined_at'], '2007-')) {
                     $badgeIds[] = $badges['pionera-2007']->id;
                 }
+                if ($position === 0) {
+                    $badgeIds[] = $badges['fundadora']->id;
+                }
 
                 $profile->badges()->syncWithoutDetaching(array_fill_keys($badgeIds, [
                     'awarded_at' => now(),
@@ -67,6 +62,28 @@ class LegacyMundoYuri2008Seeder extends Seeder
         $this->command?->info("Updated: {$updated}");
         $this->command?->info('Skipped: 0');
         $this->command?->info('Errors: 0');
+    }
+
+    /** @return array<string, Badge> */
+    private function historicalBadges(): array
+    {
+        $definitions = [
+            'miembro-historico' => ['name' => 'Miembro Histórico', 'description' => 'Formó parte del Mundo Yuri original.', 'icon' => '🌸', 'type' => 'legacy', 'priority' => 50, 'color' => '#f43f8e'],
+            'pionera-2007' => ['name' => 'Pionera 2007', 'description' => 'Participó en la comunidad original desde 2007.', 'icon' => '🕰️', 'type' => 'legacy', 'priority' => 80, 'color' => '#c084fc'],
+            'fundadora' => ['name' => 'Fundadora', 'description' => 'Reconocimiento a quienes fundaron Mundo Yuri.', 'icon' => '👑', 'type' => 'special', 'priority' => 100, 'color' => '#f59e0b'],
+        ];
+
+        $badges = [];
+        foreach ($definitions as $slug => $attributes) {
+            $badge = Badge::query()->firstOrCreate(['slug' => $slug], $attributes);
+            $legacyIcons = ['miembro-historico' => '✦', 'pionera-2007' => '✧', 'fundadora' => '♛'];
+            if ($badge->icon === $legacyIcons[$slug]) {
+                $badge->update(['icon' => $attributes['icon']]);
+            }
+            $badges[$slug] = $badge;
+        }
+
+        return $badges;
     }
 
     /** @return list<array{nickname: string, legacy_joined_at: string, legacy_message_count: int, legacy_location: string|null}> */

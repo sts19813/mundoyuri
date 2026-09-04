@@ -27,12 +27,11 @@
             <header class="community-directory-hero">
                 <span class="profile-eyebrow">Nuestro punto de encuentro</span>
                 <h1>Comunidad <em>Mundo Yuri</em></h1>
-                <p>Descubre perfiles, reencuentra miembros históricos y conoce a quienes mantienen viva la comunidad.</p>
-                <a class="profile-btn profile-btn-soft mt-3" href="{{ route('legacy-profiles.index') }}">Explorar archivo histórico</a>
+                <p>Conoce a quienes mantienen viva la comunidad, desde sus primeros recuerdos hasta las nuevas conversaciones.</p>
             </header>
 
             <section class="profile-panel community-directory-tools" aria-label="Buscar y filtrar miembros">
-                <form action="{{ route('community.members') }}" method="GET" class="community-directory-form">
+                <form action="{{ route('community.members') }}" method="GET" class="community-directory-form" data-community-directory-form>
                     <div class="profile-field community-search-field">
                         <label for="community-search">Buscar miembros</label>
                         <input id="community-search" name="q" type="search" value="{{ $filters['q'] ?? '' }}" placeholder="Nombre, alias o localización">
@@ -65,7 +64,6 @@
                     @if(filled($filters['filter'] ?? null))
                         <input type="hidden" name="filter" value="{{ $filters['filter'] }}">
                     @endif
-                    <button class="profile-btn profile-btn-primary" type="submit">Aplicar</button>
                 </form>
 
                 <div class="community-filter-chips" aria-label="Filtros rápidos">
@@ -73,7 +71,7 @@
                     <a class="{{ ($filters['filter'] ?? null) === 'new' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'new']) }}">Miembros nuevos</a>
                     <a class="{{ ($filters['filter'] ?? null) === 'oldest' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'oldest']) }}">Más antiguos</a>
                     <a class="{{ ($filters['filter'] ?? null) === 'active' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'active']) }}">Más activos</a>
-                    <a href="{{ route('legacy-profiles.index') }}">Miembros históricos</a>
+                    <a class="{{ ($filters['filter'] ?? null) === 'legacy' ? 'is-active' : '' }}" href="{{ route('community.members', ['filter' => 'legacy']) }}">Miembros históricos</a>
                 </div>
             </section>
 
@@ -89,43 +87,43 @@
 
             <div class="community-member-grid">
                 @forelse($members as $member)
-                    @php($resolvedRank = $rankResolver->resolve($member))
+                    @php($isHistoricalProfile = $member instanceof \App\Models\LegacyProfile)
                     <article class="community-member-card">
-                        <a class="community-member-avatar" href="{{ $member->publicProfileUrl() }}" aria-label="Ver perfil de {{ $member->displayName() }}">
-                            @if($member->hasProfileAvatar())
+                        <a class="community-member-avatar" href="{{ $isHistoricalProfile ? route('legacy-profiles.show', $member) : $member->publicProfileUrl() }}" aria-label="Ver perfil de {{ $isHistoricalProfile ? $member->nickname : $member->displayName() }}">
+                            @if($isHistoricalProfile && $member->avatarUrl())
+                                <img src="{{ $member->avatarUrl() }}" alt="Avatar histórico de {{ $member->nickname }}">
+                            @elseif(! $isHistoricalProfile && $member->hasProfileAvatar())
                                 <img src="{{ $member->avatarUrl() }}" alt="Foto de perfil de {{ $member->displayName() }}">
                             @else
-                                <span>{{ $member->initials() }}</span>
+                                <span>{{ $isHistoricalProfile ? mb_strtoupper(mb_substr($member->nickname, 0, 1)) : $member->initials() }}</span>
                             @endif
                         </a>
                         <div class="community-member-copy">
                             <div class="community-member-title">
                                 <div>
-                                    <h3><a href="{{ $member->publicProfileUrl() }}">{{ $member->name }}</a></h3>
-                                    @if($member->alias)<small>{{ '@'.$member->alias }}</small>@endif
+                                    <h3><a href="{{ $isHistoricalProfile ? route('legacy-profiles.show', $member) : $member->publicProfileUrl() }}">{{ $isHistoricalProfile ? $member->nickname : $member->name }}</a></h3>
+                                    @if($isHistoricalProfile)<small>Perfil histórico</small>@elseif($member->alias)<small>{{ '@'.$member->alias }}</small>@endif
                                 </div>
-                                <x-community.rank :rank="$resolvedRank" />
+                                @if($isHistoricalProfile)
+                                    @if($member->legacy_rank)<span class="community-rank">{{ $member->legacy_rank }}</span>@endif
+                                @else
+                                    <x-community.rank :rank="$rankResolver->resolve($member)" />
+                                @endif
                             </div>
 
                             <div class="community-member-badges">
-                                @if($member->is_legacy)
-                                    <span class="community-badge community-badge-legacy"><span aria-hidden="true">✦</span> Miembro histórico</span>
-                                @endif
-                                @foreach($member->badges as $badge)
-                                    @unless($member->is_legacy && $badge->slug === 'miembro-historico')
-                                        <x-community.badge :badge="$badge" />
-                                    @endunless
-                                @endforeach
+                                @foreach($member->badges as $badge)<x-community.badge :badge="$badge" />@endforeach
+                                @if(! $isHistoricalProfile && $member->is_legacy && $member->badges->doesntContain('slug', 'miembro-historico'))<span class="community-badge community-badge-legacy"><span aria-hidden="true">🌸</span> Miembro histórico</span>@endif
                             </div>
 
                             <dl class="community-member-stats">
                                 <div>
                                     <dt>Ingreso</dt>
-                                    <dd>{{ $member->show_join_date ? optional($member->communityJoinDate())->translatedFormat('M Y') : 'Fecha privada' }}</dd>
+                                    <dd>{{ $isHistoricalProfile ? $member->legacy_joined_at?->translatedFormat('d M Y') : ($member->show_join_date ? optional($member->communityJoinDate())->translatedFormat('d M Y') : 'Fecha privada') }}</dd>
                                 </div>
                                 <div>
-                                    <dt>Publicaciones</dt>
-                                    <dd>{{ number_format($member->community_message_count) }}</dd>
+                                    <dt>{{ $isHistoricalProfile ? 'Mensajes archivados' : 'Publicaciones' }}</dt>
+                                    <dd>{{ number_format($isHistoricalProfile ? $member->legacy_message_count : $member->community_message_count) }}</dd>
                                 </div>
                             </dl>
                         </div>
@@ -147,5 +145,21 @@
     </main>
 
     <x-footer />
+    <script>
+        (() => {
+            const form = document.querySelector('[data-community-directory-form]');
+            if (! form) return;
+
+            const search = form.querySelector('[name="q"]');
+            let debounce;
+
+            search?.addEventListener('input', () => {
+                window.clearTimeout(debounce);
+                debounce = window.setTimeout(() => form.requestSubmit(), 300);
+            });
+
+            form.querySelectorAll('select').forEach((field) => field.addEventListener('change', () => form.requestSubmit()));
+        })();
+    </script>
 </body>
 </html>

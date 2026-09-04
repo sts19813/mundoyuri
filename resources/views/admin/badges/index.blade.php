@@ -34,9 +34,9 @@
                         @forelse($badges as $badge)
                             <tr>
                                 <td><div class="d-flex align-items-center gap-3"><span class="fs-2">{{ $badge->icon ?: '✦' }}</span><div><div class="fw-bold text-gray-900">{{ $badge->name }}</div><div class="text-muted fs-7">{{ $badge->slug }}</div></div></div></td>
-                                <td><span class="badge badge-light-info">{{ match($badge->type) { 'legacy' => 'Histórica', 'achievement' => 'Logro', 'staff' => 'Staff', default => 'Especial' } }}</span></td>
+                                <td><span class="badge badge-light-info">{{ match($badge->type) { 'legacy' => 'Histórica', 'achievement' => 'Logro', 'staff' => 'Staff', 'contribution' => 'Contribución', 'development' => 'Desarrollo', 'activity' => 'Actividad', 'forum' => 'Foro', 'questions' => 'Preguntas', 'social' => 'Social', 'catalog' => 'Catálogo', 'community' => 'Comunidad', 'seniority' => 'Antigüedad', 'event' => 'Evento', 'fun' => 'Divertida', 'secret' => 'Secreta', default => 'Especial' } }}</span></td>
                                 <td>{{ $badge->priority }}</td>
-                                <td>{{ $badge->users_count }}</td>
+                                <td>{{ $badge->users_count + $badge->legacy_profiles_count }}</td>
                                 <td><span class="badge {{ $badge->is_active ? 'badge-light-success' : 'badge-light-danger' }}">{{ $badge->is_active ? 'Activa' : 'Inactiva' }}</span></td>
                                 <td class="text-end text-nowrap">
                                     <a href="{{ route('admin.badges.edit', $badge) }}" class="btn btn-sm btn-light-primary me-1"><i class="ki-outline ki-pencil fs-4"></i>Editar</a>

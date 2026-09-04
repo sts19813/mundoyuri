@@ -11,7 +11,7 @@ class Badge extends Model
 {
     use HasFactory;
 
-    public const TYPES = ['legacy', 'achievement', 'staff', 'special'];
+    public const TYPES = ['legacy', 'achievement', 'staff', 'special', 'contribution', 'development', 'activity', 'forum', 'questions', 'social', 'catalog', 'community', 'seniority', 'event', 'fun', 'secret'];
 
     protected $fillable = [
         'name',

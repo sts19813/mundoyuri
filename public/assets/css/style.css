@@ -2514,13 +2514,9 @@
 
     .community-directory-form {
         display: grid;
-        grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(145px, 1fr)) auto;
+        grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(145px, 1fr));
         align-items: end;
         gap: 12px;
-    }
-
-    .community-directory-form .profile-btn {
-        height: 46px;
     }
 
     .community-filter-chips {

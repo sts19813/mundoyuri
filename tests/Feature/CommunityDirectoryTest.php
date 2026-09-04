@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CommunityRank;
+use App\Models\LegacyProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -26,6 +27,7 @@ class CommunityDirectoryTest extends TestCase
         $this->get(route('community.members'))
             ->assertOk()
             ->assertSee('Visible Yuri')
+            ->assertDontSee('>Aplicar<', false)
             ->assertSee($visible->publicProfileUrl(), false)
             ->assertDontSee('visible-private@example.com')
             ->assertDontSee('Solo Miembros')
@@ -33,10 +35,18 @@ class CommunityDirectoryTest extends TestCase
             ->assertDontSee('Perfil Inactivo');
     }
 
-    public function test_directory_search_and_legacy_filter_work(): void
+    public function test_directory_search_and_legacy_filter_mix_archived_and_modern_members(): void
     {
         User::factory()->create(['name' => 'Luna Antigua', 'alias' => 'luna-rosa', 'is_legacy' => true]);
         User::factory()->create(['name' => 'Akari Moderna', 'alias' => 'akari']);
+        $historical = LegacyProfile::query()->create([
+            'legacy_external_key' => 'archivo:angel',
+            'slug' => 'angel-historica',
+            'nickname' => '~~Angel~~',
+            'legacy_joined_at' => '2007-08-13',
+            'legacy_message_count' => 100,
+            'source' => 'captura-2008',
+        ]);
 
         $this->get(route('community.members', ['q' => 'luna']))
             ->assertOk()
@@ -46,8 +56,12 @@ class CommunityDirectoryTest extends TestCase
         $this->get(route('community.members', ['filter' => 'legacy']))
             ->assertOk()
             ->assertSee('Luna Antigua')
+            ->assertSee('~~Angel~~')
             ->assertSee('Miembro histórico')
-            ->assertDontSee('Akari Moderna');
+            ->assertSee('13 Aug 2007')
+            ->assertSee('100')
+            ->assertDontSee('Akari Moderna')
+            ->assertSee(route('legacy-profiles.show', $historical), false);
     }
 
     public function test_directory_supports_join_date_and_message_ordering(): void

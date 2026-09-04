@@ -28,7 +28,7 @@
             <div class="col-md-6 col-xl-3">
                 <label class="form-label required">Tipo</label>
                 <select name="type" required class="form-select form-select-solid @error('type') is-invalid @enderror">
-                    @foreach(['legacy' => 'Histórica', 'achievement' => 'Logro', 'staff' => 'Staff', 'special' => 'Especial'] as $value => $label)
+                    @foreach(['legacy' => 'Histórica', 'achievement' => 'Logro', 'staff' => 'Staff', 'special' => 'Especial', 'contribution' => 'Contribución', 'development' => 'Desarrollo', 'activity' => 'Actividad', 'forum' => 'Foro', 'questions' => 'Preguntas', 'social' => 'Social', 'catalog' => 'Catálogo', 'community' => 'Comunidad', 'seniority' => 'Antigüedad', 'event' => 'Evento', 'fun' => 'Divertida', 'secret' => 'Secreta'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('type', $badge->type ?? 'achievement') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>

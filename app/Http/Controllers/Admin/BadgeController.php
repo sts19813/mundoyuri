@@ -20,7 +20,7 @@ class BadgeController extends Controller
     {
         $this->authorize('manage', Badge::class);
 
-        $badges = Badge::query()->withCount('users')->ordered()->paginate(20);
+        $badges = Badge::query()->withCount(['users', 'legacyProfiles'])->ordered()->paginate(20);
 
         return view('admin.badges.index', compact('badges'));
     }
