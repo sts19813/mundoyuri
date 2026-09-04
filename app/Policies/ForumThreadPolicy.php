@@ -55,4 +55,12 @@ class ForumThreadPolicy
             && $thread->author !== null
             && ! $user->is($thread->author);
     }
+
+    public function react(User $user, ForumThread $thread): bool
+    {
+        return ! $thread->is_hidden
+            && ! $thread->trashed()
+            && $thread->forum->is_active
+            && $thread->forum->category->is_active;
+    }
 }

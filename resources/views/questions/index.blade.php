@@ -49,6 +49,7 @@
                         <h2><a href="{{ route('questions.show', $question) }}">{{ $question->title }}</a></h2>
                         @if($question->questionTags->isNotEmpty())<div class="question-tags">@foreach($question->questionTags as $questionTag)<a href="{{ route('questions.index', ['tag' => $questionTag->slug]) }}">{{ $questionTag->name }}</a>@endforeach</div>@endif
                         <p>En {{ $question->forum->name }} · {{ $question->created_at->diffForHumans() }}</p>
+                        <x-community.reactions :reactable="$question" />
                     </div>
                     <div class="question-row-author">
                         @if($question->author)

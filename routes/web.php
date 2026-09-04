@@ -23,6 +23,7 @@ use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\CommunityReactionController;
 use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
@@ -125,6 +126,10 @@ Route::middleware(['auth'])
             ->name('notifications.open');
         Route::patch('/notificaciones', [NotificationController::class, 'readAll'])
             ->name('notifications.read-all');
+
+        Route::post('/comunidad/reacciones', [CommunityReactionController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('community.reactions.store');
 
         Route::get('/comunidad/foros/{forum:slug}/nuevo-tema', [ForumThreadController::class, 'create'])->name('forum.threads.create');
         Route::post('/comunidad/foros/{forum:slug}/temas', [ForumThreadController::class, 'store'])->middleware('throttle:10,1')->name('forum.threads.store');

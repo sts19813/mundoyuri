@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ForumThread extends Model
@@ -78,6 +79,11 @@ class ForumThread extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(ForumThreadVote::class);
+    }
+
+    public function reactions(): MorphMany
+    {
+        return $this->morphMany(CommunityReaction::class, 'reactable');
     }
 
     public function scopeQuestions($query)

@@ -31,4 +31,16 @@ class ForumPostPolicy
             && $post->thread->isQuestion()
             && ! $user->is($post->author);
     }
+
+    public function react(User $user, ForumPost $post): bool
+    {
+        $thread = $post->thread;
+
+        return ! $post->is_hidden
+            && ! $post->trashed()
+            && ! $thread->is_hidden
+            && ! $thread->trashed()
+            && $thread->forum->is_active
+            && $thread->forum->category->is_active;
+    }
 }

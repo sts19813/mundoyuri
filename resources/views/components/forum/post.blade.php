@@ -23,6 +23,7 @@
             <p class="forum-hidden-message">Este mensaje está oculto por moderación.</p>
         @else
             <div class="forum-post-body">{!! nl2br(e($post->body)) !!}</div>
+            <x-community.reactions :reactable="$question && $post->is_initial ? $question : $post" />
             @if($question)
                 <div class="question-post-status">
                     @if($isAccepted)<span class="question-accepted">✓ Respuesta aceptada</span>@endif

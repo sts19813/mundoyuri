@@ -6,6 +6,7 @@ use App\Http\Requests\StoreForumThreadRequest;
 use App\Http\Requests\UpdateForumThreadRequest;
 use App\Models\Forum;
 use App\Models\ForumThread;
+use App\Services\CommunityReactionService;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,7 @@ class ForumThreadController extends Controller
         return redirect()->route('forum.threads.show', $thread)->with('success', 'Tema publicado correctamente.');
     }
 
-    public function show(Request $request, ForumThread $thread): View|RedirectResponse
+    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View|RedirectResponse
     {
         if ($thread->isQuestion()) {
             return redirect()->route('questions.show', $thread);
@@ -49,6 +50,8 @@ class ForumThreadController extends Controller
             ->oldest()
             ->paginate(20)
             ->withQueryString();
+
+        $reactions->hydrateSummaries($posts->getCollection(), $request->user());
 
         $isSubscribed = $request->user()
             ? $thread->subscribers()->whereKey($request->user()->id)->exists()

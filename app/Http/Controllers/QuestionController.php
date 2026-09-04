@@ -7,6 +7,7 @@ use App\Http\Requests\StoreQuestionRequest;
 use App\Models\Forum;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Services\CommunityReactionService;
 use App\Services\ForumPostService;
 use App\Services\QuestionService;
 use App\Services\QuestionVoteService;
@@ -16,7 +17,7 @@ use Illuminate\View\View;
 
 class QuestionController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, CommunityReactionService $reactions): View
     {
         $sort = $request->string('sort', 'recent')->toString();
         abort_unless(in_array($sort, ['recent', 'unanswered', 'popular'], true), 404);
@@ -43,6 +44,7 @@ class QuestionController extends Controller
         };
 
         $questions = $questions->paginate(20)->withQueryString();
+        $reactions->hydrateSummaries($questions->getCollection(), $request->user());
 
         return view('questions.index', compact('questions', 'sort', 'search', 'tag'));
     }
@@ -69,7 +71,7 @@ class QuestionController extends Controller
         return redirect()->route('questions.show', $question)->with('success', 'Pregunta publicada correctamente.');
     }
 
-    public function show(Request $request, ForumThread $thread): View
+    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View
     {
         abort_unless($thread->isQuestion(), 404);
         $thread->load(['forum.category', 'author.badges', 'author.communityRank', 'questionTags', 'acceptedAnswer']);
@@ -82,6 +84,8 @@ class QuestionController extends Controller
             ->oldest()
             ->paginate(20)
             ->withQueryString();
+
+        $reactions->hydrateSummaries(collect([$thread])->merge($posts->getCollection()), $request->user());
 
         return view('questions.show', compact('thread', 'posts'));
     }

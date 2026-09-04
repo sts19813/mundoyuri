@@ -3816,6 +3816,12 @@
 .forum-post-header { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .06); color: var(--muted); font-size: .7rem; }
 .forum-post-header a { color: inherit; text-decoration: none; }
 .forum-post-body { padding: 20px 0; color: #eee5f0; font-size: .86rem; line-height: 1.78; overflow-wrap: anywhere; }
+.community-reactions { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 14px; }
+.community-reactions form { margin: 0; }
+.community-reaction { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; border: 1px solid rgba(255, 255, 255, .09); border-radius: 999px; padding: 3px 8px; color: #e8dce9; background: rgba(255, 255, 255, .025); font: 500 .72rem 'DM Sans', sans-serif; line-height: 1; text-decoration: none; cursor: pointer; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.community-reaction:hover { border-color: rgba(244, 63, 142, .44); background: rgba(244, 63, 142, .11); color: #fff; transform: translateY(-1px); }
+.community-reaction.is-active { border-color: rgba(244, 63, 142, .62); background: rgba(244, 63, 142, .17); box-shadow: inset 0 0 0 1px rgba(255, 174, 207, .08); }
+.community-reaction small { color: inherit; font: 600 .68rem 'DM Sans', sans-serif; }
 .forum-hidden-message { padding: 20px 0; color: #e8a8c5; font-size: .82rem; font-style: italic; }
 .forum-post-actions { display: flex; gap: 13px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .06); }
 .forum-post-actions form { display: inline; margin: 0; }

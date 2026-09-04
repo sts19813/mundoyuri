@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ForumPost extends Model
@@ -38,6 +39,11 @@ class ForumPost extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(ForumPostVote::class);
+    }
+
+    public function reactions(): MorphMany
+    {
+        return $this->morphMany(CommunityReaction::class, 'reactable');
     }
 
     public function acceptedForQuestion(): HasOne

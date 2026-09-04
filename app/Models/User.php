@@ -145,6 +145,11 @@ class User extends Authenticatable
         return $this->hasMany(ForumPostVote::class);
     }
 
+    public function communityReactions(): HasMany
+    {
+        return $this->hasMany(CommunityReaction::class);
+    }
+
     public function subscribedForumThreads(): BelongsToMany
     {
         return $this->belongsToMany(ForumThread::class, 'forum_thread_subscriptions')->withTimestamps();
