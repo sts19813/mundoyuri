@@ -54,7 +54,7 @@ class CommunityReportTest extends TestCase
         $author = User::factory()->create();
         $answerer = User::factory()->create();
         $reporter = User::factory()->create();
-        $question = app(QuestionService::class)->create($forum, $author, 'Pregunta reportable', 'Contexto.', []);
+        $question = app(QuestionService::class)->create($author, 'Pregunta reportable', 'Contexto.');
         $answer = app(ForumPostService::class)->reply($question, $answerer, 'Respuesta reportable.');
 
         $this->actingAs($reporter)->post(route('community.reports.store'), [

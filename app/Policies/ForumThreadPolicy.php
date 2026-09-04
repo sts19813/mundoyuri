@@ -14,17 +14,27 @@ class ForumThreadPolicy
             return Response::allow();
         }
 
-        return ! $thread->is_hidden && ! $thread->trashed() && $thread->forum->is_active && $thread->forum->category->is_active
+        if ($thread->isQuestion()) {
+            return ! $thread->is_hidden && ! $thread->trashed()
+                ? Response::allow()
+                : Response::denyAsNotFound();
+        }
+
+        return ! $thread->is_hidden && ! $thread->trashed() && $thread->forum?->is_active && $thread->forum?->category?->is_active
             ? Response::allow()
             : Response::denyAsNotFound();
     }
 
     public function reply(User $user, ForumThread $thread): bool
     {
+        if ($thread->isQuestion()) {
+            return ! $thread->is_locked && ! $thread->is_hidden && ! $thread->trashed();
+        }
+
         return ! $thread->is_locked
-            && ! $thread->forum->is_locked
+            && ! $thread->forum?->is_locked
             && ! $thread->is_hidden
-            && $thread->forum->acceptsRole($user);
+            && $thread->forum?->acceptsRole($user);
     }
 
     public function update(User $user, ForumThread $thread): bool
@@ -58,9 +68,13 @@ class ForumThreadPolicy
 
     public function react(User $user, ForumThread $thread): bool
     {
+        if ($thread->isQuestion()) {
+            return ! $thread->is_hidden && ! $thread->trashed();
+        }
+
         return ! $thread->is_hidden
             && ! $thread->trashed()
-            && $thread->forum->is_active
-            && $thread->forum->category->is_active;
+            && $thread->forum?->is_active
+            && $thread->forum?->category?->is_active;
     }
 }

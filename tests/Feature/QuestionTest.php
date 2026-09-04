@@ -2,12 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Forum;
-use App\Models\ForumCategory;
 use App\Models\ForumPostVote;
 use App\Models\ForumThread;
 use App\Models\ForumThreadVote;
 use App\Models\User;
+use App\Notifications\ForumReplyNotification;
 use App\Notifications\QuestionAnswerAcceptedNotification;
 use App\Services\ForumPostService;
 use App\Services\QuestionService;
@@ -19,31 +18,38 @@ class QuestionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_member_can_create_a_question_with_tags_and_it_reuses_forum_counters(): void
+    public function test_member_can_create_an_independent_question_with_only_title_and_description(): void
     {
-        [, $forum] = $this->forum();
         $author = User::factory()->create(['alias' => 'Autora']);
 
         $this->actingAs($author)->post(route('questions.store'), [
-            'forum_id' => $forum->id,
             'title' => '¿Dónde puedo encontrar una recomendación?',
             'body' => 'Busco una serie con una historia tranquila.',
-            'tags' => ['recomendaciones', 'series'],
         ])->assertRedirect();
 
         $question = ForumThread::query()->firstOrFail();
         $this->assertSame('question', $question->type);
+        $this->assertNull($question->forum_id);
         $this->assertSame(1, $author->fresh()->community_message_count);
-        $this->assertSame(['recomendaciones', 'series'], $question->questionTags()->orderBy('name')->pluck('name')->all());
-        $this->get(route('questions.index'))->assertOk()->assertSee($question->title);
+
+        $this->get(route('questions.create'))
+            ->assertOk()
+            ->assertSee('Título')
+            ->assertSee('Descripción')
+            ->assertDontSee('Espacio')
+            ->assertDontSee('Etiquetas');
+        $this->get(route('questions.index'))
+            ->assertOk()
+            ->assertSee($question->title)
+            ->assertDontSee('votos')
+            ->assertDontSee('En ');
     }
 
     public function test_votes_are_unique_and_members_cannot_vote_for_themselves(): void
     {
-        [, $forum] = $this->forum();
         $author = User::factory()->create(['alias' => 'Autora']);
         $voter = User::factory()->create(['alias' => 'Votante']);
-        $question = app(QuestionService::class)->create($forum, $author, 'Pregunta para votar', 'Necesito ayuda.', []);
+        $question = app(QuestionService::class)->create($author, 'Pregunta para votar', 'Necesito ayuda.');
 
         $this->actingAs($author)->post(route('questions.votes.store', $question))->assertForbidden();
         $this->actingAs($voter)->post(route('questions.votes.store', $question))->assertRedirect();
@@ -57,11 +63,10 @@ class QuestionTest extends TestCase
     public function test_answer_acceptance_requires_question_owner_or_moderator_and_awards_reputation(): void
     {
         Notification::fake();
-        [, $forum] = $this->forum();
         $author = User::factory()->create(['alias' => 'Autora']);
         $answerer = User::factory()->create(['alias' => 'Ayuda']);
         $outsider = User::factory()->create(['alias' => 'Ajena']);
-        $question = app(QuestionService::class)->create($forum, $author, 'Pregunta con solución', 'Aquí están los detalles.', []);
+        $question = app(QuestionService::class)->create($author, 'Pregunta con solución', 'Aquí están los detalles.');
         $answer = app(ForumPostService::class)->reply($question, $answerer, 'Esta es una solución comprobada.');
 
         $this->actingAs($outsider)->post(route('questions.answers.accept', [$question, $answer]))->assertForbidden();
@@ -73,7 +78,7 @@ class QuestionTest extends TestCase
         $this->assertSame(1, $answerer->acceptedForumAnswers()->count());
 
         $moderator = User::factory()->create(['role' => 'moderator']);
-        $moderatedQuestion = app(QuestionService::class)->create($forum, $author, 'Pregunta moderada', 'Más contexto.', []);
+        $moderatedQuestion = app(QuestionService::class)->create($author, 'Pregunta moderada', 'Más contexto.');
         $moderatedAnswer = app(ForumPostService::class)->reply($moderatedQuestion, $outsider, 'Una solución revisada.');
         $this->actingAs($moderator)->post(route('questions.answers.accept', [$moderatedQuestion, $moderatedAnswer]))->assertRedirect();
         $this->assertSame($moderatedAnswer->id, $moderatedQuestion->fresh()->accepted_answer_post_id);
@@ -81,11 +86,10 @@ class QuestionTest extends TestCase
 
     public function test_answer_votes_are_unique_and_profile_question_relationships_are_available(): void
     {
-        [, $forum] = $this->forum();
         $author = User::factory()->create(['alias' => 'Autora']);
         $answerer = User::factory()->create(['alias' => 'Respuesta']);
         $voter = User::factory()->create(['alias' => 'Votante']);
-        $question = app(QuestionService::class)->create($forum, $author, 'Pregunta de relaciones', 'Contexto.', []);
+        $question = app(QuestionService::class)->create($author, 'Pregunta de relaciones', 'Contexto.');
         $answer = app(ForumPostService::class)->reply($question, $answerer, 'Respuesta útil.');
 
         $this->actingAs($answerer)->post(route('questions.answers.votes.store', $answer))->assertForbidden();
@@ -101,10 +105,9 @@ class QuestionTest extends TestCase
 
     public function test_question_filters_support_unanswered_and_popular_ordering(): void
     {
-        [, $forum] = $this->forum();
         $author = User::factory()->create(['alias' => 'Autora']);
-        $answered = app(QuestionService::class)->create($forum, $author, 'Pregunta respondida', 'Contexto uno.', []);
-        $open = app(QuestionService::class)->create($forum, $author, 'Pregunta popular', 'Contexto dos.', []);
+        $answered = app(QuestionService::class)->create($author, 'Pregunta respondida', 'Contexto uno.');
+        $open = app(QuestionService::class)->create($author, 'Pregunta popular', 'Contexto dos.');
         app(ForumPostService::class)->reply($answered, User::factory()->create(), 'Una respuesta.');
         $open->update(['upvotes_count' => 12, 'views_count' => 50]);
 
@@ -117,21 +120,16 @@ class QuestionTest extends TestCase
             ->assertSeeInOrder(['Pregunta popular', 'Pregunta respondida']);
     }
 
-    /** @return array{ForumCategory, Forum} */
-    private function forum(): array
+    public function test_answers_notify_the_question_author_without_notifying_the_responder(): void
     {
-        $category = ForumCategory::query()->create([
-            'name' => 'Comunidad',
-            'slug' => 'comunidad',
-            'sort_order' => 0,
-            'is_active' => true,
-        ]);
+        Notification::fake();
+        $author = User::factory()->create();
+        $answerer = User::factory()->create();
+        $question = app(QuestionService::class)->create($author, 'Pregunta que requiere respuesta', 'Necesito una recomendación.');
 
-        return [$category, Forum::query()->create([
-            'forum_category_id' => $category->id,
-            'name' => 'General',
-            'slug' => 'general',
-            'sort_order' => 0,
-        ])];
+        app(ForumPostService::class)->reply($question, $answerer, 'Te recomiendo esta historia.');
+
+        Notification::assertSentTo($author, ForumReplyNotification::class);
+        Notification::assertNothingSentTo($answerer);
     }
 }

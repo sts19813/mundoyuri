@@ -17,7 +17,7 @@ class ForumController extends Controller
             ->with(['forums' => function ($query) use ($search): void {
                 $query->active()
                     ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
-                    ->withCount(['threads as visible_threads_count' => fn ($query) => $query->where('is_hidden', false)])
+                    ->withCount(['threads as visible_threads_count' => fn ($query) => $query->where('type', 'discussion')->where('is_hidden', false)])
                     ->with(['latestVisibleThread.latestVisiblePost.author']);
             }])
             ->orderBy('sort_order')
@@ -34,6 +34,7 @@ class ForumController extends Controller
 
         $search = trim((string) $request->query('q'));
         $threads = $forum->threads()
+            ->where('type', 'discussion')
             ->where('is_hidden', false)
             ->with(['author.badges', 'author.communityRank', 'latestVisiblePost.author'])
             ->when($search !== '', fn ($query) => $query->where('title', 'like', '%'.$search.'%'))

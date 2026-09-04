@@ -60,7 +60,7 @@ class CommunityReactionTest extends TestCase
         $author = User::factory()->create(['alias' => 'Autora']);
         $answerer = User::factory()->create(['alias' => 'Respuesta']);
         $member = User::factory()->create(['alias' => 'Hana']);
-        $question = app(QuestionService::class)->create($forum, $author, '¿Pregunta con reacciones?', 'Contenido.', []);
+        $question = app(QuestionService::class)->create($author, '¿Pregunta con reacciones?', 'Contenido.');
         $answer = app(ForumPostService::class)->reply($question, $answerer, 'Una respuesta.');
 
         $this->actingAs($member)->post(route('community.reactions.store'), [

@@ -36,11 +36,18 @@ class ForumPostPolicy
     {
         $thread = $post->thread;
 
+        if ($thread->isQuestion()) {
+            return ! $post->is_hidden
+                && ! $post->trashed()
+                && ! $thread->is_hidden
+                && ! $thread->trashed();
+        }
+
         return ! $post->is_hidden
             && ! $post->trashed()
             && ! $thread->is_hidden
             && ! $thread->trashed()
-            && $thread->forum->is_active
-            && $thread->forum->category->is_active;
+            && $thread->forum?->is_active
+            && $thread->forum?->category?->is_active;
     }
 }

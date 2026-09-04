@@ -30,8 +30,8 @@ class CommunityActivityTest extends TestCase
         $threads->create($forum, $member, 'Tema propio', 'Primer tema.');
         $topic = $threads->create($forum, $other, 'Tema para responder', 'Contexto.');
         $posts->reply($topic, $member, 'Mi respuesta al tema.');
-        $questions->create($forum, $member, 'Pregunta propia', 'Necesito ayuda.', []);
-        $question = $questions->create($forum, $other, 'Pregunta para responder', 'Contexto.', []);
+        $questions->create($member, 'Pregunta propia', 'Necesito ayuda.');
+        $question = $questions->create($other, 'Pregunta para responder', 'Contexto.');
         $answer = $posts->reply($question, $member, 'Respuesta que será aceptada.');
         $questions->acceptAnswer($question, $answer, $other);
 

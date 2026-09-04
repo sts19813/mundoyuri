@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreForumPostRequest;
 use App\Http\Requests\StoreQuestionRequest;
-use App\Models\Forum;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
 use App\Services\CommunityReactionService;
@@ -22,20 +21,17 @@ class QuestionController extends Controller
         $sort = $request->string('sort', 'recent')->toString();
         abort_unless(in_array($sort, ['recent', 'unanswered', 'popular'], true), 404);
         $search = trim((string) $request->query('q'));
-        $tag = trim((string) $request->query('tag'));
 
         $questions = ForumThread::query()
             ->questions()
             ->where('is_hidden', false)
-            ->whereHas('forum', fn ($query) => $query->active()->whereHas('category', fn ($category) => $category->active()))
-            ->with(['author.badges', 'author.communityRank', 'forum', 'questionTags'])
+            ->with(['author'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('title', 'like', '%'.$search.'%')
                         ->orWhereHas('posts', fn ($posts) => $posts->where('is_initial', true)->where('body', 'like', '%'.$search.'%'));
                 });
-            })
-            ->when($tag !== '', fn ($query) => $query->whereHas('questionTags', fn ($tags) => $tags->where('slug', $tag)));
+            });
 
         match ($sort) {
             'unanswered' => $questions->where('replies_count', 0)->latest(),
@@ -46,27 +42,17 @@ class QuestionController extends Controller
         $questions = $questions->paginate(20)->withQueryString();
         $reactions->hydrateSummaries($questions->getCollection(), $request->user());
 
-        return view('questions.index', compact('questions', 'sort', 'search', 'tag'));
+        return view('questions.index', compact('questions', 'sort', 'search'));
     }
 
     public function create(): View
     {
-        $forums = Forum::query()->active()->with('category')->whereHas('category', fn ($query) => $query->active())
-            ->where('is_locked', false)->orderBy('forum_category_id')->orderBy('sort_order')->get()
-            ->filter(fn (Forum $forum) => request()->user()?->can('createTopic', $forum));
-
-        return view('questions.create', compact('forums'));
+        return view('questions.create');
     }
 
     public function store(StoreQuestionRequest $request, QuestionService $questions): RedirectResponse
     {
-        $question = $questions->create(
-            Forum::query()->findOrFail($request->integer('forum_id')),
-            $request->user(),
-            $request->validated('title'),
-            $request->validated('body'),
-            $request->validated('tags', []),
-        );
+        $question = $questions->create($request->user(), $request->validated('title'), $request->validated('body'));
 
         return redirect()->route('questions.show', $question)->with('success', 'Pregunta publicada correctamente.');
     }
@@ -74,7 +60,7 @@ class QuestionController extends Controller
     public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View
     {
         abort_unless($thread->isQuestion(), 404);
-        $thread->load(['forum.category', 'author.badges', 'author.communityRank', 'questionTags', 'acceptedAnswer']);
+        $thread->load(['author.badges', 'author.communityRank', 'acceptedAnswer']);
         $this->authorize('view', $thread);
         $thread->increment('views_count');
 

@@ -60,14 +60,14 @@ class CommunityController extends Controller
                 ->get(),
             'recentQuestions' => (clone $threads)
                 ->questions()
-                ->with(['forum', 'author'])
+                ->with(['author'])
                 ->latest()
                 ->limit(5)
                 ->get(),
             'unresolvedQuestions' => (clone $threads)
                 ->questions()
                 ->whereNull('accepted_answer_post_id')
-                ->with(['forum', 'author'])
+                ->with(['author'])
                 ->orderByDesc('last_post_at')
                 ->limit(5)
                 ->get(),
@@ -144,20 +144,26 @@ class CommunityController extends Controller
     {
         return ForumThread::query()
             ->where('is_hidden', false)
-            ->whereHas('forum', fn (Builder $query) => $query->active()->whereHas('category', fn (Builder $category) => $category->active()));
+            ->where(function (Builder $query): void {
+                $query->questions()
+                    ->orWhereHas('forum', fn (Builder $forum) => $forum->active()->whereHas('category', fn (Builder $category) => $category->active()));
+            });
     }
 
     private function constrainPublicThreads(Builder $query): Builder
     {
         return $query
             ->where('is_hidden', false)
-            ->whereHas('forum', fn (Builder $forum) => $forum->active()->whereHas('category', fn (Builder $category) => $category->active()));
+            ->where(function (Builder $threads): void {
+                $threads->questions()
+                    ->orWhereHas('forum', fn (Builder $forum) => $forum->active()->whereHas('category', fn (Builder $category) => $category->active()));
+            });
     }
 
     /** @return array{members: int, threads: int, messages: int, questions: int, answers: int} */
     private function statistics(): array
     {
-        return Cache::remember('community.home.statistics.v1', now()->addMinutes(10), function (): array {
+        return Cache::remember('community.home.statistics.v2', now()->addMinutes(10), function (): array {
             $threads = $this->publicThreads();
             $posts = ForumPost::query()
                 ->where('is_hidden', false)

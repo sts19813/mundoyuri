@@ -15,7 +15,7 @@
                 @forelse($threads as $thread)
                     <tr>
                         <td>{{ $thread->title }}</td>
-                        <td>{{ $thread->forum->name }}</td>
+                        <td>{{ $thread->isQuestion() ? 'Pregunta independiente' : $thread->forum?->name }}</td>
                         <td>{{ $thread->authorName() }}</td>
                         <td>{{ number_format($thread->replies_count) }}</td>
                         <td>{{ $thread->is_hidden ? 'Oculto' : ($thread->is_locked ? 'Cerrado' : 'Visible') }}{{ $thread->is_pinned ? ' · Fijado' : '' }}</td>

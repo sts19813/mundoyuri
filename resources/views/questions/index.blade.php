@@ -25,12 +25,11 @@
 
         <form method="GET" class="forum-search question-search">
             <input name="q" type="search" value="{{ $search }}" placeholder="Buscar preguntas">
-            @if($tag)<input type="hidden" name="tag" value="{{ $tag }}">@endif
             <button type="submit">Buscar</button>
         </form>
         <nav class="question-sorts" aria-label="Ordenar preguntas">
             @foreach(['recent' => 'Recientes', 'unanswered' => 'Sin resolver', 'popular' => 'Populares'] as $value => $label)
-                <a class="{{ $sort === $value ? 'is-active' : '' }}" href="{{ route('questions.index', array_filter(['sort' => $value, 'q' => $search ?: null, 'tag' => $tag ?: null])) }}">{{ $label }}</a>
+                <a class="{{ $sort === $value ? 'is-active' : '' }}" href="{{ route('questions.index', array_filter(['sort' => $value, 'q' => $search ?: null])) }}">{{ $label }}</a>
             @endforeach
         </nav>
 
@@ -40,26 +39,17 @@
         <section class="question-list">
             @forelse($questions as $question)
                 <article class="question-row">
-                    <div class="question-row-stats">
-                        <span>{{ number_format($question->upvotes_count) }} votos</span>
-                        <span class="{{ $question->isResolved() ? 'is-resolved' : '' }}">{{ number_format($question->replies_count) }} {{ $question->isResolved() ? 'resuelta' : 'respuestas' }}</span>
-                        <span>{{ number_format($question->views_count) }} vistas</span>
-                    </div>
                     <div class="question-row-main">
                         <h2><a href="{{ route('questions.show', $question) }}">{{ $question->title }}</a></h2>
-                        @if($question->questionTags->isNotEmpty())<div class="question-tags">@foreach($question->questionTags as $questionTag)<a href="{{ route('questions.index', ['tag' => $questionTag->slug]) }}">{{ $questionTag->name }}</a>@endforeach</div>@endif
-                        <p>En {{ $question->forum->name }} · {{ $question->created_at->diffForHumans() }}</p>
-                        <x-community.reactions :reactable="$question" />
+                        <p>Por @if($question->author)<a href="{{ $question->author->publicProfileUrl() }}">{{ $question->author->displayName() }}</a>@else{{ $question->authorName() }}@endif · {{ $question->created_at->diffForHumans() }}</p>
                     </div>
-                    <div class="question-row-author">
-                        @if($question->author)
-                            <a href="{{ $question->author->publicProfileUrl() }}" class="question-mini-avatar">@if($question->author->hasProfileAvatar())<img src="{{ $question->author->avatarUrl() }}" alt="">@else{{ $question->author->initials() }}@endif</a>
-                            <div><a href="{{ $question->author->publicProfileUrl() }}">{{ $question->author->displayName() }}</a><x-community.rank :rank="app(\App\Services\CommunityRankResolver::class)->resolve($question->author)" /><x-community.user-badges :user="$question->author" :limit="2" /><small>{{ number_format($question->author->community_reputation) }} reputación</small></div>
-                        @else <span>{{ $question->authorName() }}</span> @endif
+                    <div class="question-row-meta">
+                        <span>{{ number_format($question->replies_count) }} {{ $question->replies_count === 1 ? 'respuesta' : 'respuestas' }}</span>
+                        @if($question->isResolved())<span class="is-resolved">✓ Resuelta</span>@endif
                     </div>
                 </article>
             @empty
-                <div class="profile-panel forum-empty"><h2>Aún no hay preguntas</h2><p>La primera duda puede abrir una gran conversación.</p></div>
+                <div class="profile-panel forum-empty"><h2>Aún no hay preguntas</h2><p>La primera duda puede abrir una gran conversación.</p><a href="{{ auth()->check() ? route('questions.create') : route('login') }}" class="profile-btn profile-btn-primary">Hacer una pregunta</a></div>
             @endforelse
         </section>
         {{ $questions->links() }}

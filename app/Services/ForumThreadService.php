@@ -16,15 +16,15 @@ class ForumThreadService
         private readonly MentionService $mentions,
     ) {}
 
-    public function create(Forum $forum, User $author, string $title, string $body, string $type = 'discussion'): ForumThread
+    public function create(?Forum $forum, User $author, string $title, string $body, string $type = 'discussion'): ForumThread
     {
         return DB::transaction(function () use ($forum, $author, $title, $body, $type): ForumThread {
             $thread = ForumThread::query()->create([
-                'forum_id' => $forum->id,
+                'forum_id' => $forum?->id,
                 'user_id' => $author->id,
                 'author_name_snapshot' => $author->displayName(),
                 'title' => $title,
-                'slug' => $this->uniqueSlug($forum, $title),
+                'slug' => $this->uniqueSlug($title),
                 'type' => $type,
                 'last_post_at' => now(),
             ]);
@@ -47,7 +47,7 @@ class ForumThreadService
         });
     }
 
-    private function uniqueSlug(Forum $forum, string $title): string
+    private function uniqueSlug(string $title): string
     {
         $base = Str::limit(Str::slug($title) ?: 'tema', 160, '');
         $slug = $base;

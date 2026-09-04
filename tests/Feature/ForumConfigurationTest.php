@@ -31,7 +31,11 @@ class ForumConfigurationTest extends TestCase
 
         $this->get(route('forums.index'))->assertOk()->assertSee('Bienvenidas')->assertSee('Presentaciones');
         $this->actingAs($member)->get(route('forums.show', $forum))->assertOk();
-        $this->actingAs($member)->get(route('questions.create'))->assertOk()->assertSee('Presentaciones');
+        $this->actingAs($member)->get(route('questions.create'))
+            ->assertOk()
+            ->assertSee('Título')
+            ->assertSee('Descripción')
+            ->assertDontSee('Presentaciones');
         $this->actingAs($member)->post(route('forum.threads.store', $forum), [
             'title' => 'Mi primer tema en la comunidad',
             'body' => 'Hola a todas las personas de Mundo Yuri.',
@@ -53,7 +57,11 @@ class ForumConfigurationTest extends TestCase
             'title' => 'No debe poder publicarse aquí',
             'body' => 'Este foro está bloqueado.',
         ])->assertForbidden();
-        $this->actingAs($member)->get(route('questions.create'))->assertDontSee('Música')->assertDontSee('Juegos');
+        $this->actingAs($member)->get(route('questions.create'))
+            ->assertOk()
+            ->assertSee('Haz una pregunta')
+            ->assertDontSee('Música')
+            ->assertDontSee('Juegos');
     }
 
     public function test_admin_can_manage_structure_and_only_remove_empty_categories(): void

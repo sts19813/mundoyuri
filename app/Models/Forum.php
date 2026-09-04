@@ -32,7 +32,10 @@ class Forum extends Model
 
     public function latestVisibleThread(): HasOne
     {
-        return $this->hasOne(ForumThread::class)->where('is_hidden', false)->latestOfMany('last_post_at');
+        return $this->hasOne(ForumThread::class)
+            ->where('type', 'discussion')
+            ->where('is_hidden', false)
+            ->latestOfMany('last_post_at');
     }
 
     public function scopeActive(Builder $query): Builder

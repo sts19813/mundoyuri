@@ -19,16 +19,16 @@ class CommunityHomeTest extends TestCase
 
     public function test_community_home_is_a_lightweight_public_hub_with_real_community_content(): void
     {
-        Cache::forget('community.home.statistics.v1');
+        Cache::forget('community.home.statistics.v2');
         [, $forum] = $this->forum();
         $author = User::factory()->create(['name' => 'Miyu Activa', 'alias' => 'miyu', 'last_login_at' => now()]);
         $newMember = User::factory()->create(['name' => 'Hana Nueva', 'alias' => 'hana']);
         User::factory()->create(['name' => 'Perfil Privado', 'profile_visibility' => 'private', 'last_login_at' => now()]);
         $thread = app(ForumThreadService::class)->create($forum, $author, 'Hablemos de yuri', 'Primer mensaje.');
         app(ForumPostService::class)->reply($thread, $newMember, 'Me encanta esta conversación.');
-        $question = app(QuestionService::class)->create($forum, $author, '¿Qué obra recomiendan?', 'Busco una recomendación.', []);
+        $question = app(QuestionService::class)->create($author, '¿Qué obra recomiendan?', 'Busco una recomendación.');
         app(ForumPostService::class)->reply($question, $newMember, 'Te recomiendo empezar por esta serie.');
-        app(QuestionService::class)->create($forum, $newMember, 'Pregunta todavía abierta', 'Necesito más contexto.', []);
+        app(QuestionService::class)->create($newMember, 'Pregunta todavía abierta', 'Necesito más contexto.');
         LegacyProfile::query()->create([
             'legacy_external_key' => 'foro-2007:akari',
             'slug' => 'akari-archivo',
@@ -51,7 +51,7 @@ class CommunityHomeTest extends TestCase
             ->assertDontSee('Perfil Privado')
             ->assertSee(route('community.members'), false);
 
-        $stats = Cache::get('community.home.statistics.v1');
+        $stats = Cache::get('community.home.statistics.v2');
         $this->assertSame(2, $stats['members']);
         $this->assertSame(1, $stats['threads']);
         $this->assertSame(2, $stats['questions']);

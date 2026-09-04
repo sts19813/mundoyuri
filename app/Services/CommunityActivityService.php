@@ -52,12 +52,17 @@ class CommunityActivityService
     private function threadActivities(User $user): Builder
     {
         return ForumThread::query()
-            ->join('forums', 'forums.id', '=', 'forum_threads.forum_id')
-            ->join('forum_categories', 'forum_categories.id', '=', 'forums.forum_category_id')
+            ->leftJoin('forums', 'forums.id', '=', 'forum_threads.forum_id')
+            ->leftJoin('forum_categories', 'forum_categories.id', '=', 'forums.forum_category_id')
             ->where('forum_threads.user_id', $user->id)
             ->where('forum_threads.is_hidden', false)
-            ->where('forums.is_active', true)
-            ->where('forum_categories.is_active', true)
+            ->where(function ($query): void {
+                $query->where('forum_threads.type', 'question')
+                    ->orWhere(function ($query): void {
+                        $query->where('forums.is_active', true)
+                            ->where('forum_categories.is_active', true);
+                    });
+            })
             ->selectRaw("CASE WHEN forum_threads.type = 'question' THEN 'created_question' ELSE 'created_thread' END AS activity_type")
             ->selectRaw('forum_threads.id AS target_id, NULL AS post_id, forum_threads.title, forum_threads.slug, forum_threads.type AS thread_type, forum_threads.created_at AS activity_at')
             ->toBase();
@@ -67,15 +72,20 @@ class CommunityActivityService
     {
         return ForumPost::query()
             ->join('forum_threads', 'forum_threads.id', '=', 'forum_posts.forum_thread_id')
-            ->join('forums', 'forums.id', '=', 'forum_threads.forum_id')
-            ->join('forum_categories', 'forum_categories.id', '=', 'forums.forum_category_id')
+            ->leftJoin('forums', 'forums.id', '=', 'forum_threads.forum_id')
+            ->leftJoin('forum_categories', 'forum_categories.id', '=', 'forums.forum_category_id')
             ->where('forum_posts.user_id', $user->id)
             ->where('forum_posts.is_initial', false)
             ->where('forum_posts.is_hidden', false)
             ->whereNull('forum_threads.deleted_at')
             ->where('forum_threads.is_hidden', false)
-            ->where('forums.is_active', true)
-            ->where('forum_categories.is_active', true)
+            ->where(function ($query): void {
+                $query->where('forum_threads.type', 'question')
+                    ->orWhere(function ($query): void {
+                        $query->where('forums.is_active', true)
+                            ->where('forum_categories.is_active', true);
+                    });
+            })
             ->selectRaw("CASE WHEN forum_threads.type = 'question' THEN 'answered_question' ELSE 'replied_thread' END AS activity_type")
             ->selectRaw('forum_threads.id AS target_id, forum_posts.id AS post_id, forum_threads.title, forum_threads.slug, forum_threads.type AS thread_type, forum_posts.created_at AS activity_at')
             ->toBase();
@@ -85,16 +95,12 @@ class CommunityActivityService
     {
         return ForumThread::query()
             ->join('forum_posts AS accepted_posts', 'accepted_posts.id', '=', 'forum_threads.accepted_answer_post_id')
-            ->join('forums', 'forums.id', '=', 'forum_threads.forum_id')
-            ->join('forum_categories', 'forum_categories.id', '=', 'forums.forum_category_id')
             ->where('accepted_posts.user_id', $user->id)
             ->where('accepted_posts.is_initial', false)
             ->where('accepted_posts.is_hidden', false)
             ->whereNull('accepted_posts.deleted_at')
             ->where('forum_threads.type', 'question')
             ->where('forum_threads.is_hidden', false)
-            ->where('forums.is_active', true)
-            ->where('forum_categories.is_active', true)
             ->selectRaw("'accepted_answer' AS activity_type")
             ->selectRaw('forum_threads.id AS target_id, accepted_posts.id AS post_id, forum_threads.title, forum_threads.slug, forum_threads.type AS thread_type, forum_threads.accepted_answer_at AS activity_at')
             ->toBase();

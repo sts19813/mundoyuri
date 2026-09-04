@@ -69,7 +69,7 @@ class MentionTest extends TestCase
         $answerer = User::factory()->create(['alias' => 'Yuri']);
         $author->blockedUsers()->attach($blocked);
 
-        $question = app(QuestionService::class)->create($forum, $author, 'Pregunta de menciones', '¿Puede verlo @Miyu?', []);
+        $question = app(QuestionService::class)->create($author, 'Pregunta de menciones', '¿Puede verlo @Miyu?');
         $questionPost = $question->posts()->firstOrFail();
         $this->assertDatabaseMissing('forum_mentions', ['forum_post_id' => $questionPost->id, 'mentioned_user_id' => $blocked->id]);
         $this->assertSame(0, $blocked->notifications()->count());

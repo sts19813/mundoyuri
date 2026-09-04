@@ -59,7 +59,7 @@
                             <div>
                                 <h3 class="community-list-label">Recientes</h3>
                                 @forelse($recentQuestions as $question)
-                                    <a class="community-question-link" href="{{ route('questions.show', $question) }}"><span>{{ $question->title }}</span><small>{{ number_format($question->replies_count) }} respuestas</small></a>
+                                    <a class="community-question-link" href="{{ route('questions.show', $question) }}"><span>{{ $question->title }}</span><small>{{ number_format($question->replies_count) }} respuestas · {{ $question->last_post_at?->diffForHumans() }}</small></a>
                                 @empty <p class="community-home-muted">Todavía no hay preguntas.</p> @endforelse
                             </div>
                             <div>
