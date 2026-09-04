@@ -38,7 +38,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('forum_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('author_name_snapshot', 120)->nullable();
             $table->string('title', 180);
             $table->string('slug', 190);
             $table->unsignedBigInteger('views_count')->default(0);
@@ -58,7 +57,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('forum_thread_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('author_name_snapshot', 120)->nullable();
             $table->text('body');
             $table->timestamp('edited_at')->nullable();
             $table->boolean('is_initial')->default(false);
