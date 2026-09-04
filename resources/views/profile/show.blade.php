@@ -212,10 +212,21 @@
                                     <h2>Participación</h2>
                                 </div>
                             </div>
-                            @forelse($recentActivity as $activity)
+                            @forelse($communityActivity as $activity)
                                 <article class="community-activity-item">
-                                    <p>{{ \Illuminate\Support\Str::limit($activity->body, 220) }}</p>
-                                    <time datetime="{{ $activity->created_at?->toAtomString() }}">{{ $activity->created_at?->diffForHumans() }}</time>
+                                    <p>
+                                        @switch($activity->activity_type)
+                                            @case('created_thread') Creó un tema @break
+                                            @case('replied_thread') Respondió a un tema @break
+                                            @case('created_question') Hizo una pregunta @break
+                                            @case('answered_question') Respondió una pregunta @break
+                                            @case('accepted_answer') Su respuesta fue aceptada en @break
+                                            @case('favorite_series') Marcó como favorita @break
+                                            @case('badge_awarded') Obtuvo la insignia @break
+                                        @endswitch
+                                        @if($activity->url)<a href="{{ $activity->url }}">{{ $activity->title }}</a>@else<strong>{{ $activity->title }}</strong>@endif
+                                    </p>
+                                    <time datetime="{{ $activity->occurred_at->toAtomString() }}">{{ $activity->occurred_at->diffForHumans() }}</time>
                                 </article>
                             @empty
                                 <div class="public-profile-empty">
@@ -223,6 +234,9 @@
                                     <p>Este perfil todavía no tiene actividad pública reciente.</p>
                                 </div>
                             @endforelse
+                            @if($communityActivity->hasPages())
+                                <div class="community-activity-pagination">{{ $communityActivity->links() }}</div>
+                            @endif
                         </section>
                     @endif
 

@@ -2297,6 +2297,11 @@
         line-height: 1.65;
     }
 
+    .community-activity-item a { color: #ff9bc6; font-weight: 600; text-decoration: none; }
+    .community-activity-item a:hover { color: #ffd5e7; text-decoration: underline; }
+    .community-activity-item strong { color: #f0e4f0; font-weight: 600; }
+    .community-activity-pagination { margin-top: 16px; }
+
     .community-activity-item time {
         color: var(--muted);
         font-size: .66rem;

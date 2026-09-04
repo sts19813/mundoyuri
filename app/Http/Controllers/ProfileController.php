@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
+use App\Services\CommunityActivityService;
 use App\Services\CommunityRankResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class ProfileController extends Controller
     /**
      * Display a user's public profile.
      */
-    public function show(User $user, CommunityRankResolver $rankResolver, ?string $alias = null): View
+    public function show(User $user, CommunityRankResolver $rankResolver, CommunityActivityService $activity, ?string $alias = null): View
     {
         $this->authorize('viewProfile', $user);
 
@@ -51,8 +52,16 @@ class ProfileController extends Controller
         $viewer = auth()->user();
         $isOwner = $viewer?->is($user) ?? false;
         $viewerIsStaff = $viewer?->shouldEnterAdminPanel() ?? false;
-        $canViewFavorites = $user->show_favorites || $isOwner || $viewerIsStaff;
-        $canViewActivity = $user->show_activity || $isOwner || $viewerIsStaff;
+        $viewerHasBlocked = $viewer !== null
+            && ! $viewer->is($user)
+            && $viewer->hasBlocked($user);
+        $viewerIsBlocked = $viewer !== null
+            && ! $viewer->is($user)
+            && $viewer->isBlockedBy($user);
+        $interactionBlocked = $viewerHasBlocked || $viewerIsBlocked;
+        $canViewSharedData = ! $interactionBlocked || $isOwner || $viewerIsStaff;
+        $canViewFavorites = $canViewSharedData && ($user->show_favorites || $isOwner || $viewerIsStaff);
+        $canViewActivity = $canViewSharedData && ($user->show_activity || $isOwner || $viewerIsStaff);
         $favoriteSeries = $canViewFavorites
             ? $user->favoriteSeries()
                 ->with('genre')
@@ -62,21 +71,9 @@ class ProfileController extends Controller
                 ->take(12)
                 ->get()
             : collect();
-        $recentActivity = $canViewActivity
-            ? $user->comments()
-                ->with('commentable')
-                ->where('is_approved', true)
-                ->latest()
-                ->take(6)
-                ->get()
-            : collect();
-        $viewerHasBlocked = $viewer !== null
-            && ! $viewer->is($user)
-            && $viewer->hasBlocked($user);
-        $viewerIsBlocked = $viewer !== null
-            && ! $viewer->is($user)
-            && $viewer->isBlockedBy($user);
-        $interactionBlocked = $viewerHasBlocked || $viewerIsBlocked;
+        $communityActivity = $canViewActivity
+            ? $activity->forUser($user, $canViewFavorites)
+            : null;
         $isFollowing = $viewer !== null
             && ! $viewer->is($user)
             && ! $interactionBlocked
@@ -89,7 +86,7 @@ class ProfileController extends Controller
             'interactionBlocked' => $interactionBlocked,
             'viewerHasBlocked' => $viewerHasBlocked,
             'favoriteSeries' => $favoriteSeries,
-            'recentActivity' => $recentActivity,
+            'communityActivity' => $communityActivity,
             'canViewFavorites' => $canViewFavorites,
             'canViewActivity' => $canViewActivity,
             'communityRank' => $rankResolver->resolve($user),
