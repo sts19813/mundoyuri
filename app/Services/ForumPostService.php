@@ -12,7 +12,7 @@ class ForumPostService
 {
     public function __construct(
         private readonly ForumCounterService $counters,
-        private readonly ForumMentionService $mentions,
+        private readonly MentionService $mentions,
         private readonly QuestionService $questions,
     ) {}
 

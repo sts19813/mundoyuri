@@ -22,7 +22,7 @@
         @if($post->is_hidden)
             <p class="forum-hidden-message">Este mensaje está oculto por moderación.</p>
         @else
-            <div class="forum-post-body">{!! nl2br(e($post->body)) !!}</div>
+            <div class="forum-post-body">{!! nl2br(app(\App\Services\MentionService::class)->render($post->body, $post->mentions->pluck('mentionedUser'))) !!}</div>
             <x-community.reactions :reactable="$question && $post->is_initial ? $question : $post" />
             @if($question)
                 <div class="question-post-status">

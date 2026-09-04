@@ -13,7 +13,7 @@ class ForumThreadService
 {
     public function __construct(
         private readonly ForumCounterService $counters,
-        private readonly ForumMentionService $mentions,
+        private readonly MentionService $mentions,
     ) {}
 
     public function create(Forum $forum, User $author, string $title, string $body, string $type = 'discussion'): ForumThread

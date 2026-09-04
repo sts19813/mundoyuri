@@ -21,16 +21,18 @@ class ForumMentionNotification extends Notification
 
     public function toArray(object $notifiable): array
     {
+        $isQuestion = $this->post->thread->isQuestion();
+
         return [
             'kind' => 'forum_mention',
-            'title' => $this->actor->displayName().' te mencionó en el foro',
+            'title' => $this->actor->displayName().' te mencionó en '.($isQuestion ? 'una pregunta' : 'el foro'),
             'message' => Str::limit($this->post->body, 100),
             'actor_id' => $this->actor->id,
             'actor_name' => $this->actor->displayName(),
             'actor_avatar' => $this->actor->avatarUrl(),
             'forum_thread_id' => $this->post->forum_thread_id,
             'forum_post_id' => $this->post->id,
-            'url' => route($this->post->thread->isQuestion() ? 'questions.show' : 'forum.threads.show', $this->post->thread),
+            'url' => route($isQuestion ? 'questions.show' : 'forum.threads.show', $this->post->thread).'#post-'.$this->post->id,
         ];
     }
 }
