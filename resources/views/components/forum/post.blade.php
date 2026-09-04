@@ -45,6 +45,7 @@
                 @can('update', $post)<a href="{{ route('forum.posts.edit', $post) }}">Editar</a>@endcan
                 @can('delete', $post)<form method="POST" action="{{ route('forum.posts.destroy', $post) }}">@csrf @method('DELETE')<button type="submit" onclick="return confirm('¿Eliminar este mensaje?')">Eliminar</button></form>@endcan
                 @can('moderate', $post)<form method="POST" action="{{ route('forum.moderation.post.hide', $post) }}">@csrf @method('PATCH')<button type="submit">Ocultar</button></form>@endcan
+                <x-community.report-form :reportable="$post" />
             </footer>
         @endauth
     </div>

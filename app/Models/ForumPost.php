@@ -46,6 +46,16 @@ class ForumPost extends Model
         return $this->morphMany(CommunityReaction::class, 'reactable');
     }
 
+    public function reports(): MorphMany
+    {
+        return $this->morphMany(CommunityReport::class, 'reportable');
+    }
+
+    public function moderationLogs(): MorphMany
+    {
+        return $this->morphMany(CommunityModerationLog::class, 'moderatable');
+    }
+
     public function acceptedForQuestion(): HasOne
     {
         return $this->hasOne(ForumThread::class, 'accepted_answer_post_id');

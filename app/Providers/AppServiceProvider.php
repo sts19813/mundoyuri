@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Listeners\RecordUserLogin;
 use App\Listeners\SendWelcomeEmail;
 use App\Models\Badge;
+use App\Models\CommunityReport;
 use App\Models\Forum;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
@@ -12,6 +13,7 @@ use App\Models\ForumThread;
 use App\Models\LegacyProfile;
 use App\Models\User;
 use App\Policies\BadgePolicy;
+use App\Policies\CommunityReportPolicy;
 use App\Policies\ForumCategoryPolicy;
 use App\Policies\ForumPolicy;
 use App\Policies\ForumPostPolicy;
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Registered::class, SendWelcomeEmail::class);
 
         Gate::policy(Badge::class, BadgePolicy::class);
+        Gate::policy(CommunityReport::class, CommunityReportPolicy::class);
         Gate::policy(ForumCategory::class, ForumCategoryPolicy::class);
         Gate::policy(Forum::class, ForumPolicy::class);
         Gate::policy(ForumThread::class, ForumThreadPolicy::class);

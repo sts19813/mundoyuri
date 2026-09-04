@@ -3834,6 +3834,14 @@
 .forum-post-actions form { display: inline; margin: 0; }
 .forum-post-actions a,
 .forum-post-actions button { border: 0; padding: 0; background: transparent; color: #ff8cbd; font-size: .72rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+.community-report-form { position: relative; display: inline-block; }
+.community-report-form summary { color: #ff8cbd; font-size: .72rem; font-weight: 600; cursor: pointer; list-style: none; }
+.community-report-form summary::-webkit-details-marker { display: none; }
+.community-report-form form { display: grid; width: min(290px, 75vw); gap: 8px; margin-top: 9px; padding: 12px; border: 1px solid rgba(244, 63, 142, .2); border-radius: 12px; background: #1b101d; box-shadow: 0 16px 30px rgba(0, 0, 0, .28); }
+.community-report-form label { display: grid; gap: 4px; color: #dacbda; font-size: .7rem; }
+.community-report-form select, .community-report-form textarea { width: 100%; border: 1px solid rgba(255, 255, 255, .12); border-radius: 7px; padding: 7px; color: #f3eaf3; background: rgba(255, 255, 255, .05); font: inherit; }
+.community-report-form textarea { resize: vertical; }
+.community-report-form form button { justify-self: start; border: 0; border-radius: 999px; padding: 6px 10px; color: #fff; background: rgba(244, 63, 142, .72); font-size: .7rem; }
 .forum-reply-section { margin-top: 28px; }
 .forum-reply-section h2,
 .forum-moderation h2 { margin: 0; color: #fff; font: 700 1.35rem 'Playfair Display', serif; }

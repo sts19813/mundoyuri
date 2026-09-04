@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
+use App\Http\Controllers\Admin\CommunityReportController as AdminCommunityReportController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\ForumCategoryController as AdminForumCategoryController;
 use App\Http\Controllers\Admin\ForumController as AdminForumController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\CommunityReactionController;
+use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
@@ -130,6 +132,9 @@ Route::middleware(['auth'])
         Route::post('/comunidad/reacciones', [CommunityReactionController::class, 'store'])
             ->middleware('throttle:30,1')
             ->name('community.reactions.store');
+        Route::post('/comunidad/reportes', [CommunityReportController::class, 'store'])
+            ->middleware('throttle:10,5')
+            ->name('community.reports.store');
 
         Route::get('/comunidad/foros/{forum:slug}/nuevo-tema', [ForumThreadController::class, 'create'])->name('forum.threads.create');
         Route::post('/comunidad/foros/{forum:slug}/temas', [ForumThreadController::class, 'store'])->middleware('throttle:10,1')->name('forum.threads.store');
@@ -285,6 +290,9 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
 
     Route::get('/temas-foros', [AdminForumModerationController::class, 'threads'])->name('admin.forum-topics.index');
     Route::get('/moderacion-foros', [AdminForumModerationController::class, 'index'])->name('admin.forum-moderation.index');
+    Route::get('/validacion/comunidad', [AdminCommunityReportController::class, 'index'])->name('admin.community-reports.index');
+    Route::patch('/validacion/comunidad/{communityReport}', [AdminCommunityReportController::class, 'update'])->name('admin.community-reports.update');
+    Route::post('/validacion/comunidad/{communityReport}/acciones', [AdminCommunityReportController::class, 'action'])->name('admin.community-reports.action');
 
     Route::resource('roles', AdminRoleController::class)->parameters([
         'roles' => 'role',

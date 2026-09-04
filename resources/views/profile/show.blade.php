@@ -96,6 +96,7 @@
                                     </button>
                                 </form>
                                 <a class="profile-btn profile-btn-soft" href="{{ route('messages.show', $profileUser) }}">Mensaje</a>
+                                <x-community.report-form :reportable="$profileUser" />
                             @endunless
 
                             @if($viewerHasBlocked)
