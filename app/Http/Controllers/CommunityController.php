@@ -5,72 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MemberDirectoryRequest;
 use App\Models\CommunityRank;
 use App\Models\ForumPost;
-use App\Models\ForumThread;
-use App\Models\LegacyProfile;
 use App\Models\User;
 use App\Services\CommunityRankResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class CommunityController extends Controller
 {
-    public function index(Request $request, CommunityRankResolver $rankResolver): View
+    public function index(Request $request): View
     {
-        $memberRelations = [
-            'communityRank',
-            'badges' => fn ($query) => $query->active()->ordered(),
-        ];
-
-        $members = User::query()->visibleInCommunityDirectory();
-        $threads = $this->publicThreads();
-
         return view('community.home', [
-            'activeMembers' => (clone $members)
-                ->with($memberRelations)
-                ->orderByDesc('last_login_at')
-                ->orderByDesc('community_message_count')
-                ->limit(6)
-                ->get(),
-            'newMembers' => (clone $members)
-                ->with($memberRelations)
-                ->latest()
-                ->limit(6)
-                ->get(),
-            'legacyMembers' => LegacyProfile::query()
-                ->published()
-                ->orderBy('legacy_joined_at')
-                ->orderBy('nickname')
-                ->limit(4)
-                ->get(),
-            'recentThreads' => (clone $threads)
-                ->where('type', 'discussion')
-                ->with(['forum.category', 'author'])
-                ->orderByDesc('last_post_at')
-                ->limit(5)
-                ->get(),
-            'popularThreads' => (clone $threads)
-                ->where('type', 'discussion')
-                ->with(['forum.category', 'author'])
-                ->orderByDesc('replies_count')
-                ->orderByDesc('views_count')
-                ->orderByDesc('last_post_at')
-                ->limit(5)
-                ->get(),
-            'recentQuestions' => (clone $threads)
-                ->questions()
-                ->with(['author'])
-                ->latest()
-                ->limit(5)
-                ->get(),
-            'unresolvedQuestions' => (clone $threads)
-                ->questions()
-                ->whereNull('accepted_answer_post_id')
-                ->with(['author'])
-                ->orderByDesc('last_post_at')
-                ->limit(5)
-                ->get(),
             'recentActivity' => ForumPost::query()
                 ->where('is_hidden', false)
                 ->whereHas('thread', fn (Builder $query) => $this->constrainPublicThreads($query))
@@ -85,10 +30,8 @@ class CommunityController extends Controller
                 })
                 ->with(['thread.forum', 'author'])
                 ->latest()
-                ->limit(7)
+                ->limit(5)
                 ->get(),
-            'stats' => $this->statistics(),
-            'rankResolver' => $rankResolver,
         ]);
     }
 
@@ -140,16 +83,6 @@ class CommunityController extends Controller
         ]);
     }
 
-    private function publicThreads(): Builder
-    {
-        return ForumThread::query()
-            ->where('is_hidden', false)
-            ->where(function (Builder $query): void {
-                $query->questions()
-                    ->orWhereHas('forum', fn (Builder $forum) => $forum->active()->whereHas('category', fn (Builder $category) => $category->active()));
-            });
-    }
-
     private function constrainPublicThreads(Builder $query): Builder
     {
         return $query
@@ -158,28 +91,6 @@ class CommunityController extends Controller
                 $threads->questions()
                     ->orWhereHas('forum', fn (Builder $forum) => $forum->active()->whereHas('category', fn (Builder $category) => $category->active()));
             });
-    }
-
-    /** @return array{members: int, threads: int, messages: int, questions: int, answers: int} */
-    private function statistics(): array
-    {
-        return Cache::remember('community.home.statistics.v2', now()->addMinutes(10), function (): array {
-            $threads = $this->publicThreads();
-            $posts = ForumPost::query()
-                ->where('is_hidden', false)
-                ->whereHas('thread', fn (Builder $query) => $this->constrainPublicThreads($query));
-
-            return [
-                'members' => User::query()->visibleInCommunityDirectory()->count(),
-                'threads' => (clone $threads)->where('type', 'discussion')->count(),
-                'messages' => (clone $posts)->count(),
-                'questions' => (clone $threads)->questions()->count(),
-                'answers' => (clone $posts)
-                    ->where('is_initial', false)
-                    ->whereHas('thread', fn (Builder $query) => $query->where('type', 'question'))
-                    ->count(),
-            ];
-        });
     }
 
     private function applyRankFilter(Builder $query, CommunityRank $rank): void

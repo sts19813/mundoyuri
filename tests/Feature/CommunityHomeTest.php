@@ -4,59 +4,64 @@ namespace Tests\Feature;
 
 use App\Models\Forum;
 use App\Models\ForumCategory;
-use App\Models\LegacyProfile;
 use App\Models\User;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
 use App\Services\QuestionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CommunityHomeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_community_home_is_a_lightweight_public_hub_with_real_community_content(): void
+    public function test_community_home_is_a_simple_entry_point_with_the_three_community_destinations(): void
     {
-        Cache::forget('community.home.statistics.v2');
         [, $forum] = $this->forum();
         $author = User::factory()->create(['name' => 'Miyu Activa', 'alias' => 'miyu', 'last_login_at' => now()]);
         $newMember = User::factory()->create(['name' => 'Hana Nueva', 'alias' => 'hana']);
-        User::factory()->create(['name' => 'Perfil Privado', 'profile_visibility' => 'private', 'last_login_at' => now()]);
         $thread = app(ForumThreadService::class)->create($forum, $author, 'Hablemos de yuri', 'Primer mensaje.');
         app(ForumPostService::class)->reply($thread, $newMember, 'Me encanta esta conversación.');
-        $question = app(QuestionService::class)->create($author, '¿Qué obra recomiendan?', 'Busco una recomendación.');
-        app(ForumPostService::class)->reply($question, $newMember, 'Te recomiendo empezar por esta serie.');
-        app(QuestionService::class)->create($newMember, 'Pregunta todavía abierta', 'Necesito más contexto.');
-        LegacyProfile::query()->create([
-            'legacy_external_key' => 'foro-2007:akari',
-            'slug' => 'akari-archivo',
-            'nickname' => 'Akari Archivo',
-            'legacy_joined_at' => '2007-04-12',
-            'source' => 'captura-2007',
-            'is_published' => true,
-        ]);
 
         $this->get(route('community.index'))
             ->assertOk()
             ->assertSee('Bienvenida a la')
-            ->assertSee('Temas recientes')
+            ->assertSee('Foros')
+            ->assertSee('Preguntas')
+            ->assertSee('Miembros')
+            ->assertSee(route('forums.index'), false)
+            ->assertSee(route('questions.index'), false)
+            ->assertSee(route('community.members'), false)
+            ->assertSee('Actividad reciente')
             ->assertSee('Hablemos de yuri')
-            ->assertSee('¿Qué obra recomiendan?')
-            ->assertSee('Pregunta todavía abierta')
             ->assertSee('miyu')
             ->assertSee('hana')
-            ->assertSee('Akari Archivo')
-            ->assertDontSee('Perfil Privado')
-            ->assertSee(route('community.members'), false);
+            ->assertSee('Una comunidad desde 2007')
+            ->assertSee('Miembros históricos')
+            ->assertDontSee('Temas recientes')
+            ->assertDontSee('Temas populares')
+            ->assertDontSee('Miembros activos')
+            ->assertDontSee('Miembros nuevos')
+            ->assertDontSee('Respuestas que buscamos juntas');
+    }
 
-        $stats = Cache::get('community.home.statistics.v2');
-        $this->assertSame(2, $stats['members']);
-        $this->assertSame(1, $stats['threads']);
-        $this->assertSame(2, $stats['questions']);
-        $this->assertSame(1, $stats['answers']);
-        $this->assertSame(5, $stats['messages']);
+    public function test_community_home_activity_excludes_private_profiles(): void
+    {
+        $publicAuthor = User::factory()->create(['name' => 'Miyu Pública', 'alias' => 'miyu-publica']);
+        $privateAuthor = User::factory()->create([
+            'name' => 'Miyu Privada',
+            'alias' => 'miyu-privada',
+            'profile_visibility' => 'private',
+        ]);
+
+        app(QuestionService::class)->create($publicAuthor, 'Pregunta pública', 'Esta actividad se puede ver.');
+        app(QuestionService::class)->create($privateAuthor, 'Pregunta privada', 'Esta actividad no se puede ver.');
+
+        $this->get(route('community.index'))
+            ->assertOk()
+            ->assertSee('Pregunta pública')
+            ->assertDontSee('Pregunta privada')
+            ->assertDontSee('Miyu Privada');
     }
 
     public function test_member_directory_remains_available_on_its_own_route(): void
