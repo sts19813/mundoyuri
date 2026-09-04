@@ -21,5 +21,6 @@
     @else <section class="profile-panel forum-readonly"><p><a href="{{ route('login') }}">Inicia sesión</a> para aportar una respuesta.</p></section>@endauth
 </div></main>
 <x-footer />
+<script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
 </body>
 </html>

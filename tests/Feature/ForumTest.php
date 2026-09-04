@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ForumTest extends TestCase
@@ -159,6 +160,144 @@ class ForumTest extends TestCase
 
         $this->assertSame(2, $author->fresh()->community_message_count);
         $this->assertSame(1, $thread->fresh()->replies_count);
+    }
+
+    public function test_forum_feed_shows_content_and_only_two_latest_visible_replies_per_topic(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Tema en el feed', 'Contenido original del feed');
+        foreach (range(1, 4) as $number) {
+            app(ForumPostService::class)->reply($thread, $author, 'Respuesta número '.$number);
+        }
+        app(ForumPostService::class)->reply($thread, $author, 'Respuesta oculta')->update(['is_hidden' => true]);
+        $hidden = app(ForumThreadService::class)->create($forum, $author, 'Tema escondido', 'Texto secreto');
+        $hidden->update(['is_hidden' => true]);
+
+        $this->actingAs($author)->get(route('forums.show', $forum))->assertOk()
+            ->assertSee('Contenido original del feed')->assertSee('Respuesta número 3')
+            ->assertSee('Respuesta número 4')->assertDontSee('Respuesta número 1')
+            ->assertDontSee('Respuesta oculta')->assertDontSee('Texto secreto')
+            ->assertSee(route('forum.posts.store', $thread), false)
+            ->assertViewHas('threads', fn ($threads) => $threads->first()->previewReplies->count() === 2);
+    }
+
+    public function test_forum_feed_paginates_fifty_topics_and_preserves_search(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        foreach (range(1, 51) as $number) {
+            $forum->threads()->create([
+                'user_id' => $author->id, 'title' => 'Conversación '.$number,
+                'slug' => 'conversacion-'.$number, 'type' => 'discussion', 'last_post_at' => now(),
+            ]);
+        }
+        $this->get(route('forums.show', $forum).'?q=Conversaci')->assertOk()
+            ->assertViewHas('threads', fn ($threads) => $threads->perPage() === 50 && $threads->count() === 50 && $threads->total() === 51)
+            ->assertSee('q=Conversaci', false);
+        $this->get(route('forums.show', $forum).'?q=Conversaci&page=2')->assertOk()
+            ->assertViewHas('threads', fn ($threads) => $threads->count() === 1);
+    }
+
+    public function test_feed_reply_returns_safe_content_and_rejects_invalid_or_locked_submissions(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Tema con respuestas', 'Mensaje inicial');
+        $member = User::factory()->create();
+
+        $response = $this->actingAs($member)->postJson(route('forum.posts.store', $thread), [
+            'body' => '<script>alert(123)</script>', 'from_feed' => true,
+        ])->assertCreated()->assertJsonPath('replies_count', 1);
+        $this->assertStringContainsString('&lt;script&gt;', $response->json('html'));
+        $this->assertStringNotContainsString('<script>alert', $response->json('html'));
+        $this->assertSame(1, $member->fresh()->community_message_count);
+        $this->postJson(route('forum.posts.store', $thread), ['body' => ''])->assertUnprocessable();
+        $thread->update(['is_locked' => true]);
+        $this->postJson(route('forum.posts.store', $thread), ['body' => 'No permitida'])->assertForbidden();
+        $this->assertSame(2, $thread->posts()->count());
+    }
+
+    public function test_feed_creation_and_plain_reply_return_to_the_forum(): void
+    {
+        [, $forum] = $this->forum();
+        $member = User::factory()->create();
+        $this->actingAs($member)->post(route('forum.threads.store', $forum), [
+            'title' => 'Creación desde el feed', 'body' => 'Hola comunidad', 'from_feed' => true,
+        ])->assertRedirect(route('forums.show', $forum).'#thread-'.ForumThread::query()->firstOrFail()->id);
+        $thread = ForumThread::query()->firstOrFail();
+        $this->post(route('forum.posts.store', $thread), ['body' => 'Respuesta sin JavaScript', 'from_feed' => true])
+            ->assertRedirect(route('forums.show', $forum).'#thread-'.$thread->id);
+        $this->get(route('forums.show', $forum))->assertSee('forum-topic-dialog');
+        $forum->update(['is_locked' => true]);
+        $this->get(route('forums.show', $forum))->assertDontSee('id="forum-topic-dialog"', false)
+            ->assertDontSee('data-feed-reply', false);
+    }
+
+    public function test_expanding_feed_replies_is_paginated_and_keeps_hidden_content_private(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Conversación larga', 'Mensaje de apertura');
+        foreach (range(1, 21) as $number) {
+            $thread->posts()->create(['user_id' => $author->id, 'body' => 'Contenido de respuesta '.$number]);
+        }
+        $thread->posts()->create(['user_id' => $author->id, 'body' => 'Texto oculto', 'is_hidden' => true]);
+        $response = $this->getJson(route('forum.threads.show', $thread))->assertOk();
+        $this->assertSame(20, substr_count($response->json('html'), 'class="forum-post '));
+        $this->assertStringNotContainsString('Texto oculto', $response->json('html'));
+        $this->assertStringNotContainsString('Mensaje de apertura', $response->json('html'));
+        $secondPage = $this->getJson($response->json('next_page_url'))->assertOk()->assertJsonPath('next_page_url', null);
+        $this->assertStringContainsString('Contenido de respuesta 21', $secondPage->json('html'));
+        $this->assertSame(0, $thread->fresh()->views_count);
+        $thread->update(['is_hidden' => true]);
+        $this->getJson(route('forum.threads.show', $thread))->assertNotFound();
+    }
+
+    public function test_feed_queries_do_not_grow_per_topic_and_each_topic_gets_its_own_preview(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $create = function ($number) use ($forum, $author): void {
+            $thread = app(ForumThreadService::class)->create($forum, $author, 'Tema número '.$number, 'Contenido inicial');
+            foreach (range(1, 3) as $reply) {
+                $thread->posts()->create(['user_id' => $author->id, 'body' => 'Tema '.$number.' respuesta '.$reply]);
+            }
+        };
+        $create(1);
+        $this->get(route('forums.show', $forum))->assertOk();
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $this->get(route('forums.show', $forum))->assertOk();
+        $singleQueries = count(DB::getQueryLog());
+        foreach (range(2, 5) as $number) {
+            $create($number);
+        }
+        DB::flushQueryLog();
+        $this->get(route('forums.show', $forum))->assertOk()
+            ->assertViewHas('threads', fn ($threads) => $threads->every(fn ($thread) => $thread->previewReplies->count() === 2))
+            ->assertSee('Tema 1 respuesta 3')->assertSee('Tema 5 respuesta 3');
+        $multipleQueries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+        $this->assertLessThanOrEqual($singleQueries + 2, $multipleQueries);
+    }
+
+    public function test_author_card_respects_private_profiles_blocks_and_signature_preferences(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create(['signature_enabled' => true, 'signature_text' => 'Firma distintiva del autor', 'profile_visibility' => 'private']);
+        app(ForumThreadService::class)->create($forum, $author, 'Privacidad del autor', 'Texto público del foro');
+        $viewer = User::factory()->create(['show_signatures' => true]);
+        $this->actingAs($viewer)->get(route('forums.show', $forum))->assertOk()
+            ->assertSee('Texto público del foro')->assertDontSee('Firma distintiva del autor');
+        $author->update(['profile_visibility' => 'public']);
+        $this->get(route('forums.show', $forum))->assertSee('Firma distintiva del autor')
+            ->assertSee(route('messages.show', $author), false);
+        $viewer->update(['show_signatures' => false]);
+        $this->get(route('forums.show', $forum))->assertDontSee('Firma distintiva del autor');
+        $viewer->blockedUsers()->attach($author);
+        $viewer->unsetRelation('blockedUsers');
+        $this->get(route('forums.show', $forum))->assertDontSee(route('messages.show', $author), false);
     }
 
     /** @return array{ForumCategory, Forum} */

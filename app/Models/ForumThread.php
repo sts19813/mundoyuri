@@ -51,6 +51,16 @@ class ForumThread extends Model
         return $this->posts()->where('is_hidden', false);
     }
 
+    public function initialPost(): HasOne
+    {
+        return $this->hasOne(ForumPost::class)->where('is_initial', true);
+    }
+
+    public function previewReplies(): HasMany
+    {
+        return $this->posts()->where('is_initial', false)->where('is_hidden', false);
+    }
+
     public function latestVisiblePost(): HasOne
     {
         return $this->hasOne(ForumPost::class)->where('is_hidden', false)->latestOfMany();

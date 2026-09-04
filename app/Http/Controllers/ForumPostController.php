@@ -6,15 +6,32 @@ use App\Http\Requests\StoreForumPostRequest;
 use App\Http\Requests\UpdateForumPostRequest;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Services\CommunityReactionService;
 use App\Services\ForumPostService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ForumPostController extends Controller
 {
-    public function store(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts): RedirectResponse
+    public function store(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions): RedirectResponse|JsonResponse
     {
         $post = $posts->reply($thread, $request->user(), $request->validated('body'));
+
+        if ($request->expectsJson()) {
+            $post->load(['author.badges', 'author.communityRank', 'mentions.mentionedUser']);
+            $post->setRelation('thread', $thread);
+            $reactions->hydrateSummaries([$post], $request->user());
+
+            return response()->json([
+                'html' => view('components.forum.post', ['post' => $post])->render(),
+                'replies_count' => $thread->fresh()->replies_count,
+            ], 201);
+        }
+
+        if ($request->boolean('from_feed')) {
+            return redirect()->to(route('forums.show', $thread->forum).'#thread-'.$thread->id);
+        }
 
         return redirect()->to(route('forum.threads.show', $thread).'#post-'.$post->id);
     }

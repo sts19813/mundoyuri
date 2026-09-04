@@ -9,6 +9,7 @@ use App\Models\ForumThread;
 use App\Services\CommunityReactionService;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -31,10 +32,15 @@ class ForumThreadController extends Controller
             $request->validated('body'),
         );
 
+        if ($request->boolean('from_feed')) {
+            return redirect()->to(route('forums.show', $forum).'#thread-'.$thread->id)
+                ->with('success', 'Tema publicado correctamente.');
+        }
+
         return redirect()->route('forum.threads.show', $thread)->with('success', 'Tema publicado correctamente.');
     }
 
-    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View|RedirectResponse
+    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View|RedirectResponse|JsonResponse
     {
         if ($thread->isQuestion()) {
             return redirect()->route('questions.show', $thread);
@@ -42,9 +48,12 @@ class ForumThreadController extends Controller
 
         $thread->load('forum.category');
         $this->authorize('view', $thread);
-        $thread->increment('views_count');
+        if (! $request->expectsJson()) {
+            $thread->increment('views_count');
+        }
 
         $posts = $thread->posts()
+            ->when($request->expectsJson(), fn ($query) => $query->where('is_initial', false))
             ->when(! $request->user()?->shouldEnterAdminPanel(), fn ($query) => $query->where('is_hidden', false))
             ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser'])
             ->oldest()
@@ -52,6 +61,14 @@ class ForumThreadController extends Controller
             ->withQueryString();
 
         $reactions->hydrateSummaries($posts->getCollection(), $request->user());
+        $posts->each(fn ($post) => $post->setRelation('thread', $thread));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => $posts->map(fn ($post) => view('components.forum.post', ['post' => $post])->render())->implode(''),
+                'next_page_url' => $posts->nextPageUrl(),
+            ]);
+        }
 
         $isSubscribed = $request->user()
             ? $thread->subscribers()->whereKey($request->user()->id)->exists()
