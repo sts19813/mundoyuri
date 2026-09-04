@@ -12,6 +12,9 @@ use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
+use App\Http\Controllers\Admin\ForumCategoryController as AdminForumCategoryController;
+use App\Http\Controllers\Admin\ForumController as AdminForumController;
+use App\Http\Controllers\Admin\ForumModerationController as AdminForumModerationController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
@@ -24,6 +27,11 @@ use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
+use App\Http\Controllers\ForumController;
+use App\Http\Controllers\ForumModerationController;
+use App\Http\Controllers\ForumPostController;
+use App\Http\Controllers\ForumSubscriptionController;
+use App\Http\Controllers\ForumThreadController;
 use App\Http\Controllers\LegacyProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -61,6 +69,9 @@ Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 Route::get('/comunidad', [CommunityController::class, 'index'])->name('community.index');
+Route::get('/comunidad/foros', [ForumController::class, 'index'])->name('forums.index');
+Route::get('/comunidad/foros/{forum:slug}', [ForumController::class, 'show'])->name('forums.show');
+Route::get('/comunidad/tema/{thread:slug}', [ForumThreadController::class, 'show'])->name('forum.threads.show');
 Route::get('/comunidad/historicos', [LegacyProfileController::class, 'index'])->name('legacy-profiles.index');
 Route::get('/miembros/historicos/{legacyProfile:slug}', [LegacyProfileController::class, 'show'])->name('legacy-profiles.show');
 Route::get('/usuarios/{user}/seguidores', [ProfileController::class, 'followers'])->name('profiles.followers');
@@ -110,6 +121,20 @@ Route::middleware(['auth'])
             ->name('notifications.open');
         Route::patch('/notificaciones', [NotificationController::class, 'readAll'])
             ->name('notifications.read-all');
+
+        Route::get('/comunidad/foros/{forum:slug}/nuevo-tema', [ForumThreadController::class, 'create'])->name('forum.threads.create');
+        Route::post('/comunidad/foros/{forum:slug}/temas', [ForumThreadController::class, 'store'])->middleware('throttle:10,1')->name('forum.threads.store');
+        Route::get('/comunidad/tema/{thread:slug}/editar', [ForumThreadController::class, 'edit'])->name('forum.threads.edit');
+        Route::patch('/comunidad/tema/{thread:slug}', [ForumThreadController::class, 'update'])->name('forum.threads.update');
+        Route::delete('/comunidad/tema/{thread:slug}', [ForumThreadController::class, 'destroy'])->name('forum.threads.destroy');
+        Route::post('/comunidad/tema/{thread:slug}/respuestas', [ForumPostController::class, 'store'])->middleware('throttle:30,1')->name('forum.posts.store');
+        Route::get('/comunidad/mensaje/{post}/editar', [ForumPostController::class, 'edit'])->name('forum.posts.edit');
+        Route::patch('/comunidad/mensaje/{post}', [ForumPostController::class, 'update'])->name('forum.posts.update');
+        Route::delete('/comunidad/mensaje/{post}', [ForumPostController::class, 'destroy'])->name('forum.posts.destroy');
+        Route::post('/comunidad/tema/{thread:slug}/suscripcion', [ForumSubscriptionController::class, 'store'])->name('forum.subscriptions.store');
+        Route::delete('/comunidad/tema/{thread:slug}/suscripcion', [ForumSubscriptionController::class, 'destroy'])->name('forum.subscriptions.destroy');
+        Route::patch('/comunidad/tema/{thread:slug}/moderacion', [ForumModerationController::class, 'updateThread'])->name('forum.moderation.thread.update');
+        Route::patch('/comunidad/mensaje/{post}/ocultar', [ForumModerationController::class, 'hidePost'])->name('forum.moderation.post.hide');
 
         Route::get('/aportes/nuevo', [ContentSubmissionController::class, 'create'])->name('submissions.create');
         Route::post('/aportes', [ContentSubmissionController::class, 'store'])
@@ -219,6 +244,30 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'update' => 'admin.badges.update',
             'destroy' => 'admin.badges.destroy',
         ]);
+
+    Route::resource('categorias-foros', AdminForumCategoryController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['categorias-foros' => 'forumCategory'])
+        ->names([
+            'index' => 'admin.forum-categories.index',
+            'create' => 'admin.forum-categories.create',
+            'store' => 'admin.forum-categories.store',
+            'edit' => 'admin.forum-categories.edit',
+            'update' => 'admin.forum-categories.update',
+        ]);
+
+    Route::resource('foros', AdminForumController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['foros' => 'forum'])
+        ->names([
+            'index' => 'admin.forums.index',
+            'create' => 'admin.forums.create',
+            'store' => 'admin.forums.store',
+            'edit' => 'admin.forums.edit',
+            'update' => 'admin.forums.update',
+        ]);
+
+    Route::get('/moderacion-foros', [AdminForumModerationController::class, 'index'])->name('admin.forum-moderation.index');
 
     Route::resource('roles', AdminRoleController::class)->parameters([
         'roles' => 'role',

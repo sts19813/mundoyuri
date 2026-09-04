@@ -38,6 +38,15 @@
                     </a>
                 </div>
 
+                @if($panelUser?->shouldEnterAdminPanel())
+                    <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('admin.forum-moderation.*') ? 'active' : '' }}" href="{{ route('admin.forum-moderation.index') }}">
+                            <span class="menu-icon"><i class="ki-outline ki-shield-tick fs-2"></i></span>
+                            <span class="menu-title">Moderación de foros</span>
+                        </a>
+                    </div>
+                @endif
+
                 @if($hasContentAccess)
                     <div class="menu-item mt-6 mb-2">
                         <div class="menu-content">
@@ -103,6 +112,12 @@
                             <a class="menu-link {{ request()->routeIs('admin.community-ranks.*') ? 'active' : '' }}" href="{{ route('admin.community-ranks.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-award fs-2"></i></span>
                                 <span class="menu-title">Rangos comunitarios</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.forum-categories.*', 'admin.forums.*') ? 'active' : '' }}" href="{{ route('admin.forum-categories.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-message-text-2 fs-2"></i></span>
+                                <span class="menu-title">Estructura de foros</span>
                             </a>
                         </div>
                         <div class="menu-item">
