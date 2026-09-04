@@ -4024,22 +4024,35 @@
 .legacy-claim-hint { color: #a998ac; }
 .legacy-claim-error { color: #ff9abd; }
 .legacy-claim-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.community-home-page { min-height: 0; padding-bottom: 48px; }
-.community-home-hero { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 20px 0 20px; padding: 30px 38px; border: 1px solid rgba(244, 63, 142, .16); border-radius: 24px; background: linear-gradient(118deg, rgba(255, 244, 249, .97), rgba(239, 225, 239, .92)); box-shadow: 0 22px 55px rgba(0, 0, 0, .16); }
-.community-home-hero h1 { margin: 8px 0 9px; color: #3f1f3d; font: 700 clamp(2.15rem, 4.2vw, 3.65rem)/.98 'Playfair Display', serif; letter-spacing: -.045em; }
+.community-home-page { min-height: 0; padding-bottom: 82px; }
+.community-home-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(360px, .88fr); gap: 40px; margin: 20px 0 24px; padding: 40px; overflow: hidden; border: 1px solid rgba(244, 63, 142, .17); border-radius: 24px; background: linear-gradient(122deg, rgba(255, 246, 250, .97), rgba(240, 224, 239, .94)); box-shadow: 0 22px 55px rgba(0, 0, 0, .15); }
+.community-home-hero::after { position: absolute; top: -60px; right: 5%; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(232, 72, 145, .19), transparent 68%); content: ''; pointer-events: none; }
+.community-home-hero > * { position: relative; z-index: 1; }
+.community-home-hero h1 { max-width: 610px; margin: 8px 0 11px; color: #3f1f3d; font: 700 clamp(2.35rem, 4.4vw, 4rem)/.98 'Playfair Display', serif; letter-spacing: -.05em; }
 .community-home-hero h1 em { color: #e84891; font-weight: 400; }
-.community-home-hero p { max-width: 650px; margin: 0; color: #745d73; font-size: .95rem; }
-.community-home-actions { display: flex; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; }
-.community-home-actions .profile-btn { white-space: nowrap; }
-.community-home-actions .profile-btn-soft { border-color: rgba(173, 42, 104, .42); color: #92275c; background: rgba(255, 255, 255, .48); }
-.community-home-actions .profile-btn-soft:hover { border-color: #c52d73; color: #721c48; background: rgba(255, 255, 255, .8); }
-.community-home-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .9fr); gap: 20px; align-items: start; }
+.community-home-hero p { max-width: 580px; margin: 0; color: #715c70; font-size: .94rem; line-height: 1.65; }
+.community-home-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; align-self: end; }
+.community-home-action { display: grid; min-height: 91px; align-content: center; gap: 5px; padding: 14px 13px; border: 1px solid rgba(121, 44, 91, .18); border-radius: 14px; color: #643453; background: rgba(255, 255, 255, .46); box-shadow: 0 8px 20px rgba(80, 27, 61, .05); text-decoration: none; transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; }
+.community-home-action:hover { border-color: rgba(207, 45, 116, .48); color: #4d1d3e; background: rgba(255, 255, 255, .76); box-shadow: 0 12px 25px rgba(94, 28, 66, .1); transform: translateY(-2px); }
+.community-home-action:focus-visible { outline: 3px solid rgba(232, 72, 145, .45); outline-offset: 3px; }
+.community-home-action strong { font: 700 .95rem 'Playfair Display', serif; }
+.community-home-action span { font-size: .65rem; line-height: 1.35; }
+.community-home-action.is-primary { border-color: #d72d7c; color: #fff; background: linear-gradient(135deg, #ed4d99, #c92772); box-shadow: 0 12px 24px rgba(201, 39, 114, .23); }
+.community-home-action.is-primary:hover { border-color: #b72265; color: #fff; background: linear-gradient(135deg, #e63b8b, #b72265); }
+.community-home-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .82fr); gap: 20px; align-items: start; }
 .community-home-side { display: grid; gap: 20px; }
-.community-home-section { overflow: hidden; border: 1px solid rgba(255, 255, 255, .075); border-radius: 18px; background: rgba(255, 255, 255, .025); }
-.community-home-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 20px 21px 16px; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.community-home-section { overflow: hidden; border: 1px solid rgba(255, 255, 255, .075); border-radius: 18px; background: rgba(255, 255, 255, .025); box-shadow: 0 16px 36px rgba(0, 0, 0, .1); }
+.community-home-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 21px 22px 17px; border-bottom: 1px solid rgba(255, 255, 255, .06); }
 .community-home-heading h2 { margin: 4px 0 0; color: #f5ebf5; font: 700 1.36rem 'Playfair Display', serif; }
+.community-home-heading p { max-width: 440px; margin: 7px 0 0; color: #a99aaa; font-size: .73rem; line-height: 1.55; }
 .community-home-heading > a { color: #ff9bc6; font-size: .72rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .community-home-heading > a:hover { color: #fff; }
+.community-home-members .community-member-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; }
+.community-home-members .community-member-card { min-height: 164px; padding: 15px; }
+.community-home-members .community-member-avatar, .community-home-members .community-member-avatar img, .community-home-members .community-member-avatar > span { width: 54px; height: 54px; flex-basis: 54px; }
+.community-home-members .community-member-stats { gap: 13px; margin-top: 11px; padding-top: 10px; }
+.community-home-members .community-member-badges { gap: 5px; margin-top: 7px; }
+.community-home-members .community-rank, .community-home-members .community-badge { padding: 4px 7px; font-size: .57rem; }
 .community-activity-list { padding: 6px 21px 13px; }
 .community-activity-list article { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 9px; padding: 12px 0; color: #baabbc; font-size: .78rem; }
 .community-activity-dot { width: 6px; height: 6px; margin-top: .45em; border-radius: 50%; background: #ec5799; box-shadow: 0 0 0 4px rgba(236, 87, 153, .1); }
@@ -4054,11 +4067,6 @@
 .community-thread-list > a:hover strong { color: #ff9bc6; }
 .community-thread-list strong { overflow: hidden; font: 700 .88rem 'Playfair Display', serif; text-overflow: ellipsis; white-space: nowrap; }
 .community-thread-list small { overflow: hidden; color: #a491a5; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
-.community-home-history { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 20px; border: 1px solid rgba(244, 63, 142, .15); border-radius: 18px; background: linear-gradient(118deg, rgba(244, 63, 142, .075), rgba(255, 255, 255, .018)); }
-.community-home-history-mark { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid rgba(244, 63, 142, .22); border-radius: 50%; color: #ff9bc6; background: rgba(244, 63, 142, .09); }
-.community-home-history h2 { margin: 4px 0 6px; color: #f5ebf5; font: 700 1.22rem 'Playfair Display', serif; }
-.community-home-history p { margin: 0; color: #b9a8ba; font-size: .78rem; }
-.community-home-history .profile-btn { grid-column: 1 / -1; justify-self: start; white-space: nowrap; }
 .forum-reply-section { margin-top: 28px; }
 .forum-reply-section h2,
 .forum-moderation h2 { margin: 0; color: #fff; font: 700 1.35rem 'Playfair Display', serif; }
@@ -4109,14 +4117,15 @@
 .question-tag-inputs input:first-child { grid-column: span 2; }
 
 @media (max-width: 760px) {
-    .community-home-hero { align-items: flex-start; flex-direction: column; margin-top: 10px; padding: 25px 22px; border-radius: 20px; }
+    .community-home-hero { grid-template-columns: 1fr; gap: 24px; margin-top: 10px; padding: 27px 22px; border-radius: 20px; }
     .community-home-hero h1 { font-size: clamp(2.2rem, 12vw, 3.3rem); }
     .community-home-hero p { font-size: .9rem; }
-    .community-home-actions { width: 100%; }
-    .community-home-actions .profile-btn { flex: 1 1 110px; justify-content: center; }
+    .community-home-actions { grid-template-columns: 1fr; width: 100%; }
+    .community-home-action { min-height: 78px; }
     .community-home-grid { grid-template-columns: 1fr; gap: 16px; }
     .community-home-side { gap: 16px; }
     .community-home-heading { padding: 18px 17px 14px; }
+    .community-home-members .community-member-grid { grid-template-columns: 1fr; padding: 12px; }
     .community-activity-list { padding: 6px 17px 13px; }
     .forum-page { padding: 102px 0 58px; }
     .forum-hero { margin-bottom: 28px; padding-left: 16px; }

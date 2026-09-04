@@ -16,33 +16,30 @@
     <main class="portal-profile-page community-home-page">
         <div class="profile-ambient profile-ambient-one"></div><div class="profile-ambient profile-ambient-two"></div>
         <div class="container-xl px-4 position-relative">
-            <nav class="profile-breadcrumb" aria-label="Migas de pan"><a href="{{ route('home') }}">Inicio</a><span>›</span><span>Comunidad</span></nav>
-
             <header class="community-home-hero">
                 <div>
-                    <span class="profile-eyebrow">El punto de encuentro</span>
-                    <h1>Bienvenida a la <em>comunidad</em></h1>
-                    <p>Un lugar para conversar sobre Girls' Love, compartir hallazgos y reencontrarnos con la historia de Mundo Yuri.</p>
+                    <span class="profile-eyebrow">Comunidad Mundo Yuri</span>
+                    <h1>Un espacio para <em>encontrarnos</em>.</h1>
+                    <p>Conversaciones, recomendaciones y personas que comparten el gusto por Girls’ Love. Elige por dónde quieres empezar.</p>
                 </div>
                 <div class="community-home-actions">
-                    <a class="profile-btn profile-btn-primary" href="{{ route('forums.index') }}">Foros</a>
-                    <a class="profile-btn profile-btn-soft" href="{{ route('questions.index') }}">Preguntas</a>
-                    <a class="profile-btn profile-btn-soft" href="{{ route('community.members') }}">Miembros</a>
+                    <a class="community-home-action is-primary" href="{{ route('forums.index') }}"><strong>Foros</strong><span>Únete a una conversación</span></a>
+                    <a class="community-home-action" href="{{ route('questions.index') }}"><strong>Preguntas</strong><span>Encuentra ayuda</span></a>
+                    <a class="community-home-action" href="{{ route('community.members') }}"><strong>Miembros</strong><span>Conoce a la comunidad</span></a>
                 </div>
             </header>
 
             <div class="community-home-grid">
-                <section id="actividad-reciente" class="community-home-section">
-                    <div class="community-home-heading"><div><span class="profile-panel-kicker">Ahora mismo</span><h2>Actividad reciente</h2></div><a href="{{ route('community.members', ['sort' => 'activity']) }}">Ver actividad</a></div>
-                    <div class="community-activity-list">
-                        @forelse($recentActivity as $post)
-                            @php($thread = $post->thread)
-                            <article>
-                                <span class="community-activity-dot" aria-hidden="true"></span>
-                                <div><strong>{{ $post->authorName() }}</strong> @if($post->is_initial){{ $thread->isQuestion() ? 'hizo una pregunta' : 'abrió un tema' }}@else{{ $thread->isQuestion() ? 'respondió una pregunta' : 'respondió un tema' }}@endif <a href="{{ $thread->isQuestion() ? route('questions.show', $thread) : route('forum.threads.show', $thread) }}{{ $post->is_initial ? '' : '#post-'.$post->id }}">{{ $thread->title }}</a><small>{{ $post->created_at->diffForHumans() }}</small></div>
-                            </article>
+                <section class="community-home-section community-home-members">
+                    <div class="community-home-heading">
+                        <div><span class="profile-panel-kicker">Personas</span><h2>Miembros de la comunidad</h2><p>Voces nuevas y perfiles recuperados, reunidos en un solo directorio.</p></div>
+                        <a href="{{ route('community.members') }}">Ver miembros</a>
+                    </div>
+                    <div class="community-member-grid">
+                        @forelse($featuredMembers as $member)
+                            <x-community.member-card :member="$member" :rank-resolver="$rankResolver" />
                         @empty
-                            <div class="community-home-empty"><strong>La actividad aparecerá aquí</strong><span>Cuando comencemos a conversar, este espacio se irá llenando.</span></div>
+                            <div class="community-home-empty"><strong>Pronto habrá miembros aquí</strong><span>El directorio se irá llenando conforme la comunidad crezca.</span></div>
                         @endforelse
                     </div>
                 </section>
@@ -62,14 +59,19 @@
                         </div>
                     </section>
 
-                    <section class="community-home-history" aria-labelledby="community-history-title">
-                        <span class="community-home-history-mark" aria-hidden="true">✦</span>
-                        <div>
-                            <span class="profile-panel-kicker">Archivo vivo</span>
-                            <h2 id="community-history-title">Una comunidad desde 2007</h2>
-                            <p>Estamos recuperando una pequeña parte de la historia del Mundo Yuri original.</p>
+                    <section id="actividad-reciente" class="community-home-section community-home-activity">
+                        <div class="community-home-heading"><div><span class="profile-panel-kicker">Ahora mismo</span><h2>Actividad reciente</h2></div></div>
+                        <div class="community-activity-list">
+                            @forelse($recentActivity as $post)
+                                @php($thread = $post->thread)
+                                <article>
+                                    <span class="community-activity-dot" aria-hidden="true"></span>
+                                    <div><strong>{{ $post->authorName() }}</strong> @if($post->is_initial){{ $thread->isQuestion() ? 'hizo una pregunta' : 'abrió un tema' }}@else{{ $thread->isQuestion() ? 'respondió una pregunta' : 'respondió un tema' }}@endif <a href="{{ $thread->isQuestion() ? route('questions.show', $thread) : route('forum.threads.show', $thread) }}{{ $post->is_initial ? '' : '#post-'.$post->id }}">{{ $thread->title }}</a><small>{{ $post->created_at->diffForHumans() }}</small></div>
+                                </article>
+                            @empty
+                                <div class="community-home-empty"><strong>La actividad aparecerá aquí</strong><span>Cuando comiencen las conversaciones, este espacio se irá llenando.</span></div>
+                            @endforelse
                         </div>
-                        <a class="profile-btn profile-btn-soft" href="{{ route('legacy-profiles.index') }}">Miembros históricos</a>
                     </section>
                 </aside>
             </div>

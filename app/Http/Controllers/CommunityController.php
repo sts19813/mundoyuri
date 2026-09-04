@@ -17,9 +17,29 @@ use Illuminate\View\View;
 
 class CommunityController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, CommunityRankResolver $rankResolver): View
     {
+        $modernMembers = User::query()
+            ->visibleInCommunityDirectory()
+            ->with([
+                'communityRank',
+                'badges' => fn ($query) => $query->active()->ordered(),
+            ])
+            ->latest()
+            ->limit(4)
+            ->get();
+
+        $historicalMembers = LegacyProfile::query()
+            ->published()
+            ->whereNull('claimed_by_user_id')
+            ->with(['badges' => fn ($query) => $query->active()->ordered()])
+            ->orderByDesc('legacy_joined_at')
+            ->limit(2)
+            ->get();
+
         return view('community.home', [
+            'featuredMembers' => $this->mixMembers($modernMembers, $historicalMembers),
+            'rankResolver' => $rankResolver,
             'recentThreads' => ForumThread::query()
                 ->where('type', 'discussion')
                 ->where('is_hidden', false)
@@ -45,6 +65,25 @@ class CommunityController extends Controller
                 ->limit(5)
                 ->get(),
         ]);
+    }
+
+    /** @param Collection<int, User> $modernMembers @param Collection<int, LegacyProfile> $historicalMembers @return Collection<int, User|LegacyProfile> */
+    private function mixMembers(Collection $modernMembers, Collection $historicalMembers): Collection
+    {
+        $members = collect();
+        $length = max($modernMembers->count(), $historicalMembers->count());
+
+        for ($index = 0; $index < $length; $index++) {
+            if ($modernMembers->has($index)) {
+                $members->push($modernMembers->get($index));
+            }
+
+            if ($historicalMembers->has($index)) {
+                $members->push($historicalMembers->get($index));
+            }
+        }
+
+        return $members->take(6);
     }
 
     public function members(MemberDirectoryRequest $request, CommunityRankResolver $rankResolver): View

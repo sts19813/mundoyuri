@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Forum;
 use App\Models\ForumCategory;
+use App\Models\LegacyProfile;
 use App\Models\User;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
@@ -25,7 +26,7 @@ class CommunityHomeTest extends TestCase
 
         $this->get(route('community.index'))
             ->assertOk()
-            ->assertSee('Bienvenida a la')
+            ->assertSee('Un espacio para')
             ->assertSee('Foros')
             ->assertSee('Preguntas')
             ->assertSee('Miembros')
@@ -39,8 +40,8 @@ class CommunityHomeTest extends TestCase
             ->assertSee('Temas recientes')
             ->assertSee('General')
             ->assertSee('Ver foros')
-            ->assertSee('Una comunidad desde 2007')
-            ->assertSee('Miembros históricos')
+            ->assertSee('Miembros de la comunidad')
+            ->assertDontSee('Una comunidad desde 2007')
             ->assertDontSee('Temas populares')
             ->assertDontSee('Miembros activos')
             ->assertDontSee('Miembros nuevos')
@@ -74,6 +75,27 @@ class CommunityHomeTest extends TestCase
             ->assertOk()
             ->assertSee('Directorio público')
             ->assertSee('Miembro del directorio');
+    }
+
+    public function test_community_home_mixes_public_modern_and_historical_members(): void
+    {
+        User::factory()->create(['name' => 'Hana Moderna', 'alias' => 'hana-moderna']);
+        LegacyProfile::query()->create([
+            'legacy_external_key' => 'mundo-yuri:prueba-historica',
+            'nickname' => 'Hana Histórica',
+            'slug' => 'hana-historica',
+            'legacy_joined_at' => '2007-08-13',
+            'source' => 'captura-verificada',
+            'is_legacy' => true,
+            'legacy_verified' => true,
+            'is_published' => true,
+        ]);
+
+        $this->get(route('community.index'))
+            ->assertOk()
+            ->assertSee('Hana Moderna')
+            ->assertSee('Hana Histórica')
+            ->assertSee('Ver miembros');
     }
 
     /** @return array{ForumCategory, Forum} */
