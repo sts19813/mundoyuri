@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MemberDirectoryRequest;
 use App\Models\CommunityRank;
 use App\Models\ForumPost;
+use App\Models\ForumThread;
 use App\Models\User;
 use App\Services\CommunityRankResolver;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,14 @@ class CommunityController extends Controller
     public function index(Request $request): View
     {
         return view('community.home', [
+            'recentThreads' => ForumThread::query()
+                ->where('type', 'discussion')
+                ->where('is_hidden', false)
+                ->whereHas('forum', fn (Builder $forum) => $forum->active()->whereHas('category', fn (Builder $category) => $category->active()))
+                ->with('forum')
+                ->orderByDesc('last_post_at')
+                ->limit(3)
+                ->get(),
             'recentActivity' => ForumPost::query()
                 ->where('is_hidden', false)
                 ->whereHas('thread', fn (Builder $query) => $this->constrainPublicThreads($query))

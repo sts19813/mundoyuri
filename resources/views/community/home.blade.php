@@ -31,31 +31,47 @@
                 </div>
             </header>
 
-            <div class="community-home-flow">
+            <div class="community-home-grid">
                 <section id="actividad-reciente" class="community-home-section">
                     <div class="community-home-heading"><div><span class="profile-panel-kicker">Ahora mismo</span><h2>Actividad reciente</h2></div><a href="{{ route('community.members', ['sort' => 'activity']) }}">Ver actividad</a></div>
-                        <div class="community-activity-list">
-                            @forelse($recentActivity as $post)
-                                @php($thread = $post->thread)
-                                <article>
-                                    <span class="community-activity-dot" aria-hidden="true"></span>
-                                    <div><strong>{{ $post->authorName() }}</strong> @if($post->is_initial){{ $thread->isQuestion() ? 'hizo una pregunta' : 'abrió un tema' }}@else{{ $thread->isQuestion() ? 'respondió una pregunta' : 'respondió un tema' }}@endif <a href="{{ $thread->isQuestion() ? route('questions.show', $thread) : route('forum.threads.show', $thread) }}{{ $post->is_initial ? '' : '#post-'.$post->id }}">{{ $thread->title }}</a><small>{{ $post->created_at->diffForHumans() }}</small></div>
-                                </article>
-                            @empty
-                                <div class="community-home-empty"><strong>La actividad aparecerá aquí</strong><span>Cuando comencemos a conversar, este espacio se irá llenando.</span></div>
-                            @endforelse
-                        </div>
+                    <div class="community-activity-list">
+                        @forelse($recentActivity as $post)
+                            @php($thread = $post->thread)
+                            <article>
+                                <span class="community-activity-dot" aria-hidden="true"></span>
+                                <div><strong>{{ $post->authorName() }}</strong> @if($post->is_initial){{ $thread->isQuestion() ? 'hizo una pregunta' : 'abrió un tema' }}@else{{ $thread->isQuestion() ? 'respondió una pregunta' : 'respondió un tema' }}@endif <a href="{{ $thread->isQuestion() ? route('questions.show', $thread) : route('forum.threads.show', $thread) }}{{ $post->is_initial ? '' : '#post-'.$post->id }}">{{ $thread->title }}</a><small>{{ $post->created_at->diffForHumans() }}</small></div>
+                            </article>
+                        @empty
+                            <div class="community-home-empty"><strong>La actividad aparecerá aquí</strong><span>Cuando comencemos a conversar, este espacio se irá llenando.</span></div>
+                        @endforelse
+                    </div>
                 </section>
 
-                <section class="community-home-history" aria-labelledby="community-history-title">
-                    <span class="community-home-history-mark" aria-hidden="true">✦</span>
-                    <div>
-                        <span class="profile-panel-kicker">Archivo vivo</span>
-                        <h2 id="community-history-title">Una comunidad desde 2007</h2>
-                        <p>Estamos recuperando una pequeña parte de la historia del Mundo Yuri original.</p>
-                    </div>
-                    <a class="profile-btn profile-btn-soft" href="{{ route('legacy-profiles.index') }}">Miembros históricos</a>
-                </section>
+                <aside class="community-home-side">
+                    <section class="community-home-section community-home-threads">
+                        <div class="community-home-heading"><div><span class="profile-panel-kicker">Conversaciones</span><h2>Temas recientes</h2></div><a href="{{ route('forums.index') }}">Ver foros</a></div>
+                        <div class="community-thread-list">
+                            @forelse($recentThreads as $thread)
+                                <a href="{{ route('forum.threads.show', $thread) }}">
+                                    <strong>{{ $thread->title }}</strong>
+                                    <small>{{ $thread->forum->name }}@if($thread->replies_count) · {{ number_format($thread->replies_count) }} {{ $thread->replies_count === 1 ? 'respuesta' : 'respuestas' }}@endif</small>
+                                </a>
+                            @empty
+                                <div class="community-home-empty"><strong>Aún no hay temas</strong><span>La primera conversación puede empezar hoy.</span></div>
+                            @endforelse
+                        </div>
+                    </section>
+
+                    <section class="community-home-history" aria-labelledby="community-history-title">
+                        <span class="community-home-history-mark" aria-hidden="true">✦</span>
+                        <div>
+                            <span class="profile-panel-kicker">Archivo vivo</span>
+                            <h2 id="community-history-title">Una comunidad desde 2007</h2>
+                            <p>Estamos recuperando una pequeña parte de la historia del Mundo Yuri original.</p>
+                        </div>
+                        <a class="profile-btn profile-btn-soft" href="{{ route('legacy-profiles.index') }}">Miembros históricos</a>
+                    </section>
+                </aside>
             </div>
         </div>
     </main>
