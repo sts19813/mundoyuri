@@ -55,7 +55,7 @@ class ForumThreadController extends Controller
         $posts = $thread->posts()
             ->when($request->expectsJson(), fn ($query) => $query->where('is_initial', false))
             ->when(! $request->user()?->shouldEnterAdminPanel(), fn ($query) => $query->where('is_hidden', false))
-            ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser'])
+            ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author'])
             ->oldest()
             ->paginate(20)
             ->withQueryString();

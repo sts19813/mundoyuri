@@ -1,5 +1,7 @@
 @php
-    $avatarClasses = $avatarClasses ?? ['', 'av2', 'av3'];
+    $renderedComments = new \Illuminate\Database\Eloquent\Collection($comments->flatMap(fn ($comment) => collect([$comment])->concat($comment->replies))->all());
+    $renderedComments->loadMissing('replyTo.user');
+    app(\App\Services\CommunityReactionService::class)->hydrateSummaries($renderedComments, auth()->user());
     $commentCount = $comments->sum(fn ($comment) => 1 + $comment->replies->count());
     $replyTo = (int) old('parent_id');
     $previousRootSignatureUserId = null;
@@ -17,143 +19,17 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="comments-notice" role="status">{{ session('success') }}</div>
     @endif
 
     @forelse($comments as $comment)
-        @php
-            $avatarClass = $avatarClasses[$loop->index % count($avatarClasses)];
-            $replyFormId = 'reply-form-'.$comment->id;
-        @endphp
-        <div class="comment-item">
-            @if($comment->user)
-                <a class="comment-avatar comment-avatar-link {{ $avatarClass }}" href="{{ $comment->user->publicProfileUrl() }}"
-                    aria-label="Ver perfil de {{ $comment->display_alias }}">
-            @else
-                <div class="comment-avatar {{ $avatarClass }}">
-            @endif
-                @if($comment->avatarUrl())
-                    <img src="{{ $comment->avatarUrl() }}" alt="{{ $comment->display_alias }}">
-                @else
-                    {{ $comment->initials() }}
-                @endif
-            @if($comment->user)
-                </a>
-            @else
-                </div>
-            @endif
-            <div class="comment-body">
-                <div class="comment-meta">
-                    @if($comment->user)
-                        <a class="comment-user comment-user-link" href="{{ $comment->user->publicProfileUrl() }}">{{ $comment->display_alias }}</a>
-                        <x-community.rank :rank="$rankResolver->resolve($comment->user)" />
-                        <x-community.user-badges :user="$comment->user" />
-                    @else
-                        <span class="comment-user">{{ $comment->display_alias }}</span>
-                    @endif
-                    <span class="comment-date">{{ $comment->displayTime() }}</span>
-                </div>
-                <p class="comment-text">{{ $comment->body }}</p>
-                <x-community.signature :user="$comment->user" :previous-user-id="$previousRootSignatureUserId" />
-
-                <div class="comment-actions">
-                    <button class="comment-action-btn" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $replyFormId }}"
-                        aria-expanded="{{ $replyTo === $comment->id ? 'true' : 'false' }}" aria-controls="{{ $replyFormId }}">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 17 4 12 9 7"></polyline>
-                            <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
-                        </svg>
-                        Responder
-                    </button>
-                </div>
-
-                <div class="collapse {{ $replyTo === $comment->id ? 'show' : '' }}" id="{{ $replyFormId }}">
-                    <form class="comment-reply-form" method="POST" action="{{ route('comments.store') }}">
-                        @csrf
-                        <input type="hidden" name="target_type" value="{{ $targetType }}">
-                        <input type="hidden" name="target_id" value="{{ $targetId }}">
-                        <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-
-                        <textarea class="cf-textarea" name="body" placeholder="Responder a {{ $comment->display_alias }}...">{{ $replyTo === $comment->id ? old('body') : '' }}</textarea>
-                        @if($replyTo === $comment->id)
-                            @error('body')
-                                <div class="text-danger small mb-2">{{ $message }}</div>
-                            @enderror
-                            @error('parent_id')
-                                <div class="text-danger small mb-2">{{ $message }}</div>
-                            @enderror
-                        @endif
-
-                        <div class="cf-fields">
-                            @guest
-                                <div class="cf-field">
-                                    <label>Alias <span>*</span></label>
-                                    <input type="text" name="alias" class="cf-input" placeholder="Tu alias"
-                                        value="{{ $replyTo === $comment->id ? old('alias') : '' }}">
-                                    @if($replyTo === $comment->id)
-                                        @error('alias')
-                                            <div class="text-danger small">{{ $message }}</div>
-                                        @enderror
-                                    @endif
-                                </div>
-                            @else
-                                <div class="cf-field">
-                                    <label>Responderás como</label>
-                                    <input type="text" class="cf-input" value="{{ auth()->user()->alias ?: auth()->user()->name }}" disabled>
-                                </div>
-                            @endguest
-                        </div>
-
-                        <button class="cf-submit cf-submit-sm" type="submit">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13" />
-                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                            </svg>
-                            Publicar respuesta
-                        </button>
-                    </form>
-                </div>
-
-                @php($previousReplySignatureUserId = null)
-                @foreach($comment->replies as $reply)
-                    <div class="comment-reply">
-                        <div class="comment-reply-inner">
-                            @if($reply->user)
-                                <a class="comment-avatar comment-avatar-link av2" href="{{ $reply->user->publicProfileUrl() }}"
-                                    aria-label="Ver perfil de {{ $reply->display_alias }}">
-                            @else
-                                <div class="comment-avatar av2">
-                            @endif
-                                @if($reply->avatarUrl())
-                                    <img src="{{ $reply->avatarUrl() }}" alt="{{ $reply->display_alias }}">
-                                @else
-                                    {{ $reply->initials() }}
-                                @endif
-                            @if($reply->user)
-                                </a>
-                            @else
-                                </div>
-                            @endif
-                            <div class="comment-reply-body">
-                                <div class="comment-meta">
-                                    @if($reply->user)
-                                        <a class="comment-user comment-user-link" href="{{ $reply->user->publicProfileUrl() }}">{{ $reply->display_alias }}</a>
-                                        <x-community.rank :rank="$rankResolver->resolve($reply->user)" />
-                                        <x-community.user-badges :user="$reply->user" />
-                                    @else
-                                        <span class="comment-user">{{ $reply->display_alias }}</span>
-                                    @endif
-                                    <span class="comment-date">{{ $reply->displayTime() }}</span>
-                                </div>
-                                <p class="comment-text mb-1">{{ $reply->body }}</p>
-                                <x-community.signature :user="$reply->user" :previous-user-id="$previousReplySignatureUserId" />
-                            </div>
-                        </div>
-                    </div>
-                    @php($previousReplySignatureUserId = $reply->user_id)
-                @endforeach
-            </div>
-        </div>
+        <x-community.catalog-comment :comment="$comment" :target-type="$targetType" :target-id="$targetId" :previous-user-id="$previousRootSignatureUserId">
+            @php($previousReplySignatureUserId = null)
+            @foreach($comment->replies as $reply)
+                <x-community.catalog-comment :comment="$reply" :target-type="$targetType" :target-id="$targetId" :is-reply="true" :previous-user-id="$previousReplySignatureUserId" />
+                @php($previousReplySignatureUserId = $reply->user_id)
+            @endforeach
+        </x-community.catalog-comment>
         @php($previousRootSignatureUserId = $comment->user_id)
     @empty
         <div class="text-muted small mb-4">Todavía no hay comentarios. Sé la primera persona en comentar.</div>
@@ -217,3 +93,7 @@
         </form>
     </div>
 </div>
+
+@once
+    <script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
+@endonce

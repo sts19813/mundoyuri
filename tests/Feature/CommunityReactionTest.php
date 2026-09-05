@@ -7,7 +7,8 @@ use App\Models\CommunityReaction;
 use App\Models\Forum;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
-use App\Models\ForumThread;
+use App\Models\Genre;
+use App\Models\Series;
 use App\Models\User;
 use App\Notifications\CommunityReactionNotification;
 use App\Services\ForumPostService;
@@ -162,13 +163,17 @@ class CommunityReactionTest extends TestCase
     {
         $author = User::factory()->create();
         $member = User::factory()->create();
-        $comment = Comment::query()->create([
+        $series = Series::query()->create([
+            'genre_id' => Genre::query()->create(['name' => 'Drama', 'slug' => 'drama-reactions', 'is_active' => true])->id,
+            'created_by' => $author->id, 'title' => 'Serie de prueba', 'slug' => 'serie-reactions',
+            'description' => 'Una serie para comprobar las reacciones.',
+            'content_type' => 'series', 'status' => 'ongoing', 'moderation_status' => 'approved', 'published_at' => now(),
+        ]);
+        $comment = $series->comments()->create([
             'user_id' => $author->id,
             'alias' => 'Autora',
             'body' => 'Comentario público.',
             'is_approved' => true,
-            'commentable_type' => ForumThread::class,
-            'commentable_id' => 999,
         ]);
 
         $this->actingAs($member)->post(route('community.reactions.store'), [

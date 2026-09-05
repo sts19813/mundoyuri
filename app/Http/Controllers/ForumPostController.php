@@ -16,10 +16,10 @@ class ForumPostController extends Controller
 {
     public function store(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions): RedirectResponse|JsonResponse
     {
-        $post = $posts->reply($thread, $request->user(), $request->validated('body'));
+        $post = $posts->reply($thread, $request->user(), $request->validated('body'), $request->validated('reply_to_post_id'));
 
         if ($request->expectsJson()) {
-            $post->load(['author.badges', 'author.communityRank', 'mentions.mentionedUser']);
+            $post->load(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author']);
             $post->setRelation('thread', $thread);
             $reactions->hydrateSummaries([$post], $request->user());
 

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommunityReactionRequest;
 use App\Models\Comment;
+use App\Models\Episode;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Models\Series;
 use App\Services\CommunityReactionService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -38,7 +40,7 @@ class CommunityReactionController extends Controller
         return match ($target) {
             'thread' => ForumThread::query()->with(['forum.category', 'author'])->findOrFail($id),
             'post' => ForumPost::query()->with(['thread.forum.category', 'author'])->findOrFail($id),
-            'comment' => Comment::query()->with('user')->findOrFail($id),
+            'comment' => Comment::query()->with(['user', 'parent', 'commentable'])->findOrFail($id),
             default => abort(404),
         };
     }
@@ -58,5 +60,12 @@ class CommunityReactionController extends Controller
         }
 
         abort_unless($reactable instanceof Comment && $reactable->is_approved, 404);
+        abort_if($reactable->parent_id && ! $reactable->parent?->is_approved, 404);
+        $content = $reactable->commentable;
+        abort_unless(($content instanceof Series || $content instanceof Episode) && $content->moderation_status === 'approved', 404);
+        if ($content instanceof Episode) {
+            abort_unless($content->published_at && $content->series?->moderation_status === 'approved', 404);
+        }
+        abort_if($reactable->user && $user->cannotInteractWith($reactable->user), 403);
     }
 }

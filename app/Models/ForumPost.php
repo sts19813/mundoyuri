@@ -14,11 +14,16 @@ class ForumPost extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['forum_thread_id', 'user_id', 'author_name_snapshot', 'body', 'edited_at', 'is_initial', 'is_hidden', 'upvotes_count'];
+    protected $fillable = ['forum_thread_id', 'user_id', 'author_name_snapshot', 'body', 'edited_at', 'is_initial', 'is_hidden', 'upvotes_count', 'reply_to_post_id'];
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reply_to_post_id')->where('is_hidden', false);
+    }
 
     protected function casts(): array
     {
-        return ['edited_at' => 'datetime', 'is_initial' => 'boolean', 'is_hidden' => 'boolean', 'upvotes_count' => 'integer'];
+        return ['edited_at' => 'datetime', 'is_initial' => 'boolean', 'is_hidden' => 'boolean', 'upvotes_count' => 'integer', 'reply_to_post_id' => 'integer'];
     }
 
     public function thread(): BelongsTo

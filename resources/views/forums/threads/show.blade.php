@@ -65,7 +65,7 @@
                 @can('reply', $thread)
                     <section class="forum-reply-section" id="responder">
                         <div class="forum-section-heading"><h2>Responder</h2><p>Tu mensaje se publicará en este tema.</p></div>
-                        <x-forum.composer :action="route('forum.posts.store', $thread)" submit="Publicar respuesta" />
+                        <x-forum.composer :action="route('forum.posts.store', $thread)" submit="Publicar respuesta" :use-old-input="!old('reply_to_post_id')" />
                     </section>
                 @else
                     <section class="profile-panel forum-readonly"><p>{{ $thread->is_locked || $thread->forum->is_locked ? 'Este tema está cerrado para nuevas respuestas.' : 'No tienes permiso para responder en este foro.' }}</p></section>

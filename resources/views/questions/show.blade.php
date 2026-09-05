@@ -33,7 +33,7 @@
     <section class="forum-posts">@php($previousUserId = null)@foreach($posts as $post)<x-forum.post :post="$post" :previous-user-id="$previousUserId" :question="$thread" :is-accepted="$thread->accepted_answer_post_id === $post->id" />@php($previousUserId = $post->user_id)@endforeach</section>
     {{ $posts->links() }}
     @auth
-        @can('reply', $thread)<section class="forum-reply-section" id="responder"><div class="forum-section-heading"><h2>Tu respuesta</h2><p>Comparte lo que sabes y ayuda a otra persona.</p></div><x-forum.composer :action="route('questions.answers.store', $thread)" submit="Publicar respuesta" /></section>@else <section class="profile-panel forum-readonly"><p>Esta pregunta está cerrada para nuevas respuestas.</p></section>@endcan
+        @can('reply', $thread)<section class="forum-reply-section" id="responder"><div class="forum-section-heading"><h2>Tu respuesta</h2><p>Comparte lo que sabes y ayuda a otra persona.</p></div><x-forum.composer :action="route('questions.answers.store', $thread)" submit="Publicar respuesta" :use-old-input="!old('reply_to_post_id')" /></section>@else <section class="profile-panel forum-readonly"><p>Esta pregunta está cerrada para nuevas respuestas.</p></section>@endcan
     @else <section class="profile-panel forum-readonly"><p><a href="{{ route('login') }}">Inicia sesión</a> para aportar una respuesta.</p></section>@endauth
 </div></main>
 <x-footer />

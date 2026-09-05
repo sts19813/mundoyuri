@@ -4433,6 +4433,45 @@
 .forum-feed-composer button:disabled { opacity: .6; cursor: wait; }
 .forum-post, #responder { scroll-margin-top: 100px; }
 
+/* Contextual replies follow the lightweight episode discussion style. */
+.message-reply-context { display: grid; gap: 4px; padding: 9px 12px; margin-bottom: 12px; border-left: 2px solid rgba(244, 63, 142, .4); border-radius: 0 8px 8px 0; background: rgba(255, 255, 255, .035); color: var(--muted); font-size: .74rem; overflow-wrap: anywhere; }
+.message-reply-context > :first-child { color: #e9bed3; font-weight: 500; text-decoration: none; }
+.message-reply-box { margin-top: 9px; }
+.message-reply-box > summary { display: inline-flex; align-items: center; min-height: 36px; color: var(--muted); font-size: .76rem; cursor: pointer; list-style: none; }
+.message-reply-box > summary::-webkit-details-marker { display: none; }
+.message-reply-box > summary:hover, .message-reply-box[open] > summary { color: #ffc5dc; }
+.message-inline-form { display: grid; gap: 10px; margin-top: 10px; padding: 15px; background: rgba(255, 255, 255, .025); border: 1px solid rgba(244, 63, 142, .16); border-radius: 12px; }
+.message-inline-form label { color: var(--muted); font-size: .76rem; }
+.message-inline-form textarea, .message-inline-form input:not([type="hidden"]) { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid rgba(244, 63, 142, .2); border-radius: 9px; background: rgba(255, 255, 255, .03); color: var(--text); font: .84rem 'DM Sans', sans-serif; }
+.message-inline-form textarea { resize: vertical; min-height: 90px; }
+.message-inline-form textarea:focus-visible, .message-inline-form input:focus-visible, .message-reply-box > summary:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+.message-inline-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.message-inline-form [role="status"], .message-inline-form [role="alert"] { margin: 0; font-size: .73rem; color: #ffc5dc; }
+.message-inline-form [role="status"]:empty, .message-inline-form [role="alert"]:empty { display: none; }
+.message-inline-form button:disabled { opacity: .6; cursor: wait; }
+.community-conversation-shell .forum-post-comment { border: 0; border-bottom: 1px solid rgba(255, 255, 255, .065); border-radius: 0; background: transparent; box-shadow: none; }
+.community-conversation-shell .forum-post-comment .forum-post-header { padding: 12px 0 4px; border: 0; }
+.community-conversation-shell .forum-post-comment .forum-post-content { padding: 6px 0 15px 45px; }
+.community-conversation-shell .forum-post-comment.forum-post-accepted { border-left: 2px solid rgba(136, 217, 169, .4); padding-left: 14px; }
+.comments-section .catalog-social-comment { position: relative; display: block; min-width: 0; scroll-margin-top: 100px; }
+.comments-section .catalog-social-comment:has([open]) { z-index: 30; }
+.comments-section .catalog-social-comment > .comment-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.catalog-social-comment .forum-post-author-compact { max-width: 100%; }
+.catalog-social-comment .forum-post-author-compact > summary { flex-wrap: wrap; }
+.catalog-social-comment-content { min-width: 0; padding-left: 45px; }
+.catalog-social-comment .comment-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.catalog-social-comment .community-reactions { margin-top: 10px; }
+.comments-notice { padding: 12px 16px; margin-bottom: 18px; border-left: 2px solid var(--rose); border-radius: 0 8px 8px 0; color: #edc6d8; background: rgba(244, 63, 142, .055); font-size: .82rem; }
+
+@media (max-width: 760px) {
+    .comments-section .catalog-social-comment-content { padding-left: 0; }
+    .comments-section .comment-reply.catalog-social-comment { margin-left: 8px; padding: 12px; }
+    .catalog-social-comment .comment-date { margin-left: 45px; }
+    .catalog-social-comment .forum-post-name { white-space: normal; }
+    .community-conversation-shell .forum-post-comment .forum-post-content { padding-left: 0; }
+    .message-reply-box > summary { min-height: 44px; }
+}
+
 /* One reading rhythm for forum feeds, discussions and questions. */
 .community-conversation-shell { max-width: 1120px; }
 .community-conversation-heading { align-items: center; margin-bottom: 22px; padding: 26px 28px; }

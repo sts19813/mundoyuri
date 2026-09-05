@@ -19,6 +19,12 @@
 
     const disclosures = '[data-author-card], .forum-post-menu, .forum-action-menu, .community-reaction-picker';
     document.addEventListener('click', (event) => {
+        const cancel = event.target.closest('[data-cancel-reply]');
+        if (cancel) {
+            const box = cancel.closest('.message-reply-box');
+            box.open = false;
+            box.querySelector('summary').focus();
+        }
         document.querySelectorAll(disclosures).forEach((element) => {
             if (!element.contains(event.target)) element.open = false;
         });
@@ -91,7 +97,7 @@
             }
             return;
         }
-        const form = event.target.closest('[data-feed-reply]');
+        const form = event.target.closest('[data-feed-reply], [data-inline-reply]');
         if (!form) return;
         event.preventDefault();
         if (form.dataset.sending === 'true') return;
@@ -109,15 +115,19 @@
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                status.textContent = data.errors?.body?.[0] || (response.status === 419 || response.status === 401
+                status.textContent = data.errors?.body?.[0] || data.errors?.reply_to_post_id?.[0] || (response.status === 419 || response.status === 401
                     ? 'Tu sesión expiró. Recarga la página antes de responder.'
                     : response.status === 429 ? 'Espera un momento antes de responder de nuevo.'
                     : 'No se pudo publicar. Revisa tus permisos e inténtalo de nuevo.');
                 return;
             }
             // This fragment is rendered by our Blade component; user text is escaped there.
-            topic.querySelector('[data-feed-replies]').insertAdjacentHTML('beforeend', data.html);
-            topic.querySelector('[data-reply-count]').textContent = new Intl.NumberFormat('es').format(data.replies_count);
+            if (form.matches('[data-inline-reply]')) {
+                form.closest('.forum-post').insertAdjacentHTML('afterend', data.html);
+            } else {
+                topic.querySelector('[data-feed-replies]').insertAdjacentHTML('beforeend', data.html);
+            }
+            if (topic) topic.querySelector('[data-reply-count]').textContent = new Intl.NumberFormat('es').format(data.replies_count);
             form.reset();
             status.textContent = 'Respuesta publicada.';
         } catch {

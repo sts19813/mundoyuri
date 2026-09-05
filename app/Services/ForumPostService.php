@@ -7,6 +7,7 @@ use App\Models\ForumThread;
 use App\Models\User;
 use App\Notifications\ForumReplyNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ForumPostService
 {
@@ -16,19 +17,24 @@ class ForumPostService
         private readonly QuestionService $questions,
     ) {}
 
-    public function reply(ForumThread $thread, User $author, string $body): ForumPost
+    public function reply(ForumThread $thread, User $author, string $body, ?int $replyToId = null): ForumPost
     {
-        return DB::transaction(function () use ($thread, $author, $body): ForumPost {
+        return DB::transaction(function () use ($thread, $author, $body, $replyToId): ForumPost {
+            $replyTo = $replyToId ? $thread->posts()->whereKey($replyToId)->where('is_hidden', false)->lockForUpdate()->first() : null;
+            if ($replyToId && (! $replyTo || ($replyTo->author && $author->cannotInteractWith($replyTo->author)))) {
+                throw ValidationException::withMessages(['reply_to_post_id' => 'No puedes responder a ese mensaje.']);
+            }
             $post = ForumPost::query()->create([
                 'forum_thread_id' => $thread->id,
                 'user_id' => $author->id,
                 'author_name_snapshot' => $author->displayName(),
                 'body' => $body,
+                'reply_to_post_id' => $replyTo?->id,
             ]);
 
             $post->load(['author', 'thread']);
             $mentionedUserIds = $this->mentions->record($post);
-            $this->notifySubscribers($thread, $post, $author, $mentionedUserIds);
+            $this->notifySubscribers($thread, $post, $author, $mentionedUserIds, $replyTo?->author);
             $this->counters->synchronizeThread($thread);
             $this->counters->synchronizeUser($author);
 
@@ -90,17 +96,20 @@ class ForumPostService
     }
 
     /** @param array<int, int> $mentionedUserIds */
-    private function notifySubscribers(ForumThread $thread, ForumPost $post, User $author, array $mentionedUserIds): void
+    private function notifySubscribers(ForumThread $thread, ForumPost $post, User $author, array $mentionedUserIds, ?User $replyRecipient = null): void
     {
-        $thread->subscribers()
+        $recipients = $thread->subscribers()
             ->where('users.id', '!=', $author->id)
-            ->get()
-            ->each(function (User $subscriber) use ($post, $author, $mentionedUserIds): void {
-                if (in_array($subscriber->id, $mentionedUserIds, true) || $author->cannotInteractWith($subscriber)) {
-                    return;
-                }
+            ->get();
+        if ($replyRecipient) {
+            $recipients->push($replyRecipient);
+        }
+        $recipients->unique('id')->each(function (User $subscriber) use ($post, $author, $mentionedUserIds): void {
+            if ($author->is($subscriber) || in_array($subscriber->id, $mentionedUserIds, true) || $author->cannotInteractWith($subscriber)) {
+                return;
+            }
 
-                $subscriber->notify(new ForumReplyNotification($post, $author));
-            });
+            $subscriber->notify(new ForumReplyNotification($post, $author));
+        });
     }
 }

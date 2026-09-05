@@ -10,6 +10,7 @@ use App\Services\CommunityReactionService;
 use App\Services\ForumPostService;
 use App\Services\QuestionService;
 use App\Services\QuestionVoteService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -66,20 +67,32 @@ class QuestionController extends Controller
 
         $posts = $thread->posts()
             ->when(! $request->user()?->shouldEnterAdminPanel(), fn ($query) => $query->where('is_hidden', false))
-            ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser'])
+            ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author'])
             ->oldest()
             ->paginate(20)
             ->withQueryString();
 
         $reactions->hydrateSummaries(collect([$thread])->merge($posts->getCollection()), $request->user());
+        $posts->each(fn ($post) => $post->setRelation('thread', $thread));
 
         return view('questions.show', compact('thread', 'posts'));
     }
 
-    public function answer(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts): RedirectResponse
+    public function answer(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions): RedirectResponse|JsonResponse
     {
         abort_unless($thread->isQuestion(), 404);
-        $post = $posts->reply($thread, $request->user(), $request->validated('body'));
+        $post = $posts->reply($thread, $request->user(), $request->validated('body'), $request->validated('reply_to_post_id'));
+
+        if ($request->expectsJson()) {
+            $post->load(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author']);
+            $post->setRelation('thread', $thread);
+            $reactions->hydrateSummaries([$post], $request->user());
+
+            return response()->json([
+                'html' => view('components.forum.post', ['post' => $post, 'question' => $thread])->render(),
+                'replies_count' => $thread->fresh()->replies_count,
+            ], 201);
+        }
 
         return redirect()->to(route('questions.show', $thread).'#post-'.$post->id);
     }

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Episode;
 use App\Models\Comment;
+use App\Models\Episode;
 use App\Models\Series;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
@@ -21,7 +21,7 @@ class CommentController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:comments,id'],
         ]);
 
-        if (!auth()->check() && empty($validated['alias'])) {
+        if (! auth()->check() && empty($validated['alias'])) {
             return back()
                 ->withInput()
                 ->withErrors(['alias' => 'El alias es obligatorio para comentar como anonimo.']);
@@ -36,25 +36,31 @@ class CommentController extends Controller
         }
 
         $parent = null;
-        if (!empty($validated['parent_id'])) {
+        if (! empty($validated['parent_id'])) {
             $parent = Comment::query()
                 ->whereKey($validated['parent_id'])
-                ->whereNull('parent_id')
+                ->where('is_approved', true)
                 ->firstOrFail();
 
             $sameTarget = $parent->commentable_type === $commentable->getMorphClass()
                 && (int) $parent->commentable_id === (int) $commentable->getKey();
 
-            if (!$sameTarget) {
+            if (! $sameTarget) {
                 throw ValidationException::withMessages([
                     'parent_id' => 'No se pudo responder ese comentario.',
                 ]);
+            }
+            $root = $parent->parent_id ? Comment::query()->whereKey($parent->parent_id)->where('is_approved', true)->firstOrFail() : $parent;
+            abort_unless($root->commentable_type === $commentable->getMorphClass() && (int) $root->commentable_id === (int) $commentable->getKey(), 404);
+            if ($request->user() && $parent->user && $request->user()->cannotInteractWith($parent->user)) {
+                throw ValidationException::withMessages(['parent_id' => 'No puedes responder a este usuario.']);
             }
         }
 
         $commentable->comments()->create([
             'user_id' => auth()->id(),
-            'parent_id' => $parent?->id,
+            'parent_id' => isset($root) ? $root->id : null,
+            'reply_to_comment_id' => $parent?->id,
             'alias' => auth()->check() ? (auth()->user()->alias ?: auth()->user()->name) : $validated['alias'],
             'body' => $validated['body'],
             'is_approved' => true,

@@ -42,8 +42,9 @@ class ForumController extends Controller
                 'initialPost.author.badges',
                 'initialPost.author.communityRank',
                 'initialPost.mentions.mentionedUser',
+                'initialPost.replyTo.author',
                 'previewReplies' => fn ($query) => $query->latest('id')->limit(2)
-                    ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser']),
+                    ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author']),
             ])
             ->when($search !== '', fn ($query) => $query->where('title', 'like', '%'.$search.'%'))
             ->orderByDesc('is_pinned')

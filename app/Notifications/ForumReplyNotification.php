@@ -23,7 +23,7 @@ class ForumReplyNotification extends Notification
     {
         return [
             'kind' => 'forum_reply',
-            'title' => $this->actor->displayName().' respondió en un tema que sigues',
+            'title' => $this->actor->displayName().($this->post->reply_to_post_id ? ' respondió a un mensaje de la conversación' : ' respondió en un tema que sigues'),
             'message' => Str::limit($this->post->body, 100),
             'actor_id' => $this->actor->id,
             'actor_name' => $this->actor->displayName(),

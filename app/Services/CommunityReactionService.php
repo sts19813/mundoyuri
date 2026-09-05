@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Comment;
 use App\Models\CommunityReaction;
+use App\Models\Episode;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Models\Series;
 use App\Models\User;
 use App\Notifications\CommunityReactionNotification;
 use Illuminate\Database\Eloquent\Collection;
@@ -178,8 +180,16 @@ class CommunityReactionService
             return route($thread->isQuestion() ? 'questions.show' : 'forum.threads.show', $thread).'#post-'.$reactable->id;
         }
 
-        // Comments are already valid polymorphic targets. A comment UI can opt into
-        // reactions later once it has a stable per-comment anchor and public URL.
+        if ($reactable instanceof Comment) {
+            $content = $reactable->commentable;
+
+            return match (true) {
+                $content instanceof Series => route('catalog.series.show', $content).'#comment-'.$reactable->id,
+                $content instanceof Episode => route('public.episodes.show', $content->slug).'#comment-'.$reactable->id,
+                default => null,
+            };
+        }
+
         return null;
     }
 }
