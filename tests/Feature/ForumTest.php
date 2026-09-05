@@ -179,6 +179,9 @@ class ForumTest extends TestCase
             ->assertSee('Respuesta número 4')->assertDontSee('Respuesta número 1')
             ->assertDontSee('Respuesta oculta')->assertDontSee('Texto secreto')
             ->assertSee(route('forum.posts.store', $thread), false)
+            ->assertSee('forum-feed-open', false)
+            ->assertSee('forum-post-interactions', false)
+            ->assertDontSee('data-load-replies', false)
             ->assertViewHas('threads', fn ($threads) => $threads->first()->previewReplies->count() === 2);
     }
 

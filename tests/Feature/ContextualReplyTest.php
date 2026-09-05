@@ -137,7 +137,8 @@ class ContextualReplyTest extends TestCase
         $forum = Forum::query()->create(['forum_category_id' => $category->id, 'name' => 'Fanart', 'slug' => 'fanart']);
         $author = User::factory()->create();
         $thread = app(ForumThreadService::class)->create($forum, $author, 'Comparte arte', 'Primer mensaje');
-        $image = UploadedFile::fake()->image('ilustracion.png', 2400, 1600);
+        // A phone-sized source may exceed 4,000 px; the server must resize it instead of rejecting it.
+        $image = UploadedFile::fake()->image('ilustracion.png', 4200, 3000);
 
         $this->actingAs($author)->postJson(route('forum.posts.store', $thread), [
             'body' => '', 'image' => $image,

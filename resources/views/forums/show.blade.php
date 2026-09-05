@@ -47,15 +47,18 @@
                 @forelse($threads as $thread)
                     <article id="thread-{{ $thread->id }}" class="forum-feed-topic">
                         <header class="forum-feed-title">
-                            <h2><a href="{{ route('forum.threads.show', $thread) }}">{{ $thread->title }}</a></h2>
-                            @if($thread->is_pinned)<span class="forum-state">Fijado</span>@endif
-                            @if($thread->is_locked)<span class="forum-state">Cerrado</span>@endif
+                            <div class="forum-feed-title-copy">
+                                <h2><a href="{{ route('forum.threads.show', $thread) }}">{{ $thread->title }}</a></h2>
+                                @if($thread->is_pinned)<span class="forum-state">Fijado</span>@endif
+                                @if($thread->is_locked)<span class="forum-state">Cerrado</span>@endif
+                            </div>
+                            <a href="{{ route('forum.threads.show', $thread) }}" class="profile-btn profile-btn-primary forum-feed-open">Abrir conversación</a>
                         </header>
                         @if($thread->initialPost)
                             <x-forum.post :post="$thread->initialPost" />
                         @endif
                         <div class="forum-feed-divider">
-                            <span><span data-reply-count>{{ number_format($thread->replies_count) }}</span> respuestas · <a href="{{ route('forum.threads.show', $thread) }}" @if($thread->replies_count > 100) data-load-replies @endif>{{ $thread->replies_count > 100 ? 'Ver todas las respuestas' : 'Abrir conversación' }}</a></span>
+                            <span><span data-reply-count>{{ number_format($thread->replies_count) }}</span> respuestas @if($thread->replies_count > 100)· <a href="{{ route('forum.threads.show', $thread) }}" data-load-replies>Ver todas las respuestas</a>@endif</span>
                             <span>{{ number_format($thread->views_count) }} vistas</span>
                         </div>
                         <div class="forum-feed-replies" data-feed-replies>

@@ -111,6 +111,7 @@
         const status = form.querySelector('[data-reply-status]');
         const topic = form.closest('.forum-feed-topic');
         const body = new FormData(form);
+        let serverAccepted = false;
         form.dataset.sending = 'true';
         button.disabled = true;
         status.textContent = 'Publicando…';
@@ -127,13 +128,17 @@
                     : 'No se pudo publicar. Revisa tus permisos e inténtalo de nuevo.');
                 return;
             }
+            serverAccepted = true;
+            status.textContent = 'Respuesta publicada.';
             // This fragment is rendered by our Blade component; user text is escaped there.
             if (form.matches('[data-inline-reply]')) {
-                const branch = form.closest('.forum-post-branch');
+                const branch = form.closest('.forum-post-branch') || form.closest('.forum-post');
                 let children = branch.querySelector(':scope > .forum-post-children');
                 if (!children) {
                     children = document.createElement('div');
-                    children.className = 'forum-post-children';
+                    children.className = form.closest('.forum-feed-topic')
+                        ? 'forum-post-children forum-feed-inline-children'
+                        : 'forum-post-children';
                     branch.append(children);
                 }
                 children.insertAdjacentHTML('beforeend', data.html);
@@ -148,7 +153,9 @@
             form.closest('.message-reply-box')?.removeAttribute('open');
             status.textContent = 'Respuesta publicada.';
         } catch {
-            status.textContent = 'No pudimos confirmar el envío. Comprueba tu conexión y recarga antes de reintentar.';
+            status.textContent = serverAccepted
+                ? 'Respuesta publicada. Recarga la página si no aparece todavía.'
+                : 'No pudimos confirmar el envío. Comprueba tu conexión antes de reintentar.';
         } finally {
             form.dataset.sending = 'false';
             button.disabled = false;

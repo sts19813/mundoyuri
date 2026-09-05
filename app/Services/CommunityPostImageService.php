@@ -13,8 +13,18 @@ class CommunityPostImageService
 
     private const MAX_EDGE = 1920;
 
+    private const MAX_SOURCE_PIXELS = 50_000_000;
+
     public function store(UploadedFile $file): string
     {
+        $dimensions = @getimagesize($file->getRealPath());
+        if (! $dimensions || $dimensions[0] < 1 || $dimensions[1] < 1) {
+            throw ValidationException::withMessages(['image' => 'No se pudo leer la imagen.']);
+        }
+        if ($dimensions[0] * $dimensions[1] > self::MAX_SOURCE_PIXELS) {
+            throw ValidationException::withMessages(['image' => 'La imagen supera el límite seguro de 50 megapíxeles.']);
+        }
+
         $source = $this->openImage($file);
         [$width, $height] = [imagesx($source), imagesy($source)];
         $source = $this->orient($source, $file);
