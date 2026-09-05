@@ -4025,15 +4025,15 @@
 .legacy-claim-error { color: #ff9abd; }
 .legacy-claim-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .community-home-page { min-height: 0; padding-bottom: 82px; }
-.community-home-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(360px, .88fr); gap: 40px; margin: 20px 0 24px; padding: 40px; overflow: hidden; border: 1px solid rgba(244, 63, 142, .17); border-radius: 24px; background: linear-gradient(122deg, rgba(255, 246, 250, .97), rgba(240, 224, 239, .94)); box-shadow: 0 22px 55px rgba(0, 0, 0, .15); }
-.community-home-hero::after { position: absolute; top: -60px; right: 5%; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(232, 72, 145, .19), transparent 68%); content: ''; pointer-events: none; }
+.community-home-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(360px, .88fr); gap: 40px; margin: 20px 0 24px; padding: 40px; overflow: hidden; border: 1px solid rgba(244, 63, 142, .2); border-radius: 24px; background: radial-gradient(circle at 86% 18%, rgba(232, 72, 145, .18), transparent 34%), linear-gradient(125deg, #251027 0%, #170c1b 55%, #260f23 100%); box-shadow: 0 24px 58px rgba(0, 0, 0, .25); }
+.community-home-hero::after { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(244, 114, 182, .18) 1px, transparent 1.5px); background-position: 16px 17px; background-size: 42px 42px; content: ''; opacity: .32; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 58%, #000); mask-image: linear-gradient(90deg, transparent 8%, #000 58%, #000); }
 .community-home-hero > * { position: relative; z-index: 1; }
-.community-home-hero h1 { max-width: 610px; margin: 8px 0 11px; color: #3f1f3d; font: 700 clamp(2.35rem, 4.4vw, 4rem)/.98 'Playfair Display', serif; letter-spacing: -.05em; }
-.community-home-hero h1 em { color: #e84891; font-weight: 400; }
-.community-home-hero p { max-width: 580px; margin: 0; color: #715c70; font-size: .94rem; line-height: 1.65; }
+.community-home-hero h1 { max-width: 610px; margin: 8px 0 11px; color: #f8eef7; font: 700 clamp(2.35rem, 4.4vw, 4rem)/.98 'Playfair Display', serif; letter-spacing: -.05em; }
+.community-home-hero h1 em { color: #ff6fab; font-weight: 400; }
+.community-home-hero p { max-width: 580px; margin: 0; color: #c7b3c5; font-size: .94rem; line-height: 1.65; }
 .community-home-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; align-self: end; }
-.community-home-action { display: grid; min-height: 91px; align-content: center; gap: 5px; padding: 14px 13px; border: 1px solid rgba(121, 44, 91, .18); border-radius: 14px; color: #643453; background: rgba(255, 255, 255, .46); box-shadow: 0 8px 20px rgba(80, 27, 61, .05); text-decoration: none; transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; }
-.community-home-action:hover { border-color: rgba(207, 45, 116, .48); color: #4d1d3e; background: rgba(255, 255, 255, .76); box-shadow: 0 12px 25px rgba(94, 28, 66, .1); transform: translateY(-2px); }
+.community-home-action { display: grid; min-height: 91px; align-content: center; gap: 5px; padding: 14px 13px; border: 1px solid rgba(244, 114, 182, .18); border-radius: 14px; color: #f0dce9; background: rgba(255, 255, 255, .035); box-shadow: 0 8px 20px rgba(0, 0, 0, .12); text-decoration: none; transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; }
+.community-home-action:hover { border-color: rgba(244, 114, 182, .46); color: #fff; background: rgba(244, 63, 142, .1); box-shadow: 0 12px 25px rgba(0, 0, 0, .2); transform: translateY(-2px); }
 .community-home-action:focus-visible { outline: 3px solid rgba(232, 72, 145, .45); outline-offset: 3px; }
 .community-home-action strong { font: 700 .95rem 'Playfair Display', serif; }
 .community-home-action span { font-size: .65rem; line-height: 1.35; }
@@ -4438,11 +4438,13 @@
 
 /* Replies stay under their parent instead of repeating a quoted fragment. */
 .forum-post-branch { min-width: 0; }
-.forum-post-children { display: grid; gap: 8px; margin: 8px 0 0 28px; padding-left: 17px; border-left: 2px solid rgba(244, 63, 142, .38); }
-.forum-post-children-capped { margin-left: 0; }
+.forum-post-children { display: grid; gap: 8px; margin: 8px 0 0 20px; padding-left: 0; border-left: 0; }
+.forum-post-children-capped { margin-left: 0; padding-left: 14px; border-left: 1px solid rgba(244, 63, 142, .25); }
+.forum-post-children-capped .forum-post-children-capped { padding-left: 0; border-left: 0; }
 .forum-post-children > .forum-post-branch > .forum-post { margin: 0; }
-.comment-tree-children { display: grid; gap: 8px; margin: 9px 0 0 28px; padding-left: 17px; border-left: 2px solid rgba(244, 63, 142, .38); }
-.comment-tree-children-capped { margin-left: 0; }
+.comment-tree-children { display: grid; gap: 8px; margin: 9px 0 0 20px; padding-left: 0; border-left: 0; }
+.comment-tree-children-capped { margin-left: 0; padding-left: 14px; border-left: 1px solid rgba(244, 63, 142, .25); }
+.comment-tree-children-capped .comment-tree-children-capped { padding-left: 0; border-left: 0; }
 .comment-tree-children > .comment-tree-branch > .catalog-social-comment { margin: 0; }
 .message-reply-box { margin-top: 9px; }
 .message-reply-box > summary { display: inline-flex; align-items: center; min-height: 36px; color: var(--muted); font-size: .76rem; cursor: pointer; list-style: none; }
@@ -4481,7 +4483,8 @@
 .comments-notice { padding: 12px 16px; margin-bottom: 18px; border-left: 2px solid var(--rose); border-radius: 0 8px 8px 0; color: #edc6d8; background: rgba(244, 63, 142, .055); font-size: .82rem; }
 
 @media (max-width: 760px) {
-    .forum-post-children, .comment-tree-children { margin-left: 12px; padding-left: 10px; }
+    .forum-post-children, .comment-tree-children { margin-left: 9px; padding-left: 0; }
+    .forum-post-children-capped, .comment-tree-children-capped { margin-left: 0; padding-left: 9px; }
     .comments-section .catalog-social-comment-content { padding-left: 0; }
     .comments-section .comment-reply.catalog-social-comment { margin-left: 8px; padding: 12px; }
     .catalog-social-comment .comment-date { margin-left: 45px; }

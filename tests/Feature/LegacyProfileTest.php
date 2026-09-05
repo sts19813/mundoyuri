@@ -34,7 +34,7 @@ class LegacyProfileTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_public_archive_clearly_marks_historical_profiles_without_private_evidence(): void
+    public function test_public_archive_uses_the_standard_profile_presentation_without_private_evidence(): void
     {
         $profile = LegacyProfile::query()->create([
             'legacy_external_key' => 'foro-2007:luna',
@@ -58,10 +58,12 @@ class LegacyProfileTest extends TestCase
 
         $this->get(route('legacy-profiles.show', $profile))
             ->assertOk()
-            ->assertSee('Perfil histórico')
-            ->assertSee('Datos recuperados del archivo de Mundo Yuri')
+            ->assertSee('Perfil de la comunidad')
+            ->assertSee('Información personal')
             ->assertSee('20 May 2007')
             ->assertSee('184')
+            ->assertDontSee('Registro archivado')
+            ->assertDontSee('Importado el')
             ->assertDontSee('captura-privada-014')
             ->assertDontSee('Nunca exponer esta nota.');
     }

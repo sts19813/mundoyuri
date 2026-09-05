@@ -211,7 +211,7 @@ class ProfileTest extends TestCase
         $this->get(route('catalog.series.show', $series))
             ->assertOk()
             ->assertSee($author->publicProfileUrl(), false)
-            ->assertSee('Ver perfil de autora-yuri')
+            ->assertSee('Información de autora-yuri')
             ->assertSee('Yuri Fan')
             ->assertSee('<span class="comment-user">Visitante anónima</span>', false);
     }
