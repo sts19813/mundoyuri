@@ -221,6 +221,10 @@ class ProfileTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Iniciar sesión')
+            ->assertSee('data-nav-backdrop', false)
+            ->assertSee('nav-toggler-lines', false)
+            ->assertSee('id="mobile-nav-search"', false)
+            ->assertSee('aria-current="page"', false)
             ->assertDontSee('Cerrar sesión');
 
         $user = User::factory()->create(['name' => 'Luna Rivera']);

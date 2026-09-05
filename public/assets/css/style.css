@@ -70,6 +70,8 @@
     }
 
     .nav-inner {
+        position: relative;
+        z-index: 2;
         margin: 0 auto;
         padding: 0 24px;
         display: grid;
@@ -469,6 +471,39 @@
         padding: 6px 10px;
         border-radius: 8px;
         cursor: pointer;
+    }
+
+    .nav-toggler-lines {
+        display: grid;
+        width: 20px;
+        gap: 4px;
+    }
+
+    .nav-toggler-lines span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+        transition: transform .2s, opacity .2s;
+    }
+
+    .nav-toggler.is-open .nav-toggler-lines span:first-child {
+        transform: translateY(6px) rotate(45deg);
+    }
+
+    .nav-toggler.is-open .nav-toggler-lines span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .nav-toggler.is-open .nav-toggler-lines span:last-child {
+        transform: translateY(-6px) rotate(-45deg);
+    }
+
+    .nav-mobile-backdrop,
+    .nav-mobile-heading,
+    .nav-mobile-search {
+        display: none;
     }
 
     /* ── HERO ── */
@@ -3444,60 +3479,168 @@
             padding: 0 16px;
         }
 
-        .nav-links {
-            display: flex;
+        .gl-nav .nav-links {
+            display: grid;
             position: absolute;
             top: calc(100% + 8px);
-            left: 12px;
+            left: auto;
             right: 12px;
             z-index: 1000;
-            flex-direction: column;
-            gap: 2px;
-            padding: 8px;
-            border: 1px solid rgba(244, 63, 142, 0.22);
-            border-radius: 16px;
-            background: rgba(22, 13, 24, 0.98);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42);
-            backdrop-filter: blur(16px);
+            width: min(390px, calc(100vw - 24px));
+            max-height: calc(100dvh - 88px);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            justify-self: auto;
+            gap: 7px;
+            margin: 0;
+            padding: 14px;
+            overflow-y: auto;
+            border: 1px solid rgba(244, 63, 142, .3);
+            border-radius: 20px;
+            background: #180e1b;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .58);
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            transform: translateY(-8px);
+            transform: translateY(-8px) scale(.98);
+            transform-origin: top right;
             transition: opacity .2s, visibility .2s, transform .2s;
         }
 
-        .nav-links.active {
+        .gl-nav .nav-links.active {
             opacity: 1;
             visibility: visible;
             pointer-events: auto;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
-        .nav-links li {
-            width: 100%;
+        .gl-nav .nav-links li {
+            width: auto;
             padding: 0;
         }
 
-        .nav-links a {
+        .gl-nav .nav-links a {
             width: 100%;
-            min-height: 48px;
+            min-height: 46px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            font-size: .95rem;
-            text-align: center;
+            justify-content: flex-start;
+            border: 1px solid rgba(255, 255, 255, .055);
+            border-radius: 12px;
+            padding: 0 14px;
+            color: #cbbdcd;
+            background: rgba(255, 255, 255, .025);
+            font-size: .82rem;
+            text-align: left;
         }
 
-        .nav-links a:hover,
-        .nav-links a:focus-visible {
+        .gl-nav .nav-links a:hover,
+        .gl-nav .nav-links a:focus-visible,
+        .gl-nav .nav-links a[aria-current='page'] {
+            border-color: rgba(244, 63, 142, .3);
             color: #fff;
             background: rgba(244, 63, 142, .11);
             outline: 0;
         }
 
-        .nav-links a::after {
+        .gl-nav .nav-links a[aria-current='page'] {
+            box-shadow: inset 3px 0 0 var(--rose);
+        }
+
+        .gl-nav .nav-links a::after {
             display: none;
+        }
+
+        .nav-mobile-heading {
+            grid-column: 1 / -1;
+            display: block;
+            padding: 2px 2px 5px !important;
+        }
+
+        .nav-mobile-heading span,
+        .nav-mobile-heading small {
+            display: block;
+        }
+
+        .nav-mobile-heading span {
+            color: #fff;
+            font: 700 1.05rem 'Playfair Display', serif;
+        }
+
+        .nav-mobile-heading small {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: .66rem;
+        }
+
+        .nav-mobile-search {
+            grid-column: 1 / -1;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .nav-mobile-search form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 44px;
+            margin: 0;
+            overflow: hidden;
+            border: 1px solid rgba(244, 63, 142, .24);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .035);
+        }
+
+        .nav-mobile-search input,
+        .nav-mobile-search button {
+            min-width: 0;
+            min-height: 44px;
+            border: 0;
+            color: var(--text);
+            background: transparent;
+            font: .78rem 'DM Sans', sans-serif;
+        }
+
+        .nav-mobile-search input {
+            padding: 0 13px;
+            outline: 0;
+        }
+
+        .nav-mobile-search input::placeholder {
+            color: var(--muted);
+        }
+
+        .nav-mobile-search button {
+            display: grid;
+            place-items: center;
+            color: #ff9bc6;
+            cursor: pointer;
+        }
+
+        .nav-mobile-search form:focus-within {
+            border-color: var(--rose);
+            box-shadow: 0 0 0 3px rgba(244, 63, 142, .12);
+        }
+
+        .nav-mobile-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            display: block;
+            border: 0;
+            background: rgba(7, 3, 9, .68);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .2s, visibility .2s;
+        }
+
+        body.portal-nav-open {
+            overflow: hidden;
+        }
+
+        body.portal-nav-open .nav-mobile-backdrop {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
         }
 
         .nav-search {

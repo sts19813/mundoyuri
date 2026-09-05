@@ -6,13 +6,23 @@
             <img src="{{ asset('assets/img/logos/Logo_default.png') }}" alt="Mundo Yuri" class="brand-logo">
         </a>
         <ul class="nav-links" id="navLinks">
-            <li><a href="{{ route('home') }}">Inicio</a></li>
-            <li><a href="{{ route('catalog.sections.show', 'anime') }}">Anime</a></li>
-            <li><a href="{{ route('catalog.sections.show', 'series-gl') }}">Series GL</a></li>
-            <li><a href="{{ route('community.index') }}">Comunidad</a></li>
-            <li><a href="{{ route('forums.index') }}">Foros</a></li>
-            <li><a href="{{ route('questions.index') }}">Preguntas</a></li>
-            <li><a href="{{ route('about') }}">Nosotros</a></li>
+            <li class="nav-mobile-heading"><span>Explorar Mundo Yuri</span><small>Elige dónde quieres ir</small></li>
+            <li class="nav-mobile-search">
+                <form action="{{ route('catalog.series.index') }}" method="GET" role="search">
+                    <label class="visually-hidden" for="mobile-nav-search">Buscar series</label>
+                    <input id="mobile-nav-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar series…">
+                    <button type="submit" aria-label="Buscar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    </button>
+                </form>
+            </li>
+            <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>Inicio</a></li>
+            <li><a href="{{ route('catalog.sections.show', 'anime') }}" @if(request()->routeIs('catalog.sections.show') && request()->route('sectionSlug') === 'anime') aria-current="page" @endif>Anime</a></li>
+            <li><a href="{{ route('catalog.sections.show', 'series-gl') }}" @if(request()->routeIs('catalog.sections.show') && request()->route('sectionSlug') === 'series-gl') aria-current="page" @endif>Series GL</a></li>
+            <li><a href="{{ route('community.index') }}" @if(request()->routeIs('community.index', 'community.members', 'community.activity')) aria-current="page" @endif>Comunidad</a></li>
+            <li><a href="{{ route('forums.index') }}" @if(request()->routeIs('forums.*', 'forum.*')) aria-current="page" @endif>Foros</a></li>
+            <li><a href="{{ route('questions.index') }}" @if(request()->routeIs('questions.*')) aria-current="page" @endif>Preguntas</a></li>
+            <li><a href="{{ route('about') }}" @if(request()->routeIs('about')) aria-current="page" @endif>Nosotros</a></li>
         </ul>
         <div class="nav-actions">
             <form action="{{ route('catalog.series.index') }}" method="GET" class="nav-search-form" role="search">
@@ -124,8 +134,11 @@
                 </div>
             @endguest
         </div>
-        <button class="nav-toggler" id="navToggler" type="button" aria-label="Abrir menú principal" aria-controls="navLinks" aria-expanded="false">&#9776;</button>
+        <button class="nav-toggler" id="navToggler" type="button" aria-label="Abrir menú principal" aria-controls="navLinks" aria-expanded="false">
+            <span class="nav-toggler-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
     </div>
+    <button type="button" class="nav-mobile-backdrop" data-nav-backdrop aria-label="Cerrar menú principal" tabindex="-1"></button>
 </nav>
 
 @once
@@ -133,18 +146,31 @@
         const portalNavbar = document.getElementById('navbar');
         const portalNavToggler = document.getElementById('navToggler');
         const portalNavLinks = document.getElementById('navLinks');
+        const portalNavBackdrop = portalNavbar?.querySelector('[data-nav-backdrop]');
 
         function closePortalNav() {
             portalNavLinks?.classList.remove('active');
+            portalNavToggler?.classList.remove('is-open');
             portalNavToggler?.setAttribute('aria-expanded', 'false');
             portalNavToggler?.setAttribute('aria-label', 'Abrir menú principal');
+            document.body.classList.remove('portal-nav-open');
         }
 
         portalNavToggler?.addEventListener('click', function () {
             const isOpen = portalNavLinks?.classList.toggle('active') ?? false;
+            portalNavToggler.classList.toggle('is-open', isOpen);
             portalNavToggler.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             portalNavToggler.setAttribute('aria-label', isOpen ? 'Cerrar menú principal' : 'Abrir menú principal');
+            document.body.classList.toggle('portal-nav-open', isOpen);
+            if (isOpen) {
+                document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
+                    menu.classList.remove('is-open');
+                    menu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+                });
+            }
         });
+
+        portalNavBackdrop?.addEventListener('click', closePortalNav);
 
         portalNavLinks?.querySelectorAll('a').forEach(function (link) {
             link.addEventListener('click', closePortalNav);
@@ -160,6 +186,7 @@
                 const clickedTrigger = trigger && trigger.contains(event.target);
 
                 if (clickedTrigger) {
+                    closePortalNav();
                     const willOpen = !menu.classList.contains('is-open');
                     document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
                         openMenu.classList.remove('is-open');
@@ -179,13 +206,19 @@
 
         document.addEventListener('keydown', function (event) {
             if (event.key !== 'Escape') return;
+            const navWasOpen = portalNavLinks?.classList.contains('active');
             closePortalNav();
+            if (navWasOpen) portalNavToggler?.focus();
             document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
                 menu.classList.remove('is-open');
                 const trigger = menu.querySelector('[data-user-menu-trigger]');
                 trigger?.setAttribute('aria-expanded', 'false');
                 trigger?.focus();
             });
+        });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 960) closePortalNav();
         });
 
         document.addEventListener('submit', function (event) {
