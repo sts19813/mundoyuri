@@ -112,4 +112,22 @@ class CommunityDirectoryTest extends TestCase
             ->assertSee('Fundadora Visible')
             ->assertDontSee('Kohai Visible');
     }
+
+    public function test_directory_displays_every_public_member_without_pagination(): void
+    {
+        User::factory()->count(30)->sequence(
+            fn ($sequence) => [
+                'name' => 'Integrante '.str_pad((string) ($sequence->index + 1), 2, '0', STR_PAD_LEFT),
+                'profile_visibility' => 'public',
+                'is_active' => true,
+            ],
+        )->create();
+
+        $this->get(route('community.members'))
+            ->assertOk()
+            ->assertSee('30 miembros')
+            ->assertSee('Integrante 01')
+            ->assertSee('Integrante 30')
+            ->assertDontSee('pagination');
+    }
 }

@@ -78,7 +78,7 @@
             <div class="community-directory-heading">
                 <div>
                     <span class="profile-panel-kicker">Directorio público</span>
-                    <h2>{{ $members->total() }} {{ $members->total() === 1 ? 'miembro' : 'miembros' }}</h2>
+                    <h2>{{ $members->count() }} {{ $members->count() === 1 ? 'miembro' : 'miembros' }}</h2>
                 </div>
                 @if(request()->hasAny(['q', 'filter', 'rank', 'sort', 'direction']))
                     <a href="{{ route('community.members') }}">Limpiar filtros</a>
@@ -98,9 +98,6 @@
                 @endforelse
             </div>
 
-            @if($members->hasPages())
-                <div class="community-directory-pagination">{{ $members->links() }}</div>
-            @endif
         </div>
     </main>
 

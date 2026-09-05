@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Services\CommunityRankResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
@@ -142,11 +141,10 @@ class CommunityController extends Controller
                 ->get();
         }
 
-        $members = $this->paginateMembers(
+        $members = $this->sortMembers(
             $modernMembers->get()->concat($legacyProfiles),
             $sort,
             $direction,
-            $request,
         );
 
         return view('community.index', [
@@ -158,7 +156,7 @@ class CommunityController extends Controller
     }
 
     /** @param Collection<int, User|LegacyProfile> $members */
-    private function paginateMembers(Collection $members, string $sort, string $direction, Request $request): LengthAwarePaginator
+    private function sortMembers(Collection $members, string $sort, string $direction): Collection
     {
         $members = $members
             ->sortBy(function (User|LegacyProfile $member) use ($sort): array|string|int {
@@ -177,16 +175,7 @@ class CommunityController extends Controller
             $members = $members->reverse()->values();
         }
 
-        $perPage = 24;
-        $page = LengthAwarePaginator::resolveCurrentPage();
-
-        return new LengthAwarePaginator(
-            $members->forPage($page, $perPage)->values(),
-            $members->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()],
-        );
+        return $members;
     }
 
     private function constrainPublicThreads(Builder $query): Builder

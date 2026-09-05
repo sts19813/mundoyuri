@@ -2889,6 +2889,66 @@
         margin-top: 28px;
     }
 
+    /* Laravel pagination uses Bootstrap markup throughout the public portal. */
+    .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+        margin: 24px 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .pagination .page-item {
+        margin: 0;
+    }
+
+    .pagination .page-link {
+        min-width: 40px;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 13px;
+        border: 1px solid rgba(244, 63, 142, .2);
+        border-radius: 11px !important;
+        color: #cbbdcd;
+        background: rgba(25, 14, 28, .88);
+        box-shadow: none;
+        font-size: .76rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: border-color .18s, color .18s, background .18s, transform .18s;
+    }
+
+    .pagination .page-link:hover,
+    .pagination .page-link:focus-visible {
+        border-color: rgba(244, 63, 142, .55);
+        color: #fff;
+        background: rgba(244, 63, 142, .14);
+        outline: 0;
+        transform: translateY(-1px);
+    }
+
+    .pagination .page-item.active .page-link {
+        border-color: var(--rose);
+        color: #fff;
+        background: linear-gradient(135deg, var(--pink), var(--rose));
+    }
+
+    .pagination .page-item.disabled .page-link {
+        border-color: rgba(255, 255, 255, .05);
+        color: rgba(203, 189, 205, .38);
+        background: rgba(255, 255, 255, .025);
+        pointer-events: none;
+    }
+
+    .pagination svg {
+        width: 16px;
+        height: 16px;
+    }
+
     /* ── MENSAJERÍA Y NOTIFICACIONES ── */
     .social-hub-page {
         padding-bottom: 90px;
