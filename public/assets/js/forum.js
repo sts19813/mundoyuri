@@ -17,7 +17,7 @@
         if (dialog.dataset.reopen === 'true') dialog.showModal();
     }
 
-    const disclosures = '[data-author-card], .forum-post-menu, .forum-action-menu';
+    const disclosures = '[data-author-card], .forum-post-menu, .forum-action-menu, .community-reaction-picker';
     document.addEventListener('click', (event) => {
         document.querySelectorAll(disclosures).forEach((element) => {
             if (!element.contains(event.target)) element.open = false;
@@ -48,6 +48,49 @@
     });
 
     document.addEventListener('submit', async (event) => {
+        const reactionForm = event.target.closest('[data-reaction-control] form');
+        if (reactionForm) {
+            event.preventDefault();
+            const control = reactionForm.closest('[data-reaction-control]');
+            if (control.dataset.sending === 'true') return;
+            const feedback = control.querySelector('[role="status"]');
+            const body = new FormData(reactionForm);
+            control.dataset.sending = 'true';
+            control.setAttribute('aria-busy', 'true');
+            control.querySelectorAll('button').forEach(button => button.disabled = true);
+            feedback.textContent = 'Guardando…';
+            try {
+                const response = await fetch(reactionForm.action, {
+                    method: 'POST', body, credentials: 'same-origin',
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!response.ok) {
+                    feedback.textContent = [401, 419].includes(response.status)
+                        ? 'Tu sesión expiró. Recarga para continuar.'
+                        : response.status === 429 ? 'Espera un momento y vuelve a intentarlo.'
+                        : 'No se pudo guardar la reacción.';
+                    return;
+                }
+                const data = await response.json();
+                const template = document.createElement('template');
+                // Trusted Blade fragment from the same-origin endpoint; user content is escaped.
+                template.innerHTML = data.html;
+                const updated = template.content.querySelector('[data-reaction-control]');
+                if (!updated) throw new Error('Invalid reaction response');
+                const restoreFocus = control.contains(document.activeElement);
+                control.replaceWith(updated);
+                if (restoreFocus) updated.querySelector('summary')?.focus({ preventScroll: true });
+                updated.querySelector('[role="status"]').classList.add('visually-hidden');
+                updated.querySelector('[role="status"]').textContent = data.active_type ? 'Reacción guardada.' : 'Reacción retirada.';
+            } catch {
+                feedback.textContent = 'No pudimos confirmar el cambio. Recarga antes de reintentarlo.';
+            } finally {
+                control.dataset.sending = 'false';
+                control.removeAttribute('aria-busy');
+                control.querySelectorAll('button').forEach(button => button.disabled = false);
+            }
+            return;
+        }
         const form = event.target.closest('[data-feed-reply]');
         if (!form) return;
         event.preventDefault();

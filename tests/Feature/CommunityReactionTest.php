@@ -76,6 +76,44 @@ class CommunityReactionTest extends TestCase
             ->assertSee('❤️');
     }
 
+    public function test_async_picker_changes_and_removes_a_reaction_without_duplicates(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $member = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Reacciones en el feed', 'Mensaje');
+        $post = $thread->posts()->firstOrFail();
+        $payload = ['target' => 'post', 'target_id' => $post->id, 'type' => 'love'];
+
+        $response = $this->actingAs($member)->postJson(route('community.reactions.store'), $payload)
+            ->assertOk()->assertJsonPath('active_type', 'love')->assertJsonPath('total', 1);
+        $this->assertStringContainsString('Cambiar reacción: Me encanta', $response->json('html'));
+        $this->assertStringContainsString('aria-pressed="true"', $response->json('html'));
+
+        $payload['type'] = 'yuri';
+        $this->postJson(route('community.reactions.store'), $payload)
+            ->assertOk()->assertJsonPath('active_type', 'yuri')->assertJsonPath('total', 1);
+        $this->assertDatabaseCount('community_reactions', 1);
+        $this->assertSame(1, $author->notifications()->count());
+
+        $this->postJson(route('community.reactions.store'), $payload)
+            ->assertOk()->assertJsonPath('active_type', null)->assertJsonPath('total', 0);
+        $this->assertDatabaseCount('community_reactions', 0);
+    }
+
+    public function test_async_reactions_keep_authorization_and_support_questions(): void
+    {
+        $author = User::factory()->create();
+        $question = app(QuestionService::class)->create($author, 'Una duda de la comunidad', '¿Me ayudas?');
+        $payload = ['target' => 'thread', 'target_id' => $question->id, 'type' => 'like'];
+        $this->postJson(route('community.reactions.store'), $payload)->assertUnauthorized();
+        $this->actingAs(User::factory()->create())->postJson(route('community.reactions.store'), $payload)
+            ->assertOk()->assertJsonPath('total', 1);
+        $question->update(['is_hidden' => true]);
+        $this->postJson(route('community.reactions.store'), $payload)->assertForbidden();
+        $this->assertDatabaseCount('community_reactions', 1);
+    }
+
     public function test_reactions_cannot_target_hidden_forum_content_and_validation_rejects_unknown_types(): void
     {
         [, $forum] = $this->forum();

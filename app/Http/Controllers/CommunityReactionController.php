@@ -8,16 +8,27 @@ use App\Models\ForumPost;
 use App\Models\ForumThread;
 use App\Services\CommunityReactionService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class CommunityReactionController extends Controller
 {
-    public function store(StoreCommunityReactionRequest $request, CommunityReactionService $reactions): RedirectResponse
+    public function store(StoreCommunityReactionRequest $request, CommunityReactionService $reactions): RedirectResponse|JsonResponse
     {
         $reactable = $this->target($request->validated('target'), $request->integer('target_id'));
         $this->authorizeReaction($request->user(), $reactable);
 
         $activeReaction = $reactions->toggle($request->user(), $reactable, $request->validated('type'));
+
+        if ($request->expectsJson()) {
+            $reactions->hydrateSummaries([$reactable], $request->user());
+
+            return response()->json([
+                'html' => view('components.community.reactions', ['reactable' => $reactable])->render(),
+                'active_type' => $activeReaction?->type,
+                'total' => array_sum($reactable->reaction_summary),
+            ]);
+        }
 
         return back()->with('success', $activeReaction ? 'Reacción guardada.' : 'Reacción retirada.');
     }

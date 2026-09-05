@@ -9,7 +9,7 @@
     $canInspect = $author && !$blocked && \Illuminate\Support\Facades\Gate::allows('viewProfile', $author);
 @endphp
 
-<article id="post-{{ $post->id }}" class="forum-post {{ $post->is_hidden ? 'is-hidden' : '' }}">
+<article id="post-{{ $post->id }}" class="forum-post {{ $post->is_hidden ? 'is-hidden' : '' }} {{ $isAccepted ? 'forum-post-accepted' : '' }}">
     <header class="forum-post-header">
         @if($author)
             <details class="forum-post-author-compact" data-author-card>
@@ -119,21 +119,25 @@
             <p class="forum-hidden-message">Este mensaje está oculto por moderación.</p>
         @else
             <div class="forum-post-body">{!! nl2br(app(\App\Services\MentionService::class)->render($post->body, $post->mentions->pluck('mentionedUser'))) !!}</div>
+            <div class="forum-post-feedback">
             <x-community.reactions :reactable="$question && $post->is_initial ? $question : $post" />
             @if($question)
                 <div class="question-post-status">
                     @if($isAccepted)<span class="question-accepted">✓ Respuesta aceptada</span>@endif
-                    <span>{{ number_format($post->is_initial ? $question->upvotes_count : $post->upvotes_count) }} votos positivos</span>
+                    @if(($post->is_initial ? $question->upvotes_count : $post->upvotes_count) > 0)
+                        <span title="Personas que encontraron útil este mensaje">Útil · {{ number_format($post->is_initial ? $question->upvotes_count : $post->upvotes_count) }}</span>
+                    @endif
                     @auth
                         @if($post->is_initial)
-                            @can('vote', $question)<form method="POST" action="{{ route('questions.votes.store', $question) }}">@csrf<button type="submit">Votar</button></form>@endcan
+                            @can('vote', $question)<form method="POST" action="{{ route('questions.votes.store', $question) }}">@csrf<button type="submit" title="Marcar como útil">Me ayudó</button></form>@endcan
                         @else
-                            @can('vote', $post)<form method="POST" action="{{ route('questions.answers.votes.store', $post) }}">@csrf<button type="submit">Votar</button></form>@endcan
+                            @can('vote', $post)<form method="POST" action="{{ route('questions.answers.votes.store', $post) }}">@csrf<button type="submit" title="Marcar como útil">Me ayudó</button></form>@endcan
                             @can('acceptAnswer', $question)<form method="POST" action="{{ route('questions.answers.accept', [$question, $post]) }}">@csrf<button type="submit">{{ $isAccepted ? 'Aceptada' : 'Aceptar respuesta' }}</button></form>@endcan
                         @endif
                     @endauth
                 </div>
             @endif
+            </div>
         @endif
     </div>
 </article>

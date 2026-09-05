@@ -12,24 +12,20 @@
 <body>
     <x-navbar />
     <main class="portal-profile-page forum-page">
-        <div class="container-xl px-4 position-relative">
+        <div class="container-xl px-4 position-relative community-conversation-shell">
             <nav class="profile-breadcrumb">
                 <a href="{{ route('forums.index') }}">Foros</a><span>›</span>
                 <a href="{{ route('forums.show', $thread->forum) }}">{{ $thread->forum->name }}</a><span>›</span>
                 <span>{{ $thread->title }}</span>
             </nav>
 
-            <header class="forum-thread-header forum-thread-header-compact">
-                <div>
-                    <span class="profile-eyebrow">{{ $thread->forum->name }}</span>
-                    <h1>{{ $thread->title }}</h1>
-                    <p>
-                        Creado por @if($thread->author)<a href="{{ $thread->author->publicProfileUrl() }}">{{ $thread->author->displayName() }}</a>@else{{ $thread->authorName() }}@endif
-                        · {{ number_format($thread->replies_count) }} {{ $thread->replies_count === 1 ? 'respuesta' : 'respuestas' }} · {{ number_format($thread->views_count) }} vistas
-                    </p>
-                </div>
+            <x-forum.heading :eyebrow="$thread->forum->name" :title="$thread->title">
+                <p>
+                    Creado por @if($thread->author)<a href="{{ $thread->author->publicProfileUrl() }}">{{ $thread->author->displayName() }}</a>@else{{ $thread->authorName() }}@endif
+                    · {{ number_format($thread->replies_count) }} {{ $thread->replies_count === 1 ? 'respuesta' : 'respuestas' }} · {{ number_format($thread->views_count) }} vistas
+                </p>
+                <x-slot:actions>
                 @auth
-                    <div class="forum-thread-header-actions">
                         @can('reply', $thread)<a class="profile-btn profile-btn-primary" href="#responder">Responder</a>@endcan
                         @if($isSubscribed)
                             <form method="POST" action="{{ route('forum.subscriptions.destroy', $thread) }}">@csrf @method('DELETE')<button class="profile-btn profile-btn-soft" type="submit">Dejar de seguir</button></form>
@@ -49,9 +45,9 @@
                                 <x-community.report-form :reportable="$thread" />
                             </div>
                         </details>
-                    </div>
                 @endauth
-            </header>
+                </x-slot:actions>
+            </x-forum.heading>
 
             @if(session('success'))
                 <div class="legacy-profile-notice forum-flash"><strong>Listo</strong><span>{{ session('success') }}</span></div>

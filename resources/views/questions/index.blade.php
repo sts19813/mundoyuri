@@ -17,39 +17,43 @@
         <header class="forum-hero question-hero">
             <div>
                 <span class="profile-eyebrow">Ayuda entre miembros</span>
-                <h1>Preguntas de la <em>comunidad</em></h1>
-                <p>Comparte lo que buscas y construyamos respuestas juntas.</p>
+                <h1>Preguntas <em>Mundo Yuri</em></h1>
+                <p>Encuentra esa historia GL, pide una recomendación o comparte lo que sabes.</p>
+                <form method="GET" class="forum-search">
+                    <label class="visually-hidden" for="question-search">Buscar preguntas</label>
+                    <input id="question-search" name="q" type="search" value="{{ $search }}" placeholder="¿Qué estás buscando?">
+                    <input type="hidden" name="sort" value="{{ $sort }}">
+                    <button type="submit">Buscar</button>
+                </form>
             </div>
             @auth <a href="{{ route('questions.create') }}" class="profile-btn profile-btn-primary">Hacer una pregunta</a> @endauth
         </header>
 
-        <form method="GET" class="forum-search question-search">
-            <input name="q" type="search" value="{{ $search }}" placeholder="Buscar preguntas">
-            <button type="submit">Buscar</button>
-        </form>
         <nav class="question-sorts" aria-label="Ordenar preguntas">
-            @foreach(['recent' => 'Recientes', 'unanswered' => 'Sin resolver', 'popular' => 'Populares'] as $value => $label)
-                <a class="{{ $sort === $value ? 'is-active' : '' }}" href="{{ route('questions.index', array_filter(['sort' => $value, 'q' => $search ?: null])) }}">{{ $label }}</a>
+            @foreach(['recent' => 'Recientes', 'unanswered' => 'Sin respuestas', 'popular' => 'Populares'] as $value => $label)
+                <a class="{{ $sort === $value ? 'is-active' : '' }}" @if($sort === $value) aria-current="page" @endif href="{{ route('questions.index', array_filter(['sort' => $value, 'q' => $search ?: null])) }}">{{ $label }}</a>
             @endforeach
         </nav>
 
         @if(session('success'))<div class="legacy-profile-notice mt-3"><strong>Listo</strong><span>{{ session('success') }}</span></div>@endif
         @if(session('error'))<div class="legacy-profile-notice mt-3"><strong>Atención</strong><span>{{ session('error') }}</span></div>@endif
 
-        <section class="question-list">
+        <section class="forum-category question-directory" aria-label="Preguntas de la comunidad">
+            <header><span aria-hidden="true">♡</span><div><h2>{{ $search !== '' ? 'Resultados de tu búsqueda' : 'Nos ayudamos entre todas' }}</h2><p>{{ number_format($questions->total()) }} {{ $questions->total() === 1 ? 'pregunta' : 'preguntas' }} · Anime, manga, series y comunidad</p></div></header>
             @forelse($questions as $question)
-                <article class="question-row">
+                <article class="question-row question-directory-row">
+                    <span class="forum-row-icon" aria-hidden="true">{{ $question->isResolved() ? '✓' : '?' }}</span>
                     <div class="question-row-main">
                         <h2><a href="{{ route('questions.show', $question) }}">{{ $question->title }}</a></h2>
                         <p>Por @if($question->author)<a href="{{ $question->author->publicProfileUrl() }}">{{ $question->author->displayName() }}</a>@else{{ $question->authorName() }}@endif · {{ $question->created_at->diffForHumans() }}</p>
                     </div>
                     <div class="question-row-meta">
                         <span>{{ number_format($question->replies_count) }} {{ $question->replies_count === 1 ? 'respuesta' : 'respuestas' }}</span>
-                        @if($question->isResolved())<span class="is-resolved">✓ Resuelta</span>@endif
+                        @if($question->isResolved())<span class="is-resolved">✓ Resuelta</span>@else<span>{{ $question->replies_count ? 'Conversando' : '¿Puedes ayudar?' }}</span>@endif
                     </div>
                 </article>
             @empty
-                <div class="profile-panel forum-empty"><h2>Aún no hay preguntas</h2><p>La primera duda puede abrir una gran conversación.</p><a href="{{ auth()->check() ? route('questions.create') : route('login') }}" class="profile-btn profile-btn-primary">Hacer una pregunta</a></div>
+                <div class="forum-empty"><h2>{{ $search !== '' ? 'No encontramos esa pregunta' : 'Este espacio está esperando tu pregunta' }}</h2><p>{{ $search !== '' ? 'Prueba con otras palabras o pregunta a la comunidad.' : '¿Una serie que no recuerdas? ¿Buscas tu próxima lectura? Pregunta aquí.' }}</p><a href="{{ auth()->check() ? route('questions.create') : route('login') }}" class="profile-btn profile-btn-primary">Hacer una pregunta</a></div>
             @endforelse
         </section>
         {{ $questions->links() }}

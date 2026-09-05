@@ -4405,7 +4405,7 @@
 .forum-moderation[open] > summary { border-bottom: 1px solid rgba(255, 255, 255, .06); }
 .forum-moderation form { margin: 0; padding: 16px 19px 19px; }
 
-.forum-feed { display: grid; gap: 20px; max-width: 920px; margin: 0 auto; }
+.forum-feed { display: grid; gap: 24px; margin: 0; }
 .forum-feed-topic { position: relative; min-width: 0; border: 1px solid rgba(244, 63, 142, .16); border-radius: 16px; background: #160d18; scroll-margin-top: 100px; }
 .forum-feed-title { display: flex; align-items: center; gap: 8px; padding: 17px 18px 0; }
 .forum-feed-title h2 { margin: 0; overflow-wrap: anywhere; font: 700 1.3rem 'Playfair Display', serif; }
@@ -4423,7 +4423,6 @@
 .forum-feed-replies .forum-post-avatar { width: 28px; height: 28px; }
 .forum-feed-replies .forum-post-content { padding: 3px 0 12px 37px; }
 .forum-feed-replies .forum-post-body { font-size: .82rem; padding-bottom: 9px; }
-.forum-feed-replies .community-reaction { min-height: 25px; font-size: .66rem; padding: 3px 6px; }
 .forum-feed-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; padding: 14px 16px; }
 .forum-feed-composer textarea { width: 100%; min-height: 42px; max-height: 240px; resize: vertical; border: 1px solid rgba(244, 63, 142, .19); border-radius: 12px; padding: 10px 12px; background: rgba(255, 255, 255, .035); color: var(--text); font: .8rem 'DM Sans', sans-serif; }
 .forum-feed-composer textarea:focus { outline: 2px solid var(--rose); outline-offset: 2px; }
@@ -4433,6 +4432,68 @@
 .forum-feed-readonly a { color: #ffc5dc; }
 .forum-feed-composer button:disabled { opacity: .6; cursor: wait; }
 .forum-post, #responder { scroll-margin-top: 100px; }
+
+/* One reading rhythm for forum feeds, discussions and questions. */
+.community-conversation-shell { max-width: 1120px; }
+.community-conversation-heading { align-items: center; margin-bottom: 22px; padding: 26px 28px; }
+.community-conversation-heading-copy { min-width: 0; }
+.community-conversation-heading h1 { overflow-wrap: anywhere; font-size: clamp(1.8rem, 3.3vw, 2.65rem); }
+.community-conversation-description { color: var(--muted); font-size: .83rem; line-height: 1.65; }
+.community-conversation-description a { color: #ffc1da; text-decoration: none; }
+.community-conversation-heading .forum-thread-header-actions { flex-shrink: 0; }
+.community-conversation-shell .forum-posts { gap: 16px; }
+.community-conversation-shell .forum-post-header { padding: 14px 18px; }
+.community-conversation-shell .forum-post-content { padding: 18px 22px; }
+.community-conversation-shell .forum-post-body { font-size: .9rem; }
+.community-conversation-shell .forum-feed-topic { border-radius: 18px; }
+.community-conversation-shell .forum-feed-title { padding: 21px 22px 4px; }
+.community-conversation-shell .forum-feed-title h2 { font-size: 1.4rem; line-height: 1.35; }
+.community-conversation-shell .forum-feed-topic > .forum-post > .forum-post-header { border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.community-conversation-shell .forum-feed-replies { padding: 6px 20px 0; }
+.community-conversation-shell .forum-feed-replies .forum-post-header { padding: 12px 0 5px; }
+.community-conversation-shell .forum-feed-replies .forum-post-content { padding: 6px 0 14px 45px; }
+.community-conversation-shell .forum-feed-replies .forum-post-avatar { width: 36px; height: 36px; }
+.community-conversation-shell .forum-feed-composer { padding: 18px 20px; }
+.community-conversation-shell .forum-feed-divider { padding: 11px 22px; }
+.question-directory-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.question-directory .forum-empty { margin: 0; }
+.question-directory .forum-empty .profile-btn { margin-top: 20px; }
+.question-hero .forum-search { width: min(570px, 100%); }
+.question-sorts a { min-height: 38px; padding: 9px 14px; }
+.question-directory-row .forum-row-icon { font-family: 'Playfair Display', serif; font-weight: 700; }
+.forum-post-accepted { border-color: rgba(136, 217, 169, .35); }
+.forum-post-feedback { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; padding-top: 4px; }
+.forum-post-feedback .question-post-status { padding: 0; gap: 10px; }
+.forum-post-feedback .question-post-status button { min-height: 34px; border-color: rgba(255, 255, 255, .1); background: transparent; color: var(--muted); }
+.forum-post-feedback .question-post-status button:hover { color: #ffc5dc; border-color: rgba(244, 63, 142, .3); }
+
+/* Reactions are an on-demand palette, shared by every community post. */
+.community-reactions { position: relative; align-items: center; gap: 12px; margin: 0; }
+.community-reaction-picker { position: relative; }
+.community-reaction-trigger { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; border: 1px solid transparent; border-radius: 10px; padding: 6px 9px; background: transparent; color: var(--muted); font: 500 .76rem 'DM Sans', sans-serif; text-decoration: none; cursor: pointer; list-style: none; }
+.community-reaction-trigger::-webkit-details-marker { display: none; }
+.community-reaction-trigger > span { font-size: 1.15rem; line-height: 1; }
+.community-reaction-trigger:hover, .community-reaction-picker[open] > summary { color: #ffc5dc; background: rgba(244, 63, 142, .07); }
+.community-reaction-trigger.is-active { color: #ffc1da; }
+.community-reaction-trigger:focus-visible, .community-reaction-options button:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
+.community-reaction-palette { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 30; width: 276px; max-width: calc(100vw - 70px); padding: 12px; border: 1px solid rgba(244, 63, 142, .25); border-radius: 18px; background: #27172a; box-shadow: 0 14px 34px rgba(0, 0, 0, .35); }
+.community-reaction-hint { display: block; margin-bottom: 10px; color: #c9b8cc; font-size: .65rem; line-height: 1.4; }
+.community-reaction-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.community-reaction-options .community-reaction { display: flex; justify-content: center; width: 100%; min-height: 44px; padding: 5px 0; border: 1px solid transparent; border-radius: 12px; background: transparent; font-size: 1.55rem; }
+.community-reaction-options .community-reaction:hover { transform: translateY(-4px) scale(1.1); background: rgba(244, 63, 142, .1); }
+.community-reaction-options .community-reaction.is-active { border-color: rgba(244, 63, 142, .55); background: rgba(244, 63, 142, .12); }
+.community-reaction-options button:disabled { cursor: wait; opacity: .5; }
+.community-reaction-total { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: .75rem; }
+.community-reaction-faces { display: inline-flex; padding-left: 3px; }
+.community-reaction-faces > span { display: grid; place-items: center; width: 22px; height: 22px; margin-left: -3px; border: 2px solid #160d18; border-radius: 50%; background: #29192b; font-size: .7rem; }
+.community-reaction-feedback { color: #ffc1da; font-size: .68rem; max-width: 260px; }
+.community-reaction-feedback:empty { display: none; }
+.forum-post-feedback:has(.community-reaction-picker[open]) { position: relative; z-index: 30; }
+
+@media (prefers-reduced-motion: reduce) {
+    .community-reaction-options .community-reaction { transition: none; }
+    .community-reaction-options .community-reaction:hover { transform: none; }
+}
 
 @media (max-width: 760px) {
     .forum-forum-header-compact,
@@ -4449,4 +4510,17 @@
     .forum-feed-composer button { justify-self: end; }
     .forum-section-heading { align-items: flex-start; flex-direction: column; }
     .forum-author-popover { position: fixed; top: auto; bottom: 12px; left: 12px; width: calc(100vw - 24px); max-height: min(430px, calc(100vh - 24px)); overflow: auto; }
+    .community-conversation-heading { padding: 21px; gap: 16px; }
+    .community-conversation-heading .forum-thread-header-actions { flex-shrink: 1; }
+    .community-conversation-shell .forum-post-header { padding: 12px 14px; }
+    .community-conversation-shell .forum-post-content { padding: 15px; }
+    .community-conversation-shell .forum-feed-title { padding: 18px 15px 3px; }
+    .community-conversation-shell .forum-feed-replies { padding-inline: 14px; }
+    .community-conversation-shell .forum-feed-replies .forum-post-content { padding-left: 0; }
+    .community-conversation-shell .forum-feed-composer { padding: 14px; }
+    .question-directory-row { grid-template-columns: auto minmax(0, 1fr); }
+    .question-directory-row .question-row-meta { grid-column: 2; flex-wrap: wrap; }
+    .community-reaction-palette { width: 260px; max-width: calc(100vw - 86px); }
+    .community-reaction-trigger { min-height: 44px; }
+    .forum-post-feedback { gap: 8px; }
 }

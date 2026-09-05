@@ -12,17 +12,14 @@
 <body>
     <x-navbar />
     <main class="portal-profile-page forum-page">
-        <div class="container-xl px-4 position-relative">
+        <div class="container-xl px-4 position-relative community-conversation-shell">
             <nav class="profile-breadcrumb">
                 <a href="{{ route('forums.index') }}">Foros</a><span>›</span><span>{{ $forum->name }}</span>
             </nav>
 
-            <header class="forum-forum-header forum-forum-header-compact">
-                <div>
-                    <span class="profile-eyebrow">{{ $forum->category->name }}</span>
-                    <h1>{{ $forum->name }}</h1>
-                    <p>{{ $forum->description }}</p>
-                </div>
+            <x-forum.heading :eyebrow="$forum->category->name" :title="$forum->name">
+                <p>{{ $forum->description }}</p>
+                <x-slot:actions>
                 @auth
                     @can('createTopic', $forum)
                         <a href="{{ route('forum.threads.create', $forum) }}" class="profile-btn profile-btn-primary" data-open-topic-modal aria-haspopup="dialog" aria-controls="forum-topic-dialog">
@@ -30,7 +27,8 @@
                         </a>
                     @endcan
                 @endauth
-            </header>
+                </x-slot:actions>
+            </x-forum.heading>
 
             @if(session('success'))
                 <div class="legacy-profile-notice forum-flash"><strong>Listo</strong><span>{{ session('success') }}</span></div>
