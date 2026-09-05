@@ -1,8 +1,10 @@
 @php
-    $renderedComments = new \Illuminate\Database\Eloquent\Collection($comments->flatMap(fn ($comment) => collect([$comment])->concat($comment->replies))->all());
-    $renderedComments->loadMissing('replyTo.user');
+    $flattenTree = function ($nodes) use (&$flattenTree) {
+        return $nodes->flatMap(fn ($comment) => collect([$comment])->concat($flattenTree($comment->treeReplies)));
+    };
+    $renderedComments = new \Illuminate\Database\Eloquent\Collection($flattenTree($comments)->all());
     app(\App\Services\CommunityReactionService::class)->hydrateSummaries($renderedComments, auth()->user());
-    $commentCount = $comments->sum(fn ($comment) => 1 + $comment->replies->count());
+    $commentCount = $renderedComments->count();
     $replyTo = (int) old('parent_id');
     $previousRootSignatureUserId = null;
 @endphp
@@ -23,13 +25,7 @@
     @endif
 
     @forelse($comments as $comment)
-        <x-community.catalog-comment :comment="$comment" :target-type="$targetType" :target-id="$targetId" :previous-user-id="$previousRootSignatureUserId">
-            @php($previousReplySignatureUserId = null)
-            @foreach($comment->replies as $reply)
-                <x-community.catalog-comment :comment="$reply" :target-type="$targetType" :target-id="$targetId" :is-reply="true" :previous-user-id="$previousReplySignatureUserId" />
-                @php($previousReplySignatureUserId = $reply->user_id)
-            @endforeach
-        </x-community.catalog-comment>
+        <x-community.catalog-comment-node :comment="$comment" :target-type="$targetType" :target-id="$targetId" :previous-user-id="$previousRootSignatureUserId" />
         @php($previousRootSignatureUserId = $comment->user_id)
     @empty
         <div class="text-muted small mb-4">Todavía no hay comentarios. Sé la primera persona en comentar.</div>

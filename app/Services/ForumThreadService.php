@@ -16,9 +16,9 @@ class ForumThreadService
         private readonly MentionService $mentions,
     ) {}
 
-    public function create(?Forum $forum, User $author, string $title, string $body, string $type = 'discussion'): ForumThread
+    public function create(?Forum $forum, User $author, string $title, string $body, string $type = 'discussion', ?string $imagePath = null): ForumThread
     {
-        return DB::transaction(function () use ($forum, $author, $title, $body, $type): ForumThread {
+        return DB::transaction(function () use ($forum, $author, $title, $body, $type, $imagePath): ForumThread {
             $thread = ForumThread::query()->create([
                 'forum_id' => $forum?->id,
                 'user_id' => $author->id,
@@ -34,6 +34,7 @@ class ForumThreadService
                 'user_id' => $author->id,
                 'author_name_snapshot' => $author->displayName(),
                 'body' => $body,
+                'image_path' => $imagePath,
                 'is_initial' => true,
             ]);
 

@@ -55,7 +55,7 @@
                             <x-forum.post :post="$thread->initialPost" />
                         @endif
                         <div class="forum-feed-divider">
-                            <span><span data-reply-count>{{ number_format($thread->replies_count) }}</span> respuestas · <a href="{{ route('forum.threads.show', $thread) }}" @if($thread->replies_count > 2) data-load-replies @endif>{{ $thread->replies_count > 2 ? 'Ver todas las respuestas' : 'Ver conversación' }}</a></span>
+                            <span><span data-reply-count>{{ number_format($thread->replies_count) }}</span> respuestas · <a href="{{ route('forum.threads.show', $thread) }}" @if($thread->replies_count > 100) data-load-replies @endif>{{ $thread->replies_count > 100 ? 'Ver todas las respuestas' : 'Abrir conversación' }}</a></span>
                             <span>{{ number_format($thread->views_count) }} vistas</span>
                         </div>
                         <div class="forum-feed-replies" data-feed-replies>
@@ -65,12 +65,13 @@
                         </div>
                         @auth
                             @can('reply', $thread)
-                                <form method="POST" action="{{ route('forum.posts.store', $thread) }}" class="forum-feed-composer" data-feed-reply>
+                                <form method="POST" action="{{ route('forum.posts.store', $thread) }}" class="forum-feed-composer" data-feed-reply enctype="multipart/form-data">
                                     @csrf
                                     <input type="hidden" name="from_feed" value="1">
                                     <input type="hidden" name="reply_thread" value="{{ $thread->id }}">
                                     <label class="visually-hidden" for="reply-{{ $thread->id }}">Responder a {{ $thread->title }}</label>
-                                    <textarea id="reply-{{ $thread->id }}" name="body" rows="1" minlength="2" maxlength="12000" required placeholder="Escribe una respuesta…">{{ (int) old('reply_thread') === $thread->id ? old('body') : '' }}</textarea>
+                                    <textarea id="reply-{{ $thread->id }}" name="body" rows="1" minlength="2" maxlength="12000" placeholder="Escribe una respuesta…">{{ (int) old('reply_thread') === $thread->id ? old('body') : '' }}</textarea>
+                                    <x-forum.image-field :id="'feed-image-'.$thread->id" :show-errors="false" />
                                     <button type="submit" class="profile-btn profile-btn-primary">Responder</button>
                                     <p class="forum-feed-error" role="status" data-reply-status>@if((int) old('reply_thread') === $thread->id){{ $errors->first('body') }}@endif</p>
                                 </form>

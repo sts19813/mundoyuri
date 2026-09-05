@@ -54,12 +54,16 @@
             @endif
 
             <section class="forum-posts" aria-label="Mensajes del tema">
-                @foreach($posts as $post)
-                    <x-forum.post :post="$post" />
+                @foreach($postTree as $post)
+                    <x-forum.thread-post :post="$post" />
                 @endforeach
             </section>
 
-            {{ $posts->links() }}
+            @if($hasMoreReplies)
+                <p class="forum-load-all"><a href="{{ route('forum.threads.show', $thread) }}?all=1">Ver las {{ number_format($thread->replies_count) }} respuestas</a></p>
+            @elseif($showAllReplies && $thread->replies_count > 100)
+                <p class="forum-load-all"><a href="{{ route('forum.threads.show', $thread) }}">Ver las primeras 100 respuestas</a></p>
+            @endif
 
             @auth
                 @can('reply', $thread)

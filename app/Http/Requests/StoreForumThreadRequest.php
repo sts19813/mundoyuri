@@ -19,7 +19,8 @@ class StoreForumThreadRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'min:5', 'max:180'],
-            'body' => ['required', 'string', 'min:2', 'max:12000'],
+            'body' => ['nullable', 'string', 'min:2', 'max:12000', 'required_without:image'],
+            'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=4000,max_height=4000'],
         ];
     }
 }

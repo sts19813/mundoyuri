@@ -13,6 +13,8 @@ use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
 use App\Services\QuestionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ContextualReplyTest extends TestCase
@@ -32,11 +34,14 @@ class ContextualReplyTest extends TestCase
         $response = $this->actingAs($writer)->postJson(route('forum.posts.store', $thread), [
             'body' => 'Gracias por la recomendación', 'reply_to_post_id' => $reply->id,
         ])->assertCreated()->assertJsonPath('replies_count', 2);
-        $this->assertStringContainsString('En respuesta a Hana', $response->json('html'));
+        $this->assertStringContainsString('forum-post-branch', $response->json('html'));
+        $this->assertStringNotContainsString('message-reply-context', $response->json('html'));
         $this->assertDatabaseHas('forum_posts', ['user_id' => $writer->id, 'reply_to_post_id' => $reply->id]);
         $this->assertSame(1, $recipient->notifications()->count());
         $this->assertSame(1, $writer->fresh()->community_message_count);
-        $this->get(route('forums.show', $forum))->assertOk()->assertSee('En respuesta a Hana');
+        $this->get(route('forum.threads.show', $thread))->assertOk()
+            ->assertSeeInOrder(['Mi recomendación', 'Gracias por la recomendación'])
+            ->assertSee('forum-post-children', false);
     }
 
     public function test_question_answer_can_receive_a_reply_and_hidden_original_text_is_not_leaked(): void
@@ -52,7 +57,7 @@ class ContextualReplyTest extends TestCase
         $answer->update(['is_hidden' => true]);
         $this->get(route('questions.show', $question))->assertOk()
             ->assertSee('Respuesta específica')->assertDontSee('Texto que se ocultará')
-            ->assertSee('El mensaje al que respondía ya no está disponible.');
+            ->assertDontSee('message-reply-context', false);
     }
 
     public function test_reply_targets_cannot_cross_threads_or_bypass_blocks_hidden_content_and_locks(): void
@@ -85,9 +90,9 @@ class ContextualReplyTest extends TestCase
         $this->actingAs($author)->post(route('comments.store'), [
             'target_type' => 'episode', 'target_id' => $episode->id, 'parent_id' => $reply->id, 'body' => 'Respuesta a la respuesta',
         ])->assertRedirect();
-        $this->assertDatabaseHas('comments', ['body' => 'Respuesta a la respuesta', 'parent_id' => $root->id, 'reply_to_comment_id' => $reply->id]);
+        $this->assertDatabaseHas('comments', ['body' => 'Respuesta a la respuesta', 'parent_id' => $reply->id, 'reply_to_comment_id' => $reply->id]);
         $this->get(route('public.episodes.show', $episode->slug))->assertOk()
-            ->assertSee('Respuesta a la respuesta')->assertSee('En respuesta a')
+            ->assertSee('Respuesta a la respuesta')->assertSee('comment-tree-children', false)
             ->assertSee('data-author-card', false)->assertSee('data-reaction-control', false);
     }
 
@@ -123,6 +128,59 @@ class ContextualReplyTest extends TestCase
         $this->postJson(route('community.reactions.store'), $payload)->assertForbidden();
         $series->update(['moderation_status' => 'pending']);
         $this->postJson(route('community.reactions.store'), $payload)->assertNotFound();
+    }
+
+    public function test_forum_images_are_validated_optimized_and_can_be_published_without_text(): void
+    {
+        Storage::fake('public');
+        $category = ForumCategory::query()->create(['name' => 'Arte', 'slug' => 'arte', 'is_active' => true]);
+        $forum = Forum::query()->create(['forum_category_id' => $category->id, 'name' => 'Fanart', 'slug' => 'fanart']);
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Comparte arte', 'Primer mensaje');
+        $image = UploadedFile::fake()->image('ilustracion.png', 2400, 1600);
+
+        $this->actingAs($author)->postJson(route('forum.posts.store', $thread), [
+            'body' => '', 'image' => $image,
+        ])->assertCreated();
+
+        $post = $thread->posts()->latest('id')->firstOrFail();
+        $this->assertSame('', $post->body);
+        $this->assertStringEndsWith('.webp', $post->image_path);
+        Storage::disk('public')->assertExists($post->image_path);
+        $this->assertLessThanOrEqual(800 * 1024, Storage::disk('public')->size($post->image_path));
+
+        $this->postJson(route('forum.posts.store', $thread), [
+            'body' => '', 'image' => UploadedFile::fake()->create('no-es-imagen.jpg', 10, 'text/plain'),
+        ])->assertUnprocessable()->assertJsonValidationErrors('image');
+    }
+
+    public function test_full_conversations_only_offer_all_replies_after_one_hundred_messages(): void
+    {
+        $author = User::factory()->create();
+        $category = ForumCategory::query()->create(['name' => 'Conversación', 'slug' => 'conversacion', 'is_active' => true]);
+        $forum = Forum::query()->create(['forum_category_id' => $category->id, 'name' => 'General', 'slug' => 'general']);
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Hilo largo', 'Inicio');
+
+        foreach (range(1, 101) as $number) {
+            $thread->posts()->create(['user_id' => $author->id, 'body' => 'Respuesta '.$number]);
+        }
+        $thread->update(['replies_count' => 101]);
+
+        $this->get(route('forum.threads.show', $thread))->assertOk()
+            ->assertSee('Respuesta 100')->assertDontSee('Respuesta 101')
+            ->assertSee('?all=1', false);
+        $this->get(route('forum.threads.show', $thread).'?all=1')->assertOk()->assertSee('Respuesta 101');
+
+        $question = app(QuestionService::class)->create($author, 'Pregunta larga', 'Inicio');
+        foreach (range(1, 101) as $number) {
+            $question->posts()->create(['user_id' => $author->id, 'body' => 'Aporte '.$number]);
+        }
+        $question->update(['replies_count' => 101]);
+
+        $this->get(route('questions.show', $question))->assertOk()
+            ->assertSee('Aporte 100')->assertDontSee('Aporte 101')
+            ->assertSee('?all=1', false);
+        $this->get(route('questions.show', $question).'?all=1')->assertOk()->assertSee('Aporte 101');
     }
 
     private function series(User $author): Series

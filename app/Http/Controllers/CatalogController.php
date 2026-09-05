@@ -6,6 +6,7 @@ use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
+use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -120,7 +121,7 @@ class CatalogController extends Controller
         return view('catalog.genres.show', compact('genre', 'series'));
     }
 
-    public function showSeries(Series $series, CommunityRankResolver $rankResolver): View
+    public function showSeries(Series $series, CommunityRankResolver $rankResolver, CommentConversationTree $commentTree): View
     {
         if (! $this->catalogTablesReady()) {
             abort(404);
@@ -135,22 +136,15 @@ class CatalogController extends Controller
                 ->whereNotNull('published_at')
                 ->orderBy('season_number')
                 ->orderBy('episode_number'),
-            'comments' => fn ($query) => $query
-                ->where('is_approved', true)
-                ->whereNull('parent_id')
-                ->latest()
-                ->with([
-                    'user.communityRank',
-                    'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
-                    'replies' => fn ($replyQuery) => $replyQuery
-                        ->where('is_approved', true)
-                        ->oldest()
-                        ->with([
-                            'user.communityRank',
-                            'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
-                        ]),
-                ]),
         ]);
+        $series->setRelation('comments', $commentTree->build($series->comments()
+            ->where('is_approved', true)
+            ->with([
+                'user.communityRank',
+                'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
+            ])
+            ->oldest()
+            ->get()));
 
         $recentEpisodes = Episode::query()
             ->with('series')

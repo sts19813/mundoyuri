@@ -13,9 +13,9 @@ class QuestionService
 {
     public function __construct(private readonly ForumThreadService $threads) {}
 
-    public function create(User $author, string $title, string $body): ForumThread
+    public function create(User $author, string $title, string $body, ?string $imagePath = null): ForumThread
     {
-        return $this->threads->create(null, $author, $title, $body, 'question');
+        return $this->threads->create(null, $author, $title, $body, 'question', $imagePath);
     }
 
     public function acceptAnswer(ForumThread $question, ForumPost $answer, User $actor): void

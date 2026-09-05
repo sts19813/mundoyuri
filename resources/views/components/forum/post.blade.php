@@ -50,17 +50,12 @@
         @if($post->is_hidden)
             <p class="forum-hidden-message">Este mensaje está oculto por moderación.</p>
         @else
-            @if($post->reply_to_post_id)
-                <div class="message-reply-context">
-                    @if($post->replyTo)
-                        <span>↳ En respuesta a {{ $post->replyTo->authorName() }}</span>
-                        <span>{{ \Illuminate\Support\Str::limit($post->replyTo->body, 150) }}</span>
-                    @else
-                        <span>El mensaje al que respondía ya no está disponible.</span>
-                    @endif
-                </div>
-            @endif
             <div class="forum-post-body">{!! nl2br(app(\App\Services\MentionService::class)->render($post->body, $post->mentions->pluck('mentionedUser'))) !!}</div>
+            @if($post->imageUrl())
+                <a class="forum-post-image" href="{{ $post->imageUrl() }}" target="_blank" rel="noopener">
+                    <img src="{{ $post->imageUrl() }}" alt="Imagen adjunta por {{ $post->authorName() }}" loading="lazy">
+                </a>
+            @endif
             <div class="forum-post-feedback">
             <x-community.reactions :reactable="$question && $post->is_initial ? $question : $post" />
             @if($question)
@@ -84,12 +79,12 @@
                 @can('reply', $post->thread)
                     <details class="message-reply-box" @if((int) old('reply_to_post_id') === $post->id) open @endif>
                         <summary>↳ Responder</summary>
-                        <form method="POST" action="{{ $question ? route('questions.answers.store', $question) : route('forum.posts.store', $post->thread) }}" class="message-inline-form" data-inline-reply>
+                        <form method="POST" action="{{ $question ? route('questions.answers.store', $question) : route('forum.posts.store', $post->thread) }}" class="message-inline-form" data-inline-reply enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="reply_to_post_id" value="{{ $post->id }}">
                             <label for="post-reply-{{ $post->id }}">Responder a {{ $post->authorName() }}</label>
-                            <textarea id="post-reply-{{ $post->id }}" name="body" rows="3" minlength="2" maxlength="12000" required placeholder="Escribe tu respuesta…">{{ (int) old('reply_to_post_id') === $post->id ? old('body') : '' }}</textarea>
-                            <div class="message-inline-buttons"><button type="submit" class="profile-btn profile-btn-primary">Publicar respuesta</button><button type="button" class="profile-btn profile-btn-text" data-cancel-reply>Cancelar</button></div>
+                            <textarea id="post-reply-{{ $post->id }}" name="body" rows="3" minlength="2" maxlength="12000" placeholder="Escribe tu respuesta…">{{ (int) old('reply_to_post_id') === $post->id ? old('body') : '' }}</textarea>
+                            <div class="message-inline-buttons"><x-forum.image-field :id="'post-image-'.$post->id" :show-errors="false" /><button type="submit" class="profile-btn profile-btn-primary">Publicar respuesta</button><button type="button" class="profile-btn profile-btn-text" data-cancel-reply>Cancelar</button></div>
                             <p role="status" data-reply-status>@if((int) old('reply_to_post_id') === $post->id){{ $errors->first('body') ?: $errors->first('reply_to_post_id') }}@endif</p>
                         </form>
                     </details>

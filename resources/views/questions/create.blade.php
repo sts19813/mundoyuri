@@ -12,13 +12,14 @@
 <main class="portal-profile-page forum-page question-page"><div class="container-xl px-4">
     <nav class="profile-breadcrumb"><a href="{{ route('questions.index') }}">Preguntas</a><span>›</span><span>Nueva pregunta</span></nav>
     <header class="forum-forum-header"><div><span class="profile-eyebrow">Comunidad</span><h1>Haz una pregunta</h1><p>Da contexto para que otras miembros puedan ayudarte mejor.</p></div></header>
-    <form method="POST" action="{{ route('questions.store') }}" class="forum-composer profile-panel">
+    <form method="POST" action="{{ route('questions.store') }}" class="forum-composer profile-panel" enctype="multipart/form-data">
         @csrf
         <div class="profile-field"><label for="question-title">Título</label><input id="question-title" name="title" maxlength="180" required value="{{ old('title') }}" placeholder="Resume tu duda con claridad" @error('title') aria-invalid="true" aria-describedby="question-title-error" @enderror>@error('title')<small id="question-title-error" class="profile-field-error">{{ $message }}</small>@enderror</div>
-        <div class="profile-field"><label for="question-body">Descripción</label><textarea id="question-body" name="body" rows="8" maxlength="12000" required placeholder="Explica lo que sabes, has probado o buscas." @error('body') aria-invalid="true" aria-describedby="question-body-error" @enderror>{{ old('body') }}</textarea><small class="forum-composer-help">Texto plano: no se permite HTML. Máximo 12 000 caracteres.</small>@error('body')<small id="question-body-error" class="profile-field-error">{{ $message }}</small>@enderror</div>
-        <button type="submit" class="profile-btn profile-btn-primary">Publicar pregunta</button>
+        <div class="profile-field"><label for="question-body">Descripción</label><textarea id="question-body" name="body" rows="8" maxlength="12000" placeholder="Explica lo que sabes, has probado o buscas." @error('body') aria-invalid="true" aria-describedby="question-body-error" @enderror>{{ old('body') }}</textarea><small class="forum-composer-help">Texto plano: no se permite HTML. Máximo 12 000 caracteres; también puedes adjuntar una imagen.</small>@error('body')<small id="question-body-error" class="profile-field-error">{{ $message }}</small>@enderror</div>
+        <div class="forum-composer-actions"><x-forum.image-field id="question-image" /><button type="submit" class="profile-btn profile-btn-primary">Publicar pregunta</button></div>
     </form>
 </div></main>
 <x-footer />
+<script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
 </body>
 </html>

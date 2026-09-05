@@ -6,7 +6,9 @@ use App\Http\Requests\StoreForumPostRequest;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Services\CommunityPostImageService;
 use App\Services\CommunityReactionService;
+use App\Services\ForumConversationTree;
 use App\Services\ForumPostService;
 use App\Services\QuestionService;
 use App\Services\QuestionVoteService;
@@ -51,37 +53,51 @@ class QuestionController extends Controller
         return view('questions.create');
     }
 
-    public function store(StoreQuestionRequest $request, QuestionService $questions): RedirectResponse
+    public function store(StoreQuestionRequest $request, QuestionService $questions, CommunityPostImageService $images): RedirectResponse
     {
-        $question = $questions->create($request->user(), $request->validated('title'), $request->validated('body'));
+        $question = $questions->create(
+            $request->user(),
+            $request->validated('title'),
+            $request->validated('body') ?? '',
+            $request->hasFile('image') ? $images->store($request->file('image')) : null,
+        );
 
         return redirect()->route('questions.show', $question)->with('success', 'Pregunta publicada correctamente.');
     }
 
-    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View
+    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions, ForumConversationTree $tree): View
     {
         abort_unless($thread->isQuestion(), 404);
         $thread->load(['author.badges', 'author.communityRank', 'acceptedAnswer']);
         $this->authorize('view', $thread);
         $thread->increment('views_count');
 
+        $showAllReplies = $request->boolean('all');
         $posts = $thread->posts()
             ->when(! $request->user()?->shouldEnterAdminPanel(), fn ($query) => $query->where('is_hidden', false))
             ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author'])
             ->oldest()
-            ->paginate(20)
-            ->withQueryString();
+            ->when(! $showAllReplies, fn ($query) => $query->limit(101))
+            ->get();
 
-        $reactions->hydrateSummaries(collect([$thread])->merge($posts->getCollection()), $request->user());
+        $reactions->hydrateSummaries(collect([$thread])->merge($posts), $request->user());
         $posts->each(fn ($post) => $post->setRelation('thread', $thread));
+        $postTree = $tree->build($posts);
+        $hasMoreReplies = ! $showAllReplies && $thread->replies_count > 100;
 
-        return view('questions.show', compact('thread', 'posts'));
+        return view('questions.show', compact('thread', 'postTree', 'hasMoreReplies', 'showAllReplies'));
     }
 
-    public function answer(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions): RedirectResponse|JsonResponse
+    public function answer(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions, CommunityPostImageService $images): RedirectResponse|JsonResponse
     {
         abort_unless($thread->isQuestion(), 404);
-        $post = $posts->reply($thread, $request->user(), $request->validated('body'), $request->validated('reply_to_post_id'));
+        $post = $posts->reply(
+            $thread,
+            $request->user(),
+            $request->validated('body') ?? '',
+            $request->validated('reply_to_post_id'),
+            $request->hasFile('image') ? $images->store($request->file('image')) : null,
+        );
 
         if ($request->expectsJson()) {
             $post->load(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author']);
@@ -89,7 +105,7 @@ class QuestionController extends Controller
             $reactions->hydrateSummaries([$post], $request->user());
 
             return response()->json([
-                'html' => view('components.forum.post', ['post' => $post, 'question' => $thread])->render(),
+                'html' => view('components.forum.thread-post', ['post' => $post, 'question' => $thread])->render(),
                 'replies_count' => $thread->fresh()->replies_count,
             ], 201);
         }

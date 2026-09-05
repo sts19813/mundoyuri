@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CatalogSection;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -157,7 +158,7 @@ class PublicCatalogController extends Controller
             ->get();
     }
 
-    public function episodes(CommunityRankResolver $rankResolver, ?Episode $episode = null): View
+    public function episodes(CommunityRankResolver $rankResolver, CommentConversationTree $commentTree, ?Episode $episode = null): View
     {
         if (! $this->catalogTablesReady()) {
             return view('episodios', [
@@ -198,22 +199,15 @@ class PublicCatalogController extends Controller
         $episode->load([
             'sources',
             'series',
-            'comments' => fn ($query) => $query
-                ->where('is_approved', true)
-                ->whereNull('parent_id')
-                ->latest()
-                ->with([
-                    'user.communityRank',
-                    'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
-                    'replies' => fn ($replyQuery) => $replyQuery
-                        ->where('is_approved', true)
-                        ->oldest()
-                        ->with([
-                            'user.communityRank',
-                            'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
-                        ]),
-                ]),
         ]);
+        $episode->setRelation('comments', $commentTree->build($episode->comments()
+            ->where('is_approved', true)
+            ->with([
+                'user.communityRank',
+                'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
+            ])
+            ->oldest()
+            ->get()));
 
         $series = $episode->series;
 

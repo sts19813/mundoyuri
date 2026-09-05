@@ -50,8 +50,6 @@ class CommentController extends Controller
                     'parent_id' => 'No se pudo responder ese comentario.',
                 ]);
             }
-            $root = $parent->parent_id ? Comment::query()->whereKey($parent->parent_id)->where('is_approved', true)->firstOrFail() : $parent;
-            abort_unless($root->commentable_type === $commentable->getMorphClass() && (int) $root->commentable_id === (int) $commentable->getKey(), 404);
             if ($request->user() && $parent->user && $request->user()->cannotInteractWith($parent->user)) {
                 throw ValidationException::withMessages(['parent_id' => 'No puedes responder a este usuario.']);
             }
@@ -59,7 +57,7 @@ class CommentController extends Controller
 
         $commentable->comments()->create([
             'user_id' => auth()->id(),
-            'parent_id' => isset($root) ? $root->id : null,
+            'parent_id' => $parent?->id,
             'reply_to_comment_id' => $parent?->id,
             'alias' => auth()->check() ? (auth()->user()->alias ?: auth()->user()->name) : $validated['alias'],
             'body' => $validated['body'],

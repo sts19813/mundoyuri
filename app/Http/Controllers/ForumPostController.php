@@ -6,6 +6,7 @@ use App\Http\Requests\StoreForumPostRequest;
 use App\Http\Requests\UpdateForumPostRequest;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Services\CommunityPostImageService;
 use App\Services\CommunityReactionService;
 use App\Services\ForumPostService;
 use Illuminate\Http\JsonResponse;
@@ -14,9 +15,15 @@ use Illuminate\View\View;
 
 class ForumPostController extends Controller
 {
-    public function store(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions): RedirectResponse|JsonResponse
+    public function store(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions, CommunityPostImageService $images): RedirectResponse|JsonResponse
     {
-        $post = $posts->reply($thread, $request->user(), $request->validated('body'), $request->validated('reply_to_post_id'));
+        $post = $posts->reply(
+            $thread,
+            $request->user(),
+            $request->validated('body') ?? '',
+            $request->validated('reply_to_post_id'),
+            $request->hasFile('image') ? $images->store($request->file('image')) : null,
+        );
 
         if ($request->expectsJson()) {
             $post->load(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author']);
@@ -24,7 +31,9 @@ class ForumPostController extends Controller
             $reactions->hydrateSummaries([$post], $request->user());
 
             return response()->json([
-                'html' => view('components.forum.post', ['post' => $post])->render(),
+                'html' => $request->boolean('from_feed')
+                    ? view('components.forum.post', ['post' => $post])->render()
+                    : view('components.forum.thread-post', ['post' => $post])->render(),
                 'replies_count' => $thread->fresh()->replies_count,
             ], 201);
         }

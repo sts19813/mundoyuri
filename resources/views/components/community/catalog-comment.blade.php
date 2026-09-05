@@ -11,16 +11,6 @@
         <time class="comment-date" datetime="{{ $comment->created_at->toIso8601String() }}">{{ $comment->displayTime() }}</time>
     </header>
     <div class="catalog-social-comment-content">
-        @if($comment->reply_to_comment_id && $comment->reply_to_comment_id !== $comment->parent_id)
-            <div class="message-reply-context">
-                @if($comment->replyTo)
-                    <a href="#comment-{{ $comment->replyTo->id }}">↳ En respuesta a {{ $comment->replyTo->display_alias }}</a>
-                    <span>{{ \Illuminate\Support\Str::limit($comment->replyTo->body, 150) }}</span>
-                @else
-                    <span>El comentario original ya no está disponible.</span>
-                @endif
-            </div>
-        @endif
         <p class="comment-text">{{ $comment->body }}</p>
         <x-community.signature :user="$comment->user" :previous-user-id="$previousUserId" />
         <x-community.reactions :reactable="$comment" />

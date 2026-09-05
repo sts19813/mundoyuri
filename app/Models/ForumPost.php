@@ -9,16 +9,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class ForumPost extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['forum_thread_id', 'user_id', 'author_name_snapshot', 'body', 'edited_at', 'is_initial', 'is_hidden', 'upvotes_count', 'reply_to_post_id'];
+    protected $fillable = ['forum_thread_id', 'user_id', 'author_name_snapshot', 'body', 'image_path', 'edited_at', 'is_initial', 'is_hidden', 'upvotes_count', 'reply_to_post_id'];
 
     public function replyTo(): BelongsTo
     {
         return $this->belongsTo(self::class, 'reply_to_post_id')->where('is_hidden', false);
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(self::class, 'reply_to_post_id')->where('is_hidden', false)->oldest();
+    }
+
+    public function imageUrl(): ?string
+    {
+        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
     }
 
     protected function casts(): array

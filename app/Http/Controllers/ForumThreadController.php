@@ -6,7 +6,9 @@ use App\Http\Requests\StoreForumThreadRequest;
 use App\Http\Requests\UpdateForumThreadRequest;
 use App\Models\Forum;
 use App\Models\ForumThread;
+use App\Services\CommunityPostImageService;
 use App\Services\CommunityReactionService;
+use App\Services\ForumConversationTree;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
 use Illuminate\Http\JsonResponse;
@@ -23,13 +25,15 @@ class ForumThreadController extends Controller
         return view('forums.threads.create', compact('forum'));
     }
 
-    public function store(StoreForumThreadRequest $request, Forum $forum, ForumThreadService $threads): RedirectResponse
+    public function store(StoreForumThreadRequest $request, Forum $forum, ForumThreadService $threads, CommunityPostImageService $images): RedirectResponse
     {
         $thread = $threads->create(
             $forum,
             $request->user(),
             $request->validated('title'),
-            $request->validated('body'),
+            $request->validated('body') ?? '',
+            'discussion',
+            $request->hasFile('image') ? $images->store($request->file('image')) : null,
         );
 
         if ($request->boolean('from_feed')) {
@@ -40,7 +44,7 @@ class ForumThreadController extends Controller
         return redirect()->route('forum.threads.show', $thread)->with('success', 'Tema publicado correctamente.');
     }
 
-    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions): View|RedirectResponse|JsonResponse
+    public function show(Request $request, ForumThread $thread, CommunityReactionService $reactions, ForumConversationTree $tree): View|RedirectResponse|JsonResponse
     {
         if ($thread->isQuestion()) {
             return redirect()->route('questions.show', $thread);
@@ -52,23 +56,30 @@ class ForumThreadController extends Controller
             $thread->increment('views_count');
         }
 
-        $posts = $thread->posts()
+        $postsQuery = $thread->posts()
             ->when($request->expectsJson(), fn ($query) => $query->where('is_initial', false))
             ->when(! $request->user()?->shouldEnterAdminPanel(), fn ($query) => $query->where('is_hidden', false))
             ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author'])
-            ->oldest()
-            ->paginate(20)
-            ->withQueryString();
-
-        $reactions->hydrateSummaries($posts->getCollection(), $request->user());
-        $posts->each(fn ($post) => $post->setRelation('thread', $thread));
+            ->oldest();
 
         if ($request->expectsJson()) {
+            $posts = $postsQuery->paginate(20)->withQueryString();
+            $reactions->hydrateSummaries($posts->getCollection(), $request->user());
+            $posts->each(fn ($post) => $post->setRelation('thread', $thread));
+
             return response()->json([
                 'html' => $posts->map(fn ($post) => view('components.forum.post', ['post' => $post])->render())->implode(''),
                 'next_page_url' => $posts->nextPageUrl(),
             ]);
         }
+
+        $showAllReplies = $request->boolean('all');
+        $posts = $showAllReplies ? $postsQuery->get() : $postsQuery->limit(101)->get();
+
+        $reactions->hydrateSummaries($posts, $request->user());
+        $posts->each(fn ($post) => $post->setRelation('thread', $thread));
+        $postTree = $tree->build($posts);
+        $hasMoreReplies = ! $showAllReplies && $thread->replies_count > 100;
 
         $isSubscribed = $request->user()
             ? $thread->subscribers()->whereKey($request->user()->id)->exists()
@@ -77,7 +88,7 @@ class ForumThreadController extends Controller
             ? Forum::query()->with('category')->orderBy('forum_category_id')->orderBy('sort_order')->get()
             : collect();
 
-        return view('forums.threads.show', compact('thread', 'posts', 'isSubscribed', 'moderationForums'));
+        return view('forums.threads.show', compact('thread', 'postTree', 'hasMoreReplies', 'showAllReplies', 'isSubscribed', 'moderationForums'));
     }
 
     public function edit(ForumThread $thread): View

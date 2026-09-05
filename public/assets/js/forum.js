@@ -18,6 +18,12 @@
     }
 
     const disclosures = '[data-author-card], .forum-post-menu, .forum-action-menu, .community-reaction-picker';
+    document.addEventListener('change', (event) => {
+        const input = event.target.closest('[data-image-input]');
+        if (!input) return;
+        const name = input.closest('[data-image-field]')?.querySelector('[data-image-name]');
+        if (name) name.textContent = input.files?.[0]?.name || 'JPG, PNG o WebP · se optimiza a menos de 800 KB.';
+    });
     document.addEventListener('click', (event) => {
         const cancel = event.target.closest('[data-cancel-reply]');
         if (cancel) {
@@ -115,7 +121,7 @@
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                status.textContent = data.errors?.body?.[0] || data.errors?.reply_to_post_id?.[0] || (response.status === 419 || response.status === 401
+                status.textContent = data.errors?.body?.[0] || data.errors?.image?.[0] || data.errors?.reply_to_post_id?.[0] || (response.status === 419 || response.status === 401
                     ? 'Tu sesión expiró. Recarga la página antes de responder.'
                     : response.status === 429 ? 'Espera un momento antes de responder de nuevo.'
                     : 'No se pudo publicar. Revisa tus permisos e inténtalo de nuevo.');
@@ -123,12 +129,23 @@
             }
             // This fragment is rendered by our Blade component; user text is escaped there.
             if (form.matches('[data-inline-reply]')) {
-                form.closest('.forum-post').insertAdjacentHTML('afterend', data.html);
+                const branch = form.closest('.forum-post-branch');
+                let children = branch.querySelector(':scope > .forum-post-children');
+                if (!children) {
+                    children = document.createElement('div');
+                    children.className = 'forum-post-children';
+                    branch.append(children);
+                }
+                children.insertAdjacentHTML('beforeend', data.html);
             } else {
                 topic.querySelector('[data-feed-replies]').insertAdjacentHTML('beforeend', data.html);
             }
             if (topic) topic.querySelector('[data-reply-count]').textContent = new Intl.NumberFormat('es').format(data.replies_count);
             form.reset();
+            form.querySelectorAll('[data-image-name]').forEach((name) => {
+                name.textContent = 'JPG, PNG o WebP · se optimiza a menos de 800 KB.';
+            });
+            form.closest('.message-reply-box')?.removeAttribute('open');
             status.textContent = 'Respuesta publicada.';
         } catch {
             status.textContent = 'No pudimos confirmar el envío. Comprueba tu conexión y recarga antes de reintentar.';

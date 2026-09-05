@@ -19,7 +19,8 @@ class StoreForumPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'min:2', 'max:12000'],
+            'body' => ['nullable', 'string', 'min:2', 'max:12000', 'required_without:image'],
+            'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=4000,max_height=4000'],
             'reply_to_post_id' => ['nullable', 'integer', Rule::exists('forum_posts', 'id')
                 ->where('forum_thread_id', $this->route('thread')->id)
                 ->where('is_hidden', 0)->whereNull('deleted_at')],

@@ -17,9 +17,9 @@ class ForumPostService
         private readonly QuestionService $questions,
     ) {}
 
-    public function reply(ForumThread $thread, User $author, string $body, ?int $replyToId = null): ForumPost
+    public function reply(ForumThread $thread, User $author, string $body, ?int $replyToId = null, ?string $imagePath = null): ForumPost
     {
-        return DB::transaction(function () use ($thread, $author, $body, $replyToId): ForumPost {
+        return DB::transaction(function () use ($thread, $author, $body, $replyToId, $imagePath): ForumPost {
             $replyTo = $replyToId ? $thread->posts()->whereKey($replyToId)->where('is_hidden', false)->lockForUpdate()->first() : null;
             if ($replyToId && (! $replyTo || ($replyTo->author && $author->cannotInteractWith($replyTo->author)))) {
                 throw ValidationException::withMessages(['reply_to_post_id' => 'No puedes responder a ese mensaje.']);
@@ -29,6 +29,7 @@ class ForumPostService
                 'user_id' => $author->id,
                 'author_name_snapshot' => $author->displayName(),
                 'body' => $body,
+                'image_path' => $imagePath,
                 'reply_to_post_id' => $replyTo?->id,
             ]);
 
