@@ -1,4 +1,4 @@
-@props(['post', 'previousUserId' => null, 'question' => null, 'isAccepted' => false])
+@props(['post', 'question' => null, 'isAccepted' => false])
 
 @php($author = $post->author)
 <article id="post-{{ $post->id }}" class="forum-post {{ !$post->is_initial ? 'forum-post-comment' : '' }} {{ $post->is_hidden ? 'is-hidden' : '' }} {{ $isAccepted ? 'forum-post-accepted' : '' }}">

@@ -90,7 +90,7 @@ class ContextualReplyTest extends TestCase
         $this->actingAs($author)->post(route('comments.store'), [
             'target_type' => 'episode', 'target_id' => $episode->id, 'parent_id' => $reply->id, 'body' => 'Respuesta a la respuesta',
         ])->assertRedirect();
-        $this->assertDatabaseHas('comments', ['body' => 'Respuesta a la respuesta', 'parent_id' => $reply->id, 'reply_to_comment_id' => $reply->id]);
+        $this->assertDatabaseHas('comments', ['body' => 'Respuesta a la respuesta', 'parent_id' => $reply->id]);
         $this->get(route('public.episodes.show', $episode->slug))->assertOk()
             ->assertSee('Respuesta a la respuesta')->assertSee('comment-tree-children', false)
             ->assertSee('data-author-card', false)->assertSee('data-reaction-control', false);

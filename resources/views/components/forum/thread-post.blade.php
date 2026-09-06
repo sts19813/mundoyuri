@@ -1,4 +1,4 @@
-@props(['post', 'question' => null, 'acceptedAnswerPostId' => null, 'depth' => 0, 'previousUserId' => null])
+@props(['post', 'question' => null, 'acceptedAnswerPostId' => null, 'depth' => 0])
 
 @php
     $children = $post->relationLoaded('treeReplies') ? $post->getRelation('treeReplies') : collect();
@@ -8,7 +8,6 @@
 <div class="forum-post-branch" style="--tree-depth: {{ $visualDepth }}">
     <x-forum.post
         :post="$post"
-        :previous-user-id="$previousUserId"
         :question="$question"
         :is-accepted="$acceptedAnswerPostId === $post->id"
     />
@@ -20,7 +19,6 @@
                     :question="$question"
                     :accepted-answer-post-id="$acceptedAnswerPostId"
                     :depth="$depth + 1"
-                    :previous-user-id="$post->user_id"
                 />
             @endforeach
         </div>

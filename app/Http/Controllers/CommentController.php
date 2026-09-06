@@ -58,7 +58,6 @@ class CommentController extends Controller
         $commentable->comments()->create([
             'user_id' => auth()->id(),
             'parent_id' => $parent?->id,
-            'reply_to_comment_id' => $parent?->id,
             'alias' => auth()->check() ? (auth()->user()->alias ?: auth()->user()->name) : $validated['alias'],
             'body' => $validated['body'],
             'is_approved' => true,

@@ -4,6 +4,8 @@ Fecha: 5 de septiembre de 2026. Base: `copy-20260905` (`df7aafa`). Versión revi
 
 **Conclusión:** conservar la comunidad y estabilizarla. La mayoría de las incorporaciones sí tiene consumidores. Los problemas más importantes son inconsistencias entre preguntas y foros, autorización incompleta y consultas sin límites. Eliminar archivos por cantidad no resolvería esos problemas.
 
+**Estado posterior:** los siete fallos de esta auditoría se corrigieron en `2cd593f`. La limpieza posterior retiró los aliases `CommunityBadge` y `ForumMentionService`, el modelo y las tablas de etiquetas no implementadas, la columna redundante `reply_to_comment_id`, propiedades Blade sin uso y estilos antiguos sin consumidores. La migración de limpieza convierte primero las relaciones históricas guardadas en `reply_to_comment_id` a la jerarquía activa de `parent_id`.
+
 **Alcance y evidencia**
 
 - Comparación de las referencias locales; no se consultó producción ni se hizo fetch. La referencia local `origin/main` también apunta a `eb9d4de`.

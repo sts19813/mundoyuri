@@ -76,11 +76,6 @@ class ForumThread extends Model
         return $this->belongsToMany(User::class, 'forum_thread_subscriptions')->withTimestamps();
     }
 
-    public function questionTags(): BelongsToMany
-    {
-        return $this->belongsToMany(QuestionTag::class, 'forum_thread_question_tag');
-    }
-
     public function acceptedAnswer(): BelongsTo
     {
         return $this->belongsTo(ForumPost::class, 'accepted_answer_post_id');

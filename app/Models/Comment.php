@@ -16,7 +16,6 @@ class Comment extends Model
     protected $fillable = [
         'user_id',
         'parent_id',
-        'reply_to_comment_id',
         'commentable_type',
         'commentable_id',
         'alias',
@@ -28,7 +27,6 @@ class Comment extends Model
     {
         return [
             'is_approved' => 'boolean',
-            'reply_to_comment_id' => 'integer',
         ];
     }
 
@@ -40,11 +38,6 @@ class Comment extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Comment::class, 'parent_id');
-    }
-
-    public function replyTo(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'reply_to_comment_id')->where('is_approved', true);
     }
 
     public function replies(): HasMany
