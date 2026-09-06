@@ -3232,6 +3232,58 @@
         white-space: pre-wrap;
     }
 
+    .message-attachment-image {
+        display: block;
+        max-width: min(100%, 440px);
+        margin-top: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, .18);
+    }
+
+    .message-attachment-image img {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        max-height: 420px;
+        object-fit: contain;
+    }
+
+    .message-attachment-file {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: min(290px, 100%);
+        margin-top: 8px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 10px;
+        color: #fff;
+        background: rgba(0, 0, 0, .16);
+        text-decoration: none;
+    }
+
+    .message-attachment-file > span:first-child {
+        font-size: 1.25rem;
+    }
+
+    .message-attachment-file strong,
+    .message-attachment-file small {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+
+    .message-attachment-file strong {
+        font-size: .74rem;
+    }
+
+    .message-attachment-file small {
+        margin-top: 2px;
+        color: rgba(240, 232, 245, .62);
+        font-size: .6rem;
+    }
+
     .message-bubble time {
         display: block;
         margin-top: 5px;
@@ -3261,6 +3313,11 @@
         gap: 11px;
     }
 
+    .conversation-compose-fields {
+        min-width: 0;
+        flex: 1;
+    }
+
     .conversation-composer textarea {
         min-height: 44px;
         max-height: 150px;
@@ -3273,6 +3330,47 @@
         background: rgba(10, 6, 12, .7);
         font: 400 .82rem 'DM Sans', sans-serif;
         outline: none;
+    }
+
+    .conversation-compose-fields textarea {
+        width: 100%;
+    }
+
+    .conversation-attachment-field {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px 10px;
+        margin-top: 8px;
+    }
+
+    .conversation-attachment-field input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    .conversation-attachment-field label {
+        margin: 0;
+        padding: 6px 9px;
+        border: 1px solid rgba(244, 63, 142, .24);
+        border-radius: 8px;
+        color: #ffc5dc;
+        background: rgba(244, 63, 142, .06);
+        font-size: .68rem;
+        cursor: pointer;
+    }
+
+    .conversation-attachment-field input:focus-visible + label {
+        outline: 2px solid var(--rose);
+        outline-offset: 2px;
+    }
+
+    .conversation-attachment-field small {
+        color: var(--muted);
+        font-size: .61rem;
     }
 
     .conversation-composer textarea:focus {
@@ -4606,6 +4704,13 @@
 .forum-image-button:hover { border-color: rgba(244, 63, 142, .56); background: rgba(244, 63, 142, .13); color: #fff; }
 .forum-image-button:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
 .forum-image-name { max-width: 210px; overflow: hidden; color: var(--muted); font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
+.forum-current-image { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px; border: 1px solid rgba(244, 63, 142, .16); border-radius: 12px; background: rgba(255, 255, 255, .025); }
+.forum-current-image > a { flex: 0 0 120px; overflow: hidden; border-radius: 9px; background: rgba(0, 0, 0, .2); }
+.forum-current-image img { display: block; width: 120px; height: 90px; object-fit: contain; }
+.forum-current-image strong, .forum-current-image span { display: block; }
+.forum-current-image strong { color: #fff; font-size: .78rem; }
+.forum-current-image span { margin: 3px 0 8px; color: var(--muted); font-size: .67rem; }
+.forum-current-image label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #ffc5dc; font-size: .7rem; cursor: pointer; }
 .forum-post-image { display: block; width: fit-content; max-width: min(100%, 760px); margin: 0 0 15px; overflow: hidden; border: 1px solid rgba(244, 63, 142, .18); border-radius: 12px; background: rgba(255, 255, 255, .025); }
 .forum-post-image img { display: block; max-width: 100%; max-height: min(70vh, 640px); object-fit: contain; }
 .community-conversation-shell .forum-post-comment { border: 0; border-bottom: 1px solid rgba(255, 255, 255, .065); border-radius: 0; background: transparent; box-shadow: none; }
@@ -4633,6 +4738,9 @@
     .message-reply-box > summary { min-height: 44px; }
     .forum-image-button { min-height: 44px; }
     .forum-image-name { max-width: 145px; }
+    .forum-current-image { align-items: flex-start; }
+    .forum-current-image > a { flex-basis: 88px; }
+    .forum-current-image img { width: 88px; height: 72px; }
 }
 
 /* One reading rhythm for forum feeds, discussions and questions. */

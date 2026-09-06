@@ -12,6 +12,7 @@ use App\Services\ForumPostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Throwable;
 
 class ForumPostController extends Controller
 {
@@ -53,9 +54,23 @@ class ForumPostController extends Controller
         return view('forums.posts.edit', compact('post'));
     }
 
-    public function update(UpdateForumPostRequest $request, ForumPost $post, ForumPostService $posts): RedirectResponse
+    public function update(UpdateForumPostRequest $request, ForumPost $post, ForumPostService $posts, CommunityPostImageService $images): RedirectResponse
     {
-        $posts->update($post, $request->validated('body'));
+        $oldImagePath = $post->image_path;
+        $newImagePath = $request->hasFile('image') ? $images->store($request->file('image')) : null;
+        $imagePath = $newImagePath ?: ($request->boolean('remove_image') ? null : $oldImagePath);
+
+        try {
+            $posts->update($post, $request->validated('body') ?? '', $imagePath, true);
+        } catch (Throwable $exception) {
+            $images->delete($newImagePath);
+
+            throw $exception;
+        }
+
+        if ($oldImagePath !== $imagePath) {
+            $images->delete($oldImagePath);
+        }
 
         return redirect()->to($post->conversationUrl());
     }

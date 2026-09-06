@@ -58,7 +58,9 @@
                                 @if($conversation->lastMessage?->sender_id === $viewer->id)
                                     Tú:
                                 @endif
-                                {{ \Illuminate\Support\Str::limit($conversation->lastMessage?->body, 110) }}
+                                {{ filled($conversation->lastMessage?->body)
+                                    ? \Illuminate\Support\Str::limit($conversation->lastMessage->body, 110)
+                                    : 'Archivo: '.$conversation->lastMessage?->attachment_name }}
                             </span>
                         </span>
 

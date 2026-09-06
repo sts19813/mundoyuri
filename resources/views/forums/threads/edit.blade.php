@@ -1,1 +1,33 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Editar tema · Mundo Yuri</title><x-portal-favicon /><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}"></head><body><x-navbar /><main class="portal-profile-page forum-page"><div class="container px-4"><nav class="profile-breadcrumb"><a href="{{ route('forum.threads.show', $thread) }}">{{ $thread->title }}</a><span>›</span><span>Editar</span></nav><header class="forum-forum-header"><div><span class="profile-eyebrow">Edición</span><h1>Editar tema</h1></div></header><x-forum.composer :action="route('forum.threads.update', $thread)" http-method="PATCH" submit="Guardar cambios" :title="$thread->title" :body="$thread->posts->firstWhere('is_initial', true)?->body" /></div></main><x-footer /></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar tema · Mundo Yuri</title>
+    <x-portal-favicon />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+</head>
+<body>
+    <x-navbar />
+    @php($initialPost = $thread->posts->firstWhere('is_initial', true))
+    <main class="portal-profile-page forum-page">
+        <div class="container px-4">
+            <nav class="profile-breadcrumb"><a href="{{ route('forum.threads.show', $thread) }}">{{ $thread->title }}</a><span>›</span><span>Editar</span></nav>
+            <header class="forum-forum-header"><div><span class="profile-eyebrow">Edición</span><h1>Editar tema</h1></div></header>
+            <x-forum.composer
+                :action="route('forum.threads.update', $thread)"
+                http-method="PATCH"
+                submit="Guardar cambios"
+                :title="$thread->title"
+                :body="$initialPost?->body"
+                :current-image-url="$initialPost?->imageUrl()"
+                current-image-alt="Imagen actual del tema"
+            />
+        </div>
+    </main>
+    <x-footer />
+    <script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
+</body>
+</html>

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\DirectMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PrivateMessagingTest extends TestCase
@@ -95,6 +97,68 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertSame(0, $recipient->fresh()->unreadNotifications()->count());
+    }
+
+    public function test_users_can_send_private_images_and_documents_and_only_participants_can_open_them(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->image('recuerdo.png', 640, 480),
+            ])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $imageMessage = DirectMessage::query()->firstOrFail();
+        $this->assertSame('', $imageMessage->body);
+        $this->assertSame('recuerdo.png', $imageMessage->attachment_name);
+        $this->assertTrue($imageMessage->attachmentIsImage());
+        Storage::disk('local')->assertExists($imageMessage->attachment_path);
+
+        $this->get(route('messages.show', $recipient))
+            ->assertOk()
+            ->assertSee('recuerdo.png')
+            ->assertSee(route('messages.attachments.show', $imageMessage), false);
+        $this->get(route('messages.attachments.show', $imageMessage))
+            ->assertOk()
+            ->assertHeader('content-type', 'image/png');
+        $this->actingAs($stranger)
+            ->get(route('messages.attachments.show', $imageMessage))
+            ->assertNotFound();
+
+        $this->actingAs($recipient)
+            ->post(route('messages.store', $sender), [
+                'body' => 'Te comparto el documento.',
+                'attachment' => UploadedFile::fake()->create('guia.pdf', 80, 'application/pdf'),
+            ])
+            ->assertRedirect(route('messages.show', $sender));
+
+        $documentMessage = DirectMessage::query()->latest('id')->firstOrFail();
+        $this->assertFalse($documentMessage->attachmentIsImage());
+        $this->actingAs($sender)
+            ->get(route('messages.attachments.show', $documentMessage))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'attachment; filename=guia.pdf');
+    }
+
+    public function test_private_message_attachments_reject_unsupported_files(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('programa.exe', 10, 'application/x-msdownload'),
+            ])
+            ->assertSessionHasErrors('attachment');
+
+        $this->assertDatabaseCount('direct_messages', 0);
+        $this->assertSame([], Storage::disk('local')->allFiles('direct-message-attachments'));
     }
 
     public function test_follow_notification_is_created_only_for_a_new_follow(): void

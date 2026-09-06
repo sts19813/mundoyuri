@@ -155,6 +155,73 @@ class ContextualReplyTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('image');
     }
 
+    public function test_thread_and_reply_images_can_be_replaced_or_removed_while_editing(): void
+    {
+        Storage::fake('public');
+        $category = ForumCategory::query()->create(['name' => 'Arte', 'slug' => 'arte', 'is_active' => true]);
+        $forum = Forum::query()->create(['forum_category_id' => $category->id, 'name' => 'Fanart', 'slug' => 'fanart']);
+        $author = User::factory()->create();
+        Storage::disk('public')->put('community-post-images/tema-anterior.webp', 'old');
+        Storage::disk('public')->put('community-post-images/respuesta-anterior.webp', 'old');
+        $thread = app(ForumThreadService::class)->create(
+            $forum,
+            $author,
+            'Tema con imagen editable',
+            'Mensaje inicial',
+            'discussion',
+            'community-post-images/tema-anterior.webp',
+        );
+        $reply = app(ForumPostService::class)->reply(
+            $thread,
+            $author,
+            'Respuesta con imagen',
+            null,
+            'community-post-images/respuesta-anterior.webp',
+        );
+
+        $this->actingAs($author)
+            ->get(route('forum.threads.edit', $thread))
+            ->assertOk()
+            ->assertSee('Eliminar imagen actual')
+            ->assertSee('Reemplazar imagen');
+
+        $this->patch(route('forum.threads.update', $thread), [
+            'title' => 'Tema con imagen actualizada',
+            'body' => 'Mensaje inicial actualizado',
+            'image' => UploadedFile::fake()->image('tema-nuevo.png', 900, 600),
+        ])->assertRedirect(route('forum.threads.show', $thread));
+
+        $initial = $thread->posts()->where('is_initial', true)->firstOrFail();
+        $this->assertNotSame('community-post-images/tema-anterior.webp', $initial->image_path);
+        Storage::disk('public')->assertMissing('community-post-images/tema-anterior.webp');
+        Storage::disk('public')->assertExists($initial->image_path);
+
+        $this->patch(route('forum.posts.update', $reply), [
+            'body' => 'La respuesta queda sin imagen',
+            'remove_image' => '1',
+        ])->assertRedirect($reply->conversationUrl());
+
+        $this->assertNull($reply->fresh()->image_path);
+        Storage::disk('public')->assertMissing('community-post-images/respuesta-anterior.webp');
+    }
+
+    public function test_editing_cannot_remove_the_only_content_from_a_forum_post(): void
+    {
+        Storage::fake('public');
+        $category = ForumCategory::query()->create(['name' => 'Arte', 'slug' => 'arte', 'is_active' => true]);
+        $forum = Forum::query()->create(['forum_category_id' => $category->id, 'name' => 'Fanart', 'slug' => 'fanart']);
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Tema inicial', 'Contenido inicial');
+        $reply = app(ForumPostService::class)->reply($thread, $author, '', null, 'community-post-images/unica.webp');
+
+        $this->actingAs($author)->patch(route('forum.posts.update', $reply), [
+            'body' => '',
+            'remove_image' => '1',
+        ])->assertSessionHasErrors('body');
+
+        $this->assertSame('community-post-images/unica.webp', $reply->fresh()->image_path);
+    }
+
     public function test_full_conversations_only_offer_all_replies_after_one_hundred_messages(): void
     {
         $author = User::factory()->create();

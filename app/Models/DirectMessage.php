@@ -15,6 +15,10 @@ class DirectMessage extends Model
         'sender_id',
         'recipient_id',
         'body',
+        'attachment_path',
+        'attachment_name',
+        'attachment_mime',
+        'attachment_size',
         'read_at',
     ];
 
@@ -22,7 +26,29 @@ class DirectMessage extends Model
     {
         return [
             'read_at' => 'datetime',
+            'attachment_size' => 'integer',
         ];
+    }
+
+    public function hasAttachment(): bool
+    {
+        return filled($this->attachment_path);
+    }
+
+    public function attachmentIsImage(): bool
+    {
+        return $this->hasAttachment() && str_starts_with((string) $this->attachment_mime, 'image/');
+    }
+
+    public function attachmentSizeLabel(): string
+    {
+        $bytes = max(0, (int) $this->attachment_size);
+
+        if ($bytes >= 1024 * 1024) {
+            return number_format($bytes / (1024 * 1024), 1).' MB';
+        }
+
+        return max(1, (int) ceil($bytes / 1024)).' KB';
     }
 
     public function conversation(): BelongsTo

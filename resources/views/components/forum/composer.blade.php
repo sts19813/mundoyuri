@@ -1,4 +1,4 @@
-@props(['action', 'submit' => 'Publicar', 'body' => '', 'title' => null, 'httpMethod' => 'POST', 'useOldInput' => true])
+@props(['action', 'submit' => 'Publicar', 'body' => '', 'title' => null, 'httpMethod' => 'POST', 'useOldInput' => true, 'currentImageUrl' => null, 'currentImageAlt' => 'Imagen actual'])
 
 <form method="POST" action="{{ $action }}" class="forum-composer profile-panel" enctype="multipart/form-data">
     @csrf
@@ -21,8 +21,20 @@
             @error('body')<small class="text-danger">{{ $message }}</small>@enderror
         @endif
     </div>
+    @if($currentImageUrl)
+        <div class="forum-current-image">
+            <a href="{{ $currentImageUrl }}" target="_blank" rel="noopener">
+                <img src="{{ $currentImageUrl }}" alt="{{ $currentImageAlt }}">
+            </a>
+            <div>
+                <strong>Imagen actual</strong>
+                <span>Selecciona otra imagen para reemplazarla.</span>
+                <label><input type="checkbox" name="remove_image" value="1" @checked(old('remove_image'))> Eliminar imagen actual</label>
+            </div>
+        </div>
+    @endif
     <div class="forum-composer-actions">
-        <x-forum.image-field id="forum-image" :show-errors="$useOldInput" />
+        <x-forum.image-field id="forum-image" :show-errors="$useOldInput" :button-label="$currentImageUrl ? 'Reemplazar imagen' : 'Añadir imagen'" />
         <button type="submit" class="profile-btn profile-btn-primary">{{ $submit }}</button>
     </div>
 </form>

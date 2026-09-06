@@ -62,6 +62,13 @@ class CommunityPostImageService
         return $path;
     }
 
+    public function delete(?string $path): void
+    {
+        if ($path) {
+            Storage::disk('public')->delete($path);
+        }
+    }
+
     private function openImage(UploadedFile $file): \GdImage
     {
         return match ($file->getMimeType()) {

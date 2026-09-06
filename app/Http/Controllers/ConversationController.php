@@ -9,7 +9,12 @@ use App\Notifications\NewDirectMessageNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class ConversationController extends Controller
 {
@@ -87,40 +92,88 @@ class ConversationController extends Controller
         }
 
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000', 'required_without:attachment'],
+            'attachment' => [
+                'nullable',
+                'file',
+                'max:20480',
+                'mimes:jpg,jpeg,png,webp,pdf,txt,csv,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp',
+            ],
         ]);
 
-        $body = trim($validated['body']);
+        $body = trim($validated['body'] ?? '');
 
-        if ($body === '') {
+        if ($body === '' && ! $request->hasFile('attachment')) {
             return back()
-                ->withErrors(['body' => 'Escribe un mensaje antes de enviarlo.'])
+                ->withErrors(['body' => 'Escribe un mensaje o adjunta un archivo antes de enviarlo.'])
                 ->withInput();
         }
 
-        $message = DB::transaction(function () use ($viewer, $user, $body): DirectMessage {
-            [$userOneId, $userTwoId] = Conversation::participantIds($viewer, $user);
+        $attachment = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $path = $file->store('direct-message-attachments', 'local');
+            if (! $path) {
+                throw ValidationException::withMessages(['attachment' => 'No fue posible guardar el archivo. Inténtalo de nuevo.']);
+            }
+            $attachment = [
+                'attachment_path' => $path,
+                'attachment_name' => Str::limit(basename(str_replace('\\', '/', $file->getClientOriginalName())), 255, ''),
+                'attachment_mime' => $file->getMimeType(),
+                'attachment_size' => $file->getSize(),
+            ];
+        }
 
-            $conversation = Conversation::query()->firstOrCreate([
-                'user_one_id' => $userOneId,
-                'user_two_id' => $userTwoId,
-            ]);
+        try {
+            $message = DB::transaction(function () use ($viewer, $user, $body, $attachment): DirectMessage {
+                [$userOneId, $userTwoId] = Conversation::participantIds($viewer, $user);
 
-            $message = $conversation->messages()->create([
-                'sender_id' => $viewer->id,
-                'recipient_id' => $user->id,
-                'body' => $body,
-            ]);
+                $conversation = Conversation::query()->firstOrCreate([
+                    'user_one_id' => $userOneId,
+                    'user_two_id' => $userTwoId,
+                ]);
 
-            $conversation->update(['last_message_at' => $message->created_at]);
+                $message = $conversation->messages()->create([
+                    'sender_id' => $viewer->id,
+                    'recipient_id' => $user->id,
+                    'body' => $body,
+                    ...($attachment ?? []),
+                ]);
 
-            return $message;
-        });
+                $conversation->update(['last_message_at' => $message->created_at]);
+
+                return $message;
+            });
+        } catch (Throwable $exception) {
+            if ($attachment) {
+                Storage::disk('local')->delete($attachment['attachment_path']);
+            }
+
+            throw $exception;
+        }
 
         $user->notify(new NewDirectMessageNotification($message, $viewer));
 
         return redirect()
             ->route('messages.show', $user)
             ->with('success', 'Mensaje enviado.');
+    }
+
+    public function attachment(Request $request, DirectMessage $message): StreamedResponse
+    {
+        $viewerId = $request->user()->id;
+        $message->loadMissing('conversation');
+        abort_unless(in_array($viewerId, [
+            $message->conversation->user_one_id,
+            $message->conversation->user_two_id,
+        ], true), 404);
+        abort_unless($message->hasAttachment() && Storage::disk('local')->exists($message->attachment_path), 404);
+
+        return Storage::disk('local')->response(
+            $message->attachment_path,
+            $message->attachment_name,
+            ['Content-Type' => $message->attachment_mime ?: 'application/octet-stream'],
+            $message->attachmentIsImage() ? 'inline' : 'attachment',
+        );
     }
 }

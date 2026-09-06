@@ -35,7 +35,9 @@ class NewDirectMessageNotification extends Notification
         return [
             'kind' => 'direct_message',
             'title' => 'Nuevo mensaje de '.$name,
-            'message' => Str::limit($this->directMessage->body, 100),
+            'message' => filled($this->directMessage->body)
+                ? Str::limit($this->directMessage->body, 100)
+                : 'Envió un archivo: '.$this->directMessage->attachment_name,
             'actor_id' => $this->sender->id,
             'actor_name' => $name,
             'actor_avatar' => $this->sender->avatarUrl(),

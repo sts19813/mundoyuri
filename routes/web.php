@@ -125,6 +125,8 @@ Route::middleware(['auth'])
 
         Route::get('/mensajes', [ConversationController::class, 'index'])
             ->name('messages.index');
+        Route::get('/mensajes/adjuntos/{message}', [ConversationController::class, 'attachment'])
+            ->name('messages.attachments.show');
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
             ->name('messages.show');
         Route::post('/mensajes/{user}', [ConversationController::class, 'store'])

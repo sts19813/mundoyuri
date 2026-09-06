@@ -71,7 +71,21 @@
                     @forelse($messages as $message)
                         <article class="message-row {{ $message->sender_id === $viewer->id ? 'is-outgoing' : 'is-incoming' }}">
                             <div class="message-bubble">
-                                <p>{{ $message->body }}</p>
+                                @if(filled($message->body))
+                                    <p>{{ $message->body }}</p>
+                                @endif
+                                @if($message->hasAttachment())
+                                    @if($message->attachmentIsImage())
+                                        <a class="message-attachment-image" href="{{ route('messages.attachments.show', $message) }}" target="_blank" rel="noopener">
+                                            <img src="{{ route('messages.attachments.show', $message) }}" alt="{{ $message->attachment_name }}" loading="lazy">
+                                        </a>
+                                    @else
+                                        <a class="message-attachment-file" href="{{ route('messages.attachments.show', $message) }}">
+                                            <span aria-hidden="true">▤</span>
+                                            <span><strong>{{ $message->attachment_name }}</strong><small>{{ $message->attachmentSizeLabel() }}</small></span>
+                                        </a>
+                                    @endif
+                                @endif
                                 <time datetime="{{ $message->created_at->toIso8601String() }}">
                                     {{ $message->created_at->timezone('America/Merida')->format('d M · g:i a') }}
                                     @if($message->sender_id === $viewer->id)
@@ -97,13 +111,23 @@
                     @elseif(!$otherUser->is_active)
                         <div class="conversation-disabled">Esta cuenta ya no está disponible.</div>
                     @else
-                        <form method="POST" action="{{ route('messages.store', $otherUser) }}">
+                        <form method="POST" action="{{ route('messages.store', $otherUser) }}" enctype="multipart/form-data">
                             @csrf
                             <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
-                            <textarea id="message-body" name="body" rows="2" maxlength="2000" required placeholder="Escribe un mensaje…">{{ old('body') }}</textarea>
+                            <div class="conversation-compose-fields">
+                                <textarea id="message-body" name="body" rows="2" maxlength="2000" placeholder="Escribe un mensaje…">{{ old('body') }}</textarea>
+                                <div class="conversation-attachment-field">
+                                    <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
+                                    <label for="message-attachment"><span aria-hidden="true">＋</span> Adjuntar imagen o documento</label>
+                                    <small data-message-attachment-hint>JPG, PNG, WebP, PDF y documentos de Office · máximo 20 MB.</small>
+                                </div>
+                            </div>
                             <button class="profile-btn profile-btn-primary" type="submit">Enviar</button>
                         </form>
                         @error('body')
+                            <p class="conversation-form-error">{{ $message }}</p>
+                        @enderror
+                        @error('attachment')
                             <p class="conversation-form-error">{{ $message }}</p>
                         @enderror
                     @endif
@@ -119,6 +143,13 @@
         if (conversation && !new URLSearchParams(window.location.search).has('page')) {
             conversation.scrollTop = conversation.scrollHeight;
         }
+        const attachmentInput = document.getElementById('message-attachment');
+        attachmentInput?.addEventListener('change', () => {
+            const hint = document.querySelector('[data-message-attachment-hint]');
+            if (hint) {
+                hint.textContent = attachmentInput.files?.[0]?.name || 'JPG, PNG, WebP, PDF y documentos de Office · máximo 20 MB.';
+            }
+        });
     </script>
 </body>
 </html>

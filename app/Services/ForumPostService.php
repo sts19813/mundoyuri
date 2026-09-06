@@ -15,6 +15,7 @@ class ForumPostService
         private readonly ForumCounterService $counters,
         private readonly MentionService $mentions,
         private readonly QuestionService $questions,
+        private readonly CommunityPostImageService $images,
     ) {}
 
     public function reply(ForumThread $thread, User $author, string $body, ?int $replyToId = null, ?string $imagePath = null): ForumPost
@@ -43,10 +44,14 @@ class ForumPostService
         });
     }
 
-    public function update(ForumPost $post, string $body): void
+    public function update(ForumPost $post, string $body, ?string $imagePath = null, bool $replaceImage = false): void
     {
-        DB::transaction(function () use ($post, $body): void {
-            $post->update(['body' => $body, 'edited_at' => now()]);
+        if (! $replaceImage) {
+            $imagePath = $post->image_path;
+        }
+
+        DB::transaction(function () use ($post, $body, $imagePath): void {
+            $post->update(['body' => $body, 'image_path' => $imagePath, 'edited_at' => now()]);
             $post->load('author');
             $this->mentions->record($post);
         });
@@ -70,11 +75,12 @@ class ForumPostService
 
     public function delete(ForumPost $post): void
     {
-        DB::transaction(function () use ($post): void {
+        $imagePaths = DB::transaction(function () use ($post): array {
             $thread = $post->thread;
             $author = $post->author;
 
             if ($post->is_initial) {
+                $imagePaths = $thread->posts()->withTrashed()->whereNotNull('image_path')->pluck('image_path')->all();
                 $acceptedAnswer = $thread->acceptedAnswer;
                 if ($acceptedAnswer) {
                     $this->questions->removeAcceptanceFor($acceptedAnswer);
@@ -86,16 +92,23 @@ class ForumPostService
                     $this->counters->synchronizeUser($affectedUser);
                 }
 
-                return;
+                return $imagePaths;
             }
 
+            $imagePaths = array_filter([$post->image_path]);
             $this->questions->removeAcceptanceFor($post);
             $post->delete();
             $this->counters->synchronizeThread($thread);
             if ($author) {
                 $this->counters->synchronizeUser($author);
             }
+
+            return $imagePaths;
         });
+
+        foreach ($imagePaths as $imagePath) {
+            $this->images->delete($imagePath);
+        }
     }
 
     /** @param array<int, int> $mentionedUserIds */

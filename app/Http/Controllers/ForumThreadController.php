@@ -14,7 +14,9 @@ use App\Services\ForumThreadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Throwable;
 
 class ForumThreadController extends Controller
 {
@@ -103,12 +105,28 @@ class ForumThreadController extends Controller
         return view('forums.threads.edit', compact('thread'));
     }
 
-    public function update(UpdateForumThreadRequest $request, ForumThread $thread, ForumPostService $posts): RedirectResponse
+    public function update(UpdateForumThreadRequest $request, ForumThread $thread, ForumPostService $posts, CommunityPostImageService $images): RedirectResponse
     {
         $this->authorize('update', $thread);
         $initial = $thread->posts()->where('is_initial', true)->firstOrFail();
-        $thread->update(['title' => $request->validated('title')]);
-        $posts->update($initial, $request->validated('body'));
+        $oldImagePath = $initial->image_path;
+        $newImagePath = $request->hasFile('image') ? $images->store($request->file('image')) : null;
+        $imagePath = $newImagePath ?: ($request->boolean('remove_image') ? null : $oldImagePath);
+
+        try {
+            DB::transaction(function () use ($request, $thread, $initial, $posts, $imagePath): void {
+                $thread->update(['title' => $request->validated('title')]);
+                $posts->update($initial, $request->validated('body') ?? '', $imagePath, true);
+            });
+        } catch (Throwable $exception) {
+            $images->delete($newImagePath);
+
+            throw $exception;
+        }
+
+        if ($oldImagePath !== $imagePath) {
+            $images->delete($oldImagePath);
+        }
 
         return redirect()->route('forum.threads.show', $thread)->with('success', 'Tema actualizado correctamente.');
     }
