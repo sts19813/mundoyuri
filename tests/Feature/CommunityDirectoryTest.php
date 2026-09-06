@@ -113,7 +113,30 @@ class CommunityDirectoryTest extends TestCase
             ->assertDontSee('Kohai Visible');
     }
 
-    public function test_directory_displays_every_public_member_without_pagination(): void
+    public function test_directory_uses_the_effective_automatic_rank_after_a_special_rank_is_deactivated(): void
+    {
+        $automatic = CommunityRank::query()->where('slug', 'yuri-fan')->firstOrFail();
+        $special = CommunityRank::query()->create([
+            'name' => 'Especial temporal',
+            'slug' => 'especial-temporal',
+            'is_special' => true,
+            'is_active' => true,
+            'priority' => 100,
+        ]);
+        User::factory()->create([
+            'name' => 'Rango Recalculado',
+            'community_rank_id' => $special->id,
+            'community_message_count' => 80,
+        ]);
+        $special->update(['is_active' => false]);
+
+        $this->get(route('community.members', ['rank' => $automatic->id]))
+            ->assertOk()
+            ->assertSee('Rango Recalculado')
+            ->assertSee('Yuri Fan');
+    }
+
+    public function test_directory_paginates_members_and_preserves_filters_between_pages(): void
     {
         User::factory()->count(30)->sequence(
             fn ($sequence) => [
@@ -123,11 +146,21 @@ class CommunityDirectoryTest extends TestCase
             ],
         )->create();
 
-        $this->get(route('community.members'))
+        $filters = ['sort' => 'name', 'direction' => 'asc'];
+        $this->get(route('community.members', $filters))
             ->assertOk()
             ->assertSee('30 miembros')
             ->assertSee('Integrante 01')
+            ->assertSee('Integrante 24')
+            ->assertDontSee('Integrante 25')
+            ->assertSee('page=2', false)
+            ->assertSee('sort=name', false)
+            ->assertSee('direction=asc', false);
+
+        $this->get(route('community.members', [...$filters, 'page' => 2]))
+            ->assertOk()
+            ->assertSee('Integrante 25')
             ->assertSee('Integrante 30')
-            ->assertDontSee('pagination');
+            ->assertDontSee('Integrante 24');
     }
 }

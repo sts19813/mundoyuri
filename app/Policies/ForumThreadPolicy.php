@@ -28,12 +28,17 @@ class ForumThreadPolicy
     public function reply(User $user, ForumThread $thread): bool
     {
         if ($thread->isQuestion()) {
-            return ! $thread->is_locked && ! $thread->is_hidden && ! $thread->trashed();
+            return ! $thread->is_locked
+                && ! $thread->is_hidden
+                && ! $thread->trashed();
         }
 
         return ! $thread->is_locked
             && ! $thread->forum?->is_locked
+            && $thread->forum?->is_active
+            && $thread->forum?->category?->is_active
             && ! $thread->is_hidden
+            && ! $thread->trashed()
             && $thread->forum?->acceptsRole($user);
     }
 
@@ -68,6 +73,10 @@ class ForumThreadPolicy
 
     public function react(User $user, ForumThread $thread): bool
     {
+        if ($thread->author && $user->cannotInteractWith($thread->author)) {
+            return false;
+        }
+
         if ($thread->isQuestion()) {
             return ! $thread->is_hidden && ! $thread->trashed();
         }

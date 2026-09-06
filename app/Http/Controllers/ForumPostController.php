@@ -42,7 +42,7 @@ class ForumPostController extends Controller
             return redirect()->to(route('forums.show', $thread->forum).'#thread-'.$thread->id);
         }
 
-        return redirect()->to(route('forum.threads.show', $thread).'#post-'.$post->id);
+        return redirect()->to($post->conversationUrl());
     }
 
     public function edit(ForumPost $post): View
@@ -57,7 +57,7 @@ class ForumPostController extends Controller
     {
         $posts->update($post, $request->validated('body'));
 
-        return redirect()->to(route('forum.threads.show', $post->thread).'#post-'.$post->id);
+        return redirect()->to($post->conversationUrl());
     }
 
     public function destroy(ForumPost $post, ForumPostService $posts): RedirectResponse
@@ -67,10 +67,17 @@ class ForumPostController extends Controller
         $thread = $post->thread;
         $forum = $thread->forum;
         $isInitial = $post->is_initial;
+        $isQuestion = $thread->isQuestion();
         $posts->delete($post);
 
-        return $isInitial
-            ? redirect()->route('forums.show', $forum)->with('success', 'Tema eliminado correctamente.')
-            : redirect()->route('forum.threads.show', $thread)->with('success', 'Mensaje eliminado correctamente.');
+        if ($isInitial) {
+            return $isQuestion
+                ? redirect()->route('questions.index')->with('success', 'Pregunta eliminada correctamente.')
+                : redirect()->route('forums.show', $forum)->with('success', 'Tema eliminado correctamente.');
+        }
+
+        return redirect()
+            ->route($isQuestion ? 'questions.show' : 'forum.threads.show', $thread)
+            ->with('success', 'Mensaje eliminado correctamente.');
     }
 }

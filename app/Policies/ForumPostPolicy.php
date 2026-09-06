@@ -36,6 +36,10 @@ class ForumPostPolicy
     {
         $thread = $post->thread;
 
+        if ($post->author && $user->cannotInteractWith($post->author)) {
+            return false;
+        }
+
         if ($thread->isQuestion()) {
             return ! $post->is_hidden
                 && ! $post->trashed()

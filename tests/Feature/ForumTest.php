@@ -35,7 +35,7 @@ class ForumTest extends TestCase
 
         $this->actingAs($replyAuthor)->post(route('forum.posts.store', $thread), [
             'body' => 'Una respuesta segura.',
-        ])->assertRedirect(route('forum.threads.show', $thread).'#post-2');
+        ])->assertRedirect(route('forum.threads.show', ['thread' => $thread, 'post' => 2]).'#post-2');
 
         $this->assertSame(1, $thread->fresh()->replies_count);
         $this->assertSame(1, $replyAuthor->fresh()->community_message_count);
@@ -255,6 +255,76 @@ class ForumTest extends TestCase
         $this->assertSame(0, $thread->fresh()->views_count);
         $thread->update(['is_hidden' => true]);
         $this->getJson(route('forum.threads.show', $thread))->assertNotFound();
+    }
+
+    public function test_direct_post_links_render_late_replies_with_their_parent_context(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Conversación extensa', 'Mensaje de apertura');
+        $parent = null;
+        foreach (range(1, 101) as $number) {
+            $parent = $thread->posts()->create([
+                'user_id' => $author->id,
+                'body' => 'Respuesta extensa '.$number,
+                'reply_to_post_id' => $parent?->id,
+            ]);
+        }
+        $thread->update(['replies_count' => 101]);
+
+        $this->assertStringContainsString('?post='.$parent->id.'#post-'.$parent->id, $parent->conversationUrl());
+        $this->get($parent->conversationUrl())
+            ->assertOk()
+            ->assertSee('Mensaje de apertura')
+            ->assertSee('Respuesta extensa 101')
+            ->assertSee('id="post-'.$parent->id.'"', false)
+            ->assertSee('Ver la conversación desde el inicio');
+    }
+
+    public function test_members_cannot_reply_when_forum_or_category_is_inactive(): void
+    {
+        [$category, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Tema desactivado', 'Mensaje inicial');
+
+        $forum->update(['is_active' => false]);
+        $this->actingAs($author)->post(route('forum.posts.store', $thread), ['body' => 'Respuesta rechazada'])
+            ->assertForbidden();
+
+        $forum->update(['is_active' => true]);
+        $category->update(['is_active' => false]);
+        $this->post(route('forum.posts.store', $thread), ['body' => 'Otra respuesta rechazada'])
+            ->assertForbidden();
+
+        $this->assertSame(1, $thread->posts()->count());
+    }
+
+    public function test_moderator_can_hide_a_post_after_its_author_is_deleted(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $moderator = User::factory()->create(['role' => 'moderator']);
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Autor eliminado', 'Mensaje preservado');
+        $post = $thread->posts()->firstOrFail();
+        $author->delete();
+
+        $this->actingAs($moderator)->patch(route('forum.moderation.post.hide', $post))
+            ->assertRedirect();
+
+        $this->assertTrue($post->fresh()->is_hidden);
+    }
+
+    public function test_deleted_thread_titles_generate_a_new_unique_slug_when_reused(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $original = app(ForumThreadService::class)->create($forum, $author, 'Título reutilizable', 'Primer mensaje');
+        app(ForumPostService::class)->delete($original->initialPost);
+
+        $replacement = app(ForumThreadService::class)->create($forum, $author, 'Título reutilizable', 'Nuevo mensaje');
+
+        $this->assertSame('titulo-reutilizable-2', $replacement->slug);
+        $this->assertNotSame($original->slug, $replacement->slug);
     }
 
     public function test_feed_queries_do_not_grow_per_topic_and_each_topic_gets_its_own_preview(): void

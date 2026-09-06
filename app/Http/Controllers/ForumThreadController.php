@@ -73,13 +73,17 @@ class ForumThreadController extends Controller
             ]);
         }
 
-        $showAllReplies = $request->boolean('all');
-        $posts = $showAllReplies ? $postsQuery->get() : $postsQuery->limit(101)->get();
+        $focusedPostId = $request->has('post') ? $request->integer('post') : null;
+        abort_if($request->has('post') && ! $focusedPostId, 404);
+        $showAllReplies = ! $focusedPostId && $request->boolean('all');
+        $posts = $focusedPostId
+            ? $postsQuery->whereIn('id', $tree->focusedPostIds($thread, $focusedPostId, $request->user()?->shouldEnterAdminPanel() ?? false))->get()
+            : ($showAllReplies ? $postsQuery->get() : $postsQuery->limit(101)->get());
 
         $reactions->hydrateSummaries($posts, $request->user());
         $posts->each(fn ($post) => $post->setRelation('thread', $thread));
         $postTree = $tree->build($posts);
-        $hasMoreReplies = ! $showAllReplies && $thread->replies_count > 100;
+        $hasMoreReplies = ! $focusedPostId && ! $showAllReplies && $thread->replies_count > 100;
 
         $isSubscribed = $request->user()
             ? $thread->subscribers()->whereKey($request->user()->id)->exists()
@@ -88,7 +92,7 @@ class ForumThreadController extends Controller
             ? Forum::query()->with('category')->orderBy('forum_category_id')->orderBy('sort_order')->get()
             : collect();
 
-        return view('forums.threads.show', compact('thread', 'postTree', 'hasMoreReplies', 'showAllReplies', 'isSubscribed', 'moderationForums'));
+        return view('forums.threads.show', compact('thread', 'postTree', 'hasMoreReplies', 'showAllReplies', 'focusedPostId', 'isSubscribed', 'moderationForums'));
     }
 
     public function edit(ForumThread $thread): View
@@ -114,8 +118,11 @@ class ForumThreadController extends Controller
         $this->authorize('delete', $thread);
         $initial = $thread->posts()->where('is_initial', true)->firstOrFail();
         $forum = $thread->forum;
+        $isQuestion = $thread->isQuestion();
         $posts->delete($initial);
 
-        return redirect()->route('forums.show', $forum)->with('success', 'Tema eliminado correctamente.');
+        return $isQuestion
+            ? redirect()->route('questions.index')->with('success', 'Pregunta eliminada correctamente.')
+            : redirect()->route('forums.show', $forum)->with('success', 'Tema eliminado correctamente.');
     }
 }

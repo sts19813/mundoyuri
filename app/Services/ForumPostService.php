@@ -62,7 +62,9 @@ class ForumPostService
             $this->questions->removeAcceptanceFor($post);
             $post->update(['is_hidden' => true]);
             $this->counters->synchronizeThread($post->thread);
-            $this->counters->synchronizeUser($post->author);
+            if ($post->author) {
+                $this->counters->synchronizeUser($post->author);
+            }
         });
     }
 

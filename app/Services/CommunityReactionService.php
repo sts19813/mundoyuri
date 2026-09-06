@@ -175,9 +175,7 @@ class CommunityReactionService
         }
 
         if ($reactable instanceof ForumPost) {
-            $thread = $reactable->thread;
-
-            return route($thread->isQuestion() ? 'questions.show' : 'forum.threads.show', $thread).'#post-'.$reactable->id;
+            return $reactable->conversationUrl();
         }
 
         if ($reactable instanceof Comment) {

@@ -35,7 +35,7 @@ class QuestionAnswerAcceptedNotification extends Notification
             'actor_avatar' => $this->actor->avatarUrl(),
             'forum_thread_id' => $this->question->id,
             'forum_post_id' => $this->answer->id,
-            'url' => route('questions.show', $this->question).'#post-'.$this->answer->id,
+            'url' => $this->answer->conversationUrl(),
         ];
     }
 }

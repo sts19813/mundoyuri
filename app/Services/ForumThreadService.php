@@ -54,7 +54,7 @@ class ForumThreadService
         $slug = $base;
         $number = 2;
 
-        while (ForumThread::query()->where('slug', $slug)->exists()) {
+        while (ForumThread::withTrashed()->where('slug', $slug)->exists()) {
             $slug = Str::limit($base, 180 - strlen((string) $number), '').'-'.$number;
             $number++;
         }

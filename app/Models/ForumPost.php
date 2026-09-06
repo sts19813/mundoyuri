@@ -32,6 +32,18 @@ class ForumPost extends Model
         return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
     }
 
+    public function conversationUrl(): string
+    {
+        $thread = $this->thread;
+        $routeName = $thread->isQuestion() ? 'questions.show' : 'forum.threads.show';
+
+        if ($this->is_initial) {
+            return route($routeName, $thread);
+        }
+
+        return route($routeName, ['thread' => $thread, 'post' => $this->id]).'#post-'.$this->id;
+    }
+
     protected function casts(): array
     {
         return ['edited_at' => 'datetime', 'is_initial' => 'boolean', 'is_hidden' => 'boolean', 'upvotes_count' => 'integer', 'reply_to_post_id' => 'integer'];

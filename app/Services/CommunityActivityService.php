@@ -130,8 +130,8 @@ class CommunityActivityService
     private function urlFor(object $activity): ?string
     {
         return match ($activity->activity_type) {
-            'created_thread', 'replied_thread' => route('forum.threads.show', ['thread' => $activity->slug]).($activity->post_id ? '#post-'.$activity->post_id : ''),
-            'created_question', 'answered_question', 'accepted_answer' => route('questions.show', ['thread' => $activity->slug]).($activity->post_id ? '#post-'.$activity->post_id : ''),
+            'created_thread', 'replied_thread' => route('forum.threads.show', array_filter(['thread' => $activity->slug, 'post' => $activity->post_id])).($activity->post_id ? '#post-'.$activity->post_id : ''),
+            'created_question', 'answered_question', 'accepted_answer' => route('questions.show', array_filter(['thread' => $activity->slug, 'post' => $activity->post_id])).($activity->post_id ? '#post-'.$activity->post_id : ''),
             'favorite_series' => route('catalog.series.show', ['series' => $activity->slug]),
             default => null,
         };

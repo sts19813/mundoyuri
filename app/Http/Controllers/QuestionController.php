@@ -72,20 +72,23 @@ class QuestionController extends Controller
         $this->authorize('view', $thread);
         $thread->increment('views_count');
 
-        $showAllReplies = $request->boolean('all');
-        $posts = $thread->posts()
+        $focusedPostId = $request->has('post') ? $request->integer('post') : null;
+        abort_if($request->has('post') && ! $focusedPostId, 404);
+        $showAllReplies = ! $focusedPostId && $request->boolean('all');
+        $postsQuery = $thread->posts()
             ->when(! $request->user()?->shouldEnterAdminPanel(), fn ($query) => $query->where('is_hidden', false))
             ->with(['author.badges', 'author.communityRank', 'mentions.mentionedUser', 'replyTo.author'])
-            ->oldest()
-            ->when(! $showAllReplies, fn ($query) => $query->limit(101))
-            ->get();
+            ->oldest();
+        $posts = $focusedPostId
+            ? $postsQuery->whereIn('id', $tree->focusedPostIds($thread, $focusedPostId, $request->user()?->shouldEnterAdminPanel() ?? false))->get()
+            : $postsQuery->when(! $showAllReplies, fn ($query) => $query->limit(101))->get();
 
         $reactions->hydrateSummaries(collect([$thread])->merge($posts), $request->user());
         $posts->each(fn ($post) => $post->setRelation('thread', $thread));
         $postTree = $tree->build($posts);
-        $hasMoreReplies = ! $showAllReplies && $thread->replies_count > 100;
+        $hasMoreReplies = ! $focusedPostId && ! $showAllReplies && $thread->replies_count > 100;
 
-        return view('questions.show', compact('thread', 'postTree', 'hasMoreReplies', 'showAllReplies'));
+        return view('questions.show', compact('thread', 'postTree', 'hasMoreReplies', 'showAllReplies', 'focusedPostId'));
     }
 
     public function answer(StoreForumPostRequest $request, ForumThread $thread, ForumPostService $posts, CommunityReactionService $reactions, CommunityPostImageService $images): RedirectResponse|JsonResponse
@@ -110,7 +113,7 @@ class QuestionController extends Controller
             ], 201);
         }
 
-        return redirect()->to(route('questions.show', $thread).'#post-'.$post->id);
+        return redirect()->to($post->conversationUrl());
     }
 
     public function accept(Request $request, ForumThread $thread, ForumPost $post, QuestionService $questions): RedirectResponse

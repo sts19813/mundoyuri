@@ -59,7 +59,9 @@
                 @endforeach
             </section>
 
-            @if($hasMoreReplies)
+            @if($focusedPostId)
+                <p class="forum-load-all"><a href="{{ route('forum.threads.show', $thread) }}">Ver la conversación desde el inicio</a></p>
+            @elseif($hasMoreReplies)
                 <p class="forum-load-all"><a href="{{ route('forum.threads.show', $thread) }}?all=1">Ver las {{ number_format($thread->replies_count) }} respuestas</a></p>
             @elseif($showAllReplies && $thread->replies_count > 100)
                 <p class="forum-load-all"><a href="{{ route('forum.threads.show', $thread) }}">Ver las primeras 100 respuestas</a></p>

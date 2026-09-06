@@ -66,7 +66,7 @@
                                 @php($thread = $post->thread)
                                 <article>
                                     <span class="community-activity-dot" aria-hidden="true"></span>
-                                    <div><strong>{{ $post->authorName() }}</strong> @if($post->is_initial){{ $thread->isQuestion() ? 'hizo una pregunta' : 'abrió un tema' }}@else{{ $thread->isQuestion() ? 'respondió una pregunta' : 'respondió un tema' }}@endif <a href="{{ $thread->isQuestion() ? route('questions.show', $thread) : route('forum.threads.show', $thread) }}{{ $post->is_initial ? '' : '#post-'.$post->id }}">{{ $thread->title }}</a><small>{{ $post->created_at->diffForHumans() }}</small></div>
+                                    <div><strong>{{ $post->authorName() }}</strong> @if($post->is_initial){{ $thread->isQuestion() ? 'hizo una pregunta' : 'abrió un tema' }}@else{{ $thread->isQuestion() ? 'respondió una pregunta' : 'respondió un tema' }}@endif <a href="{{ $post->conversationUrl() }}">{{ $thread->title }}</a><small>{{ $post->created_at->diffForHumans() }}</small></div>
                                 </article>
                             @empty
                                 <div class="community-home-empty"><strong>La actividad aparecerá aquí</strong><span>Cuando comiencen las conversaciones, este espacio se irá llenando.</span></div>

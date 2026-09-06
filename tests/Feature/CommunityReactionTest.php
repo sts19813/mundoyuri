@@ -134,6 +134,26 @@ class CommunityReactionTest extends TestCase
             ->assertSessionHasErrors('type');
     }
 
+    public function test_blocked_members_cannot_react_to_each_others_forum_content(): void
+    {
+        [, $forum] = $this->forum();
+        $author = User::factory()->create();
+        $blockedMember = User::factory()->create();
+        $author->blockedUsers()->attach($blockedMember);
+        $thread = app(ForumThreadService::class)->create($forum, $author, 'Tema con bloqueo', 'Contenido.');
+        $post = $thread->posts()->firstOrFail();
+
+        $this->actingAs($blockedMember)->post(route('community.reactions.store'), [
+            'target' => 'thread', 'target_id' => $thread->id, 'type' => 'love',
+        ])->assertForbidden();
+        $this->actingAs($blockedMember)->post(route('community.reactions.store'), [
+            'target' => 'post', 'target_id' => $post->id, 'type' => 'love',
+        ])->assertForbidden();
+
+        $this->assertDatabaseCount('community_reactions', 0);
+        $this->assertSame(0, $author->notifications()->count());
+    }
+
     public function test_reaction_notifications_are_grouped_per_unread_content_and_not_sent_for_self_reactions(): void
     {
         [, $forum] = $this->forum();

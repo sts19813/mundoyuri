@@ -132,4 +132,36 @@ class QuestionTest extends TestCase
         Notification::assertSentTo($author, ForumReplyNotification::class);
         Notification::assertNothingSentTo($answerer);
     }
+
+    public function test_question_owner_can_delete_it_without_a_forum_redirect_error(): void
+    {
+        $author = User::factory()->create();
+        $question = app(QuestionService::class)->create($author, 'Pregunta para eliminar', 'Contenido.');
+
+        $this->actingAs($author)->delete(route('forum.posts.destroy', $question->initialPost))
+            ->assertRedirect(route('questions.index'))
+            ->assertSessionHas('success', 'Pregunta eliminada correctamente.');
+
+        $this->assertSoftDeleted('forum_threads', ['id' => $question->id]);
+        $this->assertSoftDeleted('forum_posts', ['forum_thread_id' => $question->id]);
+    }
+
+    public function test_direct_answer_links_render_answers_after_the_first_hundred(): void
+    {
+        $author = User::factory()->create();
+        $question = app(QuestionService::class)->create($author, 'Pregunta extensa', 'Descripción inicial.');
+        foreach (range(1, 101) as $number) {
+            $answer = $question->posts()->create([
+                'user_id' => $author->id,
+                'body' => 'Respuesta tardía '.$number,
+            ]);
+        }
+        $question->update(['replies_count' => 101]);
+
+        $this->get($answer->conversationUrl())
+            ->assertOk()
+            ->assertSee('Respuesta tardía 101')
+            ->assertSee('id="post-'.$answer->id.'"', false)
+            ->assertSee('Ver la conversación desde el inicio');
+    }
 }
