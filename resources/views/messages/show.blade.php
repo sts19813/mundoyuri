@@ -144,7 +144,15 @@
     <script>
         const conversation = document.getElementById('conversationMessages');
         if (conversation && !new URLSearchParams(window.location.search).has('messages_page')) {
-            conversation.scrollTop = conversation.scrollHeight;
+            const scrollToLatestMessage = () => {
+                conversation.scrollTop = conversation.scrollHeight;
+            };
+
+            requestAnimationFrame(scrollToLatestMessage);
+            window.addEventListener('load', scrollToLatestMessage, { once: true });
+            conversation.querySelectorAll('img').forEach((image) => {
+                if (!image.complete) image.addEventListener('load', scrollToLatestMessage, { once: true });
+            });
         }
 
         const attachmentInput = document.getElementById('message-attachment');
