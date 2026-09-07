@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\DirectMessage;
 use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,25 +22,17 @@ class ConversationController extends Controller
     public function index(Request $request): View
     {
         $viewer = $request->user();
-
-        $conversations = Conversation::query()
-            ->where(function ($query) use ($viewer): void {
-                $query
-                    ->where('user_one_id', $viewer->id)
-                    ->orWhere('user_two_id', $viewer->id);
-            })
-            ->with(['userOne', 'userTwo', 'lastMessage.sender'])
-            ->withCount([
-                'messages as unread_messages_count' => fn ($query) => $query
-                    ->where('recipient_id', $viewer->id)
-                    ->whereNull('read_at'),
-            ])
+        $search = trim($request->string('q')->toString());
+        $conversations = $this->conversationList($viewer, $search)
             ->orderByDesc('last_message_at')
-            ->paginate(20);
+            ->paginate(30, ['*'], 'conversations_page')
+            ->withQueryString();
 
         return view('messages.index', [
             'conversations' => $conversations,
             'viewer' => $viewer,
+            'search' => $search,
+            'activeUser' => null,
         ]);
     }
 
@@ -62,19 +55,29 @@ class ConversationController extends Controller
             $messages = $conversation->messages()
                 ->with('sender')
                 ->latest()
-                ->paginate(50);
+                ->paginate(50, ['*'], 'messages_page')
+                ->withQueryString();
             $messages->setCollection($messages->getCollection()->reverse()->values());
         } else {
             $messages = DirectMessage::query()
                 ->whereRaw('1 = 0')
-                ->paginate(50);
+                ->paginate(50, ['*'], 'messages_page');
         }
+
+        $search = trim($request->string('q')->toString());
+        $conversations = $this->conversationList($viewer, $search)
+            ->orderByDesc('last_message_at')
+            ->paginate(30, ['*'], 'conversations_page')
+            ->withQueryString();
 
         return view('messages.show', [
             'conversation' => $conversation,
+            'conversations' => $conversations,
             'messages' => $messages,
             'otherUser' => $user,
             'viewer' => $viewer,
+            'search' => $search,
+            'activeUser' => $user,
             'interactionBlocked' => $viewer->cannotInteractWith($user),
             'viewerHasBlocked' => $viewer->hasBlocked($user),
         ]);
@@ -175,5 +178,39 @@ class ConversationController extends Controller
             ['Content-Type' => $message->attachment_mime ?: 'application/octet-stream'],
             $message->attachmentIsImage() ? 'inline' : 'attachment',
         );
+    }
+
+    private function conversationList(User $viewer, string $search): Builder
+    {
+        return Conversation::query()
+            ->where(function (Builder $query) use ($viewer): void {
+                $query
+                    ->where('user_one_id', $viewer->id)
+                    ->orWhere('user_two_id', $viewer->id);
+            })
+            ->when($search !== '', function (Builder $query) use ($viewer, $search): void {
+                $like = '%'.$search.'%';
+                $query->where(function (Builder $participants) use ($viewer, $like): void {
+                    $participants
+                        ->where(function (Builder $first) use ($viewer, $like): void {
+                            $first->where('user_one_id', $viewer->id)
+                                ->whereHas('userTwo', fn (Builder $user) => $user
+                                    ->where('name', 'like', $like)
+                                    ->orWhere('alias', 'like', $like));
+                        })
+                        ->orWhere(function (Builder $second) use ($viewer, $like): void {
+                            $second->where('user_two_id', $viewer->id)
+                                ->whereHas('userOne', fn (Builder $user) => $user
+                                    ->where('name', 'like', $like)
+                                    ->orWhere('alias', 'like', $like));
+                        });
+                });
+            })
+            ->with(['userOne', 'userTwo', 'lastMessage.sender'])
+            ->withCount([
+                'messages as unread_messages_count' => fn (Builder $query) => $query
+                    ->where('recipient_id', $viewer->id)
+                    ->whereNull('read_at'),
+            ]);
     }
 }

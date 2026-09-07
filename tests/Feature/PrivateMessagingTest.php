@@ -161,6 +161,37 @@ class PrivateMessagingTest extends TestCase
         $this->assertSame([], Storage::disk('local')->allFiles('direct-message-attachments'));
     }
 
+    public function test_messenger_workspace_keeps_the_conversation_list_beside_the_active_chat_and_supports_search(): void
+    {
+        $viewer = User::factory()->create();
+        $luna = User::factory()->create(['name' => 'Luna Rosa', 'alias' => 'lunarosa']);
+        $sol = User::factory()->create(['name' => 'Sol Azul', 'alias' => 'solazul']);
+
+        $this->actingAs($luna)->post(route('messages.store', $viewer), ['body' => 'Mensaje de Luna']);
+        $this->actingAs($sol)->post(route('messages.store', $viewer), ['body' => 'Mensaje de Sol']);
+
+        $this->actingAs($viewer)
+            ->get(route('messages.index').'?q=Luna')
+            ->assertOk()
+            ->assertSee('messenger-shell-empty', false)
+            ->assertSee('lunarosa')
+            ->assertSee('Mensaje de Luna')
+            ->assertDontSee('solazul')
+            ->assertDontSee('Mensaje de Sol');
+
+        $this->get(route('messages.show', $luna))
+            ->assertOk()
+            ->assertSee('messenger-shell has-active-chat', false)
+            ->assertSee('messenger-sidebar', false)
+            ->assertSee('messenger-chat', false)
+            ->assertSee('messenger-mobile-back', false)
+            ->assertSee('action="'.route('messages.show', $luna).'"', false)
+            ->assertDontSee('data-miyu-assistant', false)
+            ->assertSee('lunarosa')
+            ->assertSee('solazul')
+            ->assertSee('Mensaje de Luna');
+    }
+
     public function test_follow_notification_is_created_only_for_a_new_follow(): void
     {
         $follower = User::factory()->create(['name' => 'Nueva Seguidora']);
