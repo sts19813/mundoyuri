@@ -5016,3 +5016,8 @@
     .messenger-bubble { max-width: 86%; }
     .messenger-compose-input small { max-width: 56vw; }
 }
+
+@media (max-width: 430px) {
+    .messenger-page { padding-top: 54px; }
+    .messenger-container { height: calc(100dvh - 54px); }
+}
