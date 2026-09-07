@@ -157,9 +157,7 @@ class ConversationController extends Controller
 
         $user->notify(new NewDirectMessageNotification($message, $viewer));
 
-        return redirect()
-            ->route('messages.show', $user)
-            ->with('success', 'Mensaje enviado.');
+        return redirect()->route('messages.show', $user);
     }
 
     public function attachment(Request $request, DirectMessage $message): StreamedResponse

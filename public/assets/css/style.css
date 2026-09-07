@@ -4876,7 +4876,7 @@
 .messenger-ambient-one { top: -180px; right: -90px; width: 540px; height: 540px; background: radial-gradient(circle, rgba(244, 63, 142, .12), transparent 68%); }
 .messenger-ambient-two { bottom: -250px; left: -140px; width: 620px; height: 620px; background: radial-gradient(circle, rgba(109, 40, 150, .11), transparent 67%); }
 .messenger-container { position: relative; height: calc(100dvh - 110px); min-height: 0; overflow: hidden; }
-.messenger-container > .portal-alert { position: absolute; top: 10px; left: 50%; z-index: 20; width: min(520px, calc(100% - 32px)); margin: 0; transform: translateX(-50%); box-shadow: 0 12px 32px rgba(0, 0, 0, .34); }
+.messenger-container > .portal-alert { position: absolute; top: 84px; right: 18px; z-index: 20; width: min(420px, calc(100% - 36px)); margin: 0; box-shadow: 0 12px 32px rgba(0, 0, 0, .34); }
 .messenger-shell { height: 100%; min-height: 0; max-height: 100%; display: grid; grid-template-columns: minmax(285px, 340px) minmax(0, 1fr); overflow: hidden; border: 1px solid rgba(244, 63, 142, .2); border-radius: 22px; background: rgba(17, 10, 19, .96); box-shadow: 0 24px 70px rgba(0, 0, 0, .34); }
 
 .messenger-sidebar { min-width: 0; min-height: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid rgba(244, 63, 142, .14); background: linear-gradient(180deg, rgba(35, 18, 37, .97), rgba(19, 11, 22, .98)); }
@@ -5008,6 +5008,7 @@
     .messenger-compose-input { padding: 8px 11px 6px; }
     .messenger-compose-input small { max-width: 64vw; }
     .messenger-form-error { margin-inline: 40px; }
+    .messenger-container > .portal-alert { top: 70px; right: 10px; width: calc(100% - 20px); }
 }
 
 @media (max-width: 370px) {
