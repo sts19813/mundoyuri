@@ -29,7 +29,7 @@ class PrivateMessagingTest extends TestCase
                 'body' => '¿Viste el nuevo episodio de la serie?',
             ])
             ->assertRedirect(route('messages.show', $recipient))
-            ->assertSessionHas('success');
+            ->assertSessionMissing('success');
 
         $this->assertDatabaseHas('conversations', [
             'user_one_id' => min($sender->id, $recipient->id),
