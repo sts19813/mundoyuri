@@ -64,7 +64,6 @@
             'title' => 'Títulos',
             'label' => 'Anime y Series GL',
             'series' => $mixedSeries,
-            'catalogUrl' => route('catalog.series.index'),
         ])
     @else
     <section class="episodes-section" id="novedades">

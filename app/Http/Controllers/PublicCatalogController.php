@@ -83,8 +83,8 @@ class PublicCatalogController extends Controller
         $latestAnimeEpisodes = $this->latestEpisodesForSection('anime');
         $featuredGlSeries = $this->featuredSeriesForSection('series-gl');
         $featuredAnimeSeries = $this->featuredSeriesForSection('anime');
-        $glSeries = $this->seriesForSection('series-gl');
-        $animeSeries = $this->seriesForSection('anime');
+        $glSeries = $this->allTitlesForSection('series-gl');
+        $animeSeries = $this->allTitlesForSection('anime');
 
         return [
             'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
@@ -146,15 +146,13 @@ class PublicCatalogController extends Controller
             ->get();
     }
 
-    private function seriesForSection(string $sectionSlug): Collection
+    private function allTitlesForSection(string $sectionSlug): Collection
     {
         return Series::query()
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
             ->where('catalog_section', $sectionSlug)
-            ->where('content_type', 'series')
             ->orderByDesc('published_at')
-            ->take(12)
             ->get();
     }
 
