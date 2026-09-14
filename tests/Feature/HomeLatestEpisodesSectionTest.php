@@ -60,6 +60,52 @@ class HomeLatestEpisodesSectionTest extends TestCase
         );
     }
 
+    public function test_home_latest_episodes_only_show_the_latest_episode_per_series(): void
+    {
+        $genre = Genre::query()->create([
+            'name' => 'Drama',
+            'slug' => 'drama',
+            'is_active' => true,
+        ]);
+
+        $moonshadow = $this->createSeries($genre->id, 'Moonshadow', 'moonshadow', 'series-gl');
+        foreach ([5, 4, 3] as $index => $episodeNumber) {
+            Episode::query()->create([
+                'series_id' => $moonshadow->id,
+                'title' => "Moonshadow episodio {$episodeNumber}",
+                'slug' => "moonshadow-episodio-{$episodeNumber}",
+                'season_number' => 1,
+                'episode_number' => $episodeNumber,
+                'moderation_status' => 'approved',
+                'published_at' => now()->subMinutes($index + 1),
+            ]);
+        }
+
+        foreach (range(1, 12) as $number) {
+            $seriesTitle = sprintf('Serie Unica %02d', $number);
+            $series = $this->createSeries($genre->id, $seriesTitle, "serie-unica-{$number}", $number % 2 === 0 ? 'anime' : 'series-gl');
+
+            Episode::query()->create([
+                'series_id' => $series->id,
+                'title' => "Episodio unico {$number}",
+                'slug' => "episodio-unico-{$number}",
+                'season_number' => 1,
+                'episode_number' => 1,
+                'moderation_status' => 'approved',
+                'published_at' => now()->subMinutes($number + 10),
+            ]);
+        }
+
+        $episodesSection = $this->extractLatestEpisodesSection(
+            $this->get(route('home'))->assertOk()->getContent()
+        );
+
+        $this->assertSame(12, substr_count($episodesSection, 'class="episode-card"'));
+        $this->assertStringContainsString('moonshadow-episodio-5', $episodesSection);
+        $this->assertStringNotContainsString('moonshadow-episodio-4', $episodesSection);
+        $this->assertStringNotContainsString('moonshadow-episodio-3', $episodesSection);
+    }
+
     private function createSeries(int $genreId, string $title, string $slug, string $catalogSection): Series
     {
         return Series::query()->create([

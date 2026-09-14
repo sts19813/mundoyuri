@@ -123,8 +123,10 @@ class PublicCatalogController extends Controller
                 ->whereIn('catalog_section', ['series-gl', 'anime']))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
+            ->get()
+            ->unique('series_id')
             ->take(12)
-            ->get();
+            ->values();
     }
 
     private function latestEpisodesForSection(string $sectionSlug): Collection
