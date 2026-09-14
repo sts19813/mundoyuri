@@ -79,8 +79,6 @@ class PublicCatalogController extends Controller
     /** @return array<string, mixed> */
     private function mixedHomeData(): array
     {
-        $latestGlEpisodes = $this->latestEpisodesForSection('series-gl');
-        $latestAnimeEpisodes = $this->latestEpisodesForSection('anime');
         $featuredGlSeries = $this->featuredSeriesForSection('series-gl');
         $featuredAnimeSeries = $this->featuredSeriesForSection('anime');
         $glSeries = $this->allTitlesForSection('series-gl');
@@ -89,7 +87,7 @@ class PublicCatalogController extends Controller
         return [
             'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
             'isMixedHome' => true,
-            'latestEpisodes' => $this->interleave($latestGlEpisodes, $latestAnimeEpisodes),
+            'latestEpisodes' => $this->latestEpisodesForMixedHome(),
             'featuredSeries' => $this->interleave($featuredGlSeries, $featuredAnimeSeries),
             'mixedSeries' => $this->interleave($glSeries, $animeSeries),
         ];
@@ -111,6 +109,22 @@ class PublicCatalogController extends Controller
         }
 
         return $items;
+    }
+
+    private function latestEpisodesForMixedHome(): Collection
+    {
+        return Episode::query()
+            ->with('series')
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->whereHas('series', fn ($query) => $query
+                ->where('moderation_status', 'approved')
+                ->whereNotNull('published_at')
+                ->whereIn('catalog_section', ['series-gl', 'anime']))
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->take(12)
+            ->get();
     }
 
     private function latestEpisodesForSection(string $sectionSlug): Collection
