@@ -6,6 +6,7 @@
 @endif
 <head>
     <x-google-tag-manager />
+    <x-google-analytics />
     @yield('head')
 </head>
 @hasSection('body_attributes')
