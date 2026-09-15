@@ -100,10 +100,10 @@ lang="{{ str_replace('_', '-', app()->getLocale()) }}"
 
         .google-auth-btn {
             min-height: 50px;
-            border-color: rgba(255, 255, 255, .12) !important;
+            border-color: #fff !important;
             border-radius: 12px;
-            background: rgba(255, 255, 255, .07) !important;
-            color: #f7eef8 !important;
+            background: #fff !important;
+            color: #21162b !important;
             box-shadow: none;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
@@ -111,10 +111,10 @@ lang="{{ str_replace('_', '-', app()->getLocale()) }}"
         .google-auth-btn:hover,
         .google-auth-btn:focus {
             transform: translateY(-1px);
-            border-color: rgba(244, 63, 142, .6) !important;
-            background: rgba(244, 63, 142, .1) !important;
+            border-color: #fff !important;
+            background: #fff !important;
             box-shadow: 0 12px 30px rgba(0, 0, 0, .2);
-            color: #fff !important;
+            color: #21162b !important;
         }
 
         [data-bs-theme="dark"] .google-auth-btn {
@@ -128,6 +128,13 @@ lang="{{ str_replace('_', '-', app()->getLocale()) }}"
         [data-bs-theme="dark"] .google-auth-btn:focus {
             border-color: rgba(var(--bs-primary-rgb), 0.5) !important;
             box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+        }
+
+        .auth-portal-panel .google-auth-btn,
+        [data-bs-theme="dark"] .auth-portal-panel .google-auth-btn {
+            border-color: #fff !important;
+            background: #fff !important;
+            color: #21162b !important;
         }
 
         @media (max-width: 991.98px) {

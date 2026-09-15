@@ -45,12 +45,12 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect('/episodios/episodio-de-prueba');
     }
 
-    public function test_admins_and_moderators_always_enter_the_dashboard(): void
+    public function test_admins_and_moderators_enter_the_dashboard_without_a_pending_page(): void
     {
         foreach (['admin', 'moderator'] as $role) {
             $user = User::factory()->create(['role' => $role]);
 
-            $response = $this->withSession(['url.intended' => '/series/una-serie'])->post('/login', [
+            $response = $this->post('/login', [
                 'email' => $user->email,
                 'password' => 'password',
             ]);
@@ -58,6 +58,79 @@ class AuthenticationTest extends TestCase
             $response->assertRedirect(route('dashboard', absolute: false));
             $this->post('/logout');
         }
+    }
+
+    public function test_login_from_a_public_page_returns_json_without_leaving_the_page(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $this->get('/');
+        $response = $this->postJson('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'return' => url('/series/una-serie?tab=episodios'),
+        ]);
+
+        $response->assertOk()->assertJsonPath('redirect', url('/series/una-serie?tab=episodios'));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_admin_login_preserves_a_pending_admin_page(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->withSession(['url.intended' => '/admin/series'])->post('/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/admin/series');
+    }
+
+    public function test_visiting_an_admin_page_first_returns_there_after_login(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->get('/admin/dashboard')->assertRedirect(route('login'));
+
+        $this->post('/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect('/admin/dashboard');
+    }
+
+    public function test_an_external_return_url_is_ignored(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $response = $this->postJson('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'return' => 'https://example.com/private',
+        ]);
+
+        $response->assertOk()->assertJsonPath('redirect', url('/'));
+    }
+
+    public function test_login_errors_are_returned_to_the_modal(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson('/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])->assertUnprocessable()->assertJsonValidationErrors('email');
+
+        $this->assertGuest();
+    }
+
+    public function test_home_page_renders_the_login_and_registration_dialog(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('portal-auth-dialog')
+            ->assertSee('Continuar con Google')
+            ->assertSee('Registrarme con Google')
+            ->assertSee('Crea tu cuenta y haz crecer la comunidad.');
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

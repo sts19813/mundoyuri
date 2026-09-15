@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Auth\GoogleOAuthService;
+use App\Support\AuthReturnUrl;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class GoogleAuthController extends Controller
 {
     private const OAUTH_STATE_KEY = 'google_oauth_state';
     private const OAUTH_INTENT_KEY = 'google_oauth_intent';
+    private const OAUTH_ORIGIN_KEY = 'google_oauth_origin';
 
     public function __construct(
         private readonly GoogleOAuthService $googleOAuthService,
@@ -25,11 +27,15 @@ class GoogleAuthController extends Controller
 
     public function redirect(Request $request): RedirectResponse
     {
+        $origin = AuthReturnUrl::remember($request);
+        if ($origin !== null) {
+            $request->session()->put(self::OAUTH_ORIGIN_KEY, $origin);
+        }
+
         try {
             $authorizationData = $this->googleOAuthService->getAuthorizationData();
         } catch (Throwable $exception) {
-            return redirect()->route($this->intentRoute((string) $request->string('intent')))
-                ->with('error', $exception->getMessage());
+            return $this->failureRedirect($request, (string) $request->string('intent'), $exception->getMessage());
         }
 
         $request->session()->put(self::OAUTH_STATE_KEY, $authorizationData['state']);
@@ -41,35 +47,29 @@ class GoogleAuthController extends Controller
     public function callback(Request $request): RedirectResponse
     {
         if ($request->filled('error')) {
-            return redirect()->route($this->pullIntentRoute($request))
-                ->with('error', 'No se pudo completar el acceso con Google.');
+            return $this->failureRedirect($request, $request->session()->pull(self::OAUTH_INTENT_KEY), 'No se pudo completar el acceso con Google.');
         }
 
         $expectedState = $request->session()->pull(self::OAUTH_STATE_KEY);
         if (! is_string($expectedState) || $expectedState === '' || $expectedState !== (string) $request->string('state')) {
-            return redirect()->route($this->pullIntentRoute($request))
-                ->with('error', 'La sesion de Google expiro. Intenta nuevamente.');
+            return $this->failureRedirect($request, $request->session()->pull(self::OAUTH_INTENT_KEY), 'La sesión de Google expiró. Intenta nuevamente.');
         }
 
         try {
             $googleUser = $this->googleOAuthService->getUserFromCode((string) $request->string('code'));
             $user = $this->resolveUser($googleUser);
         } catch (Throwable $exception) {
-            return redirect()->route($this->pullIntentRoute($request))
-                ->with('error', $exception->getMessage());
+            return $this->failureRedirect($request, $request->session()->pull(self::OAUTH_INTENT_KEY), $exception->getMessage());
         }
 
         $request->session()->forget(self::OAUTH_INTENT_KEY);
+        $request->session()->forget(self::OAUTH_ORIGIN_KEY);
         Auth::login($user, remember: true);
         $request->session()->regenerate();
 
-        if ($user->shouldEnterAdminPanel()) {
-            $request->session()->forget('url.intended');
-
-            return redirect()->route('dashboard');
-        }
-
-        return redirect()->intended(route('home', absolute: false));
+        return redirect()->intended($user->shouldEnterAdminPanel()
+            ? route('dashboard', absolute: false)
+            : route('home', absolute: false));
     }
 
     private function resolveUser(GoogleUser $googleUser): User
@@ -131,9 +131,19 @@ class GoogleAuthController extends Controller
         ])->save();
     }
 
-    private function pullIntentRoute(Request $request): string
+    private function failureRedirect(Request $request, ?string $intent, string $message): RedirectResponse
     {
-        return $this->intentRoute($request->session()->pull(self::OAUTH_INTENT_KEY));
+        $request->session()->forget(self::OAUTH_STATE_KEY);
+        $origin = $request->session()->pull(self::OAUTH_ORIGIN_KEY);
+        $intent = $this->intentRoute($intent);
+
+        if (is_string($origin) && $origin !== '') {
+            return redirect()->to($origin)
+                ->with('auth_modal_intent', $intent)
+                ->with('error', $message);
+        }
+
+        return redirect()->route($intent)->with('error', $message);
     }
 
     private function intentRoute(?string $intent): string

@@ -34,6 +34,24 @@ class GoogleAuthenticationTest extends TestCase
         $this->assertSame('login', session('google_oauth_intent'));
     }
 
+    public function test_google_remembers_the_page_where_the_dialog_was_opened(): void
+    {
+        $service = Mockery::mock(GoogleOAuthService::class);
+        $service->shouldReceive('getAuthorizationData')->once()->andReturn([
+            'url' => 'https://accounts.google.com/o/oauth2/v2/auth?state=origin-state',
+            'state' => 'origin-state',
+        ]);
+        $this->app->instance(GoogleOAuthService::class, $service);
+
+        $this->get(route('auth.google.redirect', [
+            'intent' => 'register',
+            'return' => url('/series/una-serie'),
+        ]))->assertRedirect('https://accounts.google.com/o/oauth2/v2/auth?state=origin-state');
+
+        $this->assertSame('/series/una-serie', session('google_oauth_origin'));
+        $this->assertSame('/series/una-serie', session('url.intended'));
+    }
+
     public function test_existing_users_are_linked_by_email_when_signing_in_with_google(): void
     {
         $user = User::factory()->create([
@@ -109,5 +127,37 @@ class GoogleAuthenticationTest extends TestCase
         $this->assertTrue($user->episode_email_notifications_enabled);
         $this->assertNotNull($user->last_login_at);
         Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail): bool => $mail->hasTo('nuevo@example.com'));
+    }
+
+    public function test_google_login_returns_to_the_original_page(): void
+    {
+        $user = User::factory()->create(['google_id' => 'return-google-user']);
+        $service = Mockery::mock(GoogleOAuthService::class);
+        $service->shouldReceive('getUserFromCode')->once()->andReturn(new GoogleUser([
+            'sub' => 'return-google-user',
+            'email' => $user->email,
+            'name' => $user->name,
+        ]));
+        $this->app->instance(GoogleOAuthService::class, $service);
+
+        $this->withSession([
+            'google_oauth_state' => 'return-state',
+            'google_oauth_intent' => 'login',
+            'google_oauth_origin' => '/series/una-serie',
+            'url.intended' => '/series/una-serie',
+        ])->get(route('auth.google.callback', ['code' => 'return-code', 'state' => 'return-state']))
+            ->assertRedirect('/series/una-serie');
+    }
+
+    public function test_google_error_reopens_the_modal_on_the_original_page(): void
+    {
+        $this->withSession([
+            'google_oauth_state' => 'expected-state',
+            'google_oauth_intent' => 'register',
+            'google_oauth_origin' => '/series/una-serie',
+            'url.intended' => '/series/una-serie',
+        ])->get(route('auth.google.callback', ['error' => 'access_denied']))
+            ->assertRedirect('/series/una-serie')
+            ->assertSessionHas('auth_modal_intent', 'register');
     }
 }

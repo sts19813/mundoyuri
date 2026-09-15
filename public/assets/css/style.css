@@ -10,6 +10,44 @@
         --text: #f0e8f5;
     }
 
+    /* Acceso rápido desde cualquier página del portal */
+    .portal-auth-overlay[hidden], .portal-auth-dialog [hidden] { display: none !important; }
+    .portal-auth-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-start; justify-content: flex-end; padding: var(--auth-anchor-top, 84px) var(--auth-anchor-right, 24px) 16px 16px; pointer-events: none; }
+    .portal-auth-backdrop { position: absolute; inset: 0; pointer-events: none; }
+    .portal-auth-dialog { position: relative; width: min(100%, 450px); max-height: calc(100vh - var(--auth-anchor-top, 84px) - 16px); overflow-y: auto; padding: 32px; border: 1px solid rgba(244, 63, 142, .38); border-radius: 22px; background: radial-gradient(circle at 100% 0%, rgba(111, 55, 150, .22), transparent 45%), #170e1d; color: #f0e8f5; box-shadow: 0 18px 55px rgba(0, 0, 0, .42), 0 0 35px rgba(244, 63, 142, .08); font-family: 'DM Sans', sans-serif; pointer-events: auto; }
+    .portal-auth-close { position: absolute; top: 15px; right: 18px; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #f0e8f5; font-size: 27px; line-height: 1; cursor: pointer; }
+    .portal-auth-close:hover, .portal-auth-close:focus-visible { background: rgba(244, 63, 142, .22); }
+    .portal-auth-brand { margin-bottom: 16px; color: #ff86b8; font-size: .74rem; font-weight: 700; letter-spacing: .25em; }
+    .portal-auth-sparkle { font-size: 1.2rem; letter-spacing: 0; }
+    .portal-auth-dialog h2 { margin: 0 0 10px; color: #fff; font-family: 'Playfair Display', serif; font-size: clamp(1.7rem, 5vw, 2.2rem); line-height: 1.18; }
+    .portal-auth-intro { margin: 0 0 24px; color: #c5b6cd; font-size: .91rem; line-height: 1.55; }
+    .portal-auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 22px; padding: 5px; border: 1px solid rgba(255, 255, 255, .09); border-radius: 13px; background: rgba(255, 255, 255, .04); }
+    .portal-auth-tabs button { padding: 10px 8px; border: 0; border-radius: 9px; background: transparent; color: #c5b6cd; font-weight: 600; cursor: pointer; }
+    .portal-auth-tabs button[aria-selected="true"] { background: #f43f8e; color: #fff; box-shadow: 0 4px 15px rgba(244, 63, 142, .25); }
+    .portal-auth-google { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 48px; border: 1px solid #e7dfeb; border-radius: 12px; background: #fff; color: #21162b; text-decoration: none; font-weight: 700; transition: transform .2s, box-shadow .2s; }
+    .portal-auth-google:hover, .portal-auth-google:focus-visible { transform: translateY(-1px); box-shadow: 0 7px 24px rgba(244, 63, 142, .2); color: #21162b; }
+    .portal-auth-google-note { margin: 10px 0 0; color: #b3a2bf; text-align: center; font-size: .78rem; line-height: 1.4; }
+    .portal-auth-divider { display: flex; align-items: center; gap: 13px; margin: 23px 0 19px; color: #ab98b6; font-size: .78rem; white-space: nowrap; }
+    .portal-auth-divider::before, .portal-auth-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255, 255, 255, .15); }
+    .portal-auth-dialog form { display: flex; flex-direction: column; }
+    .portal-auth-dialog form > label { margin: 0 0 7px; color: #ece0f1; font-size: .84rem; font-weight: 600; }
+    .portal-auth-dialog form > input { width: 100%; height: 45px; margin: 0 0 16px; padding: 0 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 10px; background: #24172d; color: #fff; outline: none; }
+    .portal-auth-dialog form > input:focus { border-color: #f43f8e; box-shadow: 0 0 0 3px rgba(244, 63, 142, .16); }
+    .portal-auth-options { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 22px; color: #c5b6cd; font-size: .8rem; }
+    .portal-auth-options a { color: #ff86b8; text-decoration: none; }
+    .portal-auth-remember { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+    .portal-auth-remember input { accent-color: #f43f8e; }
+    .portal-auth-submit { min-height: 48px; border: 0; border-radius: 11px; background: linear-gradient(135deg, #f43f8e, #b83592); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(244, 63, 142, .23); }
+    .portal-auth-submit:hover, .portal-auth-submit:focus-visible { filter: brightness(1.1); }
+    .portal-auth-submit:disabled { opacity: .6; cursor: wait; }
+    .portal-auth-feedback { margin: 0 0 15px; padding: 10px 13px; border: 1px solid rgba(255, 103, 140, .35); border-radius: 9px; background: rgba(255, 78, 114, .12); color: #ffc4d3; font-size: .84rem; }
+    @media (max-width: 700px) {
+        body.portal-auth-open { overflow: hidden; }
+        .portal-auth-overlay { align-items: center; justify-content: center; padding: 12px; pointer-events: auto; }
+        .portal-auth-backdrop { background: rgba(5, 2, 10, .76); backdrop-filter: blur(8px); pointer-events: auto; }
+        .portal-auth-dialog { width: min(100%, 480px); max-height: 94vh; padding: 29px 22px; border-radius: 18px; }
+    }
+
     @media (min-width: 1750px) {
 
         .container,

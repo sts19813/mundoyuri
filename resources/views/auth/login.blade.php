@@ -18,7 +18,7 @@
                             Iniciar sesión
                         </h1>
                         <div class="text-gray-500 fw-semibold fs-6">
-                            Ingresa con tu correo electrónico
+                            Google es la forma más rápida de entrar. Si aún no tienes cuenta, se creará al continuar.
                         </div>
                     </div>
 
@@ -103,6 +103,7 @@
                             </a>
                         </div>
                     @endif
+                    <p class="text-gray-500 text-center fs-7 mt-5">Con tu cuenta tendrás un perfil y podrás recibir avisos de nuevos episodios por correo.</p>
                 </form>
                 <!--end::Form-->
             </div>

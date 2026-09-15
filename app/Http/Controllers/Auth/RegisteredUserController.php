@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthReturnUrl;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,8 +20,10 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        AuthReturnUrl::remember($request);
+
         return view('auth.register');
     }
 
@@ -28,8 +32,9 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
+        AuthReturnUrl::remember($request);
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'alias' => ['nullable', 'string', 'max:120', 'unique:users,alias'],
@@ -51,7 +56,12 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        $request->session()->regenerate();
 
-        return redirect(route('dashboard', absolute: false));
+        $redirect = redirect()->intended(route('home', absolute: false));
+
+        return $request->expectsJson()
+            ? response()->json(['redirect' => $redirect->getTargetUrl()])
+            : $redirect;
     }
 }

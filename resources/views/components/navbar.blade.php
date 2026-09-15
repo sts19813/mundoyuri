@@ -30,7 +30,7 @@
             </form>
 
             @guest
-                <a href="{{ request()->routeIs('login', 'register', 'password.*') ? route('login') : route('login', ['return' => request()->fullUrl()]) }}" class="nav-login">
+                <a href="{{ request()->routeIs('login', 'register', 'password.*') ? route('login') : route('login', ['return' => request()->fullUrl()]) }}" class="nav-login" data-auth-open="login" aria-haspopup="dialog" aria-controls="portal-auth-dialog" aria-expanded="false">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                         <polyline points="10 17 15 12 10 7" />
@@ -140,6 +140,11 @@
     </div>
     <button type="button" class="nav-mobile-backdrop" data-nav-backdrop aria-label="Cerrar menú principal" tabindex="-1"></button>
 </nav>
+
+@guest
+    @include('auth.partials.portal-modal')
+    <script src="{{ asset('assets/js/auth-modal.js') }}?v={{ filemtime(public_path('assets/js/auth-modal.js')) }}" defer></script>
+@endguest
 
 @once
     <script>

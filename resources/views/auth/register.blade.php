@@ -18,7 +18,7 @@
                             Crear cuenta
                         </h1>
                         <div class="text-gray-500 fw-semibold fs-6">
-                            Regístrate para acceder al sistema
+                            Tu perfil, tus favoritas y avisos de nuevos episodios por correo. La forma más sencilla es Google.
                         </div>
                     </div>
 
