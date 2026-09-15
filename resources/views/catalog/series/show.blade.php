@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('layouts.portal')
 
-<head>
-    <meta charset="UTF-8">
+@section('head')
+
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <x-seo
         :title="$series->title.' online'"
@@ -20,10 +20,13 @@
         href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
     <link rel="stylesheet"
         href="{{ asset('assets/css/episodios.css') }}?v={{ filemtime(public_path('assets/css/episodios.css')) }}">
-</head>
 
-<body>
-    <x-navbar />
+
+@endsection
+
+@section('body')
+
+<x-navbar />
 
     @php
         $comments = $series->comments;
@@ -186,6 +189,4 @@
         });
     </script>
     @include('partials.hover-media-script')
-</body>
-
-</html>
+@endsection

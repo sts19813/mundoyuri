@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+@extends('layouts.portal')
+
+@section('head')
+
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <x-seo
         :title="$series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title"
@@ -13,8 +14,12 @@
     <x-portal-favicon />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
-</head>
-<body>
+
+
+@endsection
+
+@section('body')
+
 <x-navbar />
 
 @php
@@ -166,5 +171,4 @@ document.querySelectorAll('.catalog-source-switcher').forEach((button) => {
     });
 });
 </script>
-</body>
-</html>
+@endsection

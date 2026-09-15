@@ -1,6 +1,10 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
+@extends('layouts.portal')
+
+@section('html_attributes')
+lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+@endsection
+
+@section('head')
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex, nofollow">
@@ -14,8 +18,13 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans text-gray-900 antialiased">
+@endsection
+
+@section('body_attributes')
+class="font-sans text-gray-900 antialiased"
+@endsection
+
+@section('body')
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
                 <a href="/">
@@ -28,5 +37,4 @@
             </div>
         </div>
         <x-neko-assistant />
-    </body>
-</html>
+@endsection

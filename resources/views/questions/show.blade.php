@@ -1,13 +1,18 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{{ $thread->title }} · Preguntas · Mundo Yuri</title>
+@extends('layouts.portal')
+
+@section('head')
+
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{{ $thread->title }} · Preguntas · Mundo Yuri</title>
     <x-portal-favicon />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
-</head>
-<body>
+
+
+@endsection
+
+@section('body')
+
 <x-navbar />
 <main class="portal-profile-page forum-page question-page"><div class="container-xl px-4 position-relative community-conversation-shell">
     <nav class="profile-breadcrumb"><a href="{{ route('questions.index') }}">Preguntas</a><span>›</span><span>{{ $thread->title }}</span></nav>
@@ -38,5 +43,4 @@
 </div></main>
 <x-footer />
 <script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
-</body>
-</html>
+@endsection

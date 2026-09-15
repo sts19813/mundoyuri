@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('layouts.portal')
 
-<head>
-    <meta charset="UTF-8">
+@section('head')
+
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <x-seo
         :title="$episode ? $series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title : 'Últimos episodios GL'"
@@ -21,11 +21,13 @@
     <link rel="stylesheet"
         href="{{ asset('assets/css/episodios.css') }}?v={{ filemtime(public_path('assets/css/episodios.css')) }}">
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
-</head>
 
-<body>
 
-    <x-navbar />
+@endsection
+
+@section('body')
+
+<x-navbar />
 
     @if(!$episode)
         <section class="py-5 mt-5">
@@ -463,6 +465,4 @@
             });
         }
     </script>
-</body>
-
-</html>
+@endsection

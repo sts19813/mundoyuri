@@ -1,6 +1,10 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
+@extends('layouts.portal')
+
+@section('html_attributes')
+lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+@endsection
+
+@section('head')
     <base href="{{ asset('metronic') }}/" />
     <title>@yield('title', 'Mundo Yuri')</title>
     <meta charset="utf-8" />
@@ -137,8 +141,13 @@
     </style>
 
     @stack('styles')
-</head>
-<body id="kt_body" class="auth-portal-page app-blank">
+@endsection
+
+@section('body_attributes')
+id="kt_body" class="auth-portal-page app-blank"
+@endsection
+
+@section('body')
     <x-navbar />
     <script>
         var defaultThemeMode = "light";
@@ -181,5 +190,4 @@
 
     @stack('scripts')
     <x-neko-assistant />
-</body>
-</html>
+@endsection

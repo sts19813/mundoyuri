@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
+@extends('layouts.portal')
+
+@section('head')
+
+<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
@@ -26,11 +27,14 @@
             background: #000;
         }
     </style>
-</head>
-<body>
-    <video controls playsinline preload="metadata">
+
+
+@endsection
+
+@section('body')
+
+<video controls playsinline preload="metadata">
         <source src="{{ $source->direct_video_url }}" type="video/mp4">
         Tu navegador no soporta la reproducción de video.
     </video>
-</body>
-</html>
+@endsection

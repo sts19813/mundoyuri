@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+@extends('layouts.portal')
+
+@section('head')
+
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -20,9 +21,13 @@
         .submission-page .btn-primary { border-color: var(--rose); background: var(--rose); }
         .submission-page .card-footer { border-color: rgba(255,255,255,.08); }
     </style>
-</head>
-<body>
-    <x-navbar />
+
+
+@endsection
+
+@section('body')
+
+<x-navbar />
     <main class="submission-page">
         <div class="container-xl px-4 d-flex flex-column gap-5">
         <div class="card">
@@ -170,5 +175,4 @@
     </main>
     <x-footer />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+@endsection

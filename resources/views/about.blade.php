@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('layouts.portal')
 
-<head>
-    <meta charset="UTF-8">
+@section('head')
+
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <x-seo
@@ -27,11 +27,13 @@
         rel="stylesheet"
         href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}"
     >
-</head>
 
-<body>
 
-    <x-navbar />
+@endsection
+
+@section('body')
+
+<x-navbar />
 
     <main class="about-page">
 
@@ -250,7 +252,4 @@
     <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
     </script>
-
-</body>
-
-</html>
+@endsection

@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+@extends('layouts.portal')
+
+@section('head')
+
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Conoce a quienes forman la comunidad de Mundo Yuri.">
     <title>Comunidad · Mundo Yuri</title>
@@ -9,9 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
-</head>
-<body>
-    <x-navbar />
+
+
+@endsection
+
+@section('body')
+
+<x-navbar />
 
     <main class="portal-profile-page community-directory-page">
         <div class="profile-ambient profile-ambient-one"></div>
@@ -120,5 +125,4 @@
             form.querySelectorAll('select').forEach((field) => field.addEventListener('change', () => form.requestSubmit()));
         })();
     </script>
-</body>
-</html>
+@endsection
