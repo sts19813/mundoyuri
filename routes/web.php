@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AssistantSettingController;
 use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
+use App\Http\Controllers\Admin\CommentModerationController as AdminCommentModerationController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\CommunityReportController as AdminCommunityReportController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
@@ -308,6 +309,9 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
 
     Route::get('/temas-foros', [AdminForumModerationController::class, 'threads'])->name('admin.forum-topics.index');
     Route::get('/moderacion-foros', [AdminForumModerationController::class, 'index'])->name('admin.forum-moderation.index');
+    Route::get('/comentarios', [AdminCommentModerationController::class, 'index'])->name('admin.comments.index');
+    Route::patch('/comentarios/{comment}', [AdminCommentModerationController::class, 'update'])->name('admin.comments.update');
+    Route::delete('/comentarios/{comment}', [AdminCommentModerationController::class, 'destroy'])->name('admin.comments.destroy');
     Route::get('/validacion/comunidad', [AdminCommunityReportController::class, 'index'])->name('admin.community-reports.index');
     Route::patch('/validacion/comunidad/{communityReport}', [AdminCommunityReportController::class, 'update'])->name('admin.community-reports.update');
     Route::post('/validacion/comunidad/{communityReport}/acciones', [AdminCommunityReportController::class, 'action'])->name('admin.community-reports.action');
