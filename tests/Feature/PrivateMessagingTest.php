@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\DirectMessage;
+use Database\Seeders\RolePermissionSeeder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class PrivateMessagingTest extends TestCase
@@ -114,17 +116,17 @@ class PrivateMessagingTest extends TestCase
 
         $imageMessage = DirectMessage::query()->firstOrFail();
         $this->assertSame('', $imageMessage->body);
-        $this->assertSame('recuerdo.png', $imageMessage->attachment_name);
+        $this->assertContains($imageMessage->attachment_name, ['recuerdo.png', 'recuerdo.webp', 'recuerdo.jpg']);
         $this->assertTrue($imageMessage->attachmentIsImage());
         Storage::disk('local')->assertExists($imageMessage->attachment_path);
 
         $this->get(route('messages.show', $recipient))
             ->assertOk()
-            ->assertSee('recuerdo.png')
+            ->assertSee($imageMessage->attachment_name)
             ->assertSee(route('messages.attachments.show', $imageMessage), false);
         $this->get(route('messages.attachments.show', $imageMessage))
             ->assertOk()
-            ->assertHeader('content-type', 'image/png');
+            ->assertHeader('content-type', $imageMessage->attachment_mime);
         $this->actingAs($stranger)
             ->get(route('messages.attachments.show', $imageMessage))
             ->assertNotFound();
@@ -143,6 +145,58 @@ class PrivateMessagingTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')
             ->assertHeader('content-disposition', 'attachment; filename=guia.pdf');
+    }
+
+    public function test_gif_attachments_are_not_converted_so_animation_can_remain(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('animacion.gif', 24, 'image/gif'),
+            ])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $message = DirectMessage::query()->firstOrFail();
+
+        $this->assertSame('animacion.gif', $message->attachment_name);
+        $this->assertSame('image/gif', $message->attachment_mime);
+        $this->assertStringEndsWith('.gif', $message->attachment_path);
+    }
+
+    public function test_sender_can_delete_message_without_removing_database_content_for_moderation(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'body' => 'Mensaje que quiero ocultar.',
+                'attachment' => UploadedFile::fake()->image('secreto.png', 640, 480),
+            ]);
+
+        $message = DirectMessage::query()->firstOrFail();
+
+        $this->actingAs($sender)
+            ->delete(route('messages.destroy', $message))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $message = $message->fresh();
+        $this->assertNotNull($message->deleted_at);
+        $this->assertSame('Mensaje que quiero ocultar.', $message->body);
+        $this->assertNotNull($message->attachment_path);
+
+        $this->actingAs($recipient)
+            ->get(route('messages.show', $sender))
+            ->assertOk()
+            ->assertSee('Mensaje eliminado')
+            ->assertDontSee('Mensaje que quiero ocultar.');
+
+        $this->get(route('messages.attachments.show', $message))->assertNotFound();
     }
 
     public function test_private_message_attachments_reject_unsupported_files(): void
@@ -306,5 +360,32 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHasErrors('body');
 
         $this->assertDatabaseCount('direct_messages', 0);
+    }
+
+    public function test_admin_can_review_private_conversations_and_deleted_message_content(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->assignRole('admin');
+        $sender = User::factory()->create(['name' => 'Remitente Chat']);
+        $recipient = User::factory()->create(['name' => 'Receptora Chat']);
+
+        $this->actingAs($sender)->post(route('messages.store', $recipient), ['body' => 'Contenido moderable.']);
+        $message = DirectMessage::query()->firstOrFail();
+        $this->actingAs($sender)->delete(route('messages.destroy', $message));
+
+        $this->actingAs($admin)
+            ->get(route('admin.conversations.index'))
+            ->assertOk()
+            ->assertSee('Remitente Chat')
+            ->assertSee('Receptora Chat')
+            ->assertSee('Mensaje eliminado');
+
+        $this->get(route('admin.conversations.show', $message->conversation))
+            ->assertOk()
+            ->assertSee('Contenido moderable.')
+            ->assertSee('Eliminado por');
     }
 }

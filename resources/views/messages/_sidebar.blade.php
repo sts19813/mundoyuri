@@ -45,7 +45,7 @@
                         </time>
                     </span>
                     <span class="messenger-conversation-preview">
-                        @if($lastMessage?->sender_id === $viewer->id)<span>Tú: </span>@endif{{ filled($lastMessage?->body) ? \Illuminate\Support\Str::limit($lastMessage->body, 72) : ($lastMessage?->attachment_name ? 'Archivo: '.$lastMessage->attachment_name : 'Sin mensajes') }}
+                        @if($lastMessage?->sender_id === $viewer->id)<span>Tú: </span>@endif{{ $lastMessage?->isDeleted() ? 'Mensaje eliminado' : (filled($lastMessage?->body) ? \Illuminate\Support\Str::limit($lastMessage->body, 72) : ($lastMessage?->attachment_name ? 'Archivo: '.$lastMessage->attachment_name : 'Sin mensajes')) }}
                     </span>
                 </span>
                 @if($conversationItem->unread_messages_count)

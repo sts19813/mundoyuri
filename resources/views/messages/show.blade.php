@@ -90,23 +90,34 @@ class="messenger-body"
                                     @endif
                                 @endif
                                 <div class="messenger-bubble">
-                                    @if(filled($message->body))<p>{{ $message->body }}</p>@endif
-                                    @if($message->hasAttachment())
-                                        @if($message->attachmentIsImage())
-                                            <a class="messenger-attachment-image" href="{{ route('messages.attachments.show', $message) }}" target="_blank" rel="noopener">
-                                                <img src="{{ route('messages.attachments.show', $message) }}" alt="{{ $message->attachment_name }}" loading="lazy">
-                                            </a>
-                                        @else
-                                            <a class="messenger-attachment-file" href="{{ route('messages.attachments.show', $message) }}">
-                                                <span aria-hidden="true">▤</span>
-                                                <span><strong>{{ $message->attachment_name }}</strong><small>{{ $message->attachmentSizeLabel() }}</small></span>
-                                            </a>
+                                    @if($message->isDeleted())
+                                        <p class="messenger-deleted-message">Mensaje eliminado</p>
+                                    @else
+                                        @if(filled($message->body))<p>{{ $message->body }}</p>@endif
+                                        @if($message->hasAttachment())
+                                            @if($message->attachmentIsImage())
+                                                <a class="messenger-attachment-image" href="{{ route('messages.attachments.show', $message) }}" target="_blank" rel="noopener">
+                                                    <img src="{{ route('messages.attachments.show', $message) }}" alt="{{ $message->attachment_name }}" loading="lazy">
+                                                </a>
+                                            @else
+                                                <a class="messenger-attachment-file" href="{{ route('messages.attachments.show', $message) }}">
+                                                    <span aria-hidden="true">▤</span>
+                                                    <span><strong>{{ $message->attachment_name }}</strong><small>{{ $message->attachmentSizeLabel() }}</small></span>
+                                                </a>
+                                            @endif
                                         @endif
                                     @endif
                                     <time datetime="{{ $message->created_at->toIso8601String() }}">
                                         {{ $message->created_at->timezone('America/Merida')->format('d M · g:i a') }}
                                         @if($outgoing)<span aria-label="{{ $message->read_at ? 'Leído' : 'Enviado' }}">{{ $message->read_at ? '✓✓' : '✓' }}</span>@endif
                                     </time>
+                                    @if($outgoing && ! $message->isDeleted())
+                                        <form method="POST" action="{{ route('messages.destroy', $message) }}" class="messenger-delete-form" onsubmit="return confirm('¿Eliminar este mensaje? Se ocultará de la conversación.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit">Eliminar</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </article>
                         @empty
@@ -130,7 +141,7 @@ class="messenger-body"
                         @else
                             <form method="POST" action="{{ route('messages.store', $otherUser) }}" class="messenger-composer" enctype="multipart/form-data">
                                 @csrf
-                                <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
+                                <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
                                 <label for="message-attachment" class="messenger-attach-button" aria-label="Adjuntar imagen o documento" title="Adjuntar imagen o documento">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.5-9.5a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9"/></svg>
                                 </label>

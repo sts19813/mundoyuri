@@ -79,6 +79,12 @@
                         </a>
                     </div>
                     <div class="menu-item">
+                        <a class="menu-link {{ request()->routeIs('admin.conversations.*') ? 'active' : '' }}" href="{{ route('admin.conversations.index') }}">
+                            <span class="menu-icon"><i class="ki-outline ki-messages fs-2"></i></span>
+                            <span class="menu-title">Chats privados</span>
+                        </a>
+                    </div>
+                    <div class="menu-item">
                         <a class="menu-link {{ request()->routeIs('admin.community-reports.*') ? 'active' : '' }}" href="{{ route('admin.community-reports.index') }}">
                             <span class="menu-icon"><i class="ki-outline ki-flag fs-2"></i></span>
                             <span class="menu-title">Reportes</span>

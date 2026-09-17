@@ -6,12 +6,12 @@ use App\Models\Conversation;
 use App\Models\DirectMessage;
 use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
+use App\Services\DirectMessageAttachmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -83,7 +83,7 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function store(Request $request, User $user): RedirectResponse
+    public function store(Request $request, User $user, DirectMessageAttachmentService $attachments): RedirectResponse
     {
         $viewer = $request->user();
 
@@ -100,7 +100,7 @@ class ConversationController extends Controller
                 'nullable',
                 'file',
                 'max:20480',
-                'mimes:jpg,jpeg,png,webp,pdf,txt,csv,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp',
+                'mimes:jpg,jpeg,png,webp,gif,pdf,txt,csv,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp',
             ],
         ]);
 
@@ -114,17 +114,11 @@ class ConversationController extends Controller
 
         $attachment = null;
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $path = $file->store('direct-message-attachments', 'local');
-            if (! $path) {
+            $attachment = $attachments->store($request->file('attachment'));
+
+            if (! $attachment['attachment_path']) {
                 throw ValidationException::withMessages(['attachment' => 'No fue posible guardar el archivo. Inténtalo de nuevo.']);
             }
-            $attachment = [
-                'attachment_path' => $path,
-                'attachment_name' => Str::limit(basename(str_replace('\\', '/', $file->getClientOriginalName())), 255, ''),
-                'attachment_mime' => $file->getMimeType(),
-                'attachment_size' => $file->getSize(),
-            ];
         }
 
         try {
@@ -160,6 +154,27 @@ class ConversationController extends Controller
         return redirect()->route('messages.show', $user);
     }
 
+    public function destroy(Request $request, DirectMessage $message): RedirectResponse
+    {
+        $viewer = $request->user();
+        $message->loadMissing('conversation');
+
+        abort_unless($message->sender_id === $viewer->id, 403);
+        abort_unless(in_array($viewer->id, [
+            $message->conversation->user_one_id,
+            $message->conversation->user_two_id,
+        ], true), 404);
+
+        if (! $message->isDeleted()) {
+            $message->update([
+                'deleted_at' => now(),
+                'deleted_by' => $viewer->id,
+            ]);
+        }
+
+        return back()->with('success', 'Mensaje eliminado.');
+    }
+
     public function attachment(Request $request, DirectMessage $message): StreamedResponse
     {
         $viewerId = $request->user()->id;
@@ -168,7 +183,7 @@ class ConversationController extends Controller
             $message->conversation->user_one_id,
             $message->conversation->user_two_id,
         ], true), 404);
-        abort_unless($message->hasAttachment() && Storage::disk('local')->exists($message->attachment_path), 404);
+        abort_unless(! $message->isDeleted() && $message->hasStoredAttachment() && Storage::disk('local')->exists($message->attachment_path), 404);
 
         return Storage::disk('local')->response(
             $message->attachment_path,

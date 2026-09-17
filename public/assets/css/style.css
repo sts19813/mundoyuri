@@ -4981,8 +4981,12 @@
 .messenger-bubble { width: fit-content; max-width: min(68%, 610px); padding: 9px 12px 6px; border-radius: 17px 17px 17px 5px; color: #f7eef8; background: #2a1a2d; box-shadow: 0 5px 13px rgba(0, 0, 0, .1); }
 .messenger-message.is-outgoing .messenger-bubble { border-radius: 17px 17px 5px; background: linear-gradient(135deg, #d62e7c, #842a91); }
 .messenger-bubble p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; font-size: .8rem; line-height: 1.45; }
+.messenger-bubble .messenger-deleted-message { color: rgba(245, 231, 244, .66); font-style: italic; }
 .messenger-bubble time { display: block; margin-top: 4px; color: rgba(245, 231, 244, .58); font-size: .53rem; line-height: 1.2; text-align: right; }
 .messenger-bubble time span { margin-left: 3px; color: #ffd0e3; }
+.messenger-delete-form { margin-top: 3px; text-align: right; }
+.messenger-delete-form button { padding: 0; border: 0; color: rgba(255, 255, 255, .58); background: transparent; font-size: .56rem; line-height: 1.2; text-decoration: underline; }
+.messenger-delete-form button:hover { color: #fff; }
 .messenger-attachment-image { display: block; max-width: 360px; margin: -5px -8px 2px; overflow: hidden; border-radius: 13px; background: rgba(0, 0, 0, .18); }
 .messenger-bubble p + .messenger-attachment-image { margin-top: 7px; }
 .messenger-attachment-image img { display: block; width: 100%; max-height: 390px; object-fit: contain; }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
 use App\Http\Controllers\Admin\CommentModerationController as AdminCommentModerationController;
+use App\Http\Controllers\Admin\ConversationModerationController as AdminConversationModerationController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\CommunityReportController as AdminCommunityReportController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
@@ -128,6 +129,8 @@ Route::middleware(['auth'])
             ->name('messages.index');
         Route::get('/mensajes/adjuntos/{message}', [ConversationController::class, 'attachment'])
             ->name('messages.attachments.show');
+        Route::delete('/mensajes/mensaje/{message}', [ConversationController::class, 'destroy'])
+            ->name('messages.destroy');
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
             ->name('messages.show');
         Route::post('/mensajes/{user}', [ConversationController::class, 'store'])
@@ -312,6 +315,9 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     Route::get('/comentarios', [AdminCommentModerationController::class, 'index'])->name('admin.comments.index');
     Route::patch('/comentarios/{comment}', [AdminCommentModerationController::class, 'update'])->name('admin.comments.update');
     Route::delete('/comentarios/{comment}', [AdminCommentModerationController::class, 'destroy'])->name('admin.comments.destroy');
+    Route::get('/chats', [AdminConversationModerationController::class, 'index'])->name('admin.conversations.index');
+    Route::get('/chats/{conversation}', [AdminConversationModerationController::class, 'show'])->name('admin.conversations.show');
+    Route::get('/chats/adjuntos/{message}', [AdminConversationModerationController::class, 'attachment'])->name('admin.conversations.attachments.show');
     Route::get('/validacion/comunidad', [AdminCommunityReportController::class, 'index'])->name('admin.community-reports.index');
     Route::patch('/validacion/comunidad/{communityReport}', [AdminCommunityReportController::class, 'update'])->name('admin.community-reports.update');
     Route::post('/validacion/comunidad/{communityReport}/acciones', [AdminCommunityReportController::class, 'action'])->name('admin.community-reports.action');

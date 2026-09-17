@@ -20,17 +20,30 @@ class DirectMessage extends Model
         'attachment_mime',
         'attachment_size',
         'read_at',
+        'deleted_at',
+        'deleted_by',
     ];
 
     protected function casts(): array
     {
         return [
             'read_at' => 'datetime',
+            'deleted_at' => 'datetime',
             'attachment_size' => 'integer',
         ];
     }
 
+    public function isDeleted(): bool
+    {
+        return $this->deleted_at !== null;
+    }
+
     public function hasAttachment(): bool
+    {
+        return ! $this->isDeleted() && filled($this->attachment_path);
+    }
+
+    public function hasStoredAttachment(): bool
     {
         return filled($this->attachment_path);
     }
@@ -64,5 +77,10 @@ class DirectMessage extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 }
