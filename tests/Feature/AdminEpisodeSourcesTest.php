@@ -268,6 +268,91 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertTrue($episode->sources[0]->is_primary);
     }
 
+    public function test_admin_can_create_episode_with_cloudflare_hls_source(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'HLS',
+            'slug' => 'hls',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie Cloudflare',
+            'slug' => 'serie-cloudflare',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para validar Cloudflare HLS.',
+        ]);
+
+        $url = 'https://mundoyuri-video.sts19813.workers.dev/Moonshadow/Moonshadow.S01e01.HLS/index.m3u8';
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.episodes.store'), [
+                'series_id' => $series->id,
+                'title' => 'Episodio Cloudflare',
+                'season_number' => 1,
+                'episode_number' => 4,
+                'moderation_status' => 'approved',
+                'source_provider' => ['cloudflare_hls'],
+                'source_type' => ['full'],
+                'source_url' => [$url],
+                'source_label' => ['Cloudflare HLS'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertRedirect(route('admin.episodes.index'));
+
+        $episode = Episode::query()->with('sources')->where('series_id', $series->id)->where('episode_number', 4)->firstOrFail();
+
+        $this->assertCount(1, $episode->sources);
+        $this->assertSame('cloudflare_hls', $episode->sources[0]->provider);
+        $this->assertSame('video', $episode->sources[0]->player_type);
+        $this->assertSame($url, $episode->sources[0]->video_url);
+        $this->assertSame($url, $episode->sources[0]->playable_url);
+        $this->assertTrue($episode->sources[0]->is_primary);
+    }
+
+    public function test_cloudflare_hls_rejects_unknown_hosts(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'HLS invalido',
+            'slug' => 'hls-invalido',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie Cloudflare invalida',
+            'slug' => 'serie-cloudflare-invalida',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para validar rechazo de Cloudflare HLS.',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->postJson(route('admin.episodes.store'), [
+                'series_id' => $series->id,
+                'title' => 'Episodio Cloudflare invalido',
+                'season_number' => 1,
+                'episode_number' => 5,
+                'moderation_status' => 'approved',
+                'source_provider' => ['cloudflare_hls'],
+                'source_type' => ['full'],
+                'source_url' => ['https://example.workers.dev/Moonshadow/index.m3u8'],
+                'source_label' => ['Cloudflare HLS'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['source_url.0']);
+    }
+
     public function test_admin_can_create_episode_with_bunny_stream_source_using_video_id(): void
     {
         config()->set('services.bunny.library_id', '987654');

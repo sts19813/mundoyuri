@@ -50,6 +50,10 @@ class VideoSource
             return self::normalizePixeldrainUrl($url);
         }
 
+        if ($provider === 'cloudflare_hls') {
+            return self::normalizeCloudflareHlsUrl($url);
+        }
+
         return $url;
     }
 
@@ -68,7 +72,7 @@ class VideoSource
 
     public static function playerType(?string $provider): string
     {
-        return $provider === 'backblaze_b2' ? 'video' : 'iframe';
+        return in_array($provider, ['backblaze_b2', 'cloudflare_hls'], true) ? 'video' : 'iframe';
     }
 
     public static function directVideoUrl(?string $provider, string $videoUrl): string
@@ -306,6 +310,31 @@ class VideoSource
         return 'https://geo.dailymotion.com/player.html?'.http_build_query([
             'video' => $videoId,
         ]);
+    }
+
+    public static function normalizeCloudflareHlsUrl(string $url): ?string
+    {
+        $parts = parse_url($url);
+
+        if (! $parts || empty($parts['host'])) {
+            return null;
+        }
+
+        $host = strtolower($parts['host']);
+        $path = $parts['path'] ?? '';
+
+        if (! in_array($host, ['mundoyuri-video.sts19813.workers.dev'], true)) {
+            return null;
+        }
+
+        if (! str_ends_with(strtolower($path), '.m3u8')) {
+            return null;
+        }
+
+        $normalizedPath = implode('/', array_map('rawurlencode', array_map('rawurldecode', explode('/', $path))));
+        $query = empty($parts['query']) ? '' : '?'.$parts['query'];
+
+        return 'https://'.$host.$normalizedPath.$query;
     }
 
     public static function normalizeBunnyUrl(string $rawValue): ?string

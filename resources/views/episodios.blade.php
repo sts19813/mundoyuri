@@ -70,7 +70,10 @@
                         <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata"
                             data-provider="{{ $primarySource->provider }}"
                             style="background:#000; @if($primarySource->player_type !== 'video') display:none; @endif">
-                            <source src="{{ $primarySource->player_type === 'video' ? $primarySource->playable_url : '' }}">
+                            <source
+                                src="{{ $primarySource->player_type === 'video' ? $primarySource->playable_url : '' }}"
+                                type="{{ $primarySource->provider === 'cloudflare_hls' ? 'application/x-mpegURL' : 'video/mp4' }}"
+                            >
                         </video>
                     @else
                         <x-media-preview
@@ -346,6 +349,7 @@
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.14/dist/hls.min.js"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
         window.addEventListener('scroll', () => {
@@ -360,6 +364,14 @@
             button.dataset.providerKey === 'backblaze_b2' && button.dataset.quality
         );
         let directPlayer = null;
+        let hlsPlayer = null;
+
+        function destroyHlsPlayer() {
+            if (hlsPlayer) {
+                hlsPlayer.destroy();
+                hlsPlayer = null;
+            }
+        }
 
         if (playerVideo && window.Plyr) {
             directPlayer = new Plyr(playerVideo, {
@@ -397,6 +409,41 @@
             }
         @endif
 
+        @if($primarySource?->provider === 'cloudflare_hls')
+            if (playerVideo) {
+                loadHlsSource(@json($primarySource->playable_url));
+            }
+        @endif
+
+        function loadHlsSource(url) {
+            if (!playerVideo) {
+                return;
+            }
+
+            destroyHlsPlayer();
+            directPlayer ? directPlayer.pause() : playerVideo.pause();
+            playerVideo.removeAttribute('src');
+            playerVideo.load();
+
+            if (window.Hls && Hls.isSupported()) {
+                hlsPlayer = new Hls();
+                hlsPlayer.loadSource(url);
+                hlsPlayer.attachMedia(playerVideo);
+            } else if (playerVideo.canPlayType('application/vnd.apple.mpegurl')) {
+                playerVideo.src = url;
+            } else if (directPlayer) {
+                directPlayer.source = { type: 'video', sources: [{ src: url, type: 'application/x-mpegURL' }] };
+            } else {
+                playerVideo.src = url;
+            }
+
+            if (directPlayer) {
+                directPlayer.elements.container.style.display = '';
+            } else {
+                playerVideo.style.display = 'block';
+            }
+        }
+
         function switchEpisodePlayer(type, url, providerKey = '') {
             if (!url) {
                 return;
@@ -408,6 +455,13 @@
                     playerFrame.style.display = 'none';
                 }
                 if (playerVideo) {
+                    if (providerKey === 'cloudflare_hls') {
+                        loadHlsSource(url);
+
+                        return;
+                    }
+
+                    destroyHlsPlayer();
                     const sources = providerKey === 'backblaze_b2' ? backblazeSources(url) : [{ src: url, type: 'video/mp4' }];
                     if (directPlayer) {
                         directPlayer.source = { type: 'video', sources };
@@ -424,6 +478,7 @@
             }
 
             if (playerVideo) {
+                destroyHlsPlayer();
                 directPlayer ? directPlayer.pause() : playerVideo.pause();
                 playerVideo.removeAttribute('src');
                 playerVideo.load();

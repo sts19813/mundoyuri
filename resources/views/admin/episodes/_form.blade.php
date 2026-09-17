@@ -353,6 +353,7 @@
                     youtube_iframe: 'YouTube: puedes pegar enlace normal o iframe.',
                     pixeldrain_cdn: 'Pixeldrain: pega el enlace del archivo; el sistema lo adapta solo.',
                     backblaze_b2: 'Backblaze B2: pega la Friendly URL o S3 URL del archivo. Funciona con buckets privados.',
+                    cloudflare_hls: 'Cloudflare HLS: pega el enlace .m3u8 del Worker de Mundo Yuri.',
                 };
 
                 helpText.textContent = helpMap[providerSelect.value] || 'Pega una URL pública, iframe o el identificador del proveedor.';

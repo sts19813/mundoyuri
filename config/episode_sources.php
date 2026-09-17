@@ -37,5 +37,8 @@ return [
         'backblaze_b2' => [
             'label' => 'Backblaze B2',
         ],
+        'cloudflare_hls' => [
+            'label' => 'Cloudflare HLS',
+        ],
     ],
 ];
