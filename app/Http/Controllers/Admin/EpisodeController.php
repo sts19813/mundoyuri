@@ -30,6 +30,11 @@ class EpisodeController extends Controller
 
     public function index(Request $request): View
     {
+        $requestedSort = (string) $request->input('sort', 'missing');
+        $sort = in_array($requestedSort, ['missing', 'episode_views', 'series_views'], true)
+            ? $requestedSort
+            : 'missing';
+
         $accessibleEpisodes = function ($query) use ($request): void {
             if (! $request->user()->can('moderate content')) {
                 $query->where(function ($scope) use ($request): void {
@@ -48,24 +53,44 @@ class EpisodeController extends Controller
         };
 
         $seriesGroups = $this->availableSeries()
+            ->reorder()
             ->when($request->filled('series_id'), fn (Builder $query) => $query->whereKey($request->integer('series_id')))
             ->when($request->filled('q'), fn (Builder $query) => $query->where('title', 'like', '%'.$request->string('q').'%'))
             ->when($request->filled('moderation_status'), fn (Builder $query) => $query->whereHas('episodes', $visibleEpisodes))
             ->withCount(['episodes as loaded_episodes_count' => $accessibleEpisodes])
+            ->withMax(['episodes as top_episode_views' => $accessibleEpisodes], 'views_count')
+            ->withSum(['episodes as total_views' => $accessibleEpisodes], 'views_count')
             ->with([
-                'episodes' => function ($query) use ($visibleEpisodes): void {
+                'episodes' => function ($query) use ($visibleEpisodes, $sort): void {
                     $visibleEpisodes($query);
-                    $query->with('sources')
-                        ->orderBy('season_number')
+                    $query->with('sources');
+
+                    if ($sort === 'episode_views') {
+                        $query->orderByDesc('views_count');
+                    }
+
+                    $query->orderBy('season_number')
                         ->orderBy('episode_number');
                 },
             ])
-            ->paginate(20)
+            ->when(
+                $sort === 'episode_views',
+                fn (Builder $query) => $query->orderByDesc('top_episode_views')->orderBy('title'),
+                fn (Builder $query) => $query->when(
+                    $sort === 'series_views',
+                    fn (Builder $query) => $query->orderByDesc('total_views')->orderBy('title'),
+                    fn (Builder $query) => $query
+                        ->orderByRaw('CASE WHEN total_episodes > loaded_episodes_count THEN 0 ELSE 1 END')
+                        ->orderByRaw('CASE WHEN total_episodes > loaded_episodes_count THEN total_episodes - loaded_episodes_count ELSE 0 END DESC')
+                        ->orderBy('title')
+                )
+            )
+            ->paginate(100)
             ->withQueryString();
 
         $seriesOptions = $this->availableSeries()->get();
 
-        return view('admin.episodes.index', compact('seriesGroups', 'seriesOptions'));
+        return view('admin.episodes.index', compact('seriesGroups', 'seriesOptions', 'sort'));
     }
 
     public function create(Request $request): View

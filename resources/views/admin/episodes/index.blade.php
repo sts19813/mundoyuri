@@ -27,33 +27,40 @@
 
 <div class="card mb-5">
     <div class="card-body py-4">
-        <form class="row g-3 align-items-end" method="GET" action="{{ route('admin.episodes.index') }}">
-            <div class="col-lg-4 col-md-6">
+        <form class="row g-3 align-items-end" method="GET" action="{{ route('admin.episodes.index') }}" data-auto-filter-form>
+            <div class="col-lg-3 col-md-6">
                 <label class="form-label fs-7">Buscar título</label>
-                <input class="form-control" name="q" value="{{ request('q') }}" placeholder="Serie o película">
+                <input class="form-control" name="q" value="{{ request('q') }}" placeholder="Serie o película" data-auto-filter-input>
             </div>
             <div class="col-lg-3 col-md-6">
                 <label class="form-label fs-7">Título exacto</label>
-                <select class="form-select" name="series_id">
+                <select class="form-select" name="series_id" data-auto-filter-select>
                     <option value="">Todos los títulos</option>
                     @foreach($seriesOptions as $option)
                         <option value="{{ $option->id }}" @selected(request('series_id') == $option->id)>{{ $option->title }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-2 col-md-6">
                 <label class="form-label fs-7">Moderación</label>
-                <select class="form-select" name="moderation_status">
+                <select class="form-select" name="moderation_status" data-auto-filter-select>
                     <option value="">Todos los estados</option>
                     <option value="pending" @selected(request('moderation_status') === 'pending')>Pendiente</option>
                     <option value="approved" @selected(request('moderation_status') === 'approved')>Aprobado</option>
                     <option value="rejected" @selected(request('moderation_status') === 'rejected')>Rechazado</option>
                 </select>
             </div>
-            <div class="col-lg-2 col-md-6 d-flex gap-2">
-                <button class="btn btn-light-primary flex-grow-1" type="submit">Filtrar</button>
-                @if(request()->hasAny(['q', 'series_id', 'moderation_status']))
-                    <a class="btn btn-light" href="{{ route('admin.episodes.index') }}" title="Limpiar filtros">×</a>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label fs-7">Orden</label>
+                <select class="form-select" name="sort" data-auto-filter-select>
+                    <option value="missing" @selected($sort === 'missing')>Faltantes primero</option>
+                    <option value="series_views" @selected($sort === 'series_views')>Series más vistas</option>
+                    <option value="episode_views" @selected($sort === 'episode_views')>Episodios más vistos</option>
+                </select>
+            </div>
+            <div class="col-lg-1 col-md-6 d-flex">
+                @if(request()->hasAny(['q', 'series_id', 'moderation_status', 'sort']))
+                    <a class="btn btn-light w-100" href="{{ route('admin.episodes.index') }}" title="Limpiar filtros">×</a>
                 @endif
             </div>
         </form>
@@ -71,6 +78,7 @@
                         <th>Tipo</th>
                         <th>Episodios</th>
                         <th>Temporadas</th>
+                        <th>Reproducciones</th>
                         <th>Última publicación web</th>
                         <th class="text-end pe-5">Acciones</th>
                     </tr>
@@ -84,6 +92,8 @@
                         $missingCount = $declaredCount > $loadedCount ? $declaredCount - $loadedCount : 0;
                         $seasonCount = $episodes->pluck('season_number')->unique()->count();
                         $latestPublication = $episodes->whereNotNull('published_at')->max('published_at');
+                        $totalViews = (int) ($seriesGroup->total_views ?? 0);
+                        $topEpisodeViews = (int) ($seriesGroup->top_episode_views ?? 0);
                         $collapseId = 'episodes-series-'.$seriesGroup->id;
                     @endphp
                     <tr>
@@ -116,6 +126,10 @@
                             @if($declaredCount > 0)<span class="text-muted"> / {{ $declaredCount }}</span>@endif
                         </td>
                         <td>{{ $seasonCount ?: '—' }}</td>
+                        <td>
+                            <span class="fw-bold">{{ number_format($totalViews) }}</span>
+                            <div class="text-muted fs-8">Top episodio: {{ number_format($topEpisodeViews) }}</div>
+                        </td>
                         <td>{{ $latestPublication?->format('d/m/Y H:i') ?: 'Sin publicar' }}</td>
                         <td class="text-end pe-4">
                             @can('create episodes')
@@ -124,7 +138,7 @@
                         </td>
                     </tr>
                     <tr class="episode-detail-row">
-                        <td colspan="7" class="p-0">
+                        <td colspan="8" class="p-0">
                             <div id="{{ $collapseId }}" class="collapse {{ request('series_id') == $seriesGroup->id ? 'show' : '' }}">
                                 <div class="p-4">
                                     @if($episodes->isEmpty())
@@ -136,6 +150,7 @@
                                                 <tr class="text-muted fw-semibold fs-8">
                                                     <th class="ps-4">Temporada / episodio</th>
                                                     <th>Título</th>
+                                                    <th>Reproducciones</th>
                                                     <th style="min-width: 320px">URLs</th>
                                                     <th>Publicación web</th>
                                                     <th>Moderación</th>
@@ -147,6 +162,9 @@
                                                 <tr>
                                                     <td class="ps-4 text-nowrap fw-semibold">T{{ $episode->season_number }} · E{{ $episode->episode_number }}</td>
                                                     <td>{{ $episode->title }}</td>
+                                                    <td class="text-nowrap">
+                                                        <span class="badge badge-light-primary fs-7">{{ number_format((int) $episode->views_count) }}</span>
+                                                    </td>
                                                     <td>
                                                         @forelse($episode->sources as $source)
                                                             <div class="d-flex align-items-start gap-2 {{ !$loop->last ? 'mb-2' : '' }}">
@@ -191,7 +209,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-center text-muted py-10">No hay series o películas para mostrar.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-10">No hay series o películas para mostrar.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -202,3 +220,32 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('[data-auto-filter-form]');
+
+        if (!form) {
+            return;
+        }
+
+        let filterTimer = null;
+        const submitFilters = () => {
+            window.clearTimeout(filterTimer);
+            form.requestSubmit();
+        };
+
+        form.querySelectorAll('[data-auto-filter-input]').forEach((input) => {
+            input.addEventListener('input', () => {
+                window.clearTimeout(filterTimer);
+                filterTimer = window.setTimeout(() => form.requestSubmit(), 450);
+            });
+        });
+
+        form.querySelectorAll('[data-auto-filter-select]').forEach((select) => {
+            select.addEventListener('change', submitFilters);
+        });
+    });
+</script>
+@endpush

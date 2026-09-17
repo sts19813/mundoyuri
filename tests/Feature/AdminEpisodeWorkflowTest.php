@@ -47,6 +47,101 @@ class AdminEpisodeWorkflowTest extends TestCase
             ->assertSee(route('admin.episodes.create', ['series_id' => $otherSeries->id]), false);
     }
 
+    public function test_episode_index_prioritizes_missing_episodes_and_shows_episode_views(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $completeSeries = $this->createSeries($admin, [
+            'title' => 'Serie completa',
+            'slug' => 'serie-completa',
+            'total_episodes' => 1,
+        ]);
+        $incompleteSeries = $this->createSeries($admin, [
+            'title' => 'Serie incompleta',
+            'slug' => 'serie-incompleta',
+            'total_episodes' => 4,
+        ]);
+
+        Episode::query()->create([
+            'series_id' => $completeSeries->id,
+            'created_by' => $admin->id,
+            'title' => 'Episodio completo',
+            'slug' => 'episodio-completo',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'views_count' => 10,
+            'moderation_status' => 'approved',
+        ]);
+        Episode::query()->create([
+            'series_id' => $incompleteSeries->id,
+            'created_by' => $admin->id,
+            'title' => 'Episodio visto',
+            'slug' => 'episodio-visto',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'views_count' => 1234,
+            'moderation_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.episodes.index'));
+
+        $response->assertOk()
+            ->assertSeeInOrder(['Serie incompleta', 'Serie completa'])
+            ->assertSee('Faltan 3 de 4')
+            ->assertSee('1,234');
+    }
+
+    public function test_episode_index_can_sort_by_series_and_episode_views(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $highSeriesViews = $this->createSeries($admin, ['title' => 'Serie con más vistas', 'slug' => 'serie-con-mas-vistas']);
+        $highEpisodeViews = $this->createSeries($admin, ['title' => 'Serie con episodio top', 'slug' => 'serie-con-episodio-top']);
+        $lowViews = $this->createSeries($admin, ['title' => 'Serie con pocas vistas', 'slug' => 'serie-con-pocas-vistas']);
+
+        foreach ([[1, 60], [2, 60]] as [$episodeNumber, $views]) {
+            Episode::query()->create([
+                'series_id' => $highSeriesViews->id,
+                'created_by' => $admin->id,
+                'title' => 'Episodio '.$episodeNumber,
+                'slug' => 'serie-vistas-episodio-'.$episodeNumber,
+                'season_number' => 1,
+                'episode_number' => $episodeNumber,
+                'views_count' => $views,
+                'moderation_status' => 'approved',
+            ]);
+        }
+
+        Episode::query()->create([
+            'series_id' => $highEpisodeViews->id,
+            'created_by' => $admin->id,
+            'title' => 'Episodio top',
+            'slug' => 'episodio-top',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'views_count' => 100,
+            'moderation_status' => 'approved',
+        ]);
+        Episode::query()->create([
+            'series_id' => $lowViews->id,
+            'created_by' => $admin->id,
+            'title' => 'Episodio bajo',
+            'slug' => 'episodio-bajo',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'views_count' => 1,
+            'moderation_status' => 'approved',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.episodes.index', ['sort' => 'series_views']))
+            ->assertOk()
+            ->assertSeeInOrder(['Serie con más vistas', 'Serie con episodio top', 'Serie con pocas vistas']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.episodes.index', ['sort' => 'episode_views']))
+            ->assertOk()
+            ->assertSeeInOrder(['Serie con episodio top', 'Serie con más vistas', 'Serie con pocas vistas']);
+    }
+
     public function test_create_form_selects_series_and_suggests_the_next_episode_number(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
