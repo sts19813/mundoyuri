@@ -2,6 +2,7 @@
     $assistantSettings = \App\Models\AssistantSetting::current();
     $assistantMessages = $assistantSettings->messagesFor(auth()->user());
     $assistantConfig = $assistantSettings->clientConfig();
+    $assistantUserEmail = auth()->user()?->email;
 @endphp
 
 @if($assistantSettings->enabled && count($assistantMessages) > 0)
@@ -28,7 +29,8 @@
                 </button>
                 <label for="miyu-contact-email">Tu correo <span>(opcional)</span></label>
                 <input id="miyu-contact-email" name="contact_email" type="email"
-                    autocomplete="email" maxlength="255" placeholder="Para poder responderte">
+                    autocomplete="email" maxlength="255" placeholder="Para poder responderte"
+                    value="{{ $assistantUserEmail }}">
 
                 <label for="miyu-contact-message" data-miyu-form-label>Cuéntanos</label>
                 <textarea id="miyu-contact-message" name="message" rows="4" minlength="10"
@@ -483,6 +485,7 @@
 
         const messages = @js($assistantMessages);
         const config = @js($assistantConfig);
+        const userEmail = @js($assistantUserEmail);
         const storageKey = 'mundoyuri.miyu.minimized';
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         const mascot = root.querySelector('[data-miyu-mascot]');
@@ -493,6 +496,7 @@
         const formType = root.querySelector('[data-miyu-form-type]');
         const formLabel = root.querySelector('[data-miyu-form-label]');
         const formStatus = root.querySelector('[data-miyu-form-status]');
+        const contactEmail = root.querySelector('[name="contact_email"]');
         const pageUrl = root.querySelector('[data-miyu-page-url]');
         const peek = root.querySelector('[data-miyu-peek]');
         const peekText = root.querySelector('[data-miyu-peek-text]');
@@ -574,6 +578,7 @@
             messageView.hidden = true;
             form.hidden = false;
             form.reset();
+            contactEmail.value = userEmail || '';
             formType.value = type;
             pageUrl.value = window.location.href;
             formLabel.textContent = labels[type] || 'Cuéntanos';
@@ -727,6 +732,7 @@
 
                 formStatus.textContent = payload.message || '¡Listo! Tu mensaje llegó al equipo.';
                 form.reset();
+                contactEmail.value = userEmail || '';
                 window.setTimeout(() => setSpeaking(false), 2400);
             } catch (error) {
                 formStatus.textContent = error.message;

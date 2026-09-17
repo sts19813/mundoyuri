@@ -154,7 +154,6 @@
     @endif
 
     @stack('scripts')
-    <x-neko-assistant />
 </body>
 
 </html>

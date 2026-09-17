@@ -31,6 +31,28 @@ class AssistantMessageTest extends TestCase
             ->assertDontSee('Dime otra cosa');
     }
 
+    public function test_admin_panel_does_not_render_the_persistent_assistant(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee('data-miyu-assistant', false)
+            ->assertDontSee('yuri-neko-open.webp', false);
+    }
+
+    public function test_authenticated_portal_prefills_the_assistant_email_field(): void
+    {
+        $user = User::factory()->create(['email' => 'member@example.com']);
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('id="miyu-contact-email"', false)
+            ->assertSee('value="member@example.com"', false);
+    }
+
     public function test_guest_can_send_a_request_from_the_assistant(): void
     {
         $response = $this->postJson(route('assistant-messages.store'), [
