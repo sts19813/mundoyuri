@@ -50,6 +50,84 @@
         </div>
     </div>
 
+    @if($siteVisitStats)
+        <div class="row g-5 g-xl-8 mb-7">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="fs-6 text-gray-600">Visitantes únicos</div>
+                        <i class="ki-outline ki-profile-user fs-2 text-primary"></i>
+                    </div>
+                    <div class="fs-2hx fw-bold">{{ number_format($siteVisitStats['unique_visitors']) }}</div>
+                    <div class="text-muted fs-7">Aproximados por usuario o cookie</div>
+                </div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="fs-6 text-gray-600">Visitas hoy</div>
+                        <i class="ki-outline ki-calendar-tick fs-2 text-success"></i>
+                    </div>
+                    <div class="fs-2hx fw-bold">{{ number_format($siteVisitStats['visits_today']) }}</div>
+                    <div class="text-muted fs-7">Páginas reales del sitio</div>
+                </div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="fs-6 text-gray-600">Visitas 7 días</div>
+                        <i class="ki-outline ki-chart-simple fs-2 text-info"></i>
+                    </div>
+                    <div class="fs-2hx fw-bold">{{ number_format($siteVisitStats['visits_7_days']) }}</div>
+                    <div class="text-muted fs-7">Incluye el día actual</div>
+                </div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="fs-6 text-gray-600">Visitas 30 días</div>
+                        <i class="ki-outline ki-graph-up fs-2 text-warning"></i>
+                    </div>
+                    <div class="fs-2hx fw-bold">{{ number_format($siteVisitStats['visits_30_days']) }}</div>
+                    <div class="text-muted fs-7">Últimos 30 días</div>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="card mb-7">
+            <div class="card-header border-0 pt-6">
+                <div class="card-title d-flex flex-column">
+                    <h3 class="fw-bold mb-1">Visitas últimos 30 días</h3>
+                    <span class="text-muted fs-7">Cantidad de visitas registradas por día</span>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div id="site-visits-30-days-chart" style="height: 260px;"></div>
+
+                <div class="separator separator-dashed my-6"></div>
+
+                <div class="row g-5">
+                    <div class="col-6 col-lg-3">
+                        <div class="fs-7 text-muted">Visitas totales</div>
+                        <div class="fs-3 fw-bold text-gray-900">{{ number_format($siteVisitStats['total_visits']) }}</div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="fs-7 text-muted">Visitantes anónimos</div>
+                        <div class="fs-3 fw-bold text-gray-900">{{ number_format($siteVisitStats['anonymous_visitors']) }}</div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="fs-7 text-muted">Visitantes registrados</div>
+                        <div class="fs-3 fw-bold text-gray-900">{{ number_format($siteVisitStats['registered_visitors']) }}</div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="fs-7 text-muted">Usuarios nuevos 30 días</div>
+                        <div class="fs-3 fw-bold text-gray-900">{{ number_format($siteVisitStats['new_users_30_days']) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row g-5 g-xl-8">
         @if($stats['users'] !== null)
             <div class="col-sm-6 col-xl-3">
@@ -198,3 +276,101 @@
         </div>
     @endcan
 @endsection
+
+@if($siteVisitChart)
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const element = document.getElementById('site-visits-30-days-chart');
+
+                if (!element || typeof ApexCharts === 'undefined') {
+                    return;
+                }
+
+                const renderChart = function () {
+                    element.innerHTML = '';
+
+                    const labelColor = KTUtil.getCssVariableValue('--bs-gray-500');
+                    const borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
+                    const primaryColor = KTUtil.getCssVariableValue('--bs-primary');
+                    const primaryLightColor = KTUtil.getCssVariableValue('--bs-primary-light');
+
+                    new ApexCharts(element, {
+                        series: [{
+                            name: 'Visitas',
+                            data: @js($siteVisitChart['values']),
+                        }],
+                        chart: {
+                            fontFamily: 'inherit',
+                            type: 'area',
+                            height: 260,
+                            toolbar: { show: false },
+                        },
+                        dataLabels: { enabled: false },
+                        fill: {
+                            type: 'solid',
+                            opacity: 0.12,
+                            colors: [primaryColor],
+                        },
+                        stroke: {
+                            curve: 'smooth',
+                            width: 3,
+                            colors: [primaryColor],
+                        },
+                        markers: {
+                            size: 3,
+                            strokeWidth: 2,
+                            strokeColors: primaryColor,
+                            colors: [primaryLightColor],
+                        },
+                        xaxis: {
+                            categories: @js($siteVisitChart['labels']),
+                            axisBorder: { show: false },
+                            axisTicks: { show: false },
+                            labels: {
+                                style: {
+                                    colors: labelColor,
+                                    fontSize: '12px',
+                                },
+                            },
+                            tooltip: { enabled: false },
+                        },
+                        yaxis: {
+                            min: 0,
+                            forceNiceScale: true,
+                            labels: {
+                                style: {
+                                    colors: labelColor,
+                                    fontSize: '12px',
+                                },
+                                formatter: function (value) {
+                                    return Math.round(value);
+                                },
+                            },
+                        },
+                        tooltip: {
+                            style: { fontSize: '12px' },
+                            y: {
+                                formatter: function (value) {
+                                    return Math.round(value) + ' visitas';
+                                },
+                            },
+                        },
+                        colors: [primaryColor],
+                        grid: {
+                            borderColor: borderColor,
+                            strokeDashArray: 4,
+                            yaxis: { lines: { show: true } },
+                        },
+                    }).render();
+                };
+
+                renderChart();
+
+                if (typeof KTThemeMode !== 'undefined') {
+                    KTThemeMode.on('kt.thememode.change', renderChart);
+                }
+            });
+        </script>
+    @endpush
+@endif

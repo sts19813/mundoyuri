@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\AdminPanelMiddleware;
+use App\Http\Middleware\RecordSiteVisit;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,9 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            RecordSiteVisit::class,
+        ]);
+
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'admin.panel' => \App\Http\Middleware\AdminPanelMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'admin.panel' => AdminPanelMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
