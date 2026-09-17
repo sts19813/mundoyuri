@@ -16,5 +16,6 @@
 @endif
     <x-google-tag-manager-noscript />
     @yield('body')
+    <script src="{{ asset('assets/js/lazy-media.js') }}?v={{ filemtime(public_path('assets/js/lazy-media.js')) }}" defer></script>
 </body>
 </html>

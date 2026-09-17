@@ -52,6 +52,10 @@ class HomeTitlesSectionTest extends TestCase
             ->assertSee('Anime · Película')
             ->getContent();
 
+        $this->assertStringContainsString('js-lazy-media', $html);
+        $this->assertStringContainsString('data-src="https://picsum.photos/300/420?series-', $html);
+        $this->assertStringContainsString('src="data:image/gif;base64', $html);
+
         $titlesHeaderPosition = strpos($html, '<h2 class="section-title">Títulos</h2>');
         $this->assertNotFalse($titlesHeaderPosition);
 
