@@ -70,10 +70,9 @@
                         <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata"
                             data-provider="{{ $primarySource->provider }}"
                             style="background:#000; @if($primarySource->player_type !== 'video') display:none; @endif">
-                            <source
-                                src="{{ $primarySource->player_type === 'video' ? $primarySource->playable_url : '' }}"
-                                type="{{ $primarySource->provider === 'cloudflare_hls' ? 'application/x-mpegURL' : 'video/mp4' }}"
-                            >
+                            @if($primarySource->player_type === 'video' && $primarySource->provider !== 'cloudflare_hls')
+                                <source src="{{ $primarySource->playable_url }}" type="video/mp4">
+                            @endif
                         </video>
                     @else
                         <x-media-preview
@@ -423,6 +422,7 @@
             destroyHlsPlayer();
             directPlayer ? directPlayer.pause() : playerVideo.pause();
             playerVideo.removeAttribute('src');
+            playerVideo.querySelectorAll('source').forEach((source) => source.remove());
             playerVideo.load();
 
             if (window.Hls && Hls.isSupported()) {
