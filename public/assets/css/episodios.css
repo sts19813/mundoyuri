@@ -1253,6 +1253,32 @@
   }
 
   @media (max-width: 576px) {
+      .player-wrap {
+          width: calc(100% + 48px);
+          margin-left: -24px;
+          margin-right: -24px;
+          border-radius: 0;
+          box-shadow: none;
+      }
+
+      .player-wrap .plyr,
+      .player-wrap .plyr__video-wrapper {
+          border-radius: 0;
+      }
+
+      .player-wrap .plyr__controls {
+          padding: 30px 10px 10px;
+      }
+
+      .player-wrap .plyr__volume {
+          min-width: 0;
+          width: auto;
+      }
+
+      .player-wrap .plyr__volume input[type="range"] {
+          display: none;
+      }
+
       .ep-nav {
           grid-template-columns: 1fr;
       }

@@ -272,35 +272,6 @@
                     </div>
                 </div>
 
-                <div class="links-section">
-                    <div class="links-header">
-                        <span class="links-title">Enlaces</span>
-                        <span class="links-badge">Descarga</span>
-                    </div>
-                    <div class="links-table-head">
-                        <span>Opciones</span>
-                        <span>Idioma</span>
-                    </div>
-                    @forelse($fullSources->isNotEmpty() ? $fullSources : $partSources as $source)
-                        <div class="links-row">
-                            <a href="{{ $source->playable_url }}" target="_blank" rel="noopener" class="links-row-option">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="8 12 12 16 16 12" />
-                                    <line x1="12" y1="8" x2="12" y2="16" />
-                                </svg>
-                                {{ $source->source_type === 'part' ? 'PARTE '.($source->sort_order ?: $loop->iteration) : strtoupper($source->provider) }}
-                            </a>
-                            <span class="links-row-lang">{{ $source->label ?: 'Sub Español' }}</span>
-                        </div>
-                    @empty
-                        <div class="links-row">
-                            <span class="links-row-option">Sin enlaces disponibles</span>
-                            <span class="links-row-lang">-</span>
-                        </div>
-                    @endforelse
-                </div>
-
                 @include('catalog.partials.threaded-comments', [
                     'comments' => $comments,
                     'targetType' => 'episode',
