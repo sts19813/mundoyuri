@@ -316,6 +316,51 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertTrue($episode->sources[0]->is_primary);
     }
 
+    public function test_admin_can_create_episode_with_cloudflare_hls_custom_domain(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'HLS custom',
+            'slug' => 'hls-custom',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie Cloudflare Custom',
+            'slug' => 'serie-cloudflare-custom',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para validar Cloudflare HLS con dominio propio.',
+        ]);
+
+        $url = 'https://video.mundoyuri.com/Moonshadow/Moonshadow.S01e06.HLS/index.m3u8';
+
+        $response = $this
+            ->actingAs($admin)
+            ->post(route('admin.episodes.store'), [
+                'series_id' => $series->id,
+                'title' => 'Episodio Cloudflare Custom',
+                'season_number' => 1,
+                'episode_number' => 6,
+                'moderation_status' => 'approved',
+                'source_provider' => ['cloudflare_hls'],
+                'source_type' => ['full'],
+                'source_url' => [$url],
+                'source_label' => ['Cloudflare HLS'],
+                'source_sort_order' => [1],
+                'source_primary' => 0,
+            ]);
+
+        $response->assertRedirect(route('admin.episodes.index'));
+
+        $episode = Episode::query()->with('sources')->where('series_id', $series->id)->where('episode_number', 6)->firstOrFail();
+
+        $this->assertSame('cloudflare_hls', $episode->sources[0]->provider);
+        $this->assertSame('video', $episode->sources[0]->player_type);
+        $this->assertSame($url, $episode->sources[0]->video_url);
+    }
+
     public function test_cloudflare_hls_rejects_unknown_hosts(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
