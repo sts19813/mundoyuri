@@ -3,7 +3,7 @@
 return [
     'hosts' => array_values(array_filter(array_map(
         'trim',
-        explode(',', env('WATCH_PROGRESS_HOSTS', 'video.mundoyuri.com'))
+        explode(',', env('WATCH_PROGRESS_HOSTS', 'video.mundoyuri.com,mundoyuri.com,www.mundoyuri.com'))
     ))),
 
     'local_hosts' => array_values(array_filter(array_map(

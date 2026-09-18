@@ -56,7 +56,24 @@ class EpisodeWatchProgressTest extends TestCase
 
     public function test_progress_is_not_available_outside_video_host(): void
     {
-        config()->set('watch_progress.hosts', ['video.mundoyuri.com']);
+        config()->set('watch_progress.hosts', ['video.mundoyuri.com', 'mundoyuri.com']);
+
+        $user = User::factory()->create();
+        [$episode, $source] = $this->episodeWithSource('backblaze_b2');
+
+        $this->withServerVariables(['HTTP_HOST' => 'example.com'])
+            ->actingAs($user)
+            ->postJson("http://example.com/episodios/{$episode->id}/progreso", [
+                'episode_source_id' => $source->id,
+                'position_seconds' => 60,
+                'duration_seconds' => 1200,
+            ])
+            ->assertNotFound();
+    }
+
+    public function test_member_can_save_progress_from_main_mundoyuri_host(): void
+    {
+        config()->set('watch_progress.hosts', ['video.mundoyuri.com', 'mundoyuri.com']);
 
         $user = User::factory()->create();
         [$episode, $source] = $this->episodeWithSource('backblaze_b2');
@@ -65,10 +82,17 @@ class EpisodeWatchProgressTest extends TestCase
             ->actingAs($user)
             ->postJson("http://mundoyuri.com/episodios/{$episode->id}/progreso", [
                 'episode_source_id' => $source->id,
-                'position_seconds' => 60,
+                'position_seconds' => 40,
                 'duration_seconds' => 1200,
             ])
-            ->assertNotFound();
+            ->assertOk();
+
+        $this->assertDatabaseHas('episode_watch_progress', [
+            'user_id' => $user->id,
+            'episode_id' => $episode->id,
+            'provider' => 'backblaze_b2',
+            'position_seconds' => 40,
+        ]);
     }
 
     public function test_progress_rejects_non_video_providers(): void
