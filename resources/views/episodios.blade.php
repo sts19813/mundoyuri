@@ -4,6 +4,7 @@
 
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
         :title="$episode ? $series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title : 'Últimos episodios GL'"
         :description="$episode ? \Illuminate\Support\Str::limit($episode->description ?: 'Mira '.$episode->title.' de '.$series->title.' online en Mundo Yuri.', 155) : 'Mira los episodios más recientes de series y doramas Girls’ Love en Mundo Yuri.'"
@@ -45,6 +46,12 @@
             $releaseDate = $episode->release_date ?: $episode->published_at;
             $avatarClasses = ['', 'av2', 'av3'];
             $comments = $episode->comments;
+            $trackableProviders = config('watch_progress.providers', []);
+            $requestedResumeSeconds = max(0, (int) request()->query('t', 0));
+            $storedResumeSeconds = $episodeProgress?->completed ? 0 : (int) ($episodeProgress?->position_seconds ?? 0);
+            $resumeSeconds = $requestedResumeSeconds ?: $storedResumeSeconds;
+            $resumeSourceId = (int) request()->query('source', $episodeProgress?->episode_source_id ?? ($primarySource?->id ?? 0));
+            $watchProgressEnabled = $watchProgressEnabled ?? false;
         @endphp
 
         <div class="ep-layout">
@@ -69,6 +76,8 @@
                             @if($primarySource->player_type !== 'iframe') style="display:none;" @endif></iframe>
                         <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata"
                             data-provider="{{ $primarySource->provider }}"
+                            data-source-id="{{ $primarySource->id }}"
+                            data-trackable="{{ in_array($primarySource->provider, $trackableProviders, true) ? '1' : '0' }}"
                             style="background:#000; @if($primarySource->player_type !== 'video') display:none; @endif">
                             @if($primarySource->player_type === 'video' && $primarySource->provider !== 'cloudflare_hls')
                                 <source src="{{ $primarySource->playable_url }}" type="video/mp4">
@@ -102,7 +111,7 @@
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($partSources as $part)
-                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-video-url="{{ $part->playable_url }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-provider-key="{{ $part->provider }}" data-player-type="{{ $part->player_type }}">
+                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-source-id="{{ $part->id }}" data-video-url="{{ $part->playable_url }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-provider-key="{{ $part->provider }}" data-trackable="{{ in_array($part->provider, $trackableProviders, true) ? '1' : '0' }}" data-player-type="{{ $part->player_type }}">
                                     {{ $part->label ?: 'Parte '.($part->sort_order ?: $loop->iteration) }}
                                 </button>
                             @endforeach
@@ -125,9 +134,11 @@
                         @forelse($fullSources as $source)
                             <button type="button"
                                 class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
+                                data-source-id="{{ $source->id }}"
                                 data-video-url="{{ $source->playable_url }}"
                                 data-provider="{{ strtoupper($source->provider) }}"
                                 data-provider-key="{{ $source->provider }}"
+                                data-trackable="{{ in_array($source->provider, $trackableProviders, true) ? '1' : '0' }}"
                                 data-quality="{{ preg_match('/\b(360|480|720|1080|1440|2160)p\b/i', (string) $source->label, $qualityMatch) ? $qualityMatch[1] : '' }}"
                                 data-player-type="{{ $source->player_type }}">
                                 <div class="server-icon">⚡</div>
@@ -333,8 +344,19 @@
         const backblazeQualityButtons = Array.from(sourceButtons).filter((button) =>
             button.dataset.providerKey === 'backblaze_b2' && button.dataset.quality
         );
+        const watchProgressConfig = {
+            enabled: @json($watchProgressEnabled),
+            endpoint: @json($watchProgressEnabled ? route('episodes.progress.store', $episode, false) : null),
+            csrf: @json(csrf_token()),
+            minimumSeconds: @json((int) config('watch_progress.minimum_seconds', 15)),
+            resumeSeconds: @json($resumeSeconds),
+            resumeSourceId: @json($resumeSourceId),
+        };
         let directPlayer = null;
         let hlsPlayer = null;
+        let lastProgressSaveAt = 0;
+        let pendingResumeSeconds = Number(watchProgressConfig.resumeSeconds || 0);
+        let resumeApplied = false;
 
         function destroyHlsPlayer() {
             if (hlsPlayer) {
@@ -415,7 +437,7 @@
             }
         }
 
-        function switchEpisodePlayer(type, url, providerKey = '') {
+        function switchEpisodePlayer(type, url, providerKey = '', sourceId = '', trackable = '0') {
             if (!url) {
                 return;
             }
@@ -426,6 +448,10 @@
                     playerFrame.style.display = 'none';
                 }
                 if (playerVideo) {
+                    playerVideo.dataset.provider = providerKey;
+                    playerVideo.dataset.sourceId = sourceId;
+                    playerVideo.dataset.trackable = trackable;
+
                     if (providerKey === 'cloudflare_hls') {
                         loadHlsSource(url);
 
@@ -454,6 +480,9 @@
                 playerVideo.removeAttribute('src');
                 playerVideo.load();
                 playerVideo.style.display = 'none';
+                playerVideo.dataset.provider = providerKey;
+                playerVideo.dataset.sourceId = sourceId;
+                playerVideo.dataset.trackable = '0';
                 if (directPlayer) {
                     directPlayer.elements.container.style.display = 'none';
                 }
@@ -471,8 +500,10 @@
                     const provider = button.getAttribute('data-provider');
                     const playerType = button.getAttribute('data-player-type') || 'iframe';
                     const providerKey = button.getAttribute('data-provider-key') || '';
+                    const sourceId = button.getAttribute('data-source-id') || '';
+                    const trackable = button.getAttribute('data-trackable') || '0';
 
-                    switchEpisodePlayer(playerType, nextUrl, providerKey);
+                    switchEpisodePlayer(playerType, nextUrl, providerKey, sourceId, trackable);
 
                     sourceButtons.forEach((item) => {
                         item.classList.remove('active');
@@ -489,6 +520,118 @@
                     }
                 });
             });
+        }
+
+        function currentVideoPayload(completed = false) {
+            if (!playerVideo || !watchProgressConfig.enabled || !watchProgressConfig.endpoint) {
+                return null;
+            }
+
+            if (playerVideo.dataset.trackable !== '1' || !playerVideo.dataset.sourceId) {
+                return null;
+            }
+
+            const positionSeconds = Math.max(0, Math.floor(playerVideo.currentTime || 0));
+            const durationSeconds = Number.isFinite(playerVideo.duration) && playerVideo.duration > 0
+                ? Math.floor(playerVideo.duration)
+                : null;
+
+            if (!completed && positionSeconds < watchProgressConfig.minimumSeconds) {
+                return null;
+            }
+
+            return {
+                episode_source_id: Number(playerVideo.dataset.sourceId),
+                position_seconds: completed && durationSeconds ? durationSeconds : positionSeconds,
+                duration_seconds: durationSeconds,
+                completed,
+            };
+        }
+
+        function saveWatchProgress(force = false, completed = false) {
+            const payload = currentVideoPayload(completed);
+
+            if (!payload) {
+                return;
+            }
+
+            const now = Date.now();
+            if (!force && now - lastProgressSaveAt < 15000) {
+                return;
+            }
+            lastProgressSaveAt = now;
+
+            fetch(watchProgressConfig.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': watchProgressConfig.csrf,
+                },
+                credentials: 'same-origin',
+                keepalive: force,
+                body: JSON.stringify(payload),
+            }).catch(() => {});
+        }
+
+        function applyPendingResume() {
+            if (!playerVideo || resumeApplied || pendingResumeSeconds <= 0) {
+                return;
+            }
+
+            if (playerVideo.readyState < 1) {
+                return;
+            }
+
+            const duration = Number.isFinite(playerVideo.duration) ? playerVideo.duration : 0;
+            const targetSeconds = duration > 0
+                ? Math.min(pendingResumeSeconds, Math.max(0, duration - 5))
+                : pendingResumeSeconds;
+
+            try {
+                playerVideo.currentTime = targetSeconds;
+                resumeApplied = true;
+            } catch (error) {
+                resumeApplied = false;
+            }
+        }
+
+        function scheduleResume(seconds) {
+            pendingResumeSeconds = Number(seconds || 0);
+            resumeApplied = false;
+
+            if (pendingResumeSeconds > 0) {
+                window.setTimeout(applyPendingResume, 250);
+                window.setTimeout(applyPendingResume, 900);
+            }
+        }
+
+        function activateResumeSource() {
+            if (!playerVideo || !watchProgressConfig.resumeSourceId) {
+                scheduleResume(watchProgressConfig.resumeSeconds);
+
+                return;
+            }
+
+            const targetSourceId = String(watchProgressConfig.resumeSourceId);
+            const currentSourceId = String(playerVideo.dataset.sourceId || '');
+            const targetButton = Array.from(sourceButtons).find((button) => button.dataset.sourceId === targetSourceId);
+
+            if (targetButton && currentSourceId !== targetSourceId) {
+                targetButton.click();
+            }
+
+            scheduleResume(watchProgressConfig.resumeSeconds);
+        }
+
+        if (playerVideo) {
+            playerVideo.addEventListener('timeupdate', () => saveWatchProgress());
+            playerVideo.addEventListener('pause', () => saveWatchProgress(true));
+            playerVideo.addEventListener('ended', () => saveWatchProgress(true, true));
+            playerVideo.addEventListener('loadedmetadata', applyPendingResume);
+            playerVideo.addEventListener('canplay', applyPendingResume);
+            window.addEventListener('pagehide', () => saveWatchProgress(true));
+            window.setTimeout(activateResumeSource, 100);
         }
     </script>
 @endsection

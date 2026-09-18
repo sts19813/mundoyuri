@@ -1,4 +1,8 @@
 *.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
 .DS_Store
 .env
 .env.backup

@@ -15,6 +15,7 @@
         $sectionLabel = $section?->label ?: $sectionName;
         $sectionUrl = $isMixedHome ? route('home') : ($section?->slug ? route('catalog.sections.show', $section->slug) : route('home'));
         $catalogUrl = route('catalog.series.index', ['section' => $section?->slug]);
+        $continueWatching = $continueWatching ?? collect();
         $homeSeoDescription = $isMixedHome
             ? 'Explora anime y series GL con nuevos episodios, destacados y colecciones seleccionadas en Mundo Yuri.'
             : ($section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.');
@@ -49,6 +50,8 @@
             </div>
         </div>
     </section>
+
+    @include('partials.home.continue-watching-section', ['continueWatching' => $continueWatching])
 
     @if($isMixedHome)
         @include('partials.home.episodes-section', [

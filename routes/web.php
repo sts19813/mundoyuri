@@ -32,6 +32,7 @@ use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
+use App\Http\Controllers\EpisodeWatchProgressController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\ForumModerationController;
 use App\Http\Controllers\ForumPostController;
@@ -103,6 +104,9 @@ Route::middleware(['auth'])
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
         Route::patch('/preferencias/correos-de-episodios', [EmailEpisodeNotificationPreferenceController::class, 'update'])
             ->name('email-episode-notifications.update');
+        Route::post('/episodios/{episode}/progreso', [EpisodeWatchProgressController::class, 'store'])
+            ->middleware('throttle:120,1')
+            ->name('episodes.progress.store');
 
         Route::get('/comunidad/historicos/reclamar', [LegacyProfileClaimController::class, 'create'])
             ->name('legacy-profile-claims.create');

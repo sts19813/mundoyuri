@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\CatalogSection;
 use App\Models\Episode;
+use App\Models\EpisodeWatchProgress;
 use App\Models\Series;
 use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -67,12 +69,14 @@ class PublicCatalogController extends Controller
             ->whereNotNull('published_at')
             ->where('catalog_section', $section->slug)
             ->count();
+        $continueWatching = $this->continueWatchingEpisodes();
 
         return compact(
             'section',
             'featuredSeries',
             'latestEpisodes',
-            'seriesCount'
+            'seriesCount',
+            'continueWatching'
         );
     }
 
@@ -90,6 +94,7 @@ class PublicCatalogController extends Controller
             'latestEpisodes' => $this->latestEpisodesForMixedHome(),
             'featuredSeries' => $this->interleave($featuredGlSeries, $featuredAnimeSeries),
             'mixedSeries' => $this->interleave($glSeries, $animeSeries),
+            'continueWatching' => $this->continueWatchingEpisodes(),
         ];
     }
 
@@ -243,6 +248,14 @@ class PublicCatalogController extends Controller
             ->take(8)
             ->get();
 
+        $watchProgressEnabled = $this->watchProgressEnabledForRequest(request()) && auth()->check();
+        $episodeProgress = $watchProgressEnabled
+            ? EpisodeWatchProgress::query()
+                ->where('user_id', auth()->id())
+                ->where('episode_id', $episode->id)
+                ->first()
+            : null;
+
         return view('episodios', compact(
             'episode',
             'series',
@@ -250,7 +263,9 @@ class PublicCatalogController extends Controller
             'recentEpisodes',
             'previousEpisode',
             'nextEpisode',
-            'rankResolver'
+            'rankResolver',
+            'watchProgressEnabled',
+            'episodeProgress'
         ));
     }
 
@@ -283,6 +298,145 @@ class PublicCatalogController extends Controller
             && Schema::hasTable('episodes')
             && Schema::hasTable('comments')
             && Schema::hasTable('episode_sources');
+    }
+
+    private function continueWatchingEpisodes(): Collection
+    {
+        if (! $this->watchProgressEnabledForRequest(request()) || ! auth()->check()) {
+            return collect();
+        }
+
+        if (! Schema::hasTable('episode_watch_progress')) {
+            return collect();
+        }
+
+        $items = collect();
+        $seenEpisodeIds = [];
+
+        EpisodeWatchProgress::query()
+            ->with(['episode.series', 'source'])
+            ->where('user_id', auth()->id())
+            ->whereIn('provider', config('watch_progress.providers', []))
+            ->whereHas('episode', fn ($query) => $query
+                ->where('moderation_status', 'approved')
+                ->whereNotNull('published_at')
+                ->whereHas('series', fn ($seriesQuery) => $seriesQuery
+                    ->where('moderation_status', 'approved')
+                    ->whereNotNull('published_at')))
+            ->whereHas('source', fn ($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
+            ->latest('last_watched_at')
+            ->latest('id')
+            ->limit(30)
+            ->get()
+            ->each(function (EpisodeWatchProgress $progress) use ($items, &$seenEpisodeIds): void {
+                if (! $progress->episode || ! $progress->episode->series) {
+                    return;
+                }
+
+                if ($progress->completed) {
+                    $nextItem = $this->nextEpisodeContinueItem($progress);
+
+                    if (! $nextItem || in_array($nextItem->episode->id, $seenEpisodeIds, true)) {
+                        return;
+                    }
+
+                    $seenEpisodeIds[] = $nextItem->episode->id;
+                    $items->push($nextItem);
+
+                    return;
+                }
+
+                if ($progress->position_seconds < (int) config('watch_progress.minimum_seconds', 15)) {
+                    return;
+                }
+
+                if (in_array($progress->episode_id, $seenEpisodeIds, true)) {
+                    return;
+                }
+
+                $progress->is_next_episode = false;
+                $seenEpisodeIds[] = $progress->episode_id;
+                $items->push($progress);
+            });
+
+        return $items->take((int) config('watch_progress.keep_per_user', 10))->values();
+    }
+
+    private function watchProgressEnabledForRequest(Request $request): bool
+    {
+        $host = $request->getHost();
+
+        if (in_array($host, config('watch_progress.hosts', []), true)) {
+            return true;
+        }
+
+        return app()->environment('local')
+            && in_array($host, config('watch_progress.local_hosts', []), true);
+    }
+
+    private function nextEpisodeContinueItem(EpisodeWatchProgress $progress): ?object
+    {
+        $episode = $progress->episode;
+
+        if (! $episode) {
+            return null;
+        }
+
+        $nextEpisode = Episode::query()
+            ->with(['series', 'sources' => fn ($query) => $query
+                ->whereIn('provider', config('watch_progress.providers', []))
+                ->orderByDesc('is_primary')
+                ->orderBy('sort_order')
+                ->orderBy('id')])
+            ->where('series_id', $episode->series_id)
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->where(function ($query) use ($episode) {
+                $query
+                    ->where('season_number', '>', $episode->season_number)
+                    ->orWhere(function ($sameSeasonQuery) use ($episode) {
+                        $sameSeasonQuery
+                            ->where('season_number', $episode->season_number)
+                            ->where('episode_number', '>', $episode->episode_number);
+                    });
+            })
+            ->whereHas('sources', fn ($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
+            ->orderBy('season_number')
+            ->orderBy('episode_number')
+            ->orderBy('id')
+            ->first();
+
+        if (! $nextEpisode) {
+            return null;
+        }
+
+        $alreadyStarted = EpisodeWatchProgress::query()
+            ->where('user_id', $progress->user_id)
+            ->where('episode_id', $nextEpisode->id)
+            ->exists();
+
+        if ($alreadyStarted) {
+            return null;
+        }
+
+        $source = $nextEpisode->sources->first();
+
+        if (! $source) {
+            return null;
+        }
+
+        return (object) [
+            'episode' => $nextEpisode,
+            'source' => $source,
+            'episode_source_id' => $source->id,
+            'provider' => $source->provider,
+            'position_seconds' => 0,
+            'duration_seconds' => null,
+            'progress_percent' => 0,
+            'completed' => false,
+            'last_watched_at' => $progress->last_watched_at,
+            'is_next_episode' => true,
+        ];
     }
 
     private function resolveSection(string $slug): ?CatalogSection
@@ -320,6 +474,7 @@ class PublicCatalogController extends Controller
             'featuredSeries' => collect(),
             'latestEpisodes' => collect(),
             'seriesCount' => 0,
+            'continueWatching' => collect(),
         ];
     }
 
@@ -332,6 +487,7 @@ class PublicCatalogController extends Controller
             'latestEpisodes' => collect(),
             'featuredSeries' => collect(),
             'mixedSeries' => collect(),
+            'continueWatching' => collect(),
         ];
     }
 }
