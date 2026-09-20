@@ -548,6 +548,90 @@
         display: none;
     }
 
+    @media (min-width: 961px) and (max-width: 1560px) {
+        .nav-inner {
+            grid-template-columns: max-content minmax(0, 1fr) max-content;
+            column-gap: clamp(16px, 1.8vw, 30px);
+        }
+
+        .nav-links {
+            min-width: 0;
+            justify-content: center;
+            gap: clamp(18px, 1.65vw, 28px);
+        }
+
+        .nav-links a {
+            font-size: .86rem;
+            letter-spacing: 0.015em;
+        }
+
+        .nav-actions {
+            min-width: 0;
+        }
+
+        .nav-search {
+            width: clamp(150px, 11.5vw, 180px);
+        }
+
+        .nav-search:focus {
+            width: clamp(170px, 13vw, 205px);
+        }
+    }
+
+    @media (min-width: 961px) and (max-width: 1180px) {
+        .nav-inner {
+            column-gap: clamp(10px, 1.1vw, 15px);
+        }
+
+        .nav-links {
+            justify-self: center;
+            gap: clamp(11px, 1.15vw, 15px);
+        }
+
+        .nav-links a {
+            font-size: .78rem;
+            letter-spacing: 0;
+        }
+
+        .brand-logo {
+            height: 38px;
+            max-width: 132px;
+        }
+
+        .nav-actions {
+            gap: 7px;
+        }
+
+        .nav-login {
+            min-height: 38px;
+            gap: 6px;
+            padding: 6px 11px;
+            font-size: .76rem;
+        }
+
+        .portal-user-name,
+        .portal-user-chevron {
+            display: none;
+        }
+
+        .portal-user-trigger {
+            min-height: 40px;
+            width: 40px;
+            padding: 3px;
+            border-radius: 50%;
+        }
+
+        .nav-search {
+            width: clamp(130px, 12vw, 150px);
+            padding-inline: 12px;
+            font-size: .78rem;
+        }
+
+        .nav-search:focus {
+            width: clamp(145px, 13vw, 165px);
+        }
+    }
+
     /* ── HERO ── */
     .hero {
         position: relative;
