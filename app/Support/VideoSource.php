@@ -59,7 +59,7 @@ class VideoSource
 
     public static function playableUrl(?string $provider, string $videoUrl, mixed $source = null): string
     {
-        if (in_array($provider, ['pixeldrain_cdn', 'backblaze_b2'], true) && $source) {
+        if (in_array($provider, ['pixeldrain_cdn', 'backblaze_b2', 'cloudflare_hls'], true) && $source) {
             return route('episode-sources.player', $source);
         }
 

@@ -312,7 +312,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertSame('cloudflare_hls', $episode->sources[0]->provider);
         $this->assertSame('video', $episode->sources[0]->player_type);
         $this->assertSame($url, $episode->sources[0]->video_url);
-        $this->assertSame($url, $episode->sources[0]->playable_url);
+        $this->assertSame(route('episode-sources.player', $episode->sources[0]), $episode->sources[0]->playable_url);
         $this->assertTrue($episode->sources[0]->is_primary);
     }
 
@@ -359,6 +359,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertSame('cloudflare_hls', $episode->sources[0]->provider);
         $this->assertSame('video', $episode->sources[0]->player_type);
         $this->assertSame($url, $episode->sources[0]->video_url);
+        $this->assertSame(route('episode-sources.player', $episode->sources[0]), $episode->sources[0]->playable_url);
     }
 
     public function test_cloudflare_hls_rejects_unknown_hosts(): void
@@ -569,5 +570,66 @@ class AdminEpisodeSourcesTest extends TestCase
         $response->assertHeader('Referrer-Policy', 'no-referrer');
         $response->assertSee('https://pixeldrain.com/api/file/LTRmJYYs', false);
         $response->assertSee('<video controls playsinline preload="metadata">', false);
+    }
+
+    public function test_cloudflare_hls_playlist_is_served_without_cache_and_rewrites_media_urls(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'HLS stream',
+            'slug' => 'hls-stream',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie HLS stream',
+            'slug' => 'serie-hls-stream',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para probar HLS.',
+        ]);
+        $episode = Episode::query()->create([
+            'series_id' => $series->id,
+            'created_by' => $admin->id,
+            'title' => 'Ep HLS stream',
+            'slug' => 'ep-hls-stream',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'moderation_status' => 'approved',
+        ]);
+        $source = EpisodeSource::query()->create([
+            'episode_id' => $episode->id,
+            'provider' => 'cloudflare_hls',
+            'source_type' => 'full',
+            'label' => 'Cloudflare HLS',
+            'sort_order' => 1,
+            'video_url' => 'https://video.mundoyuri.com/Moonshadow/index.m3u8',
+            'is_primary' => true,
+        ]);
+
+        Http::fake([
+            'https://video.mundoyuri.com/Moonshadow/index.m3u8' => Http::response("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=800000\nvariant/720p.m3u8", 200),
+            'https://video.mundoyuri.com/Moonshadow/variant/720p.m3u8' => Http::response("#EXTM3U\n#EXT-X-MAP:URI=\"init.mp4\"\n#EXTINF:6.0,\nsegment-001.ts", 200),
+        ]);
+
+        $response = $this->get(route('episode-sources.player', ['source' => $source, 'v' => 'test-session']));
+
+        $response->assertOk();
+        $cacheControl = $response->headers->get('Cache-Control');
+        $this->assertStringContainsString('no-store', $cacheControl);
+        $this->assertStringContainsString('no-cache', $cacheControl);
+        $this->assertStringContainsString('max-age=0', $cacheControl);
+        $response->assertSee('/player/episode-sources/'.$source->id.'?url=https%3A%2F%2Fvideo.mundoyuri.com%2FMoonshadow%2Fvariant%2F720p.m3u8&v=test-session', false);
+
+        $variantResponse = $this->get(route('episode-sources.player', [
+            'source' => $source,
+            'url' => 'https://video.mundoyuri.com/Moonshadow/variant/720p.m3u8',
+            'v' => 'test-session',
+        ]));
+
+        $variantResponse->assertOk();
+        $variantResponse->assertSee('URI="https://video.mundoyuri.com/Moonshadow/variant/init.mp4?_my_hls_session=test-session"', false);
+        $variantResponse->assertSee('https://video.mundoyuri.com/Moonshadow/variant/segment-001.ts?_my_hls_session=test-session', false);
     }
 }

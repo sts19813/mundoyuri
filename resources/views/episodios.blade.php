@@ -419,7 +419,22 @@
             playerVideo.load();
 
             if (window.Hls && Hls.isSupported()) {
-                hlsPlayer = new Hls();
+                hlsPlayer = new Hls({
+                    manifestLoadingMaxRetry: 4,
+                    levelLoadingMaxRetry: 4,
+                    fragLoadingMaxRetry: 4,
+                });
+                hlsPlayer.on(Hls.Events.ERROR, (event, data) => {
+                    if (!data.fatal) {
+                        return;
+                    }
+
+                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                        hlsPlayer.startLoad();
+                    } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                        hlsPlayer.recoverMediaError();
+                    }
+                });
                 hlsPlayer.loadSource(url);
                 hlsPlayer.attachMedia(playerVideo);
             } else if (playerVideo.canPlayType('application/vnd.apple.mpegurl')) {
