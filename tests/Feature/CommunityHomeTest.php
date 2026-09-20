@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Badge;
 use App\Models\Forum;
 use App\Models\ForumCategory;
 use App\Models\LegacyProfile;
@@ -77,25 +78,83 @@ class CommunityHomeTest extends TestCase
             ->assertSee('Miembro del directorio');
     }
 
-    public function test_community_home_mixes_public_modern_and_historical_members(): void
+    public function test_community_home_orders_recent_members_by_community_join_date(): void
     {
-        User::factory()->create(['name' => 'Hana Moderna', 'alias' => 'hana-moderna']);
-        LegacyProfile::query()->create([
-            'legacy_external_key' => 'mundo-yuri:prueba-historica',
-            'nickname' => 'Hana Histórica',
-            'slug' => 'hana-historica',
+        User::factory()->create(['name' => 'Hana Antigua', 'alias' => 'hana-antigua', 'created_at' => now()->subMonth()]);
+        User::factory()->create(['name' => 'Hana Reciente', 'alias' => 'hana-reciente', 'created_at' => now()]);
+        foreach (range(1, 16) as $index) {
+            User::factory()->create(['name' => "Extra {$index}", 'created_at' => now()->subDays($index)]);
+        }
+        User::factory()->create(['name' => 'Hana Fuera', 'created_at' => now()->subMonths(2)]);
+
+        $html = $this->get(route('community.index'))
+            ->assertOk()
+            ->assertSee('Nuevos usuarios en la comunidad')
+            ->assertSee('Hana Reciente')
+            ->assertSee('Hana Antigua')
+            ->assertDontSee('Hana Fuera')
+            ->getContent();
+
+        $recentStart = strpos($html, 'community-new-members-title');
+        $recentEnd = strpos($html, 'community-top-members-title');
+        $recentSection = substr($html, $recentStart, $recentEnd - $recentStart);
+
+        $this->assertLessThan(strpos($recentSection, 'Hana Antigua'), strpos($recentSection, 'Hana Reciente'));
+    }
+
+    public function test_community_home_shows_top_six_members_by_badge_score_including_historical_profiles(): void
+    {
+        $fundadora = Badge::query()->create([
+            'name' => 'Fundadora',
+            'slug' => 'fundadora-prueba',
+            'description' => 'Reconocimiento de fundación.',
+            'icon' => '♛',
+            'type' => 'special',
+            'priority' => 100,
+            'color' => '#f59e0b',
+            'is_active' => true,
+        ]);
+
+        $angel = LegacyProfile::query()->create([
+            'legacy_external_key' => 'mundo-yuri:angel',
+            'nickname' => 'Angel Fundadora',
+            'slug' => 'angel-fundadora',
             'legacy_joined_at' => '2007-08-13',
             'source' => 'captura-verificada',
             'is_legacy' => true,
             'legacy_verified' => true,
             'is_published' => true,
         ]);
+        $angel->badges()->attach($fundadora, ['awarded_at' => now()]);
 
-        $this->get(route('community.index'))
+        foreach (range(1, 6) as $score) {
+            $user = User::factory()->create(['name' => "Insignia {$score}"]);
+            $badge = Badge::query()->create([
+                'name' => "Insignia {$score}",
+                'slug' => "insignia-{$score}",
+                'description' => 'Reconocimiento de prueba.',
+                'icon' => '✦',
+                'type' => 'community',
+                'priority' => $score,
+                'color' => '#f43f8e',
+                'is_active' => true,
+            ]);
+
+            $user->badges()->attach($badge, ['awarded_at' => now()]);
+        }
+
+        $html = $this->get(route('community.index'))
             ->assertOk()
-            ->assertSee('Hana Moderna')
-            ->assertSee('Hana Histórica')
-            ->assertSee('Ver miembros');
+            ->assertSee('Usuarios Top de la comunidad')
+            ->getContent();
+
+        $topSection = substr($html, strpos($html, 'community-top-members-title'));
+
+        $this->assertStringContainsString('Angel Fundadora', $topSection);
+        $this->assertStringContainsString('Insignia 6', $topSection);
+        $this->assertStringContainsString('Insignia 2', $topSection);
+        $this->assertStringNotContainsString('Insignia 1', $topSection);
+        $this->assertLessThan(strpos($topSection, 'Insignia 6'), strpos($topSection, 'Angel Fundadora'));
     }
 
     /** @return array{ForumCategory, Forum} */

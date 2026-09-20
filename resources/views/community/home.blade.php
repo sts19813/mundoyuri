@@ -37,15 +37,37 @@
             <div class="community-home-grid">
                 <section class="community-home-section community-home-members">
                     <div class="community-home-heading">
-                        <div><span class="profile-panel-kicker">Personas</span><h2>Miembros de la comunidad</h2><p>Voces nuevas y perfiles recuperados, reunidos en un solo directorio.</p></div>
+                        <div><span class="profile-panel-kicker">Personas</span><h2>Miembros de la comunidad</h2></div>
                         <a href="{{ route('community.members') }}">Ver miembros</a>
                     </div>
-                    <div class="community-member-grid">
-                        @forelse($featuredMembers as $member)
-                            <x-community.member-card :member="$member" :rank-resolver="$rankResolver" />
-                        @empty
-                            <div class="community-home-empty"><strong>Pronto habrá miembros aquí</strong><span>El directorio se irá llenando conforme la comunidad crezca.</span></div>
-                        @endforelse
+                    <div class="community-member-spotlight">
+                        <section class="community-member-rail" aria-labelledby="community-new-members-title">
+                            <div class="community-member-rail-heading">
+                                <h3 id="community-new-members-title">Nuevos usuarios en la comunidad</h3>
+                                <span>{{ $recentMembers->count() }}</span>
+                            </div>
+                            <div class="community-member-chip-grid">
+                                @forelse($recentMembers as $member)
+                                    <x-community.member-chip :member="$member" />
+                                @empty
+                                    <div class="community-home-empty"><strong>Pronto habrá miembros aquí</strong><span>El directorio se irá llenando conforme la comunidad crezca.</span></div>
+                                @endforelse
+                            </div>
+                        </section>
+
+                        <section class="community-member-rail community-member-top" aria-labelledby="community-top-members-title">
+                            <div class="community-member-rail-heading">
+                                <h3 id="community-top-members-title">Usuarios Top de la comunidad</h3>
+                                <span>{{ $topBadgeMembers->count() }}</span>
+                            </div>
+                            <div class="community-member-chip-list">
+                                @forelse($topBadgeMembers as $member)
+                                    <x-community.member-chip :member="$member" />
+                                @empty
+                                    <div class="community-home-empty"><strong>Sin insignias todavía</strong><span>Cuando se entreguen insignias, aparecerán aquí.</span></div>
+                                @endforelse
+                            </div>
+                        </section>
                     </div>
                 </section>
 
@@ -83,4 +105,5 @@
         </div>
     </main>
     <x-footer />
+    <script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
 @endsection

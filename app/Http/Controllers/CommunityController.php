@@ -26,20 +26,40 @@ class CommunityController extends Controller
                 'communityRank',
                 'badges' => fn ($query) => $query->active()->ordered(),
             ])
-            ->latest()
-            ->limit(4)
+            ->orderByRaw('COALESCE(users.legacy_joined_at, users.created_at) DESC')
+            ->limit(18)
             ->get();
 
-        $historicalMembers = LegacyProfile::query()
+        $topModernMembers = User::query()
+            ->visibleInCommunityDirectory()
+            ->whereHas('badges', fn (Builder $query) => $query->active())
+            ->with([
+                'communityRank',
+                'badges' => fn ($query) => $query->active()->ordered(),
+            ])
+            ->withCount(['badges as active_badges_count' => fn ($query) => $query->active()])
+            ->withSum(['badges as badge_score' => fn ($query) => $query->active()], 'priority')
+            ->orderByDesc('badge_score')
+            ->orderByDesc('active_badges_count')
+            ->orderByDesc('community_message_count')
+            ->limit(6)
+            ->get();
+
+        $topHistoricalMembers = LegacyProfile::query()
             ->published()
-            ->whereNull('claimed_by_user_id')
+            ->whereHas('badges', fn (Builder $query) => $query->active())
             ->with(['badges' => fn ($query) => $query->active()->ordered()])
-            ->orderByDesc('legacy_joined_at')
-            ->limit(2)
+            ->withCount(['badges as active_badges_count' => fn ($query) => $query->active()])
+            ->withSum(['badges as badge_score' => fn ($query) => $query->active()], 'priority')
+            ->orderByDesc('badge_score')
+            ->orderByDesc('active_badges_count')
+            ->orderByDesc('legacy_message_count')
+            ->limit(6)
             ->get();
 
         return view('community.home', [
-            'featuredMembers' => $this->mixMembers($modernMembers, $historicalMembers),
+            'recentMembers' => $modernMembers,
+            'topBadgeMembers' => $this->topBadgeMembers($topModernMembers, $topHistoricalMembers),
             'rankResolver' => $rankResolver,
             'recentThreads' => ForumThread::query()
                 ->where('type', 'discussion')
@@ -69,22 +89,23 @@ class CommunityController extends Controller
     }
 
     /** @param Collection<int, User> $modernMembers @param Collection<int, LegacyProfile> $historicalMembers @return Collection<int, User|LegacyProfile> */
-    private function mixMembers(Collection $modernMembers, Collection $historicalMembers): Collection
+    private function topBadgeMembers(Collection $modernMembers, Collection $historicalMembers): Collection
     {
-        $members = collect();
-        $length = max($modernMembers->count(), $historicalMembers->count());
-
-        for ($index = 0; $index < $length; $index++) {
-            if ($modernMembers->has($index)) {
-                $members->push($modernMembers->get($index));
-            }
-
-            if ($historicalMembers->has($index)) {
-                $members->push($historicalMembers->get($index));
-            }
-        }
-
-        return $members->take(6);
+        return $modernMembers
+            ->concat($historicalMembers)
+            ->sort(function (User|LegacyProfile $first, User|LegacyProfile $second): int {
+                return [
+                    (int) ($second->badge_score ?? 0),
+                    (int) ($second->active_badges_count ?? 0),
+                    $second instanceof LegacyProfile ? (int) $second->legacy_message_count : (int) $second->community_message_count,
+                ] <=> [
+                    (int) ($first->badge_score ?? 0),
+                    (int) ($first->active_badges_count ?? 0),
+                    $first instanceof LegacyProfile ? (int) $first->legacy_message_count : (int) $first->community_message_count,
+                ];
+            })
+            ->values()
+            ->take(6);
     }
 
     public function members(MemberDirectoryRequest $request, CommunityRankResolver $rankResolver): View
