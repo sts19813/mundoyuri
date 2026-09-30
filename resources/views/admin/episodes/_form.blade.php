@@ -30,6 +30,7 @@
     $currentSeriesId = old('series_id', $episode->series_id ?? ($selectedSeriesId ?? request('series_id')));
     $currentSeason = old('season_number', $episode->season_number ?? ($suggestedSeason ?? 1));
     $currentEpisodeNumber = old('episode_number', $episode->episode_number ?? ($suggestedEpisodeNumber ?? 1));
+    $currentEpisodeNumber = \App\Models\Episode::formatEpisodeNumber($currentEpisodeNumber);
     $currentTitle = 'Episodio '.$currentEpisodeNumber;
     $currentPublishedAt = old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : ($suggestedPublishedAt ?? ''));
     $notificationEligible = $isCreating && str_starts_with($currentPublishedAt, now()->toDateString());
@@ -77,9 +78,9 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Numero de episodio</label>
-            <input class="form-control @error('episode_number') is-invalid @enderror" type="number" min="1" name="episode_number" id="episode-number" value="{{ $currentEpisodeNumber }}" required>
+            <input class="form-control @error('episode_number') is-invalid @enderror" type="number" min="0" max="99999" step="0.01" name="episode_number" id="episode-number" value="{{ $currentEpisodeNumber }}" required>
             @if($isCreating)
-                <div class="form-text">Se propone el siguiente número disponible; puedes cambiarlo.</div>
+                <div class="form-text">Se propone el siguiente número disponible; puedes cambiarlo a 0 o decimales como 1.5.</div>
             @endif
             @error('episode_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
@@ -264,7 +265,10 @@
             return;
         }
 
-        const episodeNumber = Math.max(1, Number.parseInt(episodeInput.value || '1', 10));
+        const parsedNumber = Number.parseFloat(episodeInput.value || '0');
+        const episodeNumber = Number.isFinite(parsedNumber) && parsedNumber >= 0
+            ? episodeInput.value
+            : '0';
         titleInput.value = `Episodio ${episodeNumber}`;
     };
 

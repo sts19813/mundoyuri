@@ -46,7 +46,7 @@ class ContentSubmissionController extends Controller
             'banner_image' => SeriesMedia::validationRules(),
             'cover_image' => SeriesMedia::validationRules(),
             'episode_title' => ['nullable', 'string', 'max:255'],
-            'episode_number' => ['nullable', 'integer', 'min:1', 'max:9999'],
+            'episode_number' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:9999'],
             'season_number' => ['nullable', 'integer', 'min:1', 'max:999'],
             'episode_release_date' => ['nullable', 'date'],
             'episode_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
@@ -171,8 +171,9 @@ class ContentSubmissionController extends Controller
         return $slug;
     }
 
-    private function resolveUniqueEpisodeSlug(string $seriesTitle, int $episodeNumber): string
+    private function resolveUniqueEpisodeSlug(string $seriesTitle, mixed $episodeNumber): string
     {
+        $episodeNumber = str_replace('.', '-', Episode::formatEpisodeNumber($episodeNumber));
         $baseSlug = Str::slug($seriesTitle.'-episodio-'.$episodeNumber);
         $slug = $baseSlug;
         $index = 1;

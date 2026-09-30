@@ -105,7 +105,7 @@ class EpisodeController extends Controller
             ->get()
             ->groupBy('series_id')
             ->map(fn ($episodes) => $episodes->mapWithKeys(
-                fn (Episode $episode) => [(string) $episode->season_number => ((int) $episode->max_episode_number) + 1]
+                fn (Episode $episode) => [(string) $episode->season_number => Episode::formatEpisodeNumber(floor((float) $episode->max_episode_number) + 1)]
             )->all())
             ->all();
 
@@ -234,8 +234,9 @@ class EpisodeController extends Controller
             'season_number' => ['required', 'integer', 'min:1', 'max:999'],
             'episode_number' => [
                 'required',
-                'integer',
-                'min:1',
+                'numeric',
+                'decimal:0,2',
+                'min:0',
                 'max:99999',
                 Rule::unique('episodes')
                     ->where(fn ($query) => $query->where('series_id', $request->input('series_id'))->where('season_number', $request->input('season_number')))
@@ -588,15 +589,16 @@ class EpisodeController extends Controller
     private function buildDefaultSlug(array $validated): string
     {
         $series = Series::query()->find($validated['series_id']);
+        $episodeNumber = str_replace('.', '-', Episode::formatEpisodeNumber($validated['episode_number']));
 
         return Str::slug(
-            $series?->title.'-s'.$validated['season_number'].'e'.$validated['episode_number']
+            $series?->title.'-s'.$validated['season_number'].'e'.$episodeNumber
         );
     }
 
-    private function episodeTitle(int $episodeNumber): string
+    private function episodeTitle(mixed $episodeNumber): string
     {
-        return 'Episodio '.$episodeNumber;
+        return 'Episodio '.Episode::formatEpisodeNumber($episodeNumber);
     }
 
     private function syncModeration(Episode $episode, string $status, ?string $notes): void

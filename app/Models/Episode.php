@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\SeriesMedia;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +41,28 @@ class Episode extends Model
             'notify_subscribers' => 'boolean',
             'views_count' => 'integer',
         ];
+    }
+
+    protected function episodeNumber(): Attribute
+    {
+        return Attribute::make(
+            get: fn (mixed $value): string => self::formatEpisodeNumber($value),
+        );
+    }
+
+    public static function formatEpisodeNumber(mixed $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (! is_numeric($value)) {
+            return $value;
+        }
+
+        return rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');
     }
 
     public function recordView(?User $viewer): void

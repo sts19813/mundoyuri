@@ -169,6 +169,52 @@ class AdminEpisodeWorkflowTest extends TestCase
             ->assertSee('siguiente número disponible');
     }
 
+    public function test_create_form_allows_special_episode_zero_before_the_first_episode(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $series = $this->createSeries($admin);
+
+        Episode::query()->create([
+            'series_id' => $series->id,
+            'created_by' => $admin->id,
+            'title' => 'Episodio 0',
+            'slug' => 'episodio-0',
+            'season_number' => 1,
+            'episode_number' => 0,
+            'moderation_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.episodes.create', ['series_id' => $series->id]));
+
+        $response->assertOk()
+            ->assertSee('id="episode-number" value="1"', false)
+            ->assertSee('id="episode-title" value="Episodio 1"', false)
+            ->assertSee('min="0"', false)
+            ->assertSee('step="0.01"', false);
+    }
+
+    public function test_admin_can_store_decimal_episode_numbers_with_generated_title_and_slug(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $series = $this->createSeries($admin, ['title' => 'Serie decimal', 'slug' => 'serie-decimal']);
+
+        $response = $this->actingAs($admin)->postJson(route('admin.episodes.store'), [
+            'series_id' => $series->id,
+            'title' => 'Titulo ignorado',
+            'season_number' => 1,
+            'episode_number' => '1.5',
+            'moderation_status' => 'approved',
+        ]);
+
+        $response->assertOk();
+
+        $episode = Episode::query()->firstOrFail();
+
+        $this->assertSame('1.5', $episode->episode_number);
+        $this->assertSame('Episodio 1.5', $episode->title);
+        $this->assertSame('serie-decimal-s1e1-5', $episode->slug);
+    }
+
     public function test_an_admin_episode_is_always_approved_even_when_another_status_is_submitted(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
