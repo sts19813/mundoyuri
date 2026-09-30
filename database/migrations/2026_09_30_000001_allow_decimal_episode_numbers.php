@@ -9,6 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('episodes', function (Blueprint $table) {
+            $table->index('series_id', 'episodes_series_id_index');
+        });
+
+        Schema::table('episodes', function (Blueprint $table) {
             $table->dropUnique('episodes_series_season_episode_unique');
         });
 
@@ -33,6 +37,10 @@ return new class extends Migration
 
         Schema::table('episodes', function (Blueprint $table) {
             $table->unique(['series_id', 'season_number', 'episode_number'], 'episodes_series_season_episode_unique');
+        });
+
+        Schema::table('episodes', function (Blueprint $table) {
+            $table->dropIndex('episodes_series_id_index');
         });
     }
 };
