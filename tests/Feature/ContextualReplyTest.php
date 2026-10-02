@@ -164,7 +164,7 @@ class ContextualReplyTest extends TestCase
 
         $this->actingAs($author)->post(route('forum.threads.store', $forum), [
             'title' => 'Hola con editor',
-            'body' => '<p>Hola <strong>@Hana</strong></p><script>alert(1)</script><a href="https://youtu.be/dQw4w9WgXcQ">video</a><iframe src="https://evil.example/embed"></iframe>',
+            'body' => '<p>Hola <strong>@Hana</strong></p><script>alert(1)</script><a href="https://youtu.be/dQw4w9WgXcQ">video</a><iframe src="https://evil.example/embed"></iframe><img src="/storage/community-post-images/demo.webp" class="rich-image-align-center extra" style="width: 55%; color: red;" onerror="alert(2)" width="1200" height="900">',
         ])->assertRedirect();
 
         $post = ForumPost::query()->where('is_initial', true)->firstOrFail();
@@ -172,6 +172,10 @@ class ContextualReplyTest extends TestCase
         $this->assertStringNotContainsString('<script', $post->body);
         $this->assertStringContainsString('youtube-nocookie.com/embed/dQw4w9WgXcQ', $post->body);
         $this->assertStringNotContainsString('evil.example', $post->body);
+        $this->assertStringContainsString('class="rich-image-align-center"', $post->body);
+        $this->assertStringContainsString('style="width: 55%; height: auto;"', $post->body);
+        $this->assertStringNotContainsString('onerror', $post->body);
+        $this->assertStringNotContainsString('color: red', $post->body);
 
         $this->get(route('forum.threads.show', $post->thread))
             ->assertOk()

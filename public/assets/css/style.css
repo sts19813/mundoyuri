@@ -1816,6 +1816,7 @@
     }
 
     .rich-editor {
+        position: relative;
         overflow: hidden;
         border: 1px solid rgba(244, 63, 142, .17);
         border-radius: 12px;
@@ -1889,7 +1890,65 @@
     .rich-editor .ql-toolbar .ql-picker-label.ql-active,
     .rich-editor .ql-toolbar .ql-picker-item:hover,
     .rich-editor .ql-toolbar .ql-picker-item.ql-selected { color: #ff9bc6; }
-    .rich-editor .ql-editor img { max-width: 100%; border-radius: 12px; }
+    .rich-editor .ql-editor img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+    .rich-editor .ql-editor img.rich-editor-image-selected {
+        outline: 2px solid #ff9bc6;
+        outline-offset: 4px;
+        box-shadow: 0 0 0 7px rgba(244, 63, 142, .11);
+    }
+    .rich-editor-image-tools {
+        position: absolute;
+        z-index: 8;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;
+        max-width: calc(100% - 16px);
+        padding: 7px;
+        border: 1px solid rgba(244, 63, 142, .28);
+        border-radius: 10px;
+        background: rgba(15, 7, 18, .96);
+        box-shadow: 0 16px 34px rgba(0, 0, 0, .36);
+    }
+    .rich-editor-image-tools[hidden] { display: none; }
+    .rich-editor-image-tools button {
+        min-width: 34px;
+        height: 30px;
+        padding: 0 9px;
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 8px;
+        color: #fff;
+        font: 700 .62rem 'DM Sans', sans-serif;
+        background: rgba(255, 255, 255, .06);
+        cursor: pointer;
+    }
+    .rich-editor-image-tools button:hover,
+    .rich-editor-image-tools button:focus-visible {
+        border-color: rgba(255, 155, 198, .6);
+        color: #fff;
+        background: rgba(244, 63, 142, .26);
+    }
+    .rich-editor-image-tools-divider {
+        width: 1px;
+        height: 22px;
+        background: rgba(255, 255, 255, .12);
+    }
+    .rich-editor-image-resize {
+        width: 18px;
+        height: 18px;
+        border-right: 3px solid #fff;
+        border-bottom: 3px solid #fff;
+        border-radius: 2px;
+        cursor: nwse-resize;
+    }
+    .rich-editor-image-tools.is-resizing .rich-editor-image-resize {
+        border-color: #ff9bc6;
+    }
     .rich-editor .ql-editor iframe { width: 100%; aspect-ratio: 16 / 9; min-height: 240px; border: 0; border-radius: 12px; background: #050308; }
     .rich-editor-status { min-height: 1.2em; margin: 0; padding: 0 15px 12px; color: var(--muted); font-size: .68rem; }
 
@@ -2223,6 +2282,15 @@
     .forum-post-body a:hover { color: #ffd5e7; text-decoration: underline; }
     .public-profile-biography img,
     .forum-post-body img { display: block; max-width: 100%; height: auto; margin: 15px 0; border-radius: 14px; }
+    .rich-editor .ql-editor img.rich-image-align-left,
+    .public-profile-biography img.rich-image-align-left,
+    .forum-post-body img.rich-image-align-left { display: block; margin: 15px auto 15px 0; }
+    .rich-editor .ql-editor img.rich-image-align-center,
+    .public-profile-biography img.rich-image-align-center,
+    .forum-post-body img.rich-image-align-center { display: block; margin: 15px auto; }
+    .rich-editor .ql-editor img.rich-image-align-right,
+    .public-profile-biography img.rich-image-align-right,
+    .forum-post-body img.rich-image-align-right { display: block; margin: 15px 0 15px auto; }
     .public-profile-biography iframe,
     .forum-post-body iframe { display: block; width: 100%; max-width: 760px; aspect-ratio: 16 / 9; height: auto; margin: 15px 0; border: 0; border-radius: 14px; background: #050308; }
     .public-profile-biography blockquote,

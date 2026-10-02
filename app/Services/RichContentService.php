@@ -13,7 +13,7 @@ class RichContentService
     /** @var array<string, list<string>> */
     private const ALLOWED_ATTRIBUTES = [
         'a' => ['href', 'title', 'target', 'rel'],
-        'img' => ['src', 'alt', 'title'],
+        'img' => ['src', 'alt', 'title', 'class', 'style', 'width', 'height'],
         'iframe' => ['src', 'title', 'allow', 'allowfullscreen', 'loading', 'referrerpolicy'],
         'p' => ['class'],
         'h2' => ['class'],
@@ -156,12 +156,11 @@ class RichContentService
         if ($tag === 'img') {
             $element->setAttribute('loading', 'lazy');
             $element->setAttribute('alt', Str::limit($element->getAttribute('alt') ?: 'Imagen insertada', 160, ''));
+            $this->sanitizeImageLayout($element);
         }
 
         if ($element->hasAttribute('class')) {
-            $classes = collect(explode(' ', $element->getAttribute('class')))
-                ->filter(fn (string $class): bool => preg_match('/^ql-align-(center|right|justify)$/', $class) === 1)
-                ->implode(' ');
+            $classes = $this->sanitizeClasses($element, $tag);
 
             if ($classes === '') {
                 $element->removeAttribute('class');
@@ -169,6 +168,63 @@ class RichContentService
                 $element->setAttribute('class', $classes);
             }
         }
+    }
+
+    private function sanitizeImageLayout(DOMElement $element): void
+    {
+        $width = $this->safeImageWidth($element->getAttribute('style'))
+            ?: $this->safeImageWidth($element->getAttribute('width'));
+
+        $element->removeAttribute('width');
+        $element->removeAttribute('height');
+
+        if (! $width) {
+            $element->removeAttribute('style');
+
+            return;
+        }
+
+        $element->setAttribute('style', 'width: '.$width.'; height: auto;');
+    }
+
+    private function safeImageWidth(string $value): ?string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/(?:^|;)\s*width\s*:\s*([^;]+)/i', $value, $matches) === 1) {
+            $value = trim($matches[1]);
+        }
+
+        if (preg_match('/^(\d{1,3})(?:\.\d{1,2})?%$/', $value, $matches) === 1) {
+            $width = max(10, min(100, (float) $matches[1]));
+
+            return rtrim(rtrim(number_format($width, 2, '.', ''), '0'), '.').'%';
+        }
+
+        if (preg_match('/^(\d{2,4})px$/', $value, $matches) === 1) {
+            $width = max(80, min(1200, (int) $matches[1]));
+
+            return $width.'px';
+        }
+
+        return null;
+    }
+
+    private function sanitizeClasses(DOMElement $element, string $tag): string
+    {
+        return collect(explode(' ', $element->getAttribute('class')))
+            ->filter(function (string $class) use ($tag): bool {
+                if (preg_match('/^ql-align-(center|right|justify)$/', $class) === 1) {
+                    return true;
+                }
+
+                return $tag === 'img' && preg_match('/^rich-image-align-(left|center|right)$/', $class) === 1;
+            })
+            ->implode(' ');
     }
 
     private function convertYoutubeAnchors(DOMDocument $document, DOMNode $body): void
