@@ -20,7 +20,18 @@
     <form method="POST" action="{{ route('questions.store') }}" class="forum-composer profile-panel" enctype="multipart/form-data">
         @csrf
         <div class="profile-field"><label for="question-title">Título</label><input id="question-title" name="title" maxlength="180" required value="{{ old('title') }}" placeholder="Resume tu duda con claridad" @error('title') aria-invalid="true" aria-describedby="question-title-error" @enderror>@error('title')<small id="question-title-error" class="profile-field-error">{{ $message }}</small>@enderror</div>
-        <div class="profile-field"><label for="question-body">Descripción</label><textarea id="question-body" name="body" rows="8" maxlength="12000" placeholder="Explica lo que sabes, has probado o buscas." @error('body') aria-invalid="true" aria-describedby="question-body-error" @enderror>{{ old('body') }}</textarea><small class="forum-composer-help">Texto plano: no se permite HTML. Máximo 12 000 caracteres; también puedes adjuntar una imagen.</small>@error('body')<small id="question-body-error" class="profile-field-error">{{ $message }}</small>@enderror</div>
+        <div class="profile-field">
+            <label for="question-body">Descripción</label>
+            <x-rich-editor
+                id="question-body"
+                name="body"
+                :value="old('body')"
+                placeholder="Explica lo que sabes, has probado o buscas."
+                min-height="320px"
+            />
+            <small class="forum-composer-help">Puedes usar formato, enlaces, videos de YouTube, menciones con @alias y arrastrar imágenes al editor.</small>
+            @error('body')<small id="question-body-error" class="profile-field-error">{{ $message }}</small>@enderror
+        </div>
         <div class="forum-composer-actions"><x-forum.image-field id="question-image" /><button type="submit" class="profile-btn profile-btn-primary">Publicar pregunta</button></div>
     </form>
 </div></main>

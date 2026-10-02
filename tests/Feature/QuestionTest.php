@@ -34,6 +34,7 @@ class QuestionTest extends TestCase
 
         $this->get(route('questions.create'))
             ->assertOk()
+            ->assertSee('data-rich-editor', false)
             ->assertSee('Título')
             ->assertSee('Descripción')
             ->assertDontSee('Espacio')
@@ -43,6 +44,33 @@ class QuestionTest extends TestCase
             ->assertSee($question->title)
             ->assertDontSee('votos')
             ->assertDontSee('En ');
+    }
+
+    public function test_new_question_supports_sanitized_rich_content(): void
+    {
+        $author = User::factory()->create(['alias' => 'Autora']);
+
+        $this->actingAs($author)->post(route('questions.store'), [
+            'title' => '¿Cómo puedo compartir una escena de YouTube?',
+            'body' => '<p>Busco <strong>ayuda</strong></p><script>alert(1)</script><a href="https://youtu.be/dQw4w9WgXcQ">video</a><img src="/storage/community-post-images/demo.webp" class="rich-image-align-right" style="width: 55%; color: red;" onerror="alert(2)">',
+        ])->assertRedirect();
+
+        $question = ForumThread::query()->firstOrFail();
+        $post = $question->initialPost()->firstOrFail();
+
+        $this->assertStringContainsString('<strong>ayuda</strong>', $post->body);
+        $this->assertStringContainsString('youtube-nocookie.com/embed/dQw4w9WgXcQ', $post->body);
+        $this->assertStringContainsString('class="rich-image-align-right"', $post->body);
+        $this->assertStringContainsString('style="width: 55%; height: auto;"', $post->body);
+        $this->assertStringNotContainsString('<script', $post->body);
+        $this->assertStringNotContainsString('onerror', $post->body);
+        $this->assertStringNotContainsString('color: red', $post->body);
+
+        $this->get(route('questions.show', $question))
+            ->assertOk()
+            ->assertSee('<strong>ayuda</strong>', false)
+            ->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertDontSee('alert(1)');
     }
 
     public function test_votes_are_unique_and_members_cannot_vote_for_themselves(): void
