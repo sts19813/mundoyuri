@@ -88,6 +88,8 @@ class CommunityDirectoryTest extends TestCase
 
     public function test_directory_filters_automatic_and_special_ranks(): void
     {
+        $this->travelTo('2026-10-02 12:00:00');
+
         $kohai = CommunityRank::query()->where('slug', 'kohai')->firstOrFail();
         $special = CommunityRank::query()->create([
             'name' => 'Fundadora',
@@ -98,12 +100,16 @@ class CommunityDirectoryTest extends TestCase
         ]);
 
         User::factory()->create(['name' => 'Kohai Visible', 'community_message_count' => 20]);
+        User::factory()->create(['name' => 'Kohai Por Fecha', 'community_message_count' => 0, 'created_at' => now()->subMonths(2)]);
+        User::factory()->create(['name' => 'Fan Por Fecha', 'community_message_count' => 0, 'created_at' => now()->subMonths(7)]);
         User::factory()->create(['name' => 'Yuri Fan Visible', 'community_message_count' => 80]);
         User::factory()->create(['name' => 'Fundadora Visible', 'community_rank_id' => $special->id]);
 
         $this->get(route('community.members', ['rank' => $kohai->id]))
             ->assertOk()
             ->assertSee('Kohai Visible')
+            ->assertSee('Kohai Por Fecha')
+            ->assertDontSee('Fan Por Fecha')
             ->assertDontSee('Yuri Fan Visible')
             ->assertDontSee('Fundadora Visible');
 

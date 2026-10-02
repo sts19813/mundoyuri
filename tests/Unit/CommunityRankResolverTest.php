@@ -21,6 +21,25 @@ class CommunityRankResolverTest extends TestCase
         $this->assertSame('yuri-senpai', $rank?->slug);
     }
 
+    public function test_it_resolves_automatic_ranks_by_community_join_age(): void
+    {
+        $this->travelTo('2026-10-02 12:00:00');
+
+        $users = [
+            'nuevo-miembro' => User::factory()->create(['created_at' => now()->subDays(20), 'community_message_count' => 0]),
+            'kohai' => User::factory()->create(['created_at' => now()->subMonths(2), 'community_message_count' => 0]),
+            'yuri-fan' => User::factory()->create(['created_at' => now()->subMonths(7), 'community_message_count' => 0]),
+            'yuri-senpai' => User::factory()->create(['created_at' => now()->subYears(2), 'community_message_count' => 0]),
+            'onee-sama' => User::factory()->create(['created_at' => now()->subYears(6), 'community_message_count' => 0]),
+        ];
+
+        $resolver = app(CommunityRankResolver::class);
+
+        foreach ($users as $expectedRank => $user) {
+            $this->assertSame($expectedRank, $resolver->resolve($user)?->slug);
+        }
+    }
+
     public function test_an_active_special_rank_overrides_automatic_progress(): void
     {
         $specialRank = CommunityRank::query()->create([

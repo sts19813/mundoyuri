@@ -244,13 +244,61 @@ class CommunityController extends Controller
             ->automatic()
             ->where('minimum_posts', '>', $rank->minimum_posts)
             ->min('minimum_posts');
+        [$tenureScoreSql, $tenureScoreBindings] = $this->tenureRankScoreSql();
 
         $query
             ->where(function (Builder $query): void {
                 $query->whereNull('community_rank_id')
                     ->orWhereDoesntHave('communityRank', fn (Builder $rankQuery) => $rankQuery->active()->special());
             })
-            ->where('community_message_count', '>=', $rank->minimum_posts)
-            ->when($nextMinimum !== null, fn (Builder $query) => $query->where('community_message_count', '<', $nextMinimum));
+            ->where(function (Builder $query) use ($rank, $tenureScoreSql, $tenureScoreBindings): void {
+                $query
+                    ->where('community_message_count', '>=', $rank->minimum_posts)
+                    ->orWhereRaw("({$tenureScoreSql}) >= ?", [...$tenureScoreBindings, $rank->minimum_posts]);
+            })
+            ->when($nextMinimum !== null, function (Builder $query) use ($nextMinimum, $tenureScoreSql, $tenureScoreBindings): void {
+                $query
+                    ->where('community_message_count', '<', $nextMinimum)
+                    ->whereRaw("({$tenureScoreSql}) < ?", [...$tenureScoreBindings, $nextMinimum]);
+            });
+    }
+
+    /** @return array{string, array<int, int|string>} */
+    private function tenureRankScoreSql(): array
+    {
+        $minimums = CommunityRank::query()
+            ->active()
+            ->automatic()
+            ->whereIn('slug', ['nuevo-miembro', 'kohai', 'yuri-fan', 'yuri-senpai', 'onee-sama'])
+            ->pluck('minimum_posts', 'slug');
+        $communityJoinDateSql = <<<'SQL'
+CASE
+    WHEN users.is_legacy = 1 AND users.legacy_joined_at IS NOT NULL THEN users.legacy_joined_at
+    ELSE users.created_at
+END
+SQL;
+
+        return [
+            <<<SQL
+CASE
+    WHEN ({$communityJoinDateSql}) <= ? THEN ?
+    WHEN ({$communityJoinDateSql}) <= ? THEN ?
+    WHEN ({$communityJoinDateSql}) <= ? THEN ?
+    WHEN ({$communityJoinDateSql}) <= ? THEN ?
+    ELSE ?
+END
+SQL,
+            [
+                now()->subYears(5)->toDateTimeString(),
+                (int) ($minimums['onee-sama'] ?? 500),
+                now()->subYear()->toDateTimeString(),
+                (int) ($minimums['yuri-senpai'] ?? 200),
+                now()->subMonths(6)->toDateTimeString(),
+                (int) ($minimums['yuri-fan'] ?? 50),
+                now()->subMonth()->toDateTimeString(),
+                (int) ($minimums['kohai'] ?? 10),
+                (int) ($minimums['nuevo-miembro'] ?? 0),
+            ],
+        ];
     }
 }
