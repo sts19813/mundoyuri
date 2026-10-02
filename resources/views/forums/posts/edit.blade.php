@@ -17,7 +17,7 @@
 
 <x-navbar />
     <main class="portal-profile-page forum-page">
-        <div class="container px-4">
+        <div class="container-xl px-4">
             <nav class="profile-breadcrumb"><a href="{{ route('forum.threads.show', $post->thread) }}">Volver al tema</a><span>›</span><span>Editar mensaje</span></nav>
             <header class="forum-forum-header"><div><span class="profile-eyebrow">Edición</span><h1>Editar mensaje</h1></div></header>
             <x-forum.composer

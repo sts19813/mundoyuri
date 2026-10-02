@@ -18,7 +18,7 @@
 <x-navbar />
     @php($initialPost = $thread->posts->firstWhere('is_initial', true))
     <main class="portal-profile-page forum-page">
-        <div class="container px-4">
+        <div class="container-xl px-4">
             <nav class="profile-breadcrumb"><a href="{{ route('forum.threads.show', $thread) }}">{{ $thread->title }}</a><span>›</span><span>Editar</span></nav>
             <header class="forum-forum-header"><div><span class="profile-eyebrow">Edición</span><h1>Editar tema</h1></div></header>
             <x-forum.composer

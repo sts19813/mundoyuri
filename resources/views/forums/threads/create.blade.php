@@ -9,5 +9,5 @@
 
 @section('body')
 
-<x-navbar /><main class="portal-profile-page forum-page"><div class="container px-4"><nav class="profile-breadcrumb"><a href="{{ route('forums.show', $forum) }}">{{ $forum->name }}</a><span>›</span><span>Nuevo tema</span></nav><header class="forum-forum-header"><div><span class="profile-eyebrow">Nuevo tema</span><h1>Inicia una conversación</h1></div></header><x-forum.composer :action="route('forum.threads.store', $forum)" submit="Publicar tema" title="" /></div></main><x-footer />
+<x-navbar /><main class="portal-profile-page forum-page"><div class="container-xl px-4"><nav class="profile-breadcrumb"><a href="{{ route('forums.show', $forum) }}">{{ $forum->name }}</a><span>›</span><span>Nuevo tema</span></nav><header class="forum-forum-header"><div><span class="profile-eyebrow">Nuevo tema</span><h1>Inicia una conversación</h1></div></header><x-forum.composer :action="route('forum.threads.store', $forum)" submit="Publicar tema" title="" /></div></main><x-footer />
 @endsection
