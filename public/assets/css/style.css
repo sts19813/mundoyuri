@@ -1860,16 +1860,31 @@
         font-style: normal;
     }
 
-    .rich-editor .ql-stroke { stroke: #d6c5d8; }
-    .rich-editor .ql-fill { fill: #d6c5d8; }
-    .rich-editor .ql-picker { color: #d6c5d8; }
+    .rich-editor .ql-toolbar button,
+    .rich-editor .ql-toolbar .ql-picker-label,
+    .rich-editor .ql-toolbar .ql-picker-item {
+        color: #fff;
+        opacity: .94;
+    }
+    .rich-editor .ql-toolbar button:hover,
+    .rich-editor .ql-toolbar button:focus-visible,
+    .rich-editor .ql-toolbar .ql-picker-label:hover,
+    .rich-editor .ql-toolbar .ql-picker-label:focus-visible {
+        opacity: 1;
+    }
+    .rich-editor .ql-stroke { stroke: #fff !important; }
+    .rich-editor .ql-fill { fill: #fff !important; }
+    .rich-editor .ql-picker { color: #fff; }
     .rich-editor .ql-picker-options { border-color: rgba(244, 63, 142, .2) !important; background: #1a0f1d !important; }
     .rich-editor .ql-toolbar button:hover .ql-stroke,
+    .rich-editor .ql-toolbar button:focus-visible .ql-stroke,
     .rich-editor .ql-toolbar button.ql-active .ql-stroke,
     .rich-editor .ql-toolbar .ql-picker-label:hover .ql-stroke,
-    .rich-editor .ql-toolbar .ql-picker-label.ql-active .ql-stroke { stroke: #ff9bc6; }
+    .rich-editor .ql-toolbar .ql-picker-label:focus-visible .ql-stroke,
+    .rich-editor .ql-toolbar .ql-picker-label.ql-active .ql-stroke { stroke: #ff9bc6 !important; }
     .rich-editor .ql-toolbar button:hover .ql-fill,
-    .rich-editor .ql-toolbar button.ql-active .ql-fill { fill: #ff9bc6; }
+    .rich-editor .ql-toolbar button:focus-visible .ql-fill,
+    .rich-editor .ql-toolbar button.ql-active .ql-fill { fill: #ff9bc6 !important; }
     .rich-editor .ql-toolbar .ql-picker-label:hover,
     .rich-editor .ql-toolbar .ql-picker-label.ql-active,
     .rich-editor .ql-toolbar .ql-picker-item:hover,
