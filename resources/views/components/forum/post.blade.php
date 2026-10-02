@@ -50,7 +50,7 @@
         @if($post->is_hidden)
             <p class="forum-hidden-message">Este mensaje está oculto por moderación.</p>
         @else
-            <div class="forum-post-body">{!! nl2br(app(\App\Services\MentionService::class)->render($post->body, $post->mentions->pluck('mentionedUser'))) !!}</div>
+            <div class="forum-post-body">{!! app(\App\Services\RichContentService::class)->renderForumBody($post->body, $post->mentions->pluck('mentionedUser')) !!}</div>
             @if($post->imageUrl())
                 <a class="forum-post-image" href="{{ $post->imageUrl() }}" target="_blank" rel="noopener">
                     <img src="{{ $post->imageUrl() }}" alt="Imagen adjunta por {{ $post->authorName() }}" loading="lazy">

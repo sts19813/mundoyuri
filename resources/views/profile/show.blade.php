@@ -137,7 +137,7 @@
                         </div>
 
                         @if(filled($profileUser->biography))
-                            <p class="public-profile-biography">{{ $profileUser->biography }}</p>
+                            <div class="public-profile-biography">{!! app(\App\Services\RichContentService::class)->renderProfileBiography($profileUser->biography) !!}</div>
                         @else
                             <div class="public-profile-empty">
                                 <span aria-hidden="true">✦</span>

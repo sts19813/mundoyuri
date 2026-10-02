@@ -98,6 +98,11 @@ class CommunityProfilePrivacyTest extends TestCase
         $this->assertSame('Nos vemos en el foro.', $user->signature_text);
     }
 
+    public function test_new_users_show_last_seen_by_default(): void
+    {
+        $this->assertTrue(User::factory()->create()->show_last_seen);
+    }
+
     public function test_legacy_profile_displays_historical_membership_without_private_metadata(): void
     {
         $legacy = User::factory()->create([

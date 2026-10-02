@@ -210,11 +210,13 @@ class ForumTest extends TestCase
         $member = User::factory()->create();
 
         $response = $this->actingAs($member)->postJson(route('forum.posts.store', $thread), [
-            'body' => '<script>alert(123)</script>', 'from_feed' => true,
+            'body' => '<p>Hola <script>alert(123)</script><strong>bien</strong></p>', 'from_feed' => true,
         ])->assertCreated()->assertJsonPath('replies_count', 1);
-        $this->assertStringContainsString('&lt;script&gt;', $response->json('html'));
+        $this->assertStringContainsString('<strong>bien</strong>', $response->json('html'));
         $this->assertStringNotContainsString('<script>alert', $response->json('html'));
+        $this->assertStringNotContainsString('alert(123)', $response->json('html'));
         $this->assertSame(1, $member->fresh()->community_message_count);
+        $this->postJson(route('forum.posts.store', $thread), ['body' => '<script>alert(123)</script>'])->assertUnprocessable();
         $this->postJson(route('forum.posts.store', $thread), ['body' => ''])->assertUnprocessable();
         $thread->update(['is_locked' => true]);
         $this->postJson(route('forum.posts.store', $thread), ['body' => 'No permitida'])->assertForbidden();

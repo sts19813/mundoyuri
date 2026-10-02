@@ -160,10 +160,14 @@
                             </div>
 
                             <div class="profile-field profile-field-wide">
-                                <label for="biography">Biografía <span>Máximo 600 caracteres</span></label>
-                                <textarea id="biography" name="biography" rows="5" maxlength="600"
+                                <label for="biography">Biografía <span>Con enlaces, imágenes y videos</span></label>
+                                <x-rich-editor
+                                    id="biography"
+                                    name="biography"
+                                    :value="old('biography', $user->biography)"
                                     placeholder="Cuéntale a la comunidad algo sobre ti, tus gustos y tus series favoritas…"
-                                    class="@error('biography') is-invalid @enderror">{{ old('biography', $user->biography) }}</textarea>
+                                    min-height="260px"
+                                />
                                 @error('biography')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>
 

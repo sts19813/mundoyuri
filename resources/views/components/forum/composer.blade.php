@@ -15,8 +15,14 @@
     @endif
     <div class="profile-field">
         <label for="forum-body">Mensaje</label>
-        <textarea id="forum-body" name="body" rows="7" maxlength="12000" placeholder="Escribe tu mensaje. Puedes mencionar a alguien con @alias.">{{ $useOldInput ? old('body', $body) : $body }}</textarea>
-        <small class="forum-composer-help">Puedes mencionar a alguien con @alias. Máximo 12 000 caracteres; también puedes publicar una imagen.</small>
+        <x-rich-editor
+            id="forum-body"
+            name="body"
+            :value="$useOldInput ? old('body', $body) : $body"
+            placeholder="Escribe tu mensaje. Puedes mencionar a alguien con @alias, insertar enlaces, videos e imágenes."
+            min-height="320px"
+        />
+        <small class="forum-composer-help">Puedes mencionar a alguien con @alias, arrastrar imágenes o insertar videos de YouTube.</small>
         @if($useOldInput)
             @error('body')<small class="text-danger">{{ $message }}</small>@enderror
         @endif

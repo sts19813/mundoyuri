@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table): void {
             $table->enum('profile_visibility', ['public', 'members', 'private'])->default('public');
-            $table->boolean('show_last_seen')->default(false);
+            $table->boolean('show_last_seen')->default(true);
             $table->boolean('show_join_date')->default(true);
             $table->boolean('show_favorites')->default(true);
             $table->boolean('show_activity')->default(true);

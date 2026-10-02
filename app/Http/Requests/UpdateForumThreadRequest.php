@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\ForumThread;
+use App\Services\RichContentService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateForumThreadRequest extends FormRequest
@@ -19,7 +20,7 @@ class UpdateForumThreadRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'min:5', 'max:180'],
-            'body' => ['nullable', 'string', 'min:2', 'max:12000'],
+            'body' => ['nullable', 'string', 'min:2', 'max:65000'],
             'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'remove_image' => ['nullable', 'boolean'],
         ];
@@ -37,5 +38,12 @@ class UpdateForumThreadRequest extends FormRequest
                 $validator->errors()->add('body', 'Escribe un mensaje o conserva una imagen en el tema.');
             }
         }];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'body' => app(RichContentService::class)->sanitize($this->input('body')),
+        ]);
     }
 }

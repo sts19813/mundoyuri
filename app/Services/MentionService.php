@@ -9,6 +9,9 @@ use App\Notifications\ForumMentionNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
+use DOMDocument;
+use DOMElement;
+use DOMText;
 
 class MentionService
 {
@@ -91,6 +94,42 @@ class MentionService
         return new HtmlString($rendered);
     }
 
+    /**
+     * Replace recorded mentions inside already-sanitized HTML text nodes.
+     *
+     * @param  iterable<User|null>  $mentionedUsers
+     */
+    public function renderHtml(string $html, iterable $mentionedUsers): HtmlString
+    {
+        $usersByAlias = collect($mentionedUsers)
+            ->filter(fn ($user) => $user instanceof User && filled($user->alias))
+            ->keyBy(fn (User $user) => mb_strtolower($user->alias));
+
+        if ($usersByAlias->isEmpty()) {
+            return new HtmlString($html);
+        }
+
+        $document = new DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $document->loadHTML('<?xml encoding="UTF-8"><body>'.$html.'</body>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $body = $document->getElementsByTagName('body')->item(0);
+        if (! $body) {
+            return new HtmlString($html);
+        }
+
+        $this->replaceMentionsInNode($document, $body, $usersByAlias);
+
+        $rendered = '';
+        foreach ($body->childNodes as $child) {
+            $rendered .= $document->saveHTML($child);
+        }
+
+        return new HtmlString($rendered);
+    }
+
     /** @return Collection<int, string> */
     private function extractAliases(string $body)
     {
@@ -100,5 +139,55 @@ class MentionService
             ->map(fn (string $alias) => mb_strtolower($alias))
             ->unique()
             ->values();
+    }
+
+    /** @param Collection<string, User> $usersByAlias */
+    private function replaceMentionsInNode(DOMDocument $document, \DOMNode $node, Collection $usersByAlias): void
+    {
+        foreach (iterator_to_array($node->childNodes) as $child) {
+            if ($child instanceof DOMText) {
+                $this->replaceMentionText($document, $child, $usersByAlias);
+
+                continue;
+            }
+
+            if ($child instanceof DOMElement && ! in_array(strtolower($child->tagName), ['a', 'code', 'pre'], true)) {
+                $this->replaceMentionsInNode($document, $child, $usersByAlias);
+            }
+        }
+    }
+
+    /** @param Collection<string, User> $usersByAlias */
+    private function replaceMentionText(DOMDocument $document, DOMText $text, Collection $usersByAlias): void
+    {
+        $value = $text->nodeValue;
+        if (! is_string($value) || preg_match(self::PATTERN, $value) !== 1) {
+            return;
+        }
+
+        $fragment = $document->createDocumentFragment();
+        $offset = 0;
+        preg_match_all(self::PATTERN, $value, $matches, PREG_OFFSET_CAPTURE);
+
+        foreach ($matches[0] as $index => [$mention, $position]) {
+            $alias = mb_strtolower($matches[1][$index][0]);
+            /** @var User|null $user */
+            $user = $usersByAlias->get($alias);
+            $fragment->appendChild($document->createTextNode(substr($value, $offset, $position - $offset)));
+
+            if ($user) {
+                $link = $document->createElement('a', $mention);
+                $link->setAttribute('class', 'forum-mention');
+                $link->setAttribute('href', $user->publicProfileUrl());
+                $fragment->appendChild($link);
+            } else {
+                $fragment->appendChild($document->createTextNode($mention));
+            }
+
+            $offset = $position + strlen($mention);
+        }
+
+        $fragment->appendChild($document->createTextNode(substr($value, $offset)));
+        $text->parentNode?->replaceChild($fragment, $text);
     }
 }

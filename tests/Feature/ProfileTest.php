@@ -77,6 +77,28 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertExists($user->cover_image);
     }
 
+    public function test_profile_biography_supports_sanitized_rich_content(): void
+    {
+        $user = User::factory()->create(['alias' => 'luna']);
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'email' => $user->email,
+                'biography' => '<p>Me gusta <strong>GL</strong></p><script>alert(1)</script><a href="https://youtu.be/dQw4w9WgXcQ">Mi video</a>',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertStringContainsString('<strong>GL</strong>', $user->refresh()->biography);
+        $this->assertStringNotContainsString('<script', $user->biography);
+
+        $this->get($user->publicProfileUrl())
+            ->assertOk()
+            ->assertSee('<strong>GL</strong>', false)
+            ->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertDontSee('alert(1)');
+    }
+
     public function test_profile_can_use_a_safe_youtube_cover_video(): void
     {
         $user = User::factory()->create(['alias' => 'luna-yuri']);

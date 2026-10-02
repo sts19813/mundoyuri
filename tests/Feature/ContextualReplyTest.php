@@ -155,6 +155,51 @@ class ContextualReplyTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('image');
     }
 
+    public function test_forum_rich_content_is_sanitized_rendered_and_keeps_safe_embeds(): void
+    {
+        $author = User::factory()->create();
+        $mentioned = User::factory()->create(['alias' => 'Hana']);
+        $category = ForumCategory::query()->create(['name' => 'Presentaciones', 'slug' => 'presentaciones', 'is_active' => true]);
+        $forum = Forum::query()->create(['forum_category_id' => $category->id, 'name' => 'Presentaciones', 'slug' => 'presentaciones']);
+
+        $this->actingAs($author)->post(route('forum.threads.store', $forum), [
+            'title' => 'Hola con editor',
+            'body' => '<p>Hola <strong>@Hana</strong></p><script>alert(1)</script><a href="https://youtu.be/dQw4w9WgXcQ">video</a><iframe src="https://evil.example/embed"></iframe>',
+        ])->assertRedirect();
+
+        $post = ForumPost::query()->where('is_initial', true)->firstOrFail();
+        $this->assertStringContainsString('<strong>@Hana</strong>', $post->body);
+        $this->assertStringNotContainsString('<script', $post->body);
+        $this->assertStringContainsString('youtube-nocookie.com/embed/dQw4w9WgXcQ', $post->body);
+        $this->assertStringNotContainsString('evil.example', $post->body);
+
+        $this->get(route('forum.threads.show', $post->thread))
+            ->assertOk()
+            ->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertSee($mentioned->publicProfileUrl(), false)
+            ->assertDontSee('alert(1)')
+            ->assertDontSee('evil.example', false);
+    }
+
+    public function test_rich_editor_uploads_are_optimized_for_insertion(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->postJson(route('editor.images.store'), [
+                'image' => UploadedFile::fake()->image('editor.png', 2600, 1800),
+            ])
+            ->assertCreated()
+            ->assertJsonStructure(['url']);
+
+        $path = str_replace('/storage/', '', $response->json('url'));
+        $this->assertStringStartsWith('community-post-images/', $path);
+        $this->assertStringEndsWith('.webp', $path);
+        Storage::disk('public')->assertExists($path);
+        $this->assertLessThanOrEqual(800 * 1024, Storage::disk('public')->size($path));
+    }
+
     public function test_thread_and_reply_images_can_be_replaced_or_removed_while_editing(): void
     {
         Storage::fake('public');

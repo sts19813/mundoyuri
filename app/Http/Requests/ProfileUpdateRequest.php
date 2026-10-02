@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use App\Rules\SafeSignatureImage;
+use App\Services\RichContentService;
 use App\Support\YouTubeVideoUrl;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -45,7 +46,7 @@ class ProfileUpdateRequest extends FormRequest
                     $fail('Ingresa un enlace válido de un video de YouTube.');
                 }
             }],
-            'biography' => ['nullable', 'string', 'max:600'],
+            'biography' => ['nullable', 'string', 'max:65000'],
             'profile_visibility' => ['sometimes', Rule::in(['public', 'members', 'private'])],
             'show_last_seen' => ['sometimes', 'boolean'],
             'show_join_date' => ['sometimes', 'boolean'],
@@ -61,6 +62,17 @@ class ProfileUpdateRequest extends FormRequest
             'occupation' => ['nullable', 'string', 'max:160'],
             'interests' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->exists('biography')) {
+            return;
+        }
+
+        $this->merge([
+            'biography' => app(RichContentService::class)->sanitize($this->input('biography')),
+        ]);
     }
 
     /** @return array<Closure(Validator): void> */

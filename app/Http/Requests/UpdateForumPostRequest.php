@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\ForumPost;
+use App\Services\RichContentService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateForumPostRequest extends FormRequest
@@ -18,7 +19,7 @@ class UpdateForumPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['nullable', 'string', 'min:2', 'max:12000'],
+            'body' => ['nullable', 'string', 'min:2', 'max:65000'],
             'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'remove_image' => ['nullable', 'boolean'],
         ];
@@ -35,5 +36,12 @@ class UpdateForumPostRequest extends FormRequest
                 $validator->errors()->add('body', 'Escribe un mensaje o conserva una imagen.');
             }
         }];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'body' => app(RichContentService::class)->sanitize($this->input('body')),
+        ]);
     }
 }

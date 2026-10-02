@@ -44,6 +44,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\RichEditorUploadController;
 use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\UserBlockController;
@@ -154,6 +155,9 @@ Route::middleware(['auth'])
         Route::post('/comunidad/reportes', [CommunityReportController::class, 'store'])
             ->middleware('throttle:10,5')
             ->name('community.reports.store');
+        Route::post('/editor/imagenes', [RichEditorUploadController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('editor.images.store');
 
         Route::get('/comunidad/foros/{forum:slug}/nuevo-tema', [ForumThreadController::class, 'create'])->name('forum.threads.create');
         Route::post('/comunidad/foros/{forum:slug}/temas', [ForumThreadController::class, 'store'])->middleware('throttle:10,1')->name('forum.threads.store');

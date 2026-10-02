@@ -30,7 +30,7 @@ class User extends Authenticatable
     protected $attributes = [
         'episode_email_notifications_enabled' => true,
         'profile_visibility' => 'public',
-        'show_last_seen' => false,
+        'show_last_seen' => true,
         'show_join_date' => true,
         'show_favorites' => true,
         'show_activity' => true,

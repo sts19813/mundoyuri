@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\ForumThread;
+use App\Services\RichContentService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,11 +20,18 @@ class StoreForumPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['nullable', 'string', 'min:2', 'max:12000', 'required_without:image'],
+            'body' => ['nullable', 'string', 'min:2', 'max:65000', 'required_without:image'],
             'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'reply_to_post_id' => ['nullable', 'integer', Rule::exists('forum_posts', 'id')
                 ->where('forum_thread_id', $this->route('thread')->id)
                 ->where('is_hidden', 0)->whereNull('deleted_at')],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'body' => app(RichContentService::class)->sanitize($this->input('body')),
+        ]);
     }
 }
