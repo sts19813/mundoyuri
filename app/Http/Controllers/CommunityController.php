@@ -60,6 +60,8 @@ class CommunityController extends Controller
         return view('community.home', [
             'recentMembers' => $modernMembers,
             'topBadgeMembers' => $this->topBadgeMembers($topModernMembers, $topHistoricalMembers),
+            'communityMemberCount' => User::query()->visibleInCommunityDirectory()->count()
+                + LegacyProfile::query()->published()->whereNull('claimed_by_user_id')->count(),
             'rankResolver' => $rankResolver,
             'recentThreads' => ForumThread::query()
                 ->where('type', 'discussion')

@@ -27,10 +27,11 @@ class CommunityHomeTest extends TestCase
 
         $this->get(route('community.index'))
             ->assertOk()
-            ->assertSee('Un espacio para')
+            ->assertSee('Comunidad')
             ->assertSee('Foros')
             ->assertSee('Preguntas')
             ->assertSee('Miembros')
+            ->assertSee('Ver todos los miembros')
             ->assertSee(route('forums.index'), false)
             ->assertSee(route('questions.index'), false)
             ->assertSee(route('community.members'), false)

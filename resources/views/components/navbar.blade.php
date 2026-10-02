@@ -17,8 +17,6 @@
                 </form>
             </li>
             <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>Inicio</a></li>
-            <li><a href="{{ route('catalog.sections.show', 'anime') }}" @if(request()->routeIs('catalog.sections.show') && request()->route('sectionSlug') === 'anime') aria-current="page" @endif>Anime</a></li>
-            <li><a href="{{ route('catalog.sections.show', 'series-gl') }}" @if(request()->routeIs('catalog.sections.show') && request()->route('sectionSlug') === 'series-gl') aria-current="page" @endif>Series GL</a></li>
             <li><a href="{{ route('community.index') }}" @if(request()->routeIs('community.index', 'community.members', 'community.activity')) aria-current="page" @endif>Comunidad</a></li>
             <li><a href="{{ route('forums.index') }}" @if(request()->routeIs('forums.*', 'forum.*')) aria-current="page" @endif>Foros</a></li>
             <li><a href="{{ route('questions.index') }}" @if(request()->routeIs('questions.*')) aria-current="page" @endif>Preguntas</a></li>

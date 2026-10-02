@@ -24,13 +24,12 @@
             <header class="community-home-hero">
                 <div>
                     <span class="profile-eyebrow">Comunidad Mundo Yuri</span>
-                    <h1>Un espacio para <em>encontrarnos</em>.</h1>
-                    <p>Conversaciones, recomendaciones y personas que comparten el gusto por Girls’ Love. Elige por dónde quieres empezar.</p>
+                    <h1>Comunidad</h1>
                 </div>
                 <div class="community-home-actions">
-                    <a class="community-home-action is-primary" href="{{ route('forums.index') }}"><strong>Foros</strong><span>Únete a una conversación</span></a>
-                    <a class="community-home-action" href="{{ route('questions.index') }}"><strong>Preguntas</strong><span>Encuentra ayuda</span></a>
-                    <a class="community-home-action" href="{{ route('community.members') }}"><strong>Miembros</strong><span>Conoce a la comunidad</span></a>
+                    <a class="community-home-action is-primary" href="{{ route('forums.index') }}"><strong>Foros</strong></a>
+                    <a class="community-home-action" href="{{ route('questions.index') }}"><strong>Preguntas</strong></a>
+                    <a class="community-home-action" href="{{ route('community.members') }}"><strong>Miembros</strong></a>
                 </div>
             </header>
 
@@ -38,13 +37,15 @@
                 <section class="community-home-section community-home-members">
                     <div class="community-home-heading">
                         <div><span class="profile-panel-kicker">Personas</span><h2>Miembros de la comunidad</h2></div>
-                        <a href="{{ route('community.members') }}">Ver miembros</a>
+                        <a class="community-home-member-link" href="{{ route('community.members') }}">
+                            <span>Ver todos los miembros</span>
+                            <small>{{ number_format($communityMemberCount) }} {{ $communityMemberCount === 1 ? 'miembro' : 'miembros' }}</small>
+                        </a>
                     </div>
                     <div class="community-member-spotlight">
                         <section class="community-member-rail" aria-labelledby="community-new-members-title">
                             <div class="community-member-rail-heading">
                                 <h3 id="community-new-members-title">Nuevos usuarios en la comunidad</h3>
-                                <span>{{ $recentMembers->count() }}</span>
                             </div>
                             <div class="community-member-chip-grid">
                                 @forelse($recentMembers as $member)
@@ -58,7 +59,6 @@
                         <section class="community-member-rail community-member-top" aria-labelledby="community-top-members-title">
                             <div class="community-member-rail-heading">
                                 <h3 id="community-top-members-title">Usuarios Top de la comunidad</h3>
-                                <span>{{ $topBadgeMembers->count() }}</span>
                             </div>
                             <div class="community-member-chip-list">
                                 @forelse($topBadgeMembers as $member)

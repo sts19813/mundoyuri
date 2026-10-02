@@ -230,7 +230,7 @@
                     </span>
 
                     <a
-                        href="https://github.com/sts19813"
+                        href="https://mundoyuri.com/usuarios/1/admin"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
