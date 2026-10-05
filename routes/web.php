@@ -136,6 +136,8 @@ Route::middleware(['auth'])
             ->name('messages.attachments.show');
         Route::delete('/mensajes/mensaje/{message}', [ConversationController::class, 'destroy'])
             ->name('messages.destroy');
+        Route::get('/mensajes/{user}/actualizaciones', [ConversationController::class, 'poll'])
+            ->name('messages.poll');
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
             ->name('messages.show');
         Route::post('/mensajes/{user}', [ConversationController::class, 'store'])

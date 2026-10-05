@@ -80,46 +80,7 @@ class="messenger-body"
                         @endif
 
                         @forelse($messages as $message)
-                            @php($outgoing = $message->sender_id === $viewer->id)
-                            <article class="messenger-message {{ $outgoing ? 'is-outgoing' : 'is-incoming' }}">
-                                @if(!$outgoing)
-                                    @if($otherUser->hasProfileAvatar())
-                                        <img class="messenger-message-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
-                                    @else
-                                        <span class="messenger-message-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
-                                    @endif
-                                @endif
-                                <div class="messenger-bubble">
-                                    @if($message->isDeleted())
-                                        <p class="messenger-deleted-message">Mensaje eliminado</p>
-                                    @else
-                                        @if(filled($message->body))<p>{{ $message->body }}</p>@endif
-                                        @if($message->hasAttachment())
-                                            @if($message->attachmentIsImage())
-                                                <a class="messenger-attachment-image" href="{{ route('messages.attachments.show', $message) }}" target="_blank" rel="noopener">
-                                                    <img src="{{ route('messages.attachments.show', $message) }}" alt="{{ $message->attachment_name }}" loading="lazy">
-                                                </a>
-                                            @else
-                                                <a class="messenger-attachment-file" href="{{ route('messages.attachments.show', $message) }}">
-                                                    <span aria-hidden="true">▤</span>
-                                                    <span><strong>{{ $message->attachment_name }}</strong><small>{{ $message->attachmentSizeLabel() }}</small></span>
-                                                </a>
-                                            @endif
-                                        @endif
-                                    @endif
-                                    <time datetime="{{ $message->created_at->toIso8601String() }}">
-                                        {{ $message->created_at->timezone('America/Merida')->format('d M · g:i a') }}
-                                        @if($outgoing)<span aria-label="{{ $message->read_at ? 'Leído' : 'Enviado' }}">{{ $message->read_at ? '✓✓' : '✓' }}</span>@endif
-                                    </time>
-                                    @if($outgoing && ! $message->isDeleted())
-                                        <form method="POST" action="{{ route('messages.destroy', $message) }}" class="messenger-delete-form" onsubmit="return confirm('¿Eliminar este mensaje? Se ocultará de la conversación.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit">Eliminar</button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </article>
+                            @include('messages._message', ['message' => $message, 'viewer' => $viewer, 'otherUser' => $otherUser])
                         @empty
                             <div class="messenger-chat-empty">
                                 @if($otherUser->hasProfileAvatar())
@@ -139,7 +100,7 @@ class="messenger-body"
                         @elseif(!$otherUser->is_active)
                             <div class="messenger-disabled">Esta cuenta ya no está disponible.</div>
                         @else
-                            <form method="POST" action="{{ route('messages.store', $otherUser) }}" class="messenger-composer" enctype="multipart/form-data">
+                            <form method="POST" action="{{ route('messages.store', $otherUser) }}" class="messenger-composer" enctype="multipart/form-data" data-message-composer>
                                 @csrf
                                 <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
                                 <label for="message-attachment" class="messenger-attach-button" aria-label="Adjuntar imagen o documento" title="Adjuntar imagen o documento">
@@ -165,6 +126,89 @@ class="messenger-body"
 
     <script>
         const conversation = document.getElementById('conversationMessages');
+        let latestMessageId = conversation
+            ? Math.max(0, ...Array.from(conversation.querySelectorAll('[data-message-id]')).map((message) => Number(message.dataset.messageId) || 0))
+            : 0;
+
+        const shouldStayPinnedToLatest = () => {
+            if (!conversation) return false;
+            return conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 120;
+        };
+
+        const appendMessages = (messages, { playSound = false, forceScroll = false } = {}) => {
+            if (!conversation || !Array.isArray(messages) || messages.length === 0) return;
+
+            const wasPinned = shouldStayPinnedToLatest();
+            conversation.querySelector('.messenger-chat-empty')?.remove();
+
+            messages.forEach((message) => {
+                if (!message?.id || conversation.querySelector(`[data-message-id="${message.id}"]`)) return;
+                conversation.insertAdjacentHTML('beforeend', message.html);
+                latestMessageId = Math.max(latestMessageId, Number(message.id) || 0);
+            });
+
+            if (forceScroll || wasPinned) {
+                const scrollToLatest = () => {
+                    conversation.scrollTop = conversation.scrollHeight;
+                };
+
+                requestAnimationFrame(() => {
+                    scrollToLatest();
+                    conversation.querySelectorAll('[data-message-id] img').forEach((image) => {
+                        if (!image.complete) image.addEventListener('load', scrollToLatest, { once: true });
+                    });
+                });
+            }
+
+            if (playSound && messages.some((message) => message.incoming)) {
+                playIncomingMessageSound();
+            }
+        };
+
+        const markOutgoingAsRead = (messageIds) => {
+            if (!conversation || !Array.isArray(messageIds)) return;
+
+            messageIds.forEach((messageId) => {
+                const status = conversation.querySelector(`[data-message-id="${messageId}"] [data-message-read-status]`);
+                if (!status) return;
+                status.textContent = '✓✓';
+                status.setAttribute('aria-label', 'Leído');
+            });
+        };
+
+        let audioContext = null;
+        const unlockMessageAudio = () => {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            audioContext ||= new AudioContext();
+            if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+        };
+
+        const playIncomingMessageSound = () => {
+            try {
+                unlockMessageAudio();
+                if (!audioContext || audioContext.state !== 'running') return;
+
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(760, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(980, audioContext.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.24);
+            } catch (error) {
+                // Browsers can block audio until the first user gesture.
+            }
+        };
+
+        document.addEventListener('pointerdown', unlockMessageAudio, { once: true });
+        document.addEventListener('keydown', unlockMessageAudio, { once: true });
+
         if (conversation && !new URLSearchParams(window.location.search).has('messages_page')) {
             const scrollToLatestMessage = () => {
                 conversation.scrollTop = conversation.scrollHeight;
@@ -197,5 +241,100 @@ class="messenger-body"
             }
         });
         resizeMessageBody();
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const pollUrl = @js(route('messages.poll', $otherUser));
+        let polling = false;
+
+        const pollMessages = async () => {
+            if (!conversation || polling || document.hidden) return;
+            polling = true;
+
+            try {
+                const url = new URL(pollUrl, window.location.origin);
+                url.searchParams.set('after_id', latestMessageId);
+
+                const response = await fetch(url, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) return;
+                const data = await response.json();
+                appendMessages(data.messages || [], { playSound: true });
+                markOutgoingAsRead(data.read_outgoing_ids || []);
+                latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
+            } finally {
+                polling = false;
+            }
+        };
+
+        const pollInterval = window.setInterval(pollMessages, 3500);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) pollMessages();
+        });
+        window.addEventListener('beforeunload', () => window.clearInterval(pollInterval));
+
+        const composer = document.querySelector('[data-message-composer]');
+        const showComposerError = (message) => {
+            if (!composer) return;
+            composer.parentElement?.querySelectorAll('[data-ajax-message-error]').forEach((error) => error.remove());
+            const error = document.createElement('p');
+            error.className = 'messenger-form-error';
+            error.dataset.ajaxMessageError = '';
+            error.textContent = message;
+            composer.after(error);
+        };
+
+        const clearComposerError = () => {
+            composer?.parentElement?.querySelectorAll('[data-ajax-message-error]').forEach((error) => error.remove());
+        };
+
+        composer?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            unlockMessageAudio();
+            clearComposerError();
+
+            const submitButton = composer.querySelector('button[type="submit"]');
+            submitButton?.setAttribute('disabled', 'disabled');
+
+            try {
+                const response = await fetch(composer.action, {
+                    method: 'POST',
+                    body: new FormData(composer),
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const data = await response.json();
+                        const firstError = Object.values(data.errors || {}).flat()[0] || data.message || 'No se pudo enviar el mensaje.';
+                        showComposerError(firstError);
+                        return;
+                    }
+
+                    HTMLFormElement.prototype.submit.call(composer);
+                    return;
+                }
+
+                const data = await response.json();
+                appendMessages(data.messages || [], { forceScroll: true });
+                latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
+                composer.reset();
+                if (attachmentInput) {
+                    const hint = document.querySelector('[data-message-attachment-hint]');
+                    if (hint) hint.textContent = 'Imagen o documento · máximo 20 MB';
+                }
+                resizeMessageBody();
+            } finally {
+                submitButton?.removeAttribute('disabled');
+            }
+        });
     </script>
 @endsection

@@ -61,6 +61,56 @@ class PrivateMessagingTest extends TestCase
         $this->assertNotNull(DirectMessage::firstOrFail()->fresh()->read_at);
     }
 
+    public function test_private_chat_can_poll_new_messages_and_marks_them_as_read(): void
+    {
+        $sender = User::factory()->create(['alias' => 'luna']);
+        $recipient = User::factory()->create(['alias' => 'mio']);
+        $stranger = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'body' => 'Mensaje vivo para el chat.',
+            ]);
+
+        $message = DirectMessage::query()->firstOrFail();
+
+        $this->actingAs($recipient)
+            ->getJson(route('messages.poll', $sender).'?after_id=0')
+            ->assertOk()
+            ->assertJsonPath('messages.0.id', $message->id)
+            ->assertJsonPath('messages.0.incoming', true)
+            ->assertJsonFragment(['latest_message_id' => $message->id])
+            ->assertSee('Mensaje vivo para el chat.');
+
+        $this->assertNotNull($message->fresh()->read_at);
+
+        $this->actingAs($stranger)
+            ->getJson(route('messages.poll', $sender).'?after_id=0')
+            ->assertOk()
+            ->assertJsonPath('messages', []);
+    }
+
+    public function test_private_message_json_send_returns_rendered_message_without_redirect(): void
+    {
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $response = $this->actingAs($sender)
+            ->postJson(route('messages.store', $recipient), [
+                'body' => 'Se envió sin recargar.',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('messages.0.incoming', false);
+
+        $message = DirectMessage::query()->firstOrFail();
+
+        $response
+            ->assertJsonPath('messages.0.id', $message->id)
+            ->assertJsonFragment(['latest_message_id' => $message->id]);
+
+        $this->assertStringContainsString('Se envió sin recargar.', $response->json('messages.0.html'));
+    }
+
     public function test_notifications_are_private_and_can_be_marked_as_read(): void
     {
         $sender = User::factory()->create();

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
 use App\Services\DirectMessageAttachmentService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +84,68 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function store(Request $request, User $user, DirectMessageAttachmentService $attachments): RedirectResponse
+    public function poll(Request $request, User $user): JsonResponse
+    {
+        $viewer = $request->user();
+
+        abort_if($viewer->is($user), 404);
+
+        $afterId = max(0, $request->integer('after_id'));
+        $conversation = Conversation::between($viewer, $user)->first();
+
+        if (! $conversation) {
+            return response()->json([
+                'messages' => [],
+                'latest_message_id' => $afterId,
+                'read_outgoing_ids' => [],
+            ]);
+        }
+
+        abort_unless(in_array($viewer->id, [
+            $conversation->user_one_id,
+            $conversation->user_two_id,
+        ], true), 404);
+
+        $messages = $conversation->messages()
+            ->where('id', '>', $afterId)
+            ->with('sender')
+            ->orderBy('id')
+            ->limit(50)
+            ->get();
+
+        $incomingMessageIds = $messages
+            ->where('recipient_id', $viewer->id)
+            ->whereNull('read_at')
+            ->pluck('id');
+
+        if ($incomingMessageIds->isNotEmpty()) {
+            DirectMessage::query()
+                ->whereIn('id', $incomingMessageIds)
+                ->update(['read_at' => now()]);
+
+            $messages->each(function (DirectMessage $message) use ($incomingMessageIds): void {
+                if ($incomingMessageIds->contains($message->id)) {
+                    $message->read_at = now();
+                }
+            });
+        }
+
+        $latestMessageId = max($afterId, (int) ($conversation->messages()->max('id') ?? 0));
+
+        return response()->json([
+            'messages' => $messages
+                ->map(fn (DirectMessage $message) => $this->messagePayload($message, $viewer, $user))
+                ->values(),
+            'latest_message_id' => $latestMessageId,
+            'read_outgoing_ids' => $conversation->messages()
+                ->where('sender_id', $viewer->id)
+                ->whereNotNull('read_at')
+                ->pluck('id')
+                ->values(),
+        ]);
+    }
+
+    public function store(Request $request, User $user, DirectMessageAttachmentService $attachments): JsonResponse|RedirectResponse
     {
         $viewer = $request->user();
 
@@ -150,6 +212,13 @@ class ConversationController extends Controller
         }
 
         $user->notify(new NewDirectMessageNotification($message, $viewer));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'messages' => [$this->messagePayload($message->load('sender'), $viewer, $user)],
+                'latest_message_id' => $message->id,
+            ], 201);
+        }
 
         return redirect()->route('messages.show', $user);
     }
@@ -225,5 +294,21 @@ class ConversationController extends Controller
                     ->where('recipient_id', $viewer->id)
                     ->whereNull('read_at'),
             ]);
+    }
+
+    /**
+     * @return array{id: int, incoming: bool, html: string}
+     */
+    private function messagePayload(DirectMessage $message, User $viewer, User $otherUser): array
+    {
+        return [
+            'id' => $message->id,
+            'incoming' => $message->sender_id !== $viewer->id,
+            'html' => view('messages._message', [
+                'message' => $message,
+                'viewer' => $viewer,
+                'otherUser' => $otherUser,
+            ])->render(),
+        ];
     }
 }
