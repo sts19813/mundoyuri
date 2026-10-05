@@ -13,7 +13,7 @@ class EpisodeAvailabilityNotifier
 {
     public function sendFor(Episode $episode): int
     {
-        if (! $episode->notify_subscribers || $episode->moderation_status !== 'approved' || ! $episode->published_at || ! $episode->published_at->isToday()) {
+        if (! $episode->notify_subscribers || $episode->moderation_status !== 'approved' || ! $episode->published_at) {
             return 0;
         }
 

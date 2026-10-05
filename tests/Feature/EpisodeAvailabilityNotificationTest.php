@@ -102,4 +102,75 @@ class EpisodeAvailabilityNotificationTest extends TestCase
             'episode_id' => Episode::query()->value('id'),
         ]);
     }
+
+    public function test_create_form_keeps_email_notification_switch_enabled_when_publication_date_is_not_today(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create(['name' => 'Drama', 'slug' => 'drama', 'is_active' => true]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie con aviso manual',
+            'slug' => 'serie-con-aviso-manual',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripción para probar el formulario.',
+            'moderation_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.episodes.create', ['series_id' => $series->id]));
+
+        $response->assertOk();
+        preg_match('/<input[^>]*id="episode-notify-subscribers"[^>]*>/i', $response->getContent(), $matches);
+
+        $this->assertNotEmpty($matches);
+        $this->assertStringNotContainsString('disabled', $matches[0]);
+        $this->assertStringNotContainsString('checked', $matches[0]);
+    }
+
+    public function test_new_approved_episode_can_send_email_when_publication_date_is_not_today(): void
+    {
+        Mail::fake();
+        config()->set('episode_notifications.mode', 'test');
+        config()->set('episode_notifications.test_recipient', 'sts19813@gmail.com');
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create(['name' => 'Drama', 'slug' => 'drama', 'is_active' => true]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Pelicula de prueba',
+            'slug' => 'pelicula-de-prueba',
+            'content_type' => 'movie',
+            'status' => 'completed',
+            'description' => 'Descripción para probar el correo con fecha historica.',
+            'moderation_status' => 'approved',
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.episodes.store'), [
+            'series_id' => $series->id,
+            'season_number' => 1,
+            'episode_number' => 0,
+            'release_date' => now()->subYears(3)->toDateString(),
+            'published_at' => now()->subMonth()->format('Y-m-d\\TH:i'),
+            'notify_subscribers' => true,
+            'source_provider' => ['backblaze_b2'],
+            'source_type' => ['full'],
+            'source_url' => ['https://f000.backblazeb2.com/file/mundoyuri/pelicula-de-prueba.mp4'],
+            'source_label' => ['Backblaze B2'],
+            'source_sort_order' => [1],
+            'source_primary' => 0,
+        ])->assertRedirect(route('admin.episodes.index'));
+
+        $episode = Episode::query()->firstOrFail();
+
+        Mail::assertSent(EpisodeAvailableMail::class, function (EpisodeAvailableMail $mail) use ($episode): bool {
+            return $mail->hasTo('sts19813@gmail.com')
+                && $mail->episode->is($episode);
+        });
+        $this->assertDatabaseHas('episode_email_notifications', [
+            'episode_id' => $episode->id,
+            'email' => 'sts19813@gmail.com',
+        ]);
+    }
 }

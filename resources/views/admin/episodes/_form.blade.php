@@ -33,8 +33,8 @@
     $currentEpisodeNumber = \App\Models\Episode::formatEpisodeNumber($currentEpisodeNumber);
     $currentTitle = 'Episodio '.$currentEpisodeNumber;
     $currentPublishedAt = old('published_at', isset($episode) && $episode->published_at ? $episode->published_at->format('Y-m-d\\TH:i') : ($suggestedPublishedAt ?? ''));
-    $notificationEligible = $isCreating && str_starts_with($currentPublishedAt, now()->toDateString());
-    $notifySubscribers = old('notify_subscribers', $notificationEligible);
+    $shouldSuggestNotification = $isCreating && str_starts_with($currentPublishedAt, now()->toDateString());
+    $notifySubscribers = old('notify_subscribers', $shouldSuggestNotification);
     $selectedSeries = $seriesOptions->firstWhere('id', (int) $currentSeriesId);
     $seriesIsLocked = $isCreating && request()->filled('series_id') && $selectedSeries;
 @endphp
@@ -95,6 +95,7 @@
             @if($isCreating)
                 <div class="col-md-6">
                     <label class="form-check form-switch form-check-custom form-check-solid mt-8">
+                        <input type="hidden" name="notify_subscribers" value="0">
                         <input
                             class="form-check-input"
                             type="checkbox"
@@ -102,12 +103,12 @@
                             id="episode-notify-subscribers"
                             value="1"
                             @checked($notifySubscribers)
-                            @disabled(! $notificationEligible)
+                            @if(old('notify_subscribers') !== null) data-user-choice="true" @endif
                         >
                         <span class="form-check-label fw-semibold">Notificar por correo a todos los usuarios</span>
                     </label>
                     <div class="form-text" id="episode-notification-help">
-                        {{ $notificationEligible ? 'Al guardar te pediremos confirmar el envío.' : 'Solo se puede notificar cuando la fecha de publicación es hoy.' }}
+                        {{ $shouldSuggestNotification ? 'Al guardar te pediremos confirmar el envío.' : 'No se marcará automáticamente porque la publicación no es hoy, pero puedes activarlo para enviar el aviso ahora.' }}
                     </div>
                 </div>
             @endif
@@ -300,31 +301,28 @@
             return;
         }
 
-        const canNotify = publishedAtInput.value.slice(0, 10) === today;
-        notifySubscribersInput.disabled = !canNotify;
-
-        if (!canNotify) {
-            notifySubscribersInput.checked = false;
-
-            if (notificationHelp) {
-                notificationHelp.textContent = 'Solo se puede notificar cuando la fecha de publicación es hoy.';
-            }
-
-            return;
-        }
+        const shouldSuggest = publishedAtInput.value.slice(0, 10) === today;
 
         if (notifySubscribersInput.dataset.userChoice !== 'true') {
-            notifySubscribersInput.checked = true;
+            notifySubscribersInput.checked = shouldSuggest;
         }
 
         if (notificationHelp) {
-            notificationHelp.textContent = 'Al guardar te pediremos confirmar el envío.';
+            notificationHelp.textContent = notifySubscribersInput.checked
+                ? 'Al guardar te pediremos confirmar el envío.'
+                : 'No se marcará automáticamente porque la publicación no es hoy, pero puedes activarlo para enviar el aviso ahora.';
         }
     };
 
     publishedAtInput?.addEventListener('change', updateNotificationOption);
     notifySubscribersInput?.addEventListener('change', () => {
         notifySubscribersInput.dataset.userChoice = 'true';
+
+        if (notificationHelp) {
+            notificationHelp.textContent = notifySubscribersInput.checked
+                ? 'Al guardar te pediremos confirmar el envío.'
+                : 'No se enviará correo para este episodio.';
+        }
     });
     updateNotificationOption();
 
@@ -448,7 +446,7 @@
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        if (isCreating && notifySubscribersInput?.checked && !notifySubscribersInput.disabled) {
+        if (isCreating && notifySubscribersInput?.checked) {
             if (typeof Swal === 'undefined') {
                 notifySubscribersInput.checked = window.confirm('¿Quieres enviar el correo a todos los usuarios?');
             } else {
