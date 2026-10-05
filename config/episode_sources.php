@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'player_url_ttl_minutes' => env('EPISODE_SOURCE_PLAYER_URL_TTL_MINUTES', 180),
+
     'providers' => [
         'youtube_link' => [
             'label' => 'YouTube (enlace)',

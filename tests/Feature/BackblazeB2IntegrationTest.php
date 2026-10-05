@@ -95,7 +95,7 @@ class BackblazeB2IntegrationTest extends TestCase
             ], 200),
         ]);
 
-        $response = $this->get(route('episode-sources.player', $source));
+        $response = $this->get($source->playable_url);
 
         $response->assertRedirect(
             'https://f005.backblazeb2.com/file/mundoyuri/shows/Fulfill%20S01E01.mp4?Authorization=temporary-download-token'

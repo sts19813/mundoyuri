@@ -32,6 +32,7 @@ class EpisodeSourcePlayerController extends Controller
             return redirect()->away($url, 302, [
                 'Cache-Control' => 'private, no-store, max-age=0',
                 'Referrer-Policy' => 'no-referrer',
+                'X-Robots-Tag' => 'noindex, nofollow, noarchive',
             ]);
         }
 
@@ -42,7 +43,8 @@ class EpisodeSourcePlayerController extends Controller
         return response()
             ->view('players.pixeldrain', compact('source'))
             ->header('Referrer-Policy', 'no-referrer')
-            ->header('X-Frame-Options', 'SAMEORIGIN');
+            ->header('X-Frame-Options', 'SAMEORIGIN')
+            ->header('X-Robots-Tag', 'noindex, nofollow, noarchive');
     }
 
     private function cloudflareHlsPlaylist(EpisodeSource $source, Request $request): Response
@@ -73,6 +75,7 @@ class EpisodeSourcePlayerController extends Controller
             'Expires' => '0',
             'Access-Control-Allow-Origin' => $origin,
             'Vary' => 'Origin, Referer',
+            'X-Robots-Tag' => 'noindex, nofollow, noarchive',
         ]);
     }
 
@@ -107,11 +110,10 @@ class EpisodeSourcePlayerController extends Controller
         $path = parse_url($absoluteUrl, PHP_URL_PATH) ?: '';
 
         if (str_ends_with(strtolower($path), '.m3u8')) {
-            return route('episode-sources.player', [
-                'source' => $source,
+            return VideoSource::temporaryPlayerUrl($source, [
                 'url' => $absoluteUrl,
                 'v' => $cacheBuster,
-            ], false);
+            ]);
         }
 
         return $this->appendQueryParameter($absoluteUrl, '_my_hls_session', $cacheBuster);

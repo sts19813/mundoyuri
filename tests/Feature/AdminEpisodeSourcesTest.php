@@ -7,6 +7,7 @@ use App\Models\EpisodeSource;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\User;
+use App\Support\VideoSource;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -262,7 +263,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertCount(1, $episode->sources);
         $this->assertSame('pixeldrain_cdn', $episode->sources[0]->provider);
         $this->assertSame('iframe', $episode->sources[0]->player_type);
-        $this->assertSame(route('episode-sources.player', $episode->sources[0]), $episode->sources[0]->playable_url);
+        $this->assertSignedPlayerUrl($episode->sources[0]->playable_url, $episode->sources[0]);
         $this->assertSame('https://pixeldrain.com/api/file/LTRmJYYs', $episode->sources[0]->video_url);
         $this->assertSame('https://pixeldrain.com/api/file/LTRmJYYs', $episode->sources[0]->direct_video_url);
         $this->assertTrue($episode->sources[0]->is_primary);
@@ -312,7 +313,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertSame('cloudflare_hls', $episode->sources[0]->provider);
         $this->assertSame('video', $episode->sources[0]->player_type);
         $this->assertSame($url, $episode->sources[0]->video_url);
-        $this->assertSame(route('episode-sources.player', $episode->sources[0]), $episode->sources[0]->playable_url);
+        $this->assertSignedPlayerUrl($episode->sources[0]->playable_url, $episode->sources[0]);
         $this->assertTrue($episode->sources[0]->is_primary);
     }
 
@@ -359,7 +360,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertSame('cloudflare_hls', $episode->sources[0]->provider);
         $this->assertSame('video', $episode->sources[0]->player_type);
         $this->assertSame($url, $episode->sources[0]->video_url);
-        $this->assertSame(route('episode-sources.player', $episode->sources[0]), $episode->sources[0]->playable_url);
+        $this->assertSignedPlayerUrl($episode->sources[0]->playable_url, $episode->sources[0]);
     }
 
     public function test_cloudflare_hls_rejects_unknown_hosts(): void
@@ -564,12 +565,51 @@ class AdminEpisodeSourcesTest extends TestCase
             'is_primary' => true,
         ]);
 
-        $response = $this->get(route('episode-sources.player', $source));
+        $response = $this->get($source->playable_url);
 
         $response->assertOk();
         $response->assertHeader('Referrer-Policy', 'no-referrer');
         $response->assertSee('https://pixeldrain.com/api/file/LTRmJYYs', false);
         $response->assertSee('<video controls playsinline preload="metadata">', false);
+    }
+
+    public function test_player_source_endpoint_rejects_unsigned_urls(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::query()->create([
+            'name' => 'Firmas',
+            'slug' => 'firmas',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'created_by' => $admin->id,
+            'title' => 'Serie firmas',
+            'slug' => 'serie-firmas',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Descripcion suficientemente larga para probar firmas.',
+        ]);
+        $episode = Episode::query()->create([
+            'series_id' => $series->id,
+            'created_by' => $admin->id,
+            'title' => 'Ep firmas',
+            'slug' => 'ep-firmas',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'moderation_status' => 'approved',
+        ]);
+        $source = EpisodeSource::query()->create([
+            'episode_id' => $episode->id,
+            'provider' => 'cloudflare_hls',
+            'source_type' => 'full',
+            'label' => 'Cloudflare HLS',
+            'sort_order' => 1,
+            'video_url' => 'https://video.mundoyuri.com/Moonshadow/index.m3u8',
+            'is_primary' => true,
+        ]);
+
+        $this->get(route('episode-sources.player', $source))->assertForbidden();
     }
 
     public function test_cloudflare_hls_playlist_is_served_without_cache_and_rewrites_media_urls(): void
@@ -613,17 +653,19 @@ class AdminEpisodeSourcesTest extends TestCase
             'https://video.mundoyuri.com/Moonshadow/variant/720p.m3u8' => Http::response("#EXTM3U\n#EXT-X-MAP:URI=\"init.mp4\"\n#EXTINF:6.0,\nsegment-001.ts", 200),
         ]);
 
-        $response = $this->get(route('episode-sources.player', ['source' => $source, 'v' => 'test-session']));
+        $response = $this->get(VideoSource::temporaryPlayerUrl($source, ['v' => 'test-session']));
 
         $response->assertOk();
         $cacheControl = $response->headers->get('Cache-Control');
         $this->assertStringContainsString('no-store', $cacheControl);
         $this->assertStringContainsString('no-cache', $cacheControl);
         $this->assertStringContainsString('max-age=0', $cacheControl);
-        $response->assertSee('/player/episode-sources/'.$source->id.'?url=https%3A%2F%2Fvideo.mundoyuri.com%2FMoonshadow%2Fvariant%2F720p.m3u8&v=test-session', false);
+        $response->assertSee('/player/episode-sources/'.$source->id.'?', false);
+        $response->assertSee('url=https%3A%2F%2Fvideo.mundoyuri.com%2FMoonshadow%2Fvariant%2F720p.m3u8', false);
+        $response->assertSee('v=test-session', false);
+        $response->assertSee('signature=', false);
 
-        $variantResponse = $this->get(route('episode-sources.player', [
-            'source' => $source,
+        $variantResponse = $this->get(VideoSource::temporaryPlayerUrl($source, [
             'url' => 'https://video.mundoyuri.com/Moonshadow/variant/720p.m3u8',
             'v' => 'test-session',
         ]));
@@ -631,5 +673,12 @@ class AdminEpisodeSourcesTest extends TestCase
         $variantResponse->assertOk();
         $variantResponse->assertSee('URI="https://video.mundoyuri.com/Moonshadow/variant/init.mp4?_my_hls_session=test-session"', false);
         $variantResponse->assertSee('https://video.mundoyuri.com/Moonshadow/variant/segment-001.ts?_my_hls_session=test-session', false);
+    }
+
+    private function assertSignedPlayerUrl(string $url, EpisodeSource $source): void
+    {
+        $this->assertStringStartsWith('/player/episode-sources/'.$source->id.'?', $url);
+        $this->assertStringContainsString('expires=', $url);
+        $this->assertStringContainsString('signature=', $url);
     }
 }

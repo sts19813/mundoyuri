@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class VideoSource
@@ -60,7 +61,7 @@ class VideoSource
     public static function playableUrl(?string $provider, string $videoUrl, mixed $source = null): string
     {
         if (in_array($provider, ['pixeldrain_cdn', 'backblaze_b2', 'cloudflare_hls'], true) && $source) {
-            return route('episode-sources.player', $source);
+            return self::temporaryPlayerUrl($source);
         }
 
         if ($provider === 'bunny_stream') {
@@ -68,6 +69,18 @@ class VideoSource
         }
 
         return $videoUrl;
+    }
+
+    public static function temporaryPlayerUrl(mixed $source, array $parameters = []): string
+    {
+        $ttlMinutes = max(1, (int) config('episode_sources.player_url_ttl_minutes', 180));
+
+        return URL::temporarySignedRoute(
+            'episode-sources.player',
+            now()->addMinutes($ttlMinutes),
+            ['source' => $source] + $parameters,
+            false
+        );
     }
 
     public static function playerType(?string $provider): string
