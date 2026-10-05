@@ -5,8 +5,10 @@ import { strict as assert } from 'node:assert';
 
 const script = readFileSync(new URL('../../public/assets/js/pwa.js', import.meta.url), 'utf8');
 
-async function renderNotice({ mode = 'browser', enabled = true, standalone = false } = {}) {
+async function renderNotice({ mode = 'browser', enabled = true, standalone = false, storage = new Map(), storageBlocked = false, now = new Date(2026, 9, 5, 12).getTime() } = {}) {
     const fields = new Map();
+    const dismiss = { addEventListener(event, listener) { this.click = listener; } };
+    const windowListeners = new Map();
     const control = {
         classList: { toggle() {} },
         setAttribute() {},
@@ -16,7 +18,8 @@ async function renderNotice({ mode = 'browser', enabled = true, standalone = fal
     const notice = {
         hidden: true,
         querySelector(selector) {
-            if (selector === '[data-pwa-install-help]' || selector === '[data-device-dismiss]') return null;
+            if (selector === '[data-pwa-install-help]') return null;
+            if (selector === '[data-device-dismiss]') return dismiss;
             if (selector === '[data-push-enable]') return control;
             if (!fields.has(selector)) fields.set(selector, {});
             return fields.get(selector);
@@ -34,7 +37,17 @@ async function renderNotice({ mode = 'browser', enabled = true, standalone = fal
     const window = {
         Notification: notification,
         PushManager: function () {},
-        addEventListener() {},
+        addEventListener(event, listener) { windowListeners.set(event, listener); },
+        localStorage: {
+            getItem(key) {
+                if (storageBlocked) throw new Error('Storage unavailable');
+                return storage.get(key) ?? null;
+            },
+            setItem(key, value) {
+                if (storageBlocked) throw new Error('Storage unavailable');
+                storage.set(key, value);
+            },
+        },
         matchMedia(query) {
             const displayMode = { matches: query === `(display-mode: ${mode})`, addEventListener(event, listener) { this.listener = listener; } };
             displayModes.set(query, displayMode);
@@ -48,9 +61,12 @@ async function renderNotice({ mode = 'browser', enabled = true, standalone = fal
         querySelectorAll: selector => selector === '[data-push-toggle]' ? [control] : [],
         addEventListener() {},
     };
-    runInNewContext(script, { window, navigator, document, Notification: notification });
+    class TestDate extends Date {
+        constructor(...args) { super(...(args.length ? args : [now])); }
+    }
+    runInNewContext(script, { window, navigator, document, Notification: notification, Date: TestDate });
     await new Promise(setImmediate);
-    return { notice, fields, displayModes };
+    return { notice, fields, displayModes, dismiss, storage, windowListeners };
 }
 
 for (const mode of ['standalone', 'window-controls-overlay', 'minimal-ui']) {
@@ -82,4 +98,34 @@ test('switching between installed display modes keeps the recommendation hidden'
     displayModes.get('(display-mode: standalone)').matches = true;
     displayModes.get('(display-mode: standalone)').listener();
     assert.equal(notice.hidden, true);
+});
+
+test('closing the notice suppresses it across page loads for the rest of the local day', async () => {
+    const now = new Date(2026, 9, 5, 23, 50).getTime();
+    const firstPage = await renderNotice({ now });
+    assert.equal(firstPage.notice.hidden, false);
+    firstPage.dismiss.click();
+    assert.equal(firstPage.notice.hidden, true);
+    assert.equal(firstPage.storage.get('mundo-yuri-device-notice-dismissed-date'), '2026-10-05');
+
+    const nextPage = await renderNotice({ storage: firstPage.storage, now: new Date(2026, 9, 5, 23, 59).getTime() });
+    assert.equal(nextPage.notice.hidden, true);
+    const nextDay = await renderNotice({ storage: firstPage.storage, now: new Date(2026, 9, 6, 0, 1).getTime() });
+    assert.equal(nextDay.notice.hidden, false);
+});
+
+test('closing the notice in another tab hides it here too', async () => {
+    const page = await renderNotice();
+    page.storage.set('mundo-yuri-device-notice-dismissed-date', '2026-10-05');
+    page.windowListeners.get('storage')({ key: 'mundo-yuri-device-notice-dismissed-date' });
+    assert.equal(page.notice.hidden, true);
+});
+
+test('blocked browser storage still allows closing the notice for the current page', async () => {
+    const page = await renderNotice({ storageBlocked: true });
+    assert.equal(page.notice.hidden, false);
+    page.dismiss.click();
+    assert.equal(page.notice.hidden, true);
+    page.displayModes.get('(display-mode: standalone)').listener();
+    assert.equal(page.notice.hidden, true);
 });

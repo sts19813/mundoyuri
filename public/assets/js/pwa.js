@@ -4,11 +4,12 @@
     const controls = Array.from(document.querySelectorAll('[data-push-toggle]'));
     const installButtons = Array.from(document.querySelectorAll('[data-pwa-install]'));
     const deviceNotice = document.querySelector('[data-device-notice]');
+    const noticeDismissalKey = 'mundo-yuri-device-notice-dismissed-date';
     const appDisplayModes = ['standalone', 'window-controls-overlay', 'minimal-ui']
         .map((mode) => window.matchMedia(`(display-mode: ${mode})`));
     let deferredInstallPrompt = null;
     let appInstalled = isAppWindow();
-    let noticeDismissed = false;
+    let noticeDismissedOn = deviceNotice ? readNoticeDismissal() : null;
     let pushBusy = false;
     let pushState = { active: false, disabled: true, status: 'Comprobando...' };
 
@@ -18,9 +19,35 @@
     bindInstallPrompt();
     bindPushControls();
     deviceNotice?.querySelector('[data-device-dismiss]')?.addEventListener('click', () => {
-        noticeDismissed = true;
+        noticeDismissedOn = localDate();
+        try {
+            window.localStorage.setItem(noticeDismissalKey, noticeDismissedOn);
+        } catch (error) {
+            // Keep the dismissal for this page when browser storage is unavailable.
+        }
         updateDeviceNotice();
     });
+    if (deviceNotice) {
+        window.addEventListener('storage', (event) => {
+            if (event.key === noticeDismissalKey || event.key === null) {
+                noticeDismissedOn = readNoticeDismissal();
+                updateDeviceNotice();
+            }
+        });
+    }
+
+    function localDate() {
+        const date = new Date();
+        return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    }
+
+    function readNoticeDismissal() {
+        try {
+            return window.localStorage.getItem(noticeDismissalKey);
+        } catch (error) {
+            return null;
+        }
+    }
 
     async function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) {
@@ -262,7 +289,7 @@
     function updateDeviceNotice() {
         if (!deviceNotice) return;
         const { active, status } = pushState;
-        deviceNotice.hidden = noticeDismissed || (appInstalled && active);
+        deviceNotice.hidden = noticeDismissedOn === localDate() || (appInstalled && active);
         deviceNotice.querySelector('[data-device-title]').textContent = active
             ? 'Lleva MundoYuri contigo'
             : 'Que no se te pase ningún mensaje';
