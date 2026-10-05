@@ -3,25 +3,34 @@
     const config = configNode ? JSON.parse(configNode.textContent || '{}') : {};
     const controls = Array.from(document.querySelectorAll('[data-push-toggle]'));
     const installButtons = Array.from(document.querySelectorAll('[data-pwa-install]'));
+    const deviceNotice = document.querySelector('[data-device-notice]');
+    const standaloneMode = window.matchMedia('(display-mode: standalone)');
     let deferredInstallPrompt = null;
-    let serviceWorkerRegistration = null;
+    let appInstalled = standaloneMode.matches || navigator.standalone === true;
+    let noticeDismissed = false;
+    let pushBusy = false;
+    let pushState = { active: false, disabled: true, status: 'Comprobando...' };
 
     const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
-    registerServiceWorker();
+    const serviceWorkerReady = registerServiceWorker();
     bindInstallPrompt();
     bindPushControls();
+    deviceNotice?.querySelector('[data-device-dismiss]')?.addEventListener('click', () => {
+        noticeDismissed = true;
+        updateDeviceNotice();
+    });
 
     async function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) {
-            return;
+            return null;
         }
 
         try {
-            serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
-            await navigator.serviceWorker.ready;
+            await navigator.serviceWorker.register('/sw.js');
+            return await navigator.serviceWorker.ready;
         } catch (error) {
-            updatePushControls({ disabled: true, status: 'No disponible', active: false });
+            return null;
         }
     }
 
@@ -29,22 +38,50 @@
         window.addEventListener('beforeinstallprompt', (event) => {
             event.preventDefault();
             deferredInstallPrompt = event;
-            installButtons.forEach((button) => button.hidden = false);
+            updateInstallControls();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            appInstalled = true;
+            deferredInstallPrompt = null;
+            updateInstallControls();
+            updateDeviceNotice();
+        });
+        standaloneMode.addEventListener('change', () => {
+            appInstalled = standaloneMode.matches || navigator.standalone === true;
+            updateInstallControls();
+            updateDeviceNotice();
         });
 
         installButtons.forEach((button) => {
-            button.hidden = true;
             button.addEventListener('click', async () => {
                 if (!deferredInstallPrompt) {
                     return;
                 }
 
-                deferredInstallPrompt.prompt();
-                await deferredInstallPrompt.userChoice;
-                deferredInstallPrompt = null;
-                installButtons.forEach((item) => item.hidden = true);
+                const prompt = deferredInstallPrompt;
+                try {
+                    await prompt.prompt();
+                    await prompt.userChoice;
+                } finally {
+                    deferredInstallPrompt = null;
+                    updateInstallControls();
+                }
             });
         });
+        updateInstallControls();
+    }
+
+    function updateInstallControls() {
+        installButtons.forEach((button) => button.hidden = appInstalled || !deferredInstallPrompt);
+        const help = deviceNotice?.querySelector('[data-pwa-install-help]');
+        if (!help) return;
+        help.hidden = appInstalled || Boolean(deferredInstallPrompt);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        help.querySelector('[data-pwa-install-instructions]').textContent = isIOS
+            ? 'En Safari, toca Compartir y luego Agregar a pantalla de inicio. Abre MundoYuri desde su icono para activar las notificaciones.'
+            : 'En el menú del navegador, busca Instalar aplicación o Agregar a pantalla de inicio. Si ya la instalaste, abre MundoYuri desde su icono.';
     }
 
     function bindPushControls() {
@@ -57,14 +94,18 @@
         controls.forEach((control) => {
             control.addEventListener('click', async (event) => {
                 event.preventDefault();
+                if (pushBusy || pushState.disabled) return;
                 setPushControlsBusy(true);
 
                 try {
-                    const subscription = await currentSubscription();
-
-                    if (subscription) {
-                        await subscription.unsubscribe();
+                    if (pushState.active && !control.hasAttribute('data-push-enable')) {
+                        const subscription = await currentSubscription();
+                        if (!subscription) {
+                            await refreshPushState();
+                            return;
+                        }
                         await deleteSubscription(subscription);
+                        await subscription.unsubscribe();
                         updatePushControls({ active: false, status: 'Desactivadas' });
                         return;
                     }
@@ -73,13 +114,16 @@
                 } catch (error) {
                     updatePushControls({
                         active: false,
-                        disabled: !supported || Notification.permission === 'denied',
+                        disabled: !supported || window.Notification?.permission === 'denied',
                         status: error.message || 'No disponible',
                     });
                 } finally {
                     setPushControlsBusy(false);
                 }
             });
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !pushBusy) refreshPushState();
         });
     }
 
@@ -89,12 +133,17 @@
             return;
         }
 
-        const subscription = await currentSubscription();
-        updatePushControls({
-            active: Boolean(subscription && config.pushEnabled),
-            disabled: Notification.permission === 'denied',
-            status: subscription && config.pushEnabled ? 'Activadas' : 'Activar',
-        });
+        try {
+            const subscription = await currentSubscription();
+            const active = Boolean(subscription && config.pushEnabled && Notification.permission === 'granted');
+            updatePushControls({
+                active,
+                disabled: Notification.permission === 'denied',
+                status: active ? 'Activadas' : (Notification.permission === 'denied' ? 'Permiso bloqueado' : 'Activar'),
+            });
+        } catch (error) {
+            updatePushControls({ active: false, disabled: true, status: 'No disponible' });
+        }
     }
 
     async function subscribeCurrentBrowser() {
@@ -112,8 +161,9 @@
             throw new Error(permission === 'denied' ? 'Permiso bloqueado' : 'Permiso pendiente');
         }
 
-        const registration = serviceWorkerRegistration || await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
+        const registration = await serviceWorkerReady;
+        if (!registration) throw new Error('No se pudo preparar este dispositivo. Recarga e intenta de nuevo.');
+        const subscription = await registration.pushManager.getSubscription() || await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(config.pushPublicKey),
         });
@@ -127,7 +177,8 @@
             return null;
         }
 
-        const registration = serviceWorkerRegistration || await navigator.serviceWorker.ready;
+        const registration = await serviceWorkerReady;
+        if (!registration) throw new Error('No disponible');
 
         return registration.pushManager.getSubscription();
     }
@@ -160,7 +211,8 @@
             throw new Error('No se pudo desactivar este dispositivo.');
         }
 
-        config.pushEnabled = false;
+        const data = await response.json();
+        config.pushEnabled = Boolean(data.enabled);
     }
 
     function jsonHeaders() {
@@ -173,8 +225,9 @@
     }
 
     function updatePushControls({ active, status, disabled = false }) {
+        pushState = { active: Boolean(active), status, disabled };
         controls.forEach((control) => {
-            control.disabled = disabled;
+            control.disabled = disabled || pushBusy;
             control.classList.toggle('is-active', Boolean(active));
             control.setAttribute('aria-pressed', active ? 'true' : 'false');
 
@@ -186,13 +239,40 @@
                 statusNode.textContent = status;
             }
         });
+        updateDeviceNotice();
     }
 
     function setPushControlsBusy(busy) {
+        pushBusy = busy;
         controls.forEach((control) => {
-            control.disabled = busy;
+            control.disabled = busy || pushState.disabled;
             control.classList.toggle('is-loading', busy);
         });
+        const enableButton = deviceNotice?.querySelector('[data-push-enable]');
+        if (enableButton) enableButton.textContent = busy ? 'Activando...' : 'Activar notificaciones';
+    }
+
+    function updateDeviceNotice() {
+        if (!deviceNotice) return;
+        const { active, status } = pushState;
+        deviceNotice.hidden = noticeDismissed || (appInstalled && active);
+        deviceNotice.querySelector('[data-device-title]').textContent = active
+            ? 'Lleva MundoYuri contigo'
+            : 'Que no se te pase ningún mensaje';
+        deviceNotice.querySelector('[data-device-description]').textContent = active
+            ? 'Ya tienes las notificaciones activadas. Instala la app para tener tus conversaciones y tu comunidad GL/yuri siempre a mano.'
+            : (appInstalled
+                ? 'Activa las notificaciones para enterarte de tus mensajes y novedades GL/yuri, incluso cuando la app esté cerrada.'
+                : 'Instala la app de MundoYuri o activa las notificaciones para enterarte de tus mensajes y novedades GL/yuri, incluso cuando no estés aquí.');
+        deviceNotice.querySelector('[data-push-enable]').hidden = active;
+        const feedback = deviceNotice.querySelector('[data-device-status]');
+        feedback.hidden = !active && ['Activar', 'Desactivadas', 'Comprobando...'].includes(status);
+        feedback.textContent = active ? 'Notificaciones activadas en este dispositivo.'
+            : (window.Notification?.permission === 'denied'
+                ? 'Las notificaciones están bloqueadas. Permítelas en los ajustes del navegador o del dispositivo y vuelve a esta página.'
+                : (status === 'No disponible'
+                    ? 'Este navegador no puede activar los avisos ahora. Prueba desde la app instalada o desde un navegador compatible.'
+                    : status));
     }
 
     function urlBase64ToUint8Array(base64String) {

@@ -50,13 +50,17 @@ class PrivateMessagingTest extends TestCase
             ->assertOk()
             ->assertSee('luna')
             ->assertSee('¿Viste el nuevo episodio de la serie?')
-            ->assertSee('1 mensajes sin leer');
+            ->assertSee('1 mensajes sin leer')
+            ->assertSee('data-device-notice', false)
+            ->assertSee('data-push-enable', false)
+            ->assertSee('MundoYuri jamás te enviará spam');
 
         $this->actingAs($recipient)
             ->get(route('messages.show', $sender))
             ->assertOk()
             ->assertSee('¿Viste el nuevo episodio de la serie?')
-            ->assertSee('luna');
+            ->assertSee('luna')
+            ->assertSee('data-device-notice', false);
 
         $this->assertNotNull(DirectMessage::firstOrFail()->fresh()->read_at);
     }

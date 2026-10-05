@@ -32,6 +32,8 @@ class="messenger-body"
                 <div class="portal-alert portal-alert-success" role="status">{{ session('success') }}</div>
             @endif
 
+            @include('messages._device-notifications')
+
             <section class="messenger-shell messenger-shell-empty">
                 @include('messages._sidebar')
 

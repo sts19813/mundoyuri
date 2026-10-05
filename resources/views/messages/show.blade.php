@@ -35,6 +35,8 @@ class="messenger-body"
                 <div class="portal-alert portal-alert-error" role="alert">{{ session('error') }}</div>
             @endif
 
+            @include('messages._device-notifications')
+
             <section class="messenger-shell has-active-chat">
                 @include('messages._sidebar')
 
