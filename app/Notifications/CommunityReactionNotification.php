@@ -4,13 +4,14 @@ namespace App\Notifications;
 
 use App\Models\CommunityReaction;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPushNotifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
 
 class CommunityReactionNotification extends Notification
 {
-    use Queueable;
+    use Queueable, SendsWebPushNotifications;
 
     public function __construct(
         public Model $reactable,
@@ -21,7 +22,7 @@ class CommunityReactionNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return $this->databaseAndWebPushChannels($notifiable);
     }
 
     public function toArray(object $notifiable): array

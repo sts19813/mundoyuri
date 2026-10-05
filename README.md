@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://mundoyuri.com/">
-    <img src="public/assets/img/logos/Logo_default.png" width="300" alt="Logo de Mundo Yuri">
+    <img src="public/assets/img/logos/mundo-yuri-logo.png" width="300" alt="Logo de Mundo Yuri">
   </a>
 </p>
 

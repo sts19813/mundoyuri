@@ -26,7 +26,7 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:640px;border:1px solid #4d2541;border-radius:24px;background:#211523;overflow:hidden;">
                     <tr>
                         <td align="center" style="padding:24px 30px;background:#160d18;border-bottom:1px solid #3b2235;">
-                            <img src="{{ asset('assets/img/logos/Logo_default.png') }}" width="150" alt="Mundo Yuri" style="display:block;width:150px;max-width:100%;height:auto;border:0;">
+                            <img src="{{ asset('assets/img/logos/mundo-yuri-logo-blanco.png') }}" width="160" alt="Mundo Yuri" style="display:block;width:160px;max-width:100%;height:auto;border:0;">
                         </td>
                     </tr>
                     @if($seriesCover)

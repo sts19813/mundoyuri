@@ -42,6 +42,7 @@ use App\Http\Controllers\LegacyProfileClaimController;
 use App\Http\Controllers\LegacyProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\PublicCatalogController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\RichEditorUploadController;
@@ -107,6 +108,12 @@ Route::middleware(['auth'])
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
         Route::patch('/preferencias/correos-de-episodios', [EmailEpisodeNotificationPreferenceController::class, 'update'])
             ->name('email-episode-notifications.update');
+        Route::post('/notificaciones-push/suscripcion', [PushSubscriptionController::class, 'store'])
+            ->name('push-subscriptions.store');
+        Route::delete('/notificaciones-push/suscripcion', [PushSubscriptionController::class, 'destroy'])
+            ->name('push-subscriptions.destroy');
+        Route::patch('/notificaciones-push/preferencia', [PushSubscriptionController::class, 'preference'])
+            ->name('push-subscriptions.preference');
         Route::post('/episodios/{episode}/progreso', [EpisodeWatchProgressController::class, 'store'])
             ->middleware('throttle:120,1')
             ->name('episodes.progress.store');

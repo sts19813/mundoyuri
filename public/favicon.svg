@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Mundo Yuri — favicon"><title>Mundo Yuri — favicon</title><rect width="256" height="256" rx="60" fill="#ED287A"/><g fill="#FFFFFF" transform="translate(-26 4) scale(2.25)"><defs><mask id="petal-folds" maskUnits="userSpaceOnUse" x="15" y="0" width="110" height="110"><rect x="15" width="110" height="110" fill="white"/>
+<g fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M76 23C68 27 65 37 71 46C78 57 89 61 91 75"/>
+<path d="M81 31C75 28 71 33 74 39C76 43 83 47 86 52C85 44 93 37 87 33C84 31 82 32 81 34"/>
+<path d="M64 24C54 41 59 53 71 62C80 69 84 76 84 82"/>
+<path d="M90 26C87 43 105 49 102 67C101 76 96 81 89 86"/>
+<path d="M47 43C57 40 59 47 62 55"/>
+<path d="M38 53C50 49 65 62 69 73"/>
+<path d="M52 72C66 67 73 75 81 82"/>
+<path d="M58 82C68 89 80 91 89 88"/>
+</g></mask></defs>
+<path mask="url(#petal-folds)" d="M88 88C72 97 55 89 49 80L44 78C48 74 50 71 49 67C43 61 35 55 30 55L34 47L32 44C40 41 39 31 45 26C49 15 58 13 69 11L73 9C69 16 73 21 79 21C81 18 84 16 87 15C85 24 94 28 100 34C112 44 115 58 110 70C108 76 104 81 99 85L114 82C112 88 105 91 98 92L103 99C96 98 93 94 88 88Z"/></g></svg>

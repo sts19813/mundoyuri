@@ -3,7 +3,7 @@
 <nav class="gl-nav{{ $transparent ? '' : ' scrolled' }}" id="navbar">
     <div class="nav-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="Mundo Yuri">
-            <img src="{{ asset('assets/img/logos/Logo_default.png') }}" alt="Mundo Yuri" class="brand-logo">
+            <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri" class="brand-logo">
         </a>
         <ul class="nav-links" id="navLinks">
             <li class="nav-mobile-heading"><span>Explorar Mundo Yuri</span><small>Elige dónde quieres ir</small></li>
@@ -103,6 +103,18 @@
                                 <span class="portal-dropdown-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
                             @endif
                         </a>
+                        <button type="button" class="portal-dropdown-item portal-email-preference" data-push-toggle aria-pressed="{{ $portalUser->push_notifications_enabled ? 'true' : 'false' }}">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                            <span class="portal-email-preference-copy">
+                                <span>Notificaciones del dispositivo</span>
+                                <small data-push-status>{{ $portalUser->push_notifications_enabled ? 'Activadas' : 'Activar' }}</small>
+                            </span>
+                            <span class="portal-preference-switch{{ $portalUser->push_notifications_enabled ? ' is-active' : '' }}" data-push-switch aria-hidden="true"><span></span></span>
+                        </button>
+                        <button type="button" class="portal-dropdown-item" data-pwa-install hidden>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                            Instalar Mundo Yuri
+                        </button>
                         <form method="POST" action="{{ route('email-episode-notifications.update') }}" class="portal-email-preference-form" data-email-preference-form @if($portalUser->episode_email_notifications_enabled) data-confirm-disable="¿Seguro que quieres pausar los avisos? Podrías perderte nuevos episodios cuando estén disponibles." @endif>
                             @csrf
                             @method('PATCH')

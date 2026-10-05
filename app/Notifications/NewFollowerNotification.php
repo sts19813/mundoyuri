@@ -3,12 +3,13 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPushNotifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
 class NewFollowerNotification extends Notification
 {
-    use Queueable;
+    use Queueable, SendsWebPushNotifications;
 
     public function __construct(public User $follower) {}
 
@@ -17,7 +18,7 @@ class NewFollowerNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return $this->databaseAndWebPushChannels($notifiable);
     }
 
     /**

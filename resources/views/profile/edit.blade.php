@@ -289,6 +289,21 @@
                             </button>
                         </form>
                     </section>
+
+                    <section class="profile-email-settings" id="push-notifications" aria-labelledby="push-notifications-title">
+                        <div class="profile-email-settings-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                        </div>
+                        <div class="profile-email-settings-copy">
+                            <span class="profile-panel-kicker">Preferencias de notificaciones</span>
+                            <h3 id="push-notifications-title">Avisos en este dispositivo</h3>
+                            <p>Recibe mensajes privados, menciones, respuestas y avisos importantes aunque Mundo Yuri no esté abierto.</p>
+                        </div>
+                        <button type="button" class="profile-email-toggle{{ $user->push_notifications_enabled ? ' is-active' : '' }}" data-push-toggle aria-pressed="{{ $user->push_notifications_enabled ? 'true' : 'false' }}">
+                            <span class="profile-email-toggle-track{{ $user->push_notifications_enabled ? ' is-active' : '' }}" data-push-switch aria-hidden="true"><span></span></span>
+                            <span data-push-status>{{ $user->push_notifications_enabled ? 'Activadas' : 'Activar avisos' }}</span>
+                        </button>
+                    </section>
                 </section>
 
                 <aside class="profile-sidebar">

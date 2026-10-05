@@ -14,9 +14,9 @@
             </div>
 
             <a href="{{ route('dashboard') }}" class="app-sidebar-logo">
-                <img alt="Mundo Yuri" src="{{ asset('/assets/img/logos/Logo_black.png') }}"
+                <img alt="Mundo Yuri" src="{{ asset('/assets/img/logos/mundo-yuri-logo.png') }}"
                     class="theme-light-show" height="80"/>
-                <img alt="Mundo Yuri" src="{{ asset('/assets/img/logos/Logo white.png') }}"
+                <img alt="Mundo Yuri" src="{{ asset('/assets/img/logos/mundo-yuri-logo-blanco.png') }}"
                     class="theme-dark-show" height="80" />
             </a>
         </div>

@@ -4,13 +4,14 @@ namespace App\Notifications;
 
 use App\Models\DirectMessage;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPushNotifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class NewDirectMessageNotification extends Notification
 {
-    use Queueable;
+    use Queueable, SendsWebPushNotifications;
 
     public function __construct(
         public DirectMessage $directMessage,
@@ -22,7 +23,7 @@ class NewDirectMessageNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return $this->databaseAndWebPushChannels($notifiable);
     }
 
     /**

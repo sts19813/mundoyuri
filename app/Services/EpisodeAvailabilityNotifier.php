@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Mail\EpisodeAvailableMail;
 use App\Models\Episode;
 use App\Models\EpisodeEmailNotification;
+use App\Models\EpisodeUserNotification;
 use App\Models\User;
+use App\Notifications\EpisodeAvailableNotification;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -49,6 +51,8 @@ class EpisodeAvailabilityNotifier
             }
         }
 
+        $this->notifyUsers($episode);
+
         return $sent;
     }
 
@@ -78,5 +82,65 @@ class EpisodeAvailabilityNotifier
         }
 
         return [['email' => $email, 'user_id' => $user?->id]];
+    }
+
+    private function notifyUsers(Episode $episode): int
+    {
+        $sent = 0;
+
+        foreach ($this->userRecipients() as $user) {
+            $delivery = EpisodeUserNotification::query()->firstOrCreate([
+                'episode_id' => $episode->id,
+                'user_id' => $user->id,
+            ]);
+
+            if ($delivery->notified_at) {
+                continue;
+            }
+
+            try {
+                $user->notify(new EpisodeAvailableNotification($episode));
+
+                $delivery->update([
+                    'notified_at' => now(),
+                    'error_message' => null,
+                ]);
+                $sent++;
+            } catch (Throwable $exception) {
+                report($exception);
+
+                $delivery->update([
+                    'error_message' => mb_strimwidth($exception->getMessage(), 0, 1000),
+                ]);
+            }
+        }
+
+        return $sent;
+    }
+
+    /** @return iterable<User> */
+    private function userRecipients(): iterable
+    {
+        if (config('episode_notifications.mode') === 'all') {
+            return User::query()
+                ->where('is_active', true)
+                ->where(function ($query): void {
+                    $query
+                        ->where('episode_email_notifications_enabled', true)
+                        ->orWhere('push_notifications_enabled', true);
+                })
+                ->orderBy('id')
+                ->get();
+        }
+
+        $email = trim((string) config('episode_notifications.test_recipient'));
+
+        if ($email === '') {
+            return [];
+        }
+
+        $user = User::query()->where('email', $email)->first();
+
+        return $user ? [$user] : [];
     }
 }

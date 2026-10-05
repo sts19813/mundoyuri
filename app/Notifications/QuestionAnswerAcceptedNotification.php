@@ -5,13 +5,14 @@ namespace App\Notifications;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPushNotifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class QuestionAnswerAcceptedNotification extends Notification
 {
-    use Queueable;
+    use Queueable, SendsWebPushNotifications;
 
     public function __construct(
         public ForumThread $question,
@@ -21,7 +22,7 @@ class QuestionAnswerAcceptedNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return $this->databaseAndWebPushChannels($notifiable);
     }
 
     public function toArray(object $notifiable): array
