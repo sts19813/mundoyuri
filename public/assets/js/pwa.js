@@ -4,9 +4,10 @@
     const controls = Array.from(document.querySelectorAll('[data-push-toggle]'));
     const installButtons = Array.from(document.querySelectorAll('[data-pwa-install]'));
     const deviceNotice = document.querySelector('[data-device-notice]');
-    const standaloneMode = window.matchMedia('(display-mode: standalone)');
+    const appDisplayModes = ['standalone', 'window-controls-overlay', 'minimal-ui']
+        .map((mode) => window.matchMedia(`(display-mode: ${mode})`));
     let deferredInstallPrompt = null;
-    let appInstalled = standaloneMode.matches || navigator.standalone === true;
+    let appInstalled = isAppWindow();
     let noticeDismissed = false;
     let pushBusy = false;
     let pushState = { active: false, disabled: true, status: 'Comprobando...' };
@@ -47,10 +48,12 @@
             updateInstallControls();
             updateDeviceNotice();
         });
-        standaloneMode.addEventListener('change', () => {
-            appInstalled = standaloneMode.matches || navigator.standalone === true;
-            updateInstallControls();
-            updateDeviceNotice();
+        appDisplayModes.forEach((displayMode) => {
+            displayMode.addEventListener('change', () => {
+                appInstalled = isAppWindow();
+                updateInstallControls();
+                updateDeviceNotice();
+            });
         });
 
         installButtons.forEach((button) => {
@@ -70,6 +73,10 @@
             });
         });
         updateInstallControls();
+    }
+
+    function isAppWindow() {
+        return appDisplayModes.some((displayMode) => displayMode.matches) || navigator.standalone === true;
     }
 
     function updateInstallControls() {
