@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\CommunityReaction;
 use App\Models\DirectMessage;
 use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -54,11 +56,12 @@ class ConversationController extends Controller
                 ->update(['read_at' => now()]);
 
             $messages = $conversation->messages()
-                ->with('sender')
+                ->with(['sender', 'recipient', 'replyTo.sender'])
                 ->latest()
                 ->paginate(50, ['*'], 'messages_page')
                 ->withQueryString();
             $messages->setCollection($messages->getCollection()->reverse()->values());
+            $this->hydrateMessages($messages->getCollection(), $viewer);
         } else {
             $messages = DirectMessage::query()
                 ->whereRaw('1 = 0')
@@ -108,10 +111,11 @@ class ConversationController extends Controller
 
         $messages = $conversation->messages()
             ->where('id', '>', $afterId)
-            ->with('sender')
+            ->with(['sender', 'recipient', 'replyTo.sender'])
             ->orderBy('id')
             ->limit(50)
             ->get();
+        $this->hydrateMessages($messages, $viewer);
 
         $incomingMessageIds = $messages
             ->where('recipient_id', $viewer->id)
@@ -158,6 +162,7 @@ class ConversationController extends Controller
 
         $validated = $request->validate([
             'body' => ['nullable', 'string', 'max:2000', 'required_without:attachment'],
+            'reply_to_message_id' => ['nullable', 'integer'],
             'attachment' => [
                 'nullable',
                 'file',
@@ -167,6 +172,7 @@ class ConversationController extends Controller
         ]);
 
         $body = trim($validated['body'] ?? '');
+        $replyToMessageId = $this->validReplyTargetId($viewer, $user, $validated['reply_to_message_id'] ?? null);
 
         if ($body === '' && ! $request->hasFile('attachment')) {
             return back()
@@ -184,7 +190,7 @@ class ConversationController extends Controller
         }
 
         try {
-            $message = DB::transaction(function () use ($viewer, $user, $body, $attachment): DirectMessage {
+            $message = DB::transaction(function () use ($viewer, $user, $body, $attachment, $replyToMessageId): DirectMessage {
                 [$userOneId, $userTwoId] = Conversation::participantIds($viewer, $user);
 
                 $conversation = Conversation::query()->firstOrCreate([
@@ -195,6 +201,7 @@ class ConversationController extends Controller
                 $message = $conversation->messages()->create([
                     'sender_id' => $viewer->id,
                     'recipient_id' => $user->id,
+                    'reply_to_message_id' => $replyToMessageId,
                     'body' => $body,
                     ...($attachment ?? []),
                 ]);
@@ -214,8 +221,11 @@ class ConversationController extends Controller
         $user->notify(new NewDirectMessageNotification($message, $viewer));
 
         if ($request->expectsJson()) {
+            $message->load(['sender', 'recipient', 'replyTo.sender']);
+            $this->hydrateMessages(collect([$message]), $viewer);
+
             return response()->json([
-                'messages' => [$this->messagePayload($message->load('sender'), $viewer, $user)],
+                'messages' => [$this->messagePayload($message, $viewer, $user)],
                 'latest_message_id' => $message->id,
             ], 201);
         }
@@ -297,6 +307,45 @@ class ConversationController extends Controller
     }
 
     /**
+     * @param  iterable<int, DirectMessage>|Collection<int, DirectMessage>  $messages
+     */
+    public function hydrateMessages(iterable $messages, User $viewer): void
+    {
+        $collection = $messages instanceof Collection ? $messages : collect($messages);
+        $ids = $collection->pluck('id')->filter()->values();
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $summary = DB::table('direct_message_reactions')
+            ->select('direct_message_id', 'type')
+            ->selectRaw('COUNT(*) as total')
+            ->whereIn('direct_message_id', $ids)
+            ->groupBy('direct_message_id', 'type')
+            ->get()
+            ->groupBy('direct_message_id');
+
+        $viewerReactions = DB::table('direct_message_reactions')
+            ->where('user_id', $viewer->id)
+            ->whereIn('direct_message_id', $ids)
+            ->pluck('type', 'direct_message_id');
+
+        $emptySummary = array_fill_keys(CommunityReaction::typeKeys(), 0);
+
+        $collection->each(function (DirectMessage $message) use ($summary, $viewerReactions, $emptySummary): void {
+            $messageSummary = $emptySummary;
+
+            foreach ($summary->get($message->id, collect()) as $reaction) {
+                $messageSummary[$reaction->type] = (int) $reaction->total;
+            }
+
+            $message->setAttribute('reaction_summary', $messageSummary);
+            $message->setAttribute('viewer_reaction_type', $viewerReactions[$message->id] ?? null);
+        });
+    }
+
+    /**
      * @return array{id: int, incoming: bool, html: string}
      */
     private function messagePayload(DirectMessage $message, User $viewer, User $otherUser): array
@@ -310,5 +359,33 @@ class ConversationController extends Controller
                 'otherUser' => $otherUser,
             ])->render(),
         ];
+    }
+
+    private function validReplyTargetId(User $viewer, User $recipient, mixed $replyToMessageId): ?int
+    {
+        if (! $replyToMessageId) {
+            return null;
+        }
+
+        $conversation = Conversation::between($viewer, $recipient)->first();
+
+        if (! $conversation) {
+            throw ValidationException::withMessages([
+                'reply_to_message_id' => 'El mensaje citado ya no está disponible.',
+            ]);
+        }
+
+        $target = $conversation->messages()
+            ->whereKey((int) $replyToMessageId)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (! $target) {
+            throw ValidationException::withMessages([
+                'reply_to_message_id' => 'El mensaje citado ya no está disponible.',
+            ]);
+        }
+
+        return $target->id;
     }
 }

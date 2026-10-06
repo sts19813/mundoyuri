@@ -106,8 +106,16 @@ class="messenger-body"
                         @elseif(!$otherUser->is_active)
                             <div class="messenger-disabled">Esta cuenta ya no está disponible.</div>
                         @else
+                            <div class="messenger-reply-composer is-hidden" data-reply-composer-preview>
+                                <div>
+                                    <strong data-reply-author></strong>
+                                    <span data-reply-preview></span>
+                                </div>
+                                <button type="button" data-clear-reply aria-label="Cancelar respuesta">×</button>
+                            </div>
                             <form method="POST" action="{{ route('messages.store', $otherUser) }}" class="messenger-composer" enctype="multipart/form-data" data-message-composer>
                                 @csrf
+                                <input type="hidden" name="reply_to_message_id" value="" data-reply-input>
                                 <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
                                 <label for="message-attachment" class="messenger-attach-button" aria-label="Adjuntar imagen o documento" title="Adjuntar imagen o documento">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.5-9.5a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9"/></svg>
@@ -252,6 +260,130 @@ class="messenger-body"
         const pollUrl = @js(route('messages.poll', $otherUser));
         let polling = false;
 
+        const closeMessageMenus = (except = null) => {
+            document.querySelectorAll('.messenger-message-menu[open]').forEach((menu) => {
+                if (menu !== except) menu.open = false;
+            });
+        };
+
+        const replyInput = document.querySelector('[data-reply-input]');
+        const replyPreview = document.querySelector('[data-reply-composer-preview]');
+        const replyAuthor = document.querySelector('[data-reply-author]');
+        const replyPreviewText = document.querySelector('[data-reply-preview]');
+
+        const clearReplyTarget = () => {
+            if (replyInput) replyInput.value = '';
+            replyPreview?.classList.add('is-hidden');
+            if (replyAuthor) replyAuthor.textContent = '';
+            if (replyPreviewText) replyPreviewText.textContent = '';
+        };
+
+        const setReplyTarget = (message) => {
+            if (!message || !replyInput || !replyPreview) return;
+            replyInput.value = message.dataset.messageId || '';
+            if (replyAuthor) replyAuthor.textContent = `Responder a ${message.dataset.messageAuthor || 'mensaje'}`;
+            if (replyPreviewText) replyPreviewText.textContent = message.dataset.messagePreview || '';
+            replyPreview.classList.remove('is-hidden');
+            messageBody?.focus({ preventScroll: true });
+            message.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        };
+
+        document.querySelector('[data-clear-reply]')?.addEventListener('click', clearReplyTarget);
+
+        document.addEventListener('click', (event) => {
+            const menu = event.target.closest('.messenger-message-menu');
+            if (!menu) closeMessageMenus();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            closeMessageMenus();
+            clearReplyTarget();
+        });
+
+        conversation?.addEventListener('click', async (event) => {
+            const replyButton = event.target.closest('[data-message-reply]');
+            if (replyButton) {
+                event.preventDefault();
+                const message = replyButton.closest('[data-message-id]');
+                setReplyTarget(message);
+                closeMessageMenus();
+                return;
+            }
+
+            const jump = event.target.closest('[data-jump-message]');
+            if (jump) {
+                const target = conversation.querySelector(`[data-message-id="${jump.dataset.jumpMessage}"]`);
+                if (target) {
+                    event.preventDefault();
+                    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    target.classList.add('is-highlighted');
+                    window.setTimeout(() => target.classList.remove('is-highlighted'), 1200);
+                }
+                return;
+            }
+
+            const reactionForm = event.target.closest('[data-message-reaction-form]');
+            if (!reactionForm) return;
+            event.preventDefault();
+
+            const article = reactionForm.closest('[data-message-id]');
+            const menu = reactionForm.closest('.messenger-message-menu');
+            const buttons = menu?.querySelectorAll('button');
+            buttons?.forEach((button) => button.disabled = true);
+
+            try {
+                const response = await fetch(reactionForm.action, {
+                    method: 'POST',
+                    body: new FormData(reactionForm),
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+
+                if (!response.ok) return;
+                const data = await response.json();
+                const template = document.createElement('template');
+                template.innerHTML = data.html || '';
+                const updated = template.content.querySelector('[data-message-id]');
+                if (article && updated) {
+                    article.replaceWith(updated);
+                }
+            } finally {
+                buttons?.forEach((button) => button.disabled = false);
+            }
+        });
+
+        let longPressTimer = null;
+        conversation?.addEventListener('pointerdown', (event) => {
+            if (!['touch', 'pen'].includes(event.pointerType)) return;
+            if (event.target.closest('a, button, input, textarea, summary, details, form')) return;
+
+            const message = event.target.closest('[data-message-id]');
+            if (!message) return;
+
+            longPressTimer = window.setTimeout(() => {
+                const menu = message.querySelector('.messenger-message-menu');
+                if (menu) {
+                    closeMessageMenus(menu);
+                    menu.open = true;
+                    navigator.vibrate?.(12);
+                }
+            }, 520);
+        });
+
+        ['pointerup', 'pointercancel', 'pointermove', 'scroll'].forEach((eventName) => {
+            conversation?.addEventListener(eventName, () => {
+                if (longPressTimer) {
+                    window.clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }, { passive: true });
+        });
+
         const pollMessages = async () => {
             if (!conversation || polling || document.hidden) return;
             polling = true;
@@ -333,6 +465,7 @@ class="messenger-body"
                 appendMessages(data.messages || [], { forceScroll: true });
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
                 composer.reset();
+                clearReplyTarget();
                 if (attachmentInput) {
                     const hint = document.querySelector('[data-message-attachment-hint]');
                     if (hint) hint.textContent = 'Imagen o documento · máximo 20 MB';

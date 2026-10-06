@@ -199,7 +199,7 @@ class CommunityController extends Controller
             ->orderBy($sortColumn, $direction)
             ->orderBy('member_type')
             ->orderBy('member_id')
-            ->paginate(24)
+            ->paginate(50)
             ->withQueryString();
 
         $rows = $members->getCollection();

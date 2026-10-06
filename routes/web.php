@@ -30,6 +30,7 @@ use App\Http\Controllers\CommunityReactionController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\DirectMessageReactionController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
 use App\Http\Controllers\EpisodeWatchProgressController;
@@ -145,6 +146,9 @@ Route::middleware(['auth'])
             ->name('messages.attachments.show');
         Route::delete('/mensajes/mensaje/{message}', [ConversationController::class, 'destroy'])
             ->name('messages.destroy');
+        Route::post('/mensajes/mensaje/{message}/reacciones', [DirectMessageReactionController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('messages.reactions.store');
         Route::get('/mensajes/{user}/actualizaciones', [ConversationController::class, 'poll'])
             ->name('messages.poll');
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])

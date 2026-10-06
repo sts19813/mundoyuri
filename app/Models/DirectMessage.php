@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DirectMessage extends Model
 {
@@ -14,6 +15,7 @@ class DirectMessage extends Model
         'conversation_id',
         'sender_id',
         'recipient_id',
+        'reply_to_message_id',
         'body',
         'attachment_path',
         'attachment_name',
@@ -64,6 +66,23 @@ class DirectMessage extends Model
         return max(1, (int) ceil($bytes / 1024)).' KB';
     }
 
+    public function previewText(): string
+    {
+        if ($this->isDeleted()) {
+            return 'Mensaje eliminado';
+        }
+
+        if (filled($this->body)) {
+            return (string) str($this->body)->squish()->limit(110);
+        }
+
+        if ($this->attachment_name) {
+            return 'Archivo: '.$this->attachment_name;
+        }
+
+        return 'Mensaje';
+    }
+
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
@@ -77,6 +96,16 @@ class DirectMessage extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reply_to_message_id');
+    }
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(DirectMessageReaction::class);
     }
 
     public function deletedBy(): BelongsTo

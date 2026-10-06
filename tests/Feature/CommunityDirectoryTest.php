@@ -144,7 +144,7 @@ class CommunityDirectoryTest extends TestCase
 
     public function test_directory_paginates_members_and_preserves_filters_between_pages(): void
     {
-        User::factory()->count(30)->sequence(
+        User::factory()->count(60)->sequence(
             fn ($sequence) => [
                 'name' => 'Integrante '.str_pad((string) ($sequence->index + 1), 2, '0', STR_PAD_LEFT),
                 'profile_visibility' => 'public',
@@ -155,18 +155,18 @@ class CommunityDirectoryTest extends TestCase
         $filters = ['sort' => 'name', 'direction' => 'asc'];
         $this->get(route('community.members', $filters))
             ->assertOk()
-            ->assertSee('30 miembros')
+            ->assertSee('60 miembros')
             ->assertSee('Integrante 01')
-            ->assertSee('Integrante 24')
-            ->assertDontSee('Integrante 25')
+            ->assertSee('Integrante 50')
+            ->assertDontSee('Integrante 51')
             ->assertSee('page=2', false)
             ->assertSee('sort=name', false)
             ->assertSee('direction=asc', false);
 
         $this->get(route('community.members', [...$filters, 'page' => 2]))
             ->assertOk()
-            ->assertSee('Integrante 25')
-            ->assertSee('Integrante 30')
-            ->assertDontSee('Integrante 24');
+            ->assertSee('Integrante 51')
+            ->assertSee('Integrante 60')
+            ->assertDontSee('Integrante 50');
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DirectMessage;
+use App\Models\CommunityReaction;
 use Database\Seeders\RolePermissionSeeder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -113,6 +114,100 @@ class PrivateMessagingTest extends TestCase
             ->assertJsonFragment(['latest_message_id' => $message->id]);
 
         $this->assertStringContainsString('Se envió sin recargar.', $response->json('messages.0.html'));
+    }
+
+    public function test_private_messages_can_reply_to_previous_messages(): void
+    {
+        $sender = User::factory()->create(['name' => 'Luna']);
+        $recipient = User::factory()->create(['name' => 'Mio']);
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'body' => 'Mensaje original para citar.',
+            ]);
+
+        $original = DirectMessage::query()->firstOrFail();
+
+        $this->actingAs($recipient)
+            ->post(route('messages.store', $sender), [
+                'body' => 'Esta es mi respuesta.',
+                'reply_to_message_id' => $original->id,
+            ])
+            ->assertRedirect(route('messages.show', $sender));
+
+        $reply = DirectMessage::query()->latest('id')->firstOrFail();
+
+        $this->assertSame($original->id, $reply->reply_to_message_id);
+
+        $this->actingAs($sender)
+            ->get(route('messages.show', $recipient))
+            ->assertOk()
+            ->assertSee('Mensaje original para citar.')
+            ->assertSee('Esta es mi respuesta.')
+            ->assertSee('messenger-reply-quote', false);
+    }
+
+    public function test_private_messages_can_be_reacted_to_with_existing_reactions(): void
+    {
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'body' => 'Mensaje con reacción.',
+            ]);
+
+        $message = DirectMessage::query()->firstOrFail();
+        $this->assertArrayHasKey('yuri', CommunityReaction::types());
+
+        $response = $this->actingAs($recipient)
+            ->postJson(route('messages.reactions.store', $message), [
+                'type' => 'yuri',
+            ])
+            ->assertOk()
+            ->assertJsonPath('active_type', 'yuri');
+
+        $this->assertStringContainsString('🌸', $response->json('html'));
+
+        $this->assertDatabaseHas('direct_message_reactions', [
+            'direct_message_id' => $message->id,
+            'user_id' => $recipient->id,
+            'type' => 'yuri',
+        ]);
+
+        $this->actingAs($recipient)
+            ->postJson(route('messages.reactions.store', $message), [
+                'type' => 'love',
+            ])
+            ->assertOk()
+            ->assertJsonPath('active_type', 'love');
+
+        $this->assertDatabaseMissing('direct_message_reactions', [
+            'direct_message_id' => $message->id,
+            'user_id' => $recipient->id,
+            'type' => 'yuri',
+        ]);
+        $this->assertDatabaseHas('direct_message_reactions', [
+            'direct_message_id' => $message->id,
+            'user_id' => $recipient->id,
+            'type' => 'love',
+        ]);
+
+        $this->actingAs($recipient)
+            ->postJson(route('messages.reactions.store', $message), [
+                'type' => 'love',
+            ])
+            ->assertOk()
+            ->assertJsonPath('active_type', null);
+
+        $this->assertDatabaseCount('direct_message_reactions', 0);
+
+        $this->actingAs($stranger)
+            ->postJson(route('messages.reactions.store', $message), [
+                'type' => 'like',
+            ])
+            ->assertNotFound();
     }
 
     public function test_notifications_are_private_and_can_be_marked_as_read(): void
