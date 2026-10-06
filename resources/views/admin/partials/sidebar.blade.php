@@ -180,7 +180,7 @@
                         <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.catalog-sections.*') ? 'active' : '' }}" href="{{ route('admin.catalog-sections.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-abstract-26 fs-2"></i></span>
-                                <span class="menu-title">Secciones y hero</span>
+                                <span class="menu-title">Inicio y portada</span>
                             </a>
                         </div>
                         <div class="menu-item">

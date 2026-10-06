@@ -27,12 +27,9 @@ class PublicCatalogController extends Controller
     public function section(string $sectionSlug): View
     {
         abort_unless($this->catalogTablesReady(), 404);
+        abort_unless($this->resolveSection($sectionSlug), 404);
 
-        $section = $this->resolveSection($sectionSlug);
-
-        abort_unless($section, 404);
-
-        return view('index', $this->homeData($section));
+        return view('index', $this->mixedHomeData());
     }
 
     /** @return array<string, mixed> */

@@ -19,7 +19,10 @@
         $homeSeoDescription = $isMixedHome
             ? 'Explora anime y series GL con nuevos episodios, destacados y colecciones seleccionadas en Mundo Yuri.'
             : ($section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.');
-        $heroImageUrl = $section?->hero_image_url ?: '/assets/img/wallpaper-login.jpg';
+        $heroDesktopImageUrl = $section?->heroDesktopImageUrl() ?: '/assets/img/wallpaper-login.jpg';
+        $heroMobileImageUrl = $section?->heroMobileImageUrl() ?: $heroDesktopImageUrl;
+        $heroPrimaryUrl = $section?->heroButtonUrl($section->hero_primary_url, $catalogUrl) ?? $catalogUrl;
+        $heroSecondaryUrl = $section?->heroButtonUrl($section->hero_secondary_url, '#novedades') ?? '#novedades';
     @endphp
     <x-seo title="{{ $isMixedHome ? 'Mundo Yuri: Anime y Series GL' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" />
     <x-portal-favicon />
@@ -34,8 +37,11 @@
 
 <x-navbar :transparent="true" />
 
-    <section class="hero">
-        <img class="hero-cover-image" src="{{ $heroImageUrl }}" alt="" aria-hidden="true">
+    <section @class(['hero', 'hero-video-on-mobile' => $section?->hero_video_on_mobile])>
+        <picture class="hero-cover-media" aria-hidden="true">
+            <source media="(max-width: 768px)" srcset="{{ $heroMobileImageUrl }}">
+            <img class="hero-cover-image" src="{{ $heroDesktopImageUrl }}" alt="">
+        </picture>
         @if($section?->heroVideoEmbedUrl())
             <iframe id="heroYoutubeVideo" class="hero-video" src="{{ $section->heroVideoEmbedUrl() }}" title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>
         @elseif($section?->hasDirectVideo())
@@ -46,10 +52,16 @@
             <div class="hero-tag"><span class="brand-heart" style="width:14px;height:14px;"></span>{{ $section?->hero_eyebrow ?: $sectionName }}</div>
             <h1>{{ $section?->hero_title ?: 'Historias para descubrir, sentir y compartir' }}</h1>
             @if($section?->hero_description)<p class="hero-desc">{{ $section->hero_description }}</p>@endif
-            <div class="hero-actions">
-                <a href="{{ $catalogUrl }}" class="btn-rose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>{{ $section?->hero_primary_label ?: 'Explorar catálogo' }}</a>
-                <a href="#novedades" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
-            </div>
+            @if(($section?->hero_primary_enabled ?? true) || ($section?->hero_secondary_enabled ?? true))
+                <div class="hero-actions">
+                    @if($section?->hero_primary_enabled ?? true)
+                        <a href="{{ $heroPrimaryUrl }}" class="btn-rose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>{{ $section?->hero_primary_label ?: 'Explorar catálogo' }}</a>
+                    @endif
+                    @if($section?->hero_secondary_enabled ?? true)
+                        <a href="{{ $heroSecondaryUrl }}" class="btn-ghost">{{ $section?->hero_secondary_label ?: 'Ver novedades' }}</a>
+                    @endif
+                </div>
+            @endif
         </div>
     </section>
 

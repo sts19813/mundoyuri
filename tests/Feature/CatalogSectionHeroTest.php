@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\CatalogSection;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CatalogSectionHeroTest extends TestCase
@@ -20,31 +22,33 @@ class CatalogSectionHeroTest extends TestCase
             ->assertSee('src="/assets/img/wallpaper-login.jpg"', false);
     }
 
-    public function test_admin_can_update_a_catalog_section_cover_image(): void
+    public function test_legacy_section_urls_use_the_same_portal_home_configuration(): void
     {
+        $this->get(route('catalog.sections.show', 'anime'))
+            ->assertOk()
+            ->assertSee('Compartiendo el yuri con elegancia')
+            ->assertSee('class="hero-cover-media"', false);
+    }
+
+    public function test_admin_can_upload_a_catalog_section_cover_image(): void
+    {
+        Storage::fake('public');
         $admin = User::factory()->create(['role' => 'admin']);
         $section = CatalogSection::query()->where('slug', 'series-gl')->firstOrFail();
 
         $this->actingAs($admin)
             ->put(route('admin.catalog-sections.update', $section), [
-                'slug' => $section->slug,
-                'name' => $section->name,
-                'label' => $section->label,
-                'hero_eyebrow' => $section->hero_eyebrow,
                 'hero_title' => 'Compartiendo el yuri con elegancia',
-                'hero_description' => $section->hero_description,
-                'hero_image_url' => 'https://cdn.example.com/mundo-yuri/gl-cover.jpg',
-                'hero_video_url' => $section->hero_video_url,
-                'hero_primary_label' => $section->hero_primary_label,
-                'hero_secondary_label' => $section->hero_secondary_label,
-                'sort_order' => $section->sort_order,
-                'is_active' => 1,
+                'hero_desktop_image' => UploadedFile::fake()->image('portada-desktop.jpg', 1600, 900),
+                'hero_mobile_image' => UploadedFile::fake()->image('portada-movil.jpg', 720, 960),
+                'hero_primary_enabled' => 1,
+                'hero_secondary_enabled' => 1,
             ])
-            ->assertRedirect(route('admin.catalog-sections.index'));
+            ->assertRedirect(route('admin.catalog-sections.edit', $section));
 
-        $this->assertDatabaseHas('catalog_sections', [
-            'id' => $section->id,
-            'hero_image_url' => 'https://cdn.example.com/mundo-yuri/gl-cover.jpg',
-        ]);
+        $section->refresh();
+
+        Storage::disk('public')->assertExists($section->hero_desktop_image);
+        Storage::disk('public')->assertExists($section->hero_mobile_image);
     }
 }
