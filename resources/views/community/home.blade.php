@@ -37,7 +37,7 @@
                 <section class="community-home-section community-home-members">
                     <div class="community-home-heading">
                         <div><span class="profile-panel-kicker">Personas</span><h2>Miembros de la comunidad</h2></div>
-                        <a class="community-home-member-link" href="{{ route('community.members') }}">
+                        <a class="profile-btn profile-btn-primary community-home-member-link" href="{{ route('community.members') }}">
                             <span>Ver todos los miembros</span>
                             <small>{{ number_format($communityMemberCount) }} {{ $communityMemberCount === 1 ? 'miembro' : 'miembros' }}</small>
                         </a>
