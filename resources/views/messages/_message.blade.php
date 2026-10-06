@@ -12,7 +12,6 @@
         'messenger-message',
         'is-outgoing' => $outgoing,
         'is-incoming' => ! $outgoing,
-        'has-reactions' => ! $message->isDeleted() && $reactionTotal > 0,
     ])
     data-message-id="{{ $message->id }}"
     data-message-author="{{ $messageAuthor }}"
@@ -51,6 +50,10 @@
                 @endif
             @endif
         @endif
+        <time datetime="{{ $message->created_at->toIso8601String() }}">
+            {{ $message->created_at->timezone('America/Merida')->format('d M · g:i a') }}
+            @if($outgoing)<span data-message-read-status aria-label="{{ $message->read_at ? 'Leído' : 'Enviado' }}">{{ $message->read_at ? '✓✓' : '✓' }}</span>@endif
+        </time>
         @if(!$message->isDeleted() && $reactionTotal > 0)
             <div class="messenger-reaction-summary" aria-label="{{ $reactionTotal }} reacciones">
                 @foreach($receivedReactions->take(3) as $type => $count)
@@ -59,10 +62,6 @@
                 <small>{{ number_format($reactionTotal) }}</small>
             </div>
         @endif
-        <time datetime="{{ $message->created_at->toIso8601String() }}">
-            {{ $message->created_at->timezone('America/Merida')->format('d M · g:i a') }}
-            @if($outgoing)<span data-message-read-status aria-label="{{ $message->read_at ? 'Leído' : 'Enviado' }}">{{ $message->read_at ? '✓✓' : '✓' }}</span>@endif
-        </time>
         @if(! $message->isDeleted())
             <details class="messenger-message-menu">
                 <summary aria-label="Opciones del mensaje">•••</summary>

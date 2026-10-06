@@ -139,13 +139,6 @@ class="messenger-body"
     </main>
 
     <script>
-        const isStandaloneMessenger = window.matchMedia('(display-mode: standalone)').matches
-            || window.navigator.standalone === true;
-
-        if (isStandaloneMessenger) {
-            document.body.classList.add('is-standalone-pwa');
-        }
-
         const syncMessengerViewport = () => {
             const viewport = window.visualViewport;
             const messagePane = document.getElementById('conversationMessages');
@@ -327,7 +320,12 @@ class="messenger-body"
 
         document.addEventListener('click', (event) => {
             const menu = event.target.closest('.messenger-message-menu');
-            if (!menu) closeMessageMenus();
+            if (menu) {
+                closeMessageMenus(menu);
+                return;
+            }
+
+            closeMessageMenus();
         });
 
         document.addEventListener('keydown', (event) => {
