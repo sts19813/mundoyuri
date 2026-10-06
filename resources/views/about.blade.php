@@ -231,8 +231,6 @@
 
                     <a
                         href="https://mundoyuri.com/usuarios/1/admin"
-                        target="_blank"
-                        rel="noopener noreferrer"
                     >
                         sts19813
                     </a>

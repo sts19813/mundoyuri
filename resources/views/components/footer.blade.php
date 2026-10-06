@@ -58,7 +58,7 @@
         <hr class="footer-divider">
         <p class="footer-copy">© {{ date('Y') }} Mundo Yuri · Ninguno de los derechos reservados</p>
         <p class="footer-copy">Hecho con ❤️ por
-            <a href="https://mundoyuri.com/usuarios/1/admin" target="_blank" rel="noopener noreferrer">
+            <a href="https://mundoyuri.com/usuarios/1/admin">
                 sts19813
             </a>
         </p>
