@@ -127,4 +127,47 @@ class EpisodeSharingTest extends TestCase
             ->assertDontSee('Backblaze B2')
             ->assertDontSee('BYSE');
     }
+
+    public function test_public_episode_hides_the_source_picker_when_there_is_only_one_source(): void
+    {
+        $genre = Genre::query()->create([
+            'name' => 'Romance',
+            'slug' => 'romance',
+            'is_active' => true,
+        ]);
+        $series = Series::query()->create([
+            'genre_id' => $genre->id,
+            'title' => 'Historia con una fuente',
+            'slug' => 'historia-con-una-fuente',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Una historia Girls Love para validar una fuente de video.',
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
+        $episode = Episode::query()->create([
+            'series_id' => $series->id,
+            'title' => 'Una fuente',
+            'slug' => 'una-fuente',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
+        EpisodeSource::query()->create([
+            'episode_id' => $episode->id,
+            'provider' => 'cloudflare_hls',
+            'source_type' => 'full',
+            'label' => 'Cloudflare HLS',
+            'sort_order' => 1,
+            'video_url' => 'https://video.mundoyuri.com/stream/playlist.m3u8',
+            'is_primary' => true,
+        ]);
+
+        $response = $this->get(route('public.episodes.show', $episode->slug));
+
+        $response->assertOk()
+            ->assertSee('episode-page-body', false)
+            ->assertDontSee('Fuentes de vídeo');
+    }
 }

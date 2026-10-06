@@ -1252,6 +1252,39 @@
       }
   }
 
+  @media (max-width: 767px) {
+      .episode-page-body #navbar,
+      .episode-page-body .miyu-assistant {
+          display: none !important;
+      }
+
+      .episode-page-body .ep-layout {
+          padding: 0 0 48px;
+          gap: 28px;
+      }
+
+      .episode-page-body .ep-breadcrumb {
+          display: none;
+      }
+
+      .episode-page-body .player-wrap {
+          width: 100%;
+          margin: 0;
+          border-radius: 0;
+          box-shadow: none;
+      }
+
+      .episode-page-body .player-wrap .plyr,
+      .episode-page-body .player-wrap .plyr__video-wrapper {
+          border-radius: 0;
+      }
+
+      .episode-page-body .ep-main > :not(.player-wrap):not(.ep-breadcrumb) {
+          margin-left: 16px;
+          margin-right: 16px;
+      }
+  }
+
   @media (max-width: 576px) {
       .player-wrap {
           width: calc(100% + 48px);

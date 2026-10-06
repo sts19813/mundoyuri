@@ -1,5 +1,9 @@
 @extends('layouts.portal')
 
+@section('body_attributes')
+    class="episode-page-body"
+@endsection
+
 @section('head')
 
 <meta charset="UTF-8">
@@ -146,46 +150,41 @@
                     </div>
                 @endif
 
-                <div class="server-section">
-                    <div class="server-header">
-                        <span class="server-header-title">Fuentes de vídeo</span>
-                        <div class="server-views">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            {{ $fullSources->count() }} fuentes
+                @if($fullSources->count() > 1)
+                    <div class="server-section">
+                        <div class="server-header">
+                            <span class="server-header-title">Fuentes de vídeo</span>
+                            <div class="server-views">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                {{ $fullSources->count() }} fuentes
+                            </div>
+                        </div>
+                        <div class="server-list">
+                            @foreach($fullSources as $source)
+                                @php($sourcePublicLabel = $publicSourceLabel($source))
+                                <button type="button"
+                                    class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
+                                    data-source-id="{{ $source->id }}"
+                                    data-video-url="{{ $source->playable_url }}"
+                                    data-provider="{{ $sourcePublicLabel['name'] }}"
+                                    data-provider-key="{{ $source->provider }}"
+                                    data-trackable="{{ in_array($source->provider, $trackableProviders, true) ? '1' : '0' }}"
+                                    data-quality="{{ preg_match('/\b(360|480|720|1080|1440|2160)p\b/i', (string) $source->label, $qualityMatch) ? $qualityMatch[1] : '' }}"
+                                    data-player-type="{{ $source->player_type }}">
+                                    <div class="server-icon">⚡</div>
+                                    <div class="server-info">
+                                        <div class="server-name">{{ $sourcePublicLabel['name'] }}</div>
+                                        <div class="server-meta">{{ $sourcePublicLabel['meta'] }}</div>
+                                    </div>
+                                    <span class="server-badge {{ $source->is_primary ? 'badge-clean' : 'badge-ads' }}">{{ $source->is_primary ? 'Principal' : 'Alterno' }}</span>
+                                </button>
+                            @endforeach
                         </div>
                     </div>
-                    <div class="server-list">
-                        @forelse($fullSources as $source)
-                            @php($sourcePublicLabel = $publicSourceLabel($source))
-                            <button type="button"
-                                class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
-                                data-source-id="{{ $source->id }}"
-                                data-video-url="{{ $source->playable_url }}"
-                                data-provider="{{ $sourcePublicLabel['name'] }}"
-                                data-provider-key="{{ $source->provider }}"
-                                data-trackable="{{ in_array($source->provider, $trackableProviders, true) ? '1' : '0' }}"
-                                data-quality="{{ preg_match('/\b(360|480|720|1080|1440|2160)p\b/i', (string) $source->label, $qualityMatch) ? $qualityMatch[1] : '' }}"
-                                data-player-type="{{ $source->player_type }}">
-                                <div class="server-icon">⚡</div>
-                                <div class="server-info">
-                                    <div class="server-name">{{ $sourcePublicLabel['name'] }}</div>
-                                    <div class="server-meta">{{ $sourcePublicLabel['meta'] }}</div>
-                                </div>
-                                <span class="server-badge {{ $source->is_primary ? 'badge-clean' : 'badge-ads' }}">{{ $source->is_primary ? 'Principal' : 'Alterno' }}</span>
-                            </button>
-                        @empty
-                            <div class="server-item">
-                                <div class="server-info">
-                                    <div class="server-name">{{ $partSources->isNotEmpty() ? 'Sin fuentes completas' : 'Sin fuentes' }}</div>
-                                    <div class="server-meta">{{ $partSources->isNotEmpty() ? 'Este episodio se reproduce por partes.' : 'Este episodio aún no tiene enlaces disponibles.' }}</div>
-                                </div>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
+                @endif
 
                 <div class="ep-title-section">
                     <h1>{{ $series->title }} · <em>Temporada {{ $episode->season_number }} Episodio {{ $episode->episode_number }}</em></h1>
