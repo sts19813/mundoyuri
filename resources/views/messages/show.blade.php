@@ -294,6 +294,36 @@ class="messenger-body"
             });
         };
 
+        const positionMessageMenu = (menu) => {
+            const panel = menu?.querySelector('.messenger-message-menu-panel');
+            const trigger = menu?.querySelector('summary');
+            const message = menu?.closest('[data-message-id]');
+            if (!panel || !trigger || !message || !conversation) return;
+
+            const chatBounds = conversation.getBoundingClientRect();
+            const triggerBounds = trigger.getBoundingClientRect();
+            const panelWidth = panel.offsetWidth;
+            const panelHeight = panel.offsetHeight;
+            const padding = 12;
+            const opensToLeft = message.classList.contains('is-outgoing');
+            const desiredLeft = opensToLeft
+                ? triggerBounds.left - panelWidth - 10
+                : triggerBounds.right + 10;
+            const left = Math.min(
+                Math.max(desiredLeft, chatBounds.left + padding),
+                chatBounds.right - panelWidth - padding
+            );
+            const desiredTop = triggerBounds.top + (triggerBounds.height - panelHeight) / 2;
+            const top = Math.min(
+                Math.max(desiredTop, chatBounds.top + padding),
+                chatBounds.bottom - panelHeight - padding
+            );
+
+            panel.style.left = `${left}px`;
+            panel.style.top = `${top}px`;
+            panel.style.transform = 'none';
+        };
+
         const replyInput = document.querySelector('[data-reply-input]');
         const replyPreview = document.querySelector('[data-reply-composer-preview]');
         const replyAuthor = document.querySelector('[data-reply-author]');
@@ -326,6 +356,19 @@ class="messenger-body"
             }
 
             closeMessageMenus();
+        });
+
+        document.addEventListener('toggle', (event) => {
+            const menu = event.target.closest?.('.messenger-message-menu');
+            if (!menu?.open) return;
+
+            closeMessageMenus(menu);
+            requestAnimationFrame(() => positionMessageMenu(menu));
+        }, true);
+
+        conversation?.addEventListener('scroll', () => closeMessageMenus(), { passive: true });
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('.messenger-message-menu[open]').forEach(positionMessageMenu);
         });
 
         document.addEventListener('keydown', (event) => {
