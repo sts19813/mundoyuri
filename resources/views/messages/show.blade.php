@@ -3,7 +3,7 @@
 @section('head')
 
 <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Conversación con {{ $otherUser->alias ?: $otherUser->name }} · Mundo Yuri</title>
     <x-portal-favicon />
@@ -139,6 +139,39 @@ class="messenger-body"
     </main>
 
     <script>
+        const isStandaloneMessenger = window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true;
+
+        if (isStandaloneMessenger) {
+            document.body.classList.add('is-standalone-pwa');
+        }
+
+        const syncMessengerViewport = () => {
+            const viewport = window.visualViewport;
+            const messagePane = document.getElementById('conversationMessages');
+            const wasPinnedToLatest = messagePane
+                ? messagePane.scrollHeight - messagePane.scrollTop - messagePane.clientHeight < 120
+                : false;
+            const height = Math.max(
+                320,
+                Math.floor(viewport?.height || window.innerHeight || document.documentElement.clientHeight)
+            );
+
+            document.body.style.setProperty('--messenger-viewport-height', `${height}px`);
+
+            if (wasPinnedToLatest) {
+                requestAnimationFrame(() => {
+                    messagePane.scrollTop = messagePane.scrollHeight;
+                });
+            }
+        };
+
+        syncMessengerViewport();
+        window.visualViewport?.addEventListener('resize', syncMessengerViewport);
+        window.visualViewport?.addEventListener('scroll', syncMessengerViewport);
+        window.addEventListener('resize', syncMessengerViewport);
+        window.addEventListener('orientationchange', () => window.setTimeout(syncMessengerViewport, 250));
+
         const conversation = document.getElementById('conversationMessages');
         let latestMessageId = conversation
             ? Math.max(0, ...Array.from(conversation.querySelectorAll('[data-message-id]')).map((message) => Number(message.dataset.messageId) || 0))
@@ -248,6 +281,8 @@ class="messenger-body"
             messageBody.style.height = `${Math.min(messageBody.scrollHeight, 120)}px`;
         };
         messageBody?.addEventListener('input', resizeMessageBody);
+        messageBody?.addEventListener('focus', syncMessengerViewport);
+        messageBody?.addEventListener('blur', () => window.setTimeout(syncMessengerViewport, 120));
         messageBody?.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
                 event.preventDefault();
@@ -471,6 +506,8 @@ class="messenger-body"
                     if (hint) hint.textContent = 'Imagen o documento · máximo 20 MB';
                 }
                 resizeMessageBody();
+                syncMessengerViewport();
+                messageBody?.focus({ preventScroll: true });
             } finally {
                 submitButton?.removeAttribute('disabled');
             }
