@@ -57,6 +57,7 @@ class CatalogSectionController extends Controller
             'hero_eyebrow' => ['nullable', 'string', 'max:160'],
             'hero_title' => ['required', 'string', 'max:255'],
             'hero_description' => ['nullable', 'string', 'max:2000'],
+            'hero_image_url' => ['nullable', 'url', 'max:2048'],
             'hero_video_url' => ['nullable', 'url', 'max:2048'],
             'hero_primary_label' => ['nullable', 'string', 'max:80'],
             'hero_secondary_label' => ['nullable', 'string', 'max:80'],

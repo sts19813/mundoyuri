@@ -19,6 +19,7 @@
         $homeSeoDescription = $isMixedHome
             ? 'Explora anime y series GL con nuevos episodios, destacados y colecciones seleccionadas en Mundo Yuri.'
             : ($section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.');
+        $heroImageUrl = $section?->hero_image_url ?: '/assets/img/wallpaper-login.jpg';
     @endphp
     <x-seo title="{{ $isMixedHome ? 'Mundo Yuri: Anime y Series GL' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" />
     <x-portal-favicon />
@@ -34,6 +35,7 @@
 <x-navbar :transparent="true" />
 
     <section class="hero">
+        <img class="hero-cover-image" src="{{ $heroImageUrl }}" alt="" aria-hidden="true">
         @if($section?->heroVideoEmbedUrl())
             <iframe id="heroYoutubeVideo" class="hero-video" src="{{ $section->heroVideoEmbedUrl() }}" title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>
         @elseif($section?->hasDirectVideo())

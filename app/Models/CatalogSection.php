@@ -17,6 +17,7 @@ class CatalogSection extends Model
         'hero_eyebrow',
         'hero_title',
         'hero_description',
+        'hero_image_url',
         'hero_video_url',
         'hero_primary_label',
         'hero_secondary_label',

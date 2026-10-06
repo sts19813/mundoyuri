@@ -19,9 +19,14 @@
         <div class="col-12"><hr><h4 class="mb-0">Hero de la sección</h4></div>
         <div class="col-md-6"><label class="form-label">Texto superior</label><input class="form-control" name="hero_eyebrow" value="{{ old('hero_eyebrow', $catalogSection->hero_eyebrow ?? '') }}" placeholder="Anime · Actualizado diario"></div>
         <div class="col-md-6">
+            <label class="form-label">Imagen de portada</label>
+            <input class="form-control" type="url" name="hero_image_url" value="{{ old('hero_image_url', $catalogSection->hero_image_url ?? '') }}" placeholder="https://.../portada.jpg">
+            <div class="form-text">Se muestra como portada del hero en móvil.</div>
+        </div>
+        <div class="col-md-6">
             <label class="form-label">Video de fondo</label>
             <input class="form-control" type="url" name="hero_video_url" value="{{ old('hero_video_url', $catalogSection->hero_video_url ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
-            <div class="form-text">Admite enlaces de YouTube o URL directa a un video MP4/WebM.</div>
+            <div class="form-text">En escritorio admite enlaces de YouTube o URL directa a un video MP4/WebM.</div>
         </div>
         <div class="col-12"><label class="form-label">Título principal</label><input class="form-control" name="hero_title" value="{{ old('hero_title', $catalogSection->hero_title ?? '') }}" required></div>
         <div class="col-12"><label class="form-label">Descripción</label><textarea class="form-control" rows="3" name="hero_description">{{ old('hero_description', $catalogSection->hero_description ?? '') }}</textarea></div>
