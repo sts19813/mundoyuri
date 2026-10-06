@@ -163,6 +163,8 @@ Route::middleware(['auth'])
             ->name('notifications.open');
         Route::patch('/notificaciones', [NotificationController::class, 'readAll'])
             ->name('notifications.read-all');
+        Route::delete('/notificaciones', [NotificationController::class, 'destroyAll'])
+            ->name('notifications.destroy-all');
 
         Route::post('/comunidad/reacciones', [CommunityReactionController::class, 'store'])
             ->middleware('throttle:30,1')

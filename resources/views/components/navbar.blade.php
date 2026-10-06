@@ -40,6 +40,7 @@
                 @php($portalUser = auth()->user())
                 @php($portalUnreadMessages = $portalUser->receivedMessages()->whereNull('read_at')->count())
                 @php($portalUnreadNotifications = $portalUser->unreadNotifications()->count())
+                @php($portalRecentNotifications = $portalUser->notifications()->latest()->limit(6)->get())
 
                 <a href="{{ route('messages.index') }}" class="portal-nav-shortcut" aria-label="Mensajes{{ $portalUnreadMessages ? ': '.$portalUnreadMessages.' sin leer' : '' }}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -49,15 +50,60 @@
                         <span class="portal-nav-badge">{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
                     @endif
                 </a>
-                <a href="{{ route('notifications.index') }}" class="portal-nav-shortcut" aria-label="Notificaciones{{ $portalUnreadNotifications ? ': '.$portalUnreadNotifications.' sin leer' : '' }}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                        <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
-                    </svg>
-                    @if($portalUnreadNotifications)
-                        <span class="portal-nav-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
-                    @endif
-                </a>
+                <div class="portal-notification-menu" data-notification-menu>
+                    <button type="button" class="portal-nav-shortcut" data-notification-menu-trigger aria-haspopup="true" aria-expanded="false" aria-controls="portal-notification-dropdown" aria-label="Notificaciones{{ $portalUnreadNotifications ? ': '.$portalUnreadNotifications.' sin leer' : '' }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                            <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+                        </svg>
+                        @if($portalUnreadNotifications)
+                            <span class="portal-nav-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
+                        @endif
+                    </button>
+                    <div id="portal-notification-dropdown" class="portal-notification-dropdown" data-notification-menu-dropdown>
+                        <header class="portal-notification-heading">
+                            <div>
+                                <strong>Notificaciones</strong>
+                                <small>{{ $portalUnreadNotifications ? $portalUnreadNotifications.' sin leer' : 'Estás al día' }}</small>
+                            </div>
+                            <a href="{{ route('notifications.index') }}">Ver todas</a>
+                        </header>
+                        <div class="portal-notification-list">
+                            @forelse($portalRecentNotifications as $notification)
+                                <a class="portal-notification-item{{ $notification->read_at ? '' : ' is-unread' }}" href="{{ route('notifications.open', $notification) }}">
+                                    @if(filled($notification->data['actor_avatar'] ?? null))
+                                        <img src="{{ $notification->data['actor_avatar'] }}" alt="">
+                                    @else
+                                        <span class="portal-notification-avatar-fallback">MY</span>
+                                    @endif
+                                    <span>
+                                        @if(($notification->data['kind'] ?? null) === 'direct_message')
+                                            <strong>Nuevo mensaje privado</strong>
+                                            <small>Abre Mensajes para verlo.</small>
+                                        @else
+                                            <strong>{{ $notification->data['title'] ?? 'Nueva actividad' }}</strong>
+                                            <small>{{ $notification->data['message'] ?? '' }}</small>
+                                        @endif
+                                        <time datetime="{{ $notification->created_at->toIso8601String() }}">{{ $notification->created_at->diffForHumans() }}</time>
+                                    </span>
+                                    @unless($notification->read_at)<i aria-label="Sin leer"></i>@endunless
+                                </a>
+                            @empty
+                                <p class="portal-notification-empty">No tienes notificaciones todavía.</p>
+                            @endforelse
+                        </div>
+                        <footer class="portal-notification-actions">
+                            <a href="{{ route('notifications.index') }}">Ver todas</a>
+                            @if($portalRecentNotifications->isNotEmpty())
+                                <form method="POST" action="{{ route('notifications.destroy-all') }}" onsubmit="return confirm('¿Borrar todas tus notificaciones? Esta acción no se puede deshacer.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit">Borrar todas</button>
+                                </form>
+                            @endif
+                        </footer>
+                    </div>
+                </div>
 
                 <div class="portal-user-menu" data-user-menu>
                     <button type="button" class="portal-user-trigger" data-user-menu-trigger aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de {{ $portalUser->name }}">
@@ -171,6 +217,13 @@
             document.body.classList.remove('portal-nav-open');
         }
 
+        function closeNotificationMenus() {
+            document.querySelectorAll('[data-notification-menu].is-open').forEach(function (menu) {
+                menu.classList.remove('is-open');
+                menu.querySelector('[data-notification-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+            });
+        }
+
         portalNavToggler?.addEventListener('click', function () {
             const isOpen = portalNavLinks?.classList.toggle('active') ?? false;
             portalNavToggler.classList.toggle('is-open', isOpen);
@@ -178,6 +231,7 @@
             portalNavToggler.setAttribute('aria-label', isOpen ? 'Cerrar menú principal' : 'Abrir menú principal');
             document.body.classList.toggle('portal-nav-open', isOpen);
             if (isOpen) {
+                closeNotificationMenus();
                 document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
                     menu.classList.remove('is-open');
                     menu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
@@ -202,11 +256,35 @@
 
                 if (clickedTrigger) {
                     closePortalNav();
+                    closeNotificationMenus();
                     const willOpen = !menu.classList.contains('is-open');
                     document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
                         openMenu.classList.remove('is-open');
                         openMenu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
                     });
+                    menu.classList.toggle('is-open', willOpen);
+                    trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    return;
+                }
+
+                if (!menu.contains(event.target)) {
+                    menu.classList.remove('is-open');
+                    trigger?.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            document.querySelectorAll('[data-notification-menu]').forEach(function (menu) {
+                const trigger = menu.querySelector('[data-notification-menu-trigger]');
+                const clickedTrigger = trigger && trigger.contains(event.target);
+
+                if (clickedTrigger) {
+                    closePortalNav();
+                    document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
+                        openMenu.classList.remove('is-open');
+                        openMenu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+                    });
+                    const willOpen = !menu.classList.contains('is-open');
+                    closeNotificationMenus();
                     menu.classList.toggle('is-open', willOpen);
                     trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
                     return;
@@ -223,6 +301,7 @@
             if (event.key !== 'Escape') return;
             const navWasOpen = portalNavLinks?.classList.contains('active');
             closePortalNav();
+            closeNotificationMenus();
             if (navWasOpen) portalNavToggler?.focus();
             document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
                 menu.classList.remove('is-open');

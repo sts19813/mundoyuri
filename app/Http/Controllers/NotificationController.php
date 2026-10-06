@@ -44,4 +44,11 @@ class NotificationController extends Controller
 
         return back()->with('success', 'Todas las notificaciones se marcaron como leídas.');
     }
+
+    public function destroyAll(Request $request): RedirectResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return back()->with('success', 'Todas las notificaciones se eliminaron.');
+    }
 }

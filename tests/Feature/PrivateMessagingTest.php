@@ -231,7 +231,8 @@ class PrivateMessagingTest extends TestCase
             ->get(route('notifications.index'))
             ->assertOk()
             ->assertSee('Nuevo mensaje')
-            ->assertSee('1 pendientes por leer');
+            ->assertSee('1 pendientes por leer')
+            ->assertSee('Borrar todas');
 
         $this->actingAs($recipient)
             ->get(route('notifications.open', $notification))
@@ -248,6 +249,27 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertSame(0, $recipient->fresh()->unreadNotifications()->count());
+    }
+
+    public function test_users_can_delete_only_their_own_notifications(): void
+    {
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $otherRecipient = User::factory()->create();
+
+        $this->actingAs($sender)->post(route('messages.store', $recipient), ['body' => 'Para ti.']);
+        $this->actingAs($sender)->post(route('messages.store', $otherRecipient), ['body' => 'Para la otra cuenta.']);
+
+        $this->assertSame(1, $recipient->notifications()->count());
+        $this->assertSame(1, $otherRecipient->notifications()->count());
+
+        $this->actingAs($recipient)
+            ->delete(route('notifications.destroy-all'))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertSame(0, $recipient->fresh()->notifications()->count());
+        $this->assertSame(1, $otherRecipient->fresh()->notifications()->count());
     }
 
     public function test_users_can_send_private_images_and_documents_and_only_participants_can_open_them(): void

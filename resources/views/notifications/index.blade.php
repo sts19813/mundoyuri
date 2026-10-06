@@ -46,6 +46,13 @@
                         <button class="profile-btn profile-btn-soft" type="submit">Marcar todas como leídas</button>
                     </form>
                 @endif
+                @if($notifications->isNotEmpty())
+                    <form method="POST" action="{{ route('notifications.destroy-all') }}" onsubmit="return confirm('¿Borrar todas tus notificaciones? Esta acción no se puede deshacer.');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="profile-btn profile-btn-text" type="submit">Borrar todas</button>
+                    </form>
+                @endif
             </header>
 
             <section class="profile-panel social-list-panel">

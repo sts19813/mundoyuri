@@ -253,6 +253,10 @@
         position: relative;
     }
 
+    .portal-notification-menu {
+        position: relative;
+    }
+
     .portal-nav-shortcut {
         position: relative;
         width: 40px;
@@ -378,6 +382,71 @@
         visibility: visible;
         transform: translateY(0) scale(1);
     }
+
+    .portal-notification-dropdown {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        z-index: 45;
+        width: min(370px, calc(100vw - 32px));
+        overflow: hidden;
+        border: 1px solid rgba(244, 63, 142, .22);
+        border-radius: 16px;
+        color: #efe5f0;
+        background: rgba(22, 13, 24, .98);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+        backdrop-filter: blur(16px);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px) scale(.98);
+        transform-origin: top right;
+        transition: opacity .18s, visibility .18s, transform .18s;
+    }
+
+    .portal-notification-menu.is-open .portal-notification-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+    }
+
+    .portal-notification-heading,
+    .portal-notification-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 13px 14px;
+    }
+
+    .portal-notification-heading { border-bottom: 1px solid rgba(255, 255, 255, .07); }
+    .portal-notification-heading strong,
+    .portal-notification-heading small { display: block; }
+    .portal-notification-heading strong { color: #fff; font-size: .88rem; }
+    .portal-notification-heading small { margin-top: 2px; color: var(--muted); font-size: .67rem; }
+    .portal-notification-heading > a,
+    .portal-notification-actions > a { color: #ff9bc6; font-size: .7rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+    .portal-notification-heading > a:hover,
+    .portal-notification-actions > a:hover { color: #fff; }
+    .portal-notification-list { max-height: min(408px, 55vh); overflow-y: auto; }
+    .portal-notification-item { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 11px 14px; color: #e9deea; text-decoration: none; }
+    .portal-notification-item:hover { color: #fff; background: rgba(244, 63, 142, .09); }
+    .portal-notification-item.is-unread { background: rgba(244, 63, 142, .055); }
+    .portal-notification-item > img,
+    .portal-notification-avatar-fallback { width: 36px; height: 36px; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(244, 63, 142, .22); border-radius: 50%; object-fit: cover; }
+    .portal-notification-avatar-fallback { color: #fff; background: linear-gradient(135deg, var(--rose), #8b3dc4); font-size: .56rem; font-weight: 700; }
+    .portal-notification-item > span:nth-child(2) { min-width: 0; }
+    .portal-notification-item strong,
+    .portal-notification-item small,
+    .portal-notification-item time { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .portal-notification-item strong { color: inherit; font-size: .72rem; font-weight: 600; }
+    .portal-notification-item small { margin-top: 2px; color: #b9a8bd; font-size: .64rem; }
+    .portal-notification-item time { margin-top: 3px; color: #8f7d93; font-size: .57rem; }
+    .portal-notification-item i { width: 7px; height: 7px; border-radius: 50%; background: var(--rose); }
+    .portal-notification-empty { margin: 0; padding: 26px 18px; color: var(--muted); font-size: .75rem; text-align: center; }
+    .portal-notification-actions { border-top: 1px solid rgba(255, 255, 255, .07); }
+    .portal-notification-actions form { margin: 0; }
+    .portal-notification-actions button { border: 0; padding: 0; color: #f7a7c9; background: transparent; font: 600 .7rem 'DM Sans', sans-serif; cursor: pointer; }
+    .portal-notification-actions button:hover { color: #fff; }
 
     .portal-user-summary {
         display: flex;
@@ -4207,6 +4276,12 @@
             top: 68px;
             right: 16px;
             width: min(275px, calc(100vw - 32px));
+        }
+
+        .portal-notification-dropdown {
+            position: fixed;
+            top: 68px;
+            right: 16px;
         }
 
         .nav-toggler {
