@@ -5594,9 +5594,9 @@ img.messenger-avatar { display: block; }
 @media (max-width: 900px) {
     .messenger-shell { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); }
     .messenger-bubble { max-width: 76%; }
-    .messenger-message-menu { top: auto; bottom: 4px; transform: none; }
-    .messenger-message-menu-panel { position: fixed; left: 50%; right: auto; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 40; width: min(300px, calc(100vw - 28px)); max-width: none; margin: 0; padding: 12px; border-radius: 18px; transform: translateX(-50%); }
-    .messenger-message.is-outgoing .messenger-message-menu-panel { left: 50%; right: auto; }
+    .messenger-message-menu { top: 50%; bottom: auto; transform: translateY(-50%); }
+    .messenger-message-menu-panel { position: absolute; top: 50%; right: 0; bottom: auto; left: auto; z-index: 40; width: min(268px, calc(100vw - 92px)); max-width: none; margin: 0; padding: 10px; border-radius: 16px; transform: translateY(-50%); }
+    .messenger-message.is-outgoing .messenger-message-menu-panel { right: auto; left: 0; }
     .messenger-message-reactions { gap: 9px; padding: 9px; }
     .messenger-message-reactions button { width: 42px; height: 42px; }
     .messenger-message-reactions button span { font-size: 1.28rem; }
