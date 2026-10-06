@@ -106,4 +106,21 @@
     </main>
     <x-footer />
     <script src="{{ asset('assets/js/forum.js') }}?v={{ filemtime(public_path('assets/js/forum.js')) }}" defer></script>
+    <script>
+        document.addEventListener('click', (event) => {
+            const card = event.target.closest('[data-member-chip]');
+            if (!card) return;
+
+            event.preventDefault();
+            window.location.assign(card.dataset.profileUrl);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            const card = event.target.closest('[data-member-chip]');
+            if (!card || !['Enter', ' '].includes(event.key)) return;
+
+            event.preventDefault();
+            window.location.assign(card.dataset.profileUrl);
+        });
+    </script>
 @endsection
