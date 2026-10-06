@@ -5510,6 +5510,7 @@ img.messenger-avatar { display: block; }
 .messenger-older-link { margin-bottom: 18px; text-align: center; }
 .messenger-older-link a { display: inline-flex; padding: 7px 12px; border-radius: 14px; color: #d8bed3; background: rgba(255, 255, 255, .055); font-size: .64rem; text-decoration: none; }
 .messenger-message { position: relative; display: flex; align-items: flex-end; gap: 7px; margin: 3px 0; scroll-margin: 84px; }
+.messenger-message.has-reactions { margin-bottom: 24px; }
 .messenger-message.is-outgoing { justify-content: flex-end; }
 .messenger-message.is-highlighted .messenger-bubble { box-shadow: 0 0 0 2px rgba(255, 193, 218, .55), 0 0 26px rgba(244, 63, 142, .28); }
 .messenger-message-avatar-wrap { width: 28px; height: 28px; flex: 0 0 28px; align-self: flex-end; }

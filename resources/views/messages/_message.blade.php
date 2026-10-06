@@ -8,7 +8,12 @@
 @php($reactionTotal = $receivedReactions->sum())
 <article
     id="message-{{ $message->id }}"
-    class="messenger-message {{ $outgoing ? 'is-outgoing' : 'is-incoming' }}"
+    @class([
+        'messenger-message',
+        'is-outgoing' => $outgoing,
+        'is-incoming' => ! $outgoing,
+        'has-reactions' => ! $message->isDeleted() && $reactionTotal > 0,
+    ])
     data-message-id="{{ $message->id }}"
     data-message-author="{{ $messageAuthor }}"
     data-message-preview="{{ $message->previewText() }}"
