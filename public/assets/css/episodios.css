@@ -1253,13 +1253,12 @@
   }
 
   @media (max-width: 767px) {
-      .episode-page-body #navbar,
       .episode-page-body .miyu-assistant {
           display: none !important;
       }
 
       .episode-page-body .ep-layout {
-          padding: 0 0 48px;
+          padding: 80px 0 48px;
           gap: 28px;
       }
 
