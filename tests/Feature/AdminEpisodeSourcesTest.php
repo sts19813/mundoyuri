@@ -612,7 +612,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->get(route('episode-sources.player', $source))->assertForbidden();
     }
 
-    public function test_cloudflare_hls_playlist_is_served_without_cache_and_rewrites_media_urls(): void
+    public function test_cloudflare_hls_playlist_is_served_without_cache_and_rewrites_stable_media_urls(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $genre = Genre::query()->create([
@@ -671,8 +671,9 @@ class AdminEpisodeSourcesTest extends TestCase
         ]));
 
         $variantResponse->assertOk();
-        $variantResponse->assertSee('URI="https://video.mundoyuri.com/Moonshadow/variant/init.mp4?_my_hls_session=test-session"', false);
-        $variantResponse->assertSee('https://video.mundoyuri.com/Moonshadow/variant/segment-001.ts?_my_hls_session=test-session', false);
+        $variantResponse->assertSee('URI="https://video.mundoyuri.com/Moonshadow/variant/init.mp4"', false);
+        $variantResponse->assertSee('https://video.mundoyuri.com/Moonshadow/variant/segment-001.ts', false);
+        $variantResponse->assertDontSee('_my_hls_session', false);
     }
 
     private function assertSignedPlayerUrl(string $url, EpisodeSource $source): void

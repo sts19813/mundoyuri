@@ -116,21 +116,7 @@ class EpisodeSourcePlayerController extends Controller
             ]);
         }
 
-        return $this->appendQueryParameter($absoluteUrl, '_my_hls_session', $cacheBuster);
-    }
-
-    private function appendQueryParameter(string $url, string $key, string $value): string
-    {
-        $fragment = '';
-
-        if (str_contains($url, '#')) {
-            [$url, $fragment] = explode('#', $url, 2);
-            $fragment = '#'.$fragment;
-        }
-
-        $separator = str_contains($url, '?') ? '&' : '?';
-
-        return $url.$separator.rawurlencode($key).'='.rawurlencode($value).$fragment;
+        return $absoluteUrl;
     }
 
     private function trustedMundoYuriOrigin(Request $request): string
