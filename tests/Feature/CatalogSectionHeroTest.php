@@ -15,7 +15,7 @@ class CatalogSectionHeroTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('compartiendo el yuri y GL con elegancia ✨')
+            ->assertSee('Compartiendo el yuri con elegancia')
             ->assertSee('class="hero-cover-image"', false)
             ->assertSee('src="/assets/img/wallpaper-login.jpg"', false);
     }
@@ -31,7 +31,7 @@ class CatalogSectionHeroTest extends TestCase
                 'name' => $section->name,
                 'label' => $section->label,
                 'hero_eyebrow' => $section->hero_eyebrow,
-                'hero_title' => 'compartiendo el yuri y GL con elegancia ✨',
+                'hero_title' => 'Compartiendo el yuri con elegancia',
                 'hero_description' => $section->hero_description,
                 'hero_image_url' => 'https://cdn.example.com/mundo-yuri/gl-cover.jpg',
                 'hero_video_url' => $section->hero_video_url,

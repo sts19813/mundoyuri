@@ -43,7 +43,7 @@ class PublicCatalogController extends Controller
             ->whereNotNull('published_at')
             ->where('catalog_section', $section->slug)
             ->withSum([
-                'episodes as total_episode_views' => fn ($query) => $query
+                'episodes as total_episode_views' => fn($query) => $query
                     ->where('moderation_status', 'approved')
                     ->whereNotNull('published_at'),
             ], 'views_count')
@@ -56,7 +56,7 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->whereHas('series', fn ($query) => $query->where('catalog_section', $section->slug))
+            ->whereHas('series', fn($query) => $query->where('catalog_section', $section->slug))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get()
@@ -122,7 +122,7 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->whereHas('series', fn ($query) => $query
+            ->whereHas('series', fn($query) => $query
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at')
                 ->whereIn('catalog_section', ['series-gl', 'anime']))
@@ -140,7 +140,7 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->whereHas('series', fn ($query) => $query->where('catalog_section', $sectionSlug))
+            ->whereHas('series', fn($query) => $query->where('catalog_section', $sectionSlug))
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get()
@@ -157,7 +157,7 @@ class PublicCatalogController extends Controller
             ->where('catalog_section', $sectionSlug)
             ->where('content_type', 'series')
             ->withSum([
-                'episodes as total_episode_views' => fn ($query) => $query
+                'episodes as total_episode_views' => fn($query) => $query
                     ->where('moderation_status', 'approved')
                     ->whereNotNull('published_at'),
             ], 'views_count')
@@ -223,7 +223,7 @@ class PublicCatalogController extends Controller
             ->where('is_approved', true)
             ->with([
                 'user.communityRank',
-                'user.badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
+                'user.badges' => fn($badgeQuery) => $badgeQuery->active()->ordered(),
             ])
             ->oldest()
             ->get()));
@@ -251,9 +251,9 @@ class PublicCatalogController extends Controller
         $watchProgressEnabled = $this->watchProgressEnabledForRequest(request()) && auth()->check();
         $episodeProgress = $watchProgressEnabled
             ? EpisodeWatchProgress::query()
-                ->where('user_id', auth()->id())
-                ->where('episode_id', $episode->id)
-                ->first()
+            ->where('user_id', auth()->id())
+            ->where('episode_id', $episode->id)
+            ->first()
             : null;
 
         return view('episodios', compact(
@@ -271,7 +271,7 @@ class PublicCatalogController extends Controller
 
     private function resolvePrevAndNext(Collection $episodes, int $currentEpisodeId): array
     {
-        $index = $episodes->search(fn (Episode $item) => $item->id === $currentEpisodeId);
+        $index = $episodes->search(fn(Episode $item) => $item->id === $currentEpisodeId);
 
         if ($index === false) {
             return [null, null];
@@ -317,13 +317,13 @@ class PublicCatalogController extends Controller
             ->with(['episode.series', 'source'])
             ->where('user_id', auth()->id())
             ->whereIn('provider', config('watch_progress.providers', []))
-            ->whereHas('episode', fn ($query) => $query
+            ->whereHas('episode', fn($query) => $query
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at')
-                ->whereHas('series', fn ($seriesQuery) => $seriesQuery
+                ->whereHas('series', fn($seriesQuery) => $seriesQuery
                     ->where('moderation_status', 'approved')
                     ->whereNotNull('published_at')))
-            ->whereHas('source', fn ($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
+            ->whereHas('source', fn($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
             ->latest('last_watched_at')
             ->latest('id')
             ->limit(30)
@@ -383,7 +383,7 @@ class PublicCatalogController extends Controller
         }
 
         $nextEpisode = Episode::query()
-            ->with(['series', 'sources' => fn ($query) => $query
+            ->with(['series', 'sources' => fn($query) => $query
                 ->whereIn('provider', config('watch_progress.providers', []))
                 ->orderByDesc('is_primary')
                 ->orderBy('sort_order')
@@ -400,7 +400,7 @@ class PublicCatalogController extends Controller
                             ->where('episode_number', '>', $episode->episode_number);
                     });
             })
-            ->whereHas('sources', fn ($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
+            ->whereHas('sources', fn($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
             ->orderBy('season_number')
             ->orderBy('episode_number')
             ->orderBy('id')
@@ -457,8 +457,8 @@ class PublicCatalogController extends Controller
             'slug' => 'series-gl',
             'name' => 'Series GL',
             'label' => 'Serie GL',
-            'hero_eyebrow' => 'Contenido GL · Actualizado diario',
-            'hero_title' => 'compartiendo el yuri y GL con elegancia ✨',
+            'hero_eyebrow' => 'Contenido GL · Actualizado',
+            'hero_title' => 'Compartiendo el yuri con elegancia',
             'hero_description' => 'Mira series, doramas y películas GL de todo el mundo, subtituladas en español y con nuevos episodios cada semana.',
             'hero_image_url' => '/assets/img/wallpaper-login.jpg',
             'hero_video_url' => null,
