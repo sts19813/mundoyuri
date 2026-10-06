@@ -43,7 +43,7 @@
                 <div class="profile-hero-pattern"></div>
 
                 <div class="profile-identity">
-                    <div class="profile-avatar-wrap">
+                    <div @class(['profile-avatar-wrap', 'is-online' => $profileUser->isOnline()])>
                         @if($profileUser->hasProfileAvatar())
                             <img src="{{ $profileUser->avatarUrl() }}" alt="Foto de perfil de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-avatar-main">
                         @else
@@ -120,7 +120,7 @@
                     @endif
                     <div class="profile-status-chip">
                         <span></span>
-                        {{ $profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad' }}
+                        {{ $profileUser->isOnline() ? 'Conectada ahora' : ($profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad') }}
                     </div>
                 </div>
         </section>
@@ -325,10 +325,10 @@
                                 <dt>Respuestas aceptadas</dt>
                                 <dd>{{ number_format($profileUser->accepted_forum_answers_count) }}</dd>
                             </div>
-                            @if($profileUser->show_last_seen && $profileUser->last_login_at)
+                            @if($profileUser->show_last_seen && $profileUser->lastSeenForDisplay())
                                 <div>
                                     <dt>Última visita</dt>
-                                    <dd>{{ $profileUser->last_login_at->diffForHumans() }}</dd>
+                                    <dd>{{ $profileUser->lastSeenForDisplay()->diffForHumans() }}</dd>
                                 </div>
                             @endif
                         </dl>

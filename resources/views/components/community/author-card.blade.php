@@ -9,7 +9,7 @@
 @endphp
 <details class="forum-post-author-compact" data-author-card>
     <summary aria-label="Información de {{ $author->displayName() }}">
-        <span class="forum-post-avatar">
+        <span @class(['forum-post-avatar', 'is-online' => $author->isOnline()])>
             @if($author->hasProfileAvatar())
                 <img src="{{ $author->avatarUrl() }}" alt="Avatar de {{ $author->displayName() }}">
             @else
@@ -25,7 +25,7 @@
 
     <aside class="forum-author-popover" aria-label="Información de {{ $author->displayName() }}">
         <div class="forum-author-popover-top">
-            <a href="{{ $author->publicProfileUrl() }}" class="forum-author-popover-avatar" tabindex="-1" aria-hidden="true">
+            <a href="{{ $author->publicProfileUrl() }}" @class(['forum-author-popover-avatar', 'is-online' => $author->isOnline()]) tabindex="-1" aria-hidden="true">
                 @if($author->hasProfileAvatar())
                     <img src="{{ $author->avatarUrl() }}" alt="">
                 @else

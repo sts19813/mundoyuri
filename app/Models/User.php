@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'push_notifications_enabled', 'last_login_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'cover_video_url', 'biography', 'profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_text', 'signature_image', 'signature_enabled', 'show_signatures', 'signature_suspended_until', 'location', 'website', 'occupation', 'interests', 'community_message_count', 'community_reputation', 'community_rank_id', 'is_legacy', 'legacy_joined_at', 'legacy_source', 'legacy_notes', 'legacy_verified', 'profile_claimed_at'])]
+#[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'push_notifications_enabled', 'last_login_at', 'last_seen_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'cover_video_url', 'biography', 'profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_text', 'signature_image', 'signature_enabled', 'show_signatures', 'signature_suspended_until', 'location', 'website', 'occupation', 'interests', 'community_message_count', 'community_reputation', 'community_rank_id', 'is_legacy', 'legacy_joined_at', 'legacy_source', 'legacy_notes', 'legacy_verified', 'profile_claimed_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -58,6 +58,7 @@ class User extends Authenticatable
             'episode_email_notifications_enabled' => 'boolean',
             'push_notifications_enabled' => 'boolean',
             'last_login_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'show_last_seen' => 'boolean',
             'show_join_date' => 'boolean',
             'show_favorites' => 'boolean',
@@ -303,6 +304,27 @@ class User extends Authenticatable
     public function hasProfileAvatar(): bool
     {
         return filled($this->profile_image) || filled($this->google_avatar);
+    }
+
+    public function lastSeenForDisplay(): ?CarbonInterface
+    {
+        return $this->last_seen_at ?: $this->last_login_at;
+    }
+
+    public function wasSeenWithin(int $minutes): bool
+    {
+        return $this->show_last_seen
+            && $this->lastSeenForDisplay()?->greaterThanOrEqualTo(now()->subMinutes($minutes));
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->wasSeenWithin(120);
+    }
+
+    public function isOnlineForMessages(): bool
+    {
+        return $this->wasSeenWithin(60);
     }
 
     public function coverImageUrl(): ?string

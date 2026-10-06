@@ -13,6 +13,11 @@ class RecordUserLogin
             return;
         }
 
-        $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
+        $seenAt = now();
+
+        $event->user->forceFill([
+            'last_login_at' => $seenAt,
+            'last_seen_at' => $seenAt,
+        ])->saveQuietly();
     }
 }

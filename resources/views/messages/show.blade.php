@@ -46,14 +46,16 @@ class="messenger-body"
                             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
                         </a>
                         <a class="messenger-chat-person" href="{{ $otherUser->publicProfileUrl() }}">
-                            @if($otherUser->hasProfileAvatar())
-                                <img class="messenger-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
-                            @else
-                                <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
-                            @endif
+                            <span @class(['messenger-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()])>
+                                @if($otherUser->hasProfileAvatar())
+                                    <img class="messenger-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
+                                @else
+                                    <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
+                                @endif
+                            </span>
                             <span>
                                 <strong>{{ $otherUser->alias ?: $otherUser->name }}</strong>
-                                <small>{{ $otherUser->is_active ? 'Ver perfil' : 'Cuenta no disponible' }}</small>
+                                <small>{{ $otherUser->isOnlineForMessages() ? 'Conectada ahora' : ($otherUser->is_active ? 'Ver perfil' : 'Cuenta no disponible') }}</small>
                             </span>
                         </a>
 
@@ -85,11 +87,13 @@ class="messenger-body"
                             @include('messages._message', ['message' => $message, 'viewer' => $viewer, 'otherUser' => $otherUser])
                         @empty
                             <div class="messenger-chat-empty">
-                                @if($otherUser->hasProfileAvatar())
-                                    <img class="messenger-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
-                                @else
-                                    <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
-                                @endif
+                                <span @class(['messenger-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()])>
+                                    @if($otherUser->hasProfileAvatar())
+                                        <img class="messenger-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
+                                    @else
+                                        <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
+                                    @endif
+                                </span>
                                 <h2>{{ $otherUser->alias ?: $otherUser->name }}</h2>
                                 <p>Este es el comienzo de su conversación privada.</p>
                             </div>

@@ -32,11 +32,13 @@
                 ])
                 @if($activeUser?->is($conversationUser)) aria-current="page" @endif
             >
-                @if($conversationUser->hasProfileAvatar())
-                    <img class="messenger-avatar" src="{{ $conversationUser->avatarUrl() }}" alt="">
-                @else
-                    <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $conversationUser->initials() }}</span>
-                @endif
+                <span @class(['messenger-avatar-wrap', 'is-online' => $conversationUser->isOnlineForMessages()])>
+                    @if($conversationUser->hasProfileAvatar())
+                        <img class="messenger-avatar" src="{{ $conversationUser->avatarUrl() }}" alt="">
+                    @else
+                        <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $conversationUser->initials() }}</span>
+                    @endif
+                </span>
                 <span class="messenger-conversation-copy">
                     <span class="messenger-conversation-line">
                         <strong>{{ $conversationUser->alias ?: $conversationUser->name }}</strong>

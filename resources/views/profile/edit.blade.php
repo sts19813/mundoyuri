@@ -53,7 +53,7 @@
                     Cambiar portada
                 </label>
                 <div class="profile-identity">
-                    <div class="profile-avatar-wrap">
+                    <div @class(['profile-avatar-wrap', 'is-online' => $user->isOnline()])>
                         @if($user->hasProfileAvatar())
                             <img src="{{ $user->avatarUrl() }}" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main" data-avatar-preview>
                             <span class="profile-avatar-main profile-avatar-generic d-none" data-avatar-fallback>{{ $user->initials() }}</span>

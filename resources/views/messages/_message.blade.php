@@ -1,11 +1,13 @@
 @php($outgoing = $message->sender_id === $viewer->id)
 <article class="messenger-message {{ $outgoing ? 'is-outgoing' : 'is-incoming' }}" data-message-id="{{ $message->id }}">
     @if(!$outgoing)
-        @if($otherUser->hasProfileAvatar())
-            <img class="messenger-message-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
-        @else
-            <span class="messenger-message-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
-        @endif
+        <span @class(['messenger-avatar-wrap', 'messenger-message-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()])>
+            @if($otherUser->hasProfileAvatar())
+                <img class="messenger-message-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
+            @else
+                <span class="messenger-message-avatar messenger-avatar-fallback" aria-hidden="true">{{ $otherUser->initials() }}</span>
+            @endif
+        </span>
     @endif
     <div class="messenger-bubble">
         @if($message->isDeleted())

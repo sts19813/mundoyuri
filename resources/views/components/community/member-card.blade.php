@@ -5,7 +5,7 @@
 @php($memberName = $isHistoricalProfile ? $member->nickname : $member->displayName())
 
 <article class="community-member-card">
-    <a class="community-member-avatar" href="{{ $profileUrl }}" aria-label="Ver perfil de {{ $memberName }}">
+    <a @class(['community-member-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) href="{{ $profileUrl }}" aria-label="Ver perfil de {{ $memberName }}">
         @if($isHistoricalProfile && $member->avatarUrl())
             <img src="{{ $member->avatarUrl() }}" alt="Avatar histórico de {{ $member->nickname }}">
         @elseif(! $isHistoricalProfile && $member->hasProfileAvatar())

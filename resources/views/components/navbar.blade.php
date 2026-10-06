@@ -62,9 +62,9 @@
                 <div class="portal-user-menu" data-user-menu>
                     <button type="button" class="portal-user-trigger" data-user-menu-trigger aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de {{ $portalUser->name }}">
                         @if($portalUser->hasProfileAvatar())
-                            <img src="{{ $portalUser->avatarUrl() }}" alt="Foto de perfil de {{ $portalUser->name }}" class="portal-avatar portal-avatar-image">
+                            <img src="{{ $portalUser->avatarUrl() }}" alt="Foto de perfil de {{ $portalUser->name }}" @class(['portal-avatar', 'portal-avatar-image', 'is-online' => $portalUser->isOnline()])>
                         @else
-                            <span class="portal-avatar portal-avatar-fallback" aria-hidden="true">{{ $portalUser->initials() }}</span>
+                            <span @class(['portal-avatar', 'portal-avatar-fallback', 'is-online' => $portalUser->isOnline()]) aria-hidden="true">{{ $portalUser->initials() }}</span>
                         @endif
                         <span class="portal-user-name">{{ $portalUser->alias ?: $portalUser->name }}</span>
                         <svg class="portal-user-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -75,9 +75,9 @@
                     <div class="portal-user-dropdown" data-user-menu-dropdown role="menu">
                         <div class="portal-user-summary">
                             @if($portalUser->hasProfileAvatar())
-                                <img src="{{ $portalUser->avatarUrl() }}" alt="" class="portal-avatar portal-avatar-image portal-avatar-lg">
+                                <img src="{{ $portalUser->avatarUrl() }}" alt="" @class(['portal-avatar', 'portal-avatar-image', 'portal-avatar-lg', 'is-online' => $portalUser->isOnline()])>
                             @else
-                                <span class="portal-avatar portal-avatar-fallback portal-avatar-lg" aria-hidden="true">{{ $portalUser->initials() }}</span>
+                                <span @class(['portal-avatar', 'portal-avatar-fallback', 'portal-avatar-lg', 'is-online' => $portalUser->isOnline()]) aria-hidden="true">{{ $portalUser->initials() }}</span>
                             @endif
                             <div>
                                 <strong>{{ $portalUser->name }}</strong>

@@ -10,7 +10,7 @@
 
 <details class="forum-post-author-compact community-member-chip" data-author-card data-member-chip data-profile-url="{{ $profileUrl }}">
     <summary aria-label="Ver perfil de {{ $memberName }}">
-        <span class="forum-post-avatar" aria-hidden="true">
+        <span @class(['forum-post-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) aria-hidden="true">
         @if($hasAvatar)
             <img src="{{ $member->avatarUrl() }}" alt="">
         @else
@@ -22,7 +22,7 @@
 
     <aside class="forum-author-popover" aria-label="Información de {{ $memberName }}">
         <div class="forum-author-popover-top">
-            <span class="forum-author-popover-avatar" aria-hidden="true">
+            <span @class(['forum-author-popover-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) aria-hidden="true">
                 @if($hasAvatar)
                     <img src="{{ $member->avatarUrl() }}" alt="">
                 @else
