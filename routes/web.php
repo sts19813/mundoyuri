@@ -49,6 +49,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\RichEditorUploadController;
 use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\UserPresenceController;
 use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserFollowController;
 use Illuminate\Support\Facades\Blade;
@@ -115,6 +116,9 @@ Route::middleware(['auth'])
             ->name('push-subscriptions.destroy');
         Route::patch('/notificaciones-push/preferencia', [PushSubscriptionController::class, 'preference'])
             ->name('push-subscriptions.preference');
+        Route::post('/actividad/latido', UserPresenceController::class)
+            ->middleware('throttle:240,1')
+            ->name('presence.heartbeat');
         Route::post('/episodios/{episode}/progreso', [EpisodeWatchProgressController::class, 'store'])
             ->middleware('throttle:120,1')
             ->name('episodes.progress.store');

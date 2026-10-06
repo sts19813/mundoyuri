@@ -29,5 +29,14 @@
     ])
     <script id="mundo-yuri-pwa-config" type="application/json">@json($pwaConfig)</script>
     <script src="{{ asset('assets/js/pwa.js') }}?v={{ filemtime(public_path('assets/js/pwa.js')) }}" defer></script>
+    @auth
+        @php($presenceConfig = [
+            'enabled' => true,
+            'endpoint' => route('presence.heartbeat'),
+            'csrfToken' => csrf_token(),
+        ])
+        <script id="mundo-yuri-presence-config" type="application/json">@json($presenceConfig)</script>
+        <script src="{{ asset('assets/js/presence.js') }}?v={{ filemtime(public_path('assets/js/presence.js')) }}" defer></script>
+    @endauth
 </body>
 </html>

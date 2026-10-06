@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\Episode;
+use App\Models\EpisodeWatchProgress;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\SiteVisit;
 use App\Models\User;
+use App\Models\UserPresenceSession;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
@@ -27,6 +30,11 @@ class AdminDashboardController extends Controller
         $canModerate = $user->can('moderate content');
         $siteVisitStats = null;
         $siteVisitChart = null;
+        $activePresenceSessions = collect();
+        $topTimeUsers = collect();
+        $recentUserVisits = collect();
+        $currentWatchingEpisodes = collect();
+        $recentWatchProgress = collect();
 
         $stats = [
             'users' => $user->can('manage users') ? User::count() : null,
@@ -45,6 +53,11 @@ class AdminDashboardController extends Controller
         if ($canModerate) {
             $siteVisitStats = $this->siteVisitStats();
             $siteVisitChart = $this->siteVisitChart();
+            $activePresenceSessions = $this->activePresenceSessions();
+            $topTimeUsers = $this->topTimeUsers();
+            $recentUserVisits = $this->recentUserVisits();
+            $currentWatchingEpisodes = $this->currentWatchingEpisodes();
+            $recentWatchProgress = $this->recentWatchProgress();
         }
 
         $mostViewedEpisodes = Episode::query()
@@ -63,7 +76,18 @@ class AdminDashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'siteVisitStats', 'siteVisitChart', 'mostViewedEpisodes', 'mostViewedSeries'));
+        return view('admin.dashboard', compact(
+            'stats',
+            'siteVisitStats',
+            'siteVisitChart',
+            'mostViewedEpisodes',
+            'mostViewedSeries',
+            'activePresenceSessions',
+            'topTimeUsers',
+            'recentUserVisits',
+            'currentWatchingEpisodes',
+            'recentWatchProgress',
+        ));
     }
 
     /** @return array<string, int> */
@@ -92,6 +116,8 @@ class AdminDashboardController extends Controller
             'anonymous_visitors' => (int) ($row->anonymous_visitors ?? 0),
             'registered_visitors' => (int) ($row->registered_visitors ?? 0),
             'new_users_30_days' => User::query()->where('created_at', '>=', now()->subDays(29)->startOfDay())->count(),
+            'active_now' => UserPresenceSession::query()->where('last_seen_at', '>=', now()->subMinutes(2))->distinct('user_id')->count('user_id'),
+            'tracked_hours' => (int) floor(UserPresenceSession::query()->sum('total_seconds') / 3600),
         ];
     }
 
@@ -115,5 +141,67 @@ class AdminDashboardController extends Controller
         }
 
         return compact('labels', 'values');
+    }
+
+    private function activePresenceSessions(): Collection
+    {
+        return UserPresenceSession::query()
+            ->with('user:id,name,alias,email')
+            ->where('last_seen_at', '>=', now()->subMinutes(2))
+            ->latest('last_seen_at')
+            ->take(30)
+            ->get()
+            ->unique('user_id')
+            ->take(10)
+            ->values();
+    }
+
+    private function topTimeUsers(): Collection
+    {
+        $totals = UserPresenceSession::query()
+            ->select('user_id')
+            ->selectRaw('SUM(total_seconds) as total_presence_seconds')
+            ->selectRaw('MAX(last_seen_at) as last_presence_at')
+            ->groupBy('user_id');
+
+        return User::query()
+            ->joinSub($totals, 'presence_totals', fn ($join) => $join->on('users.id', '=', 'presence_totals.user_id'))
+            ->select('users.id', 'users.name', 'users.alias', 'users.email')
+            ->addSelect([
+                'total_presence_seconds' => DB::raw('presence_totals.total_presence_seconds'),
+                'last_presence_at' => DB::raw('presence_totals.last_presence_at'),
+            ])
+            ->orderByDesc('presence_totals.total_presence_seconds')
+            ->take(10)
+            ->get();
+    }
+
+    private function recentUserVisits(): Collection
+    {
+        return SiteVisit::query()
+            ->with('user:id,name,alias,email')
+            ->whereNotNull('user_id')
+            ->latest('visited_at')
+            ->take(10)
+            ->get();
+    }
+
+    private function currentWatchingEpisodes(): Collection
+    {
+        return EpisodeWatchProgress::query()
+            ->with(['user:id,name,alias,email', 'episode.series:id,title'])
+            ->where('last_watched_at', '>=', now()->subMinutes(2))
+            ->latest('last_watched_at')
+            ->take(10)
+            ->get();
+    }
+
+    private function recentWatchProgress(): Collection
+    {
+        return EpisodeWatchProgress::query()
+            ->with(['user:id,name,alias,email', 'episode.series:id,title'])
+            ->latest('last_watched_at')
+            ->take(10)
+            ->get();
     }
 }

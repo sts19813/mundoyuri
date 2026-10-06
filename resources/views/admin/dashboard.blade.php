@@ -16,6 +16,26 @@
 @endsection
 
 @section('content')
+    @php
+        $formatDuration = function (int $seconds): string {
+            $seconds = max(0, $seconds);
+            $hours = intdiv($seconds, 3600);
+            $minutes = intdiv($seconds % 3600, 60);
+
+            if ($hours > 0) {
+                return $hours.' h'.($minutes > 0 ? ' '.$minutes.' min' : '');
+            }
+
+            if ($minutes > 0) {
+                return $minutes.' min';
+            }
+
+            return $seconds.' s';
+        };
+
+        $displayUser = fn ($user): string => $user?->alias ?: $user?->name ?: $user?->email ?: 'Usuario eliminado';
+    @endphp
+
     <div class="card mb-7">
         <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-5">
             <div>
@@ -92,6 +112,26 @@
                     <div class="text-muted fs-7">Últimos 30 días</div>
                 </div></div>
             </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="fs-6 text-gray-600">Usuarios activos ahora</div>
+                        <i class="ki-outline ki-pulse fs-2 text-success"></i>
+                    </div>
+                    <div class="fs-2hx fw-bold">{{ number_format($siteVisitStats['active_now']) }}</div>
+                    <div class="text-muted fs-7">Latidos en los últimos 2 minutos</div>
+                </div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="fs-6 text-gray-600">Horas acumuladas</div>
+                        <i class="ki-outline ki-timer fs-2 text-primary"></i>
+                    </div>
+                    <div class="fs-2hx fw-bold">{{ number_format($siteVisitStats['tracked_hours']) }}</div>
+                    <div class="text-muted fs-7">Tiempo de usuarios registrados</div>
+                </div></div>
+            </div>
         </div>
 
         <div class="card mb-7">
@@ -122,6 +162,227 @@
                     <div class="col-6 col-lg-3">
                         <div class="fs-7 text-muted">Usuarios nuevos 30 días</div>
                         <div class="fs-3 fw-bold text-gray-900">{{ number_format($siteVisitStats['new_users_30_days']) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5 g-xl-8 mb-7">
+            <div class="col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex flex-column">
+                            <h3 class="fw-bold mb-1">Usuarios viendo ahora</h3>
+                            <span class="text-muted fs-7">Página actual detectada por latidos del navegador</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-row-dashed gy-4 mb-0">
+                                <thead>
+                                    <tr class="text-muted fw-bold fs-7 text-uppercase">
+                                        <th>Usuario</th>
+                                        <th>Está viendo</th>
+                                        <th class="text-end">Último latido</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($activePresenceSessions as $session)
+                                        <tr>
+                                            <td>
+                                                @if($session->user)
+                                                    <a href="{{ route('admin.users.show', $session->user) }}" class="text-gray-900 text-hover-primary fw-bold">
+                                                        {{ $displayUser($session->user) }}
+                                                    </a>
+                                                    <div class="text-muted fs-7">{{ $session->user->email }}</div>
+                                                @else
+                                                    <span class="text-muted">Usuario eliminado</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <a href="{{ url($session->current_path) }}" class="text-gray-900 text-hover-primary fw-semibold" target="_blank" rel="noopener">
+                                                    {{ \Illuminate\Support\Str::limit($session->current_title ?: $session->current_path, 46) }}
+                                                </a>
+                                                <div class="text-muted fs-7">{{ \Illuminate\Support\Str::limit($session->current_path, 54) }}</div>
+                                            </td>
+                                            <td class="text-end text-muted fs-7">{{ $session->last_seen_at?->diffForHumans() }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="3" class="text-center text-muted py-8">No hay usuarios activos ahora mismo.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex flex-column">
+                            <h3 class="fw-bold mb-1">Usuarios con más tiempo</h3>
+                            <span class="text-muted fs-7">Horas acumuladas dentro del portal</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-row-dashed gy-4 mb-0">
+                                <thead>
+                                    <tr class="text-muted fw-bold fs-7 text-uppercase">
+                                        <th>Usuario</th>
+                                        <th class="text-end">Tiempo total</th>
+                                        <th class="text-end">Última actividad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($topTimeUsers as $timeUser)
+                                        <tr>
+                                            <td>
+                                                <a href="{{ route('admin.users.show', $timeUser) }}" class="text-gray-900 text-hover-primary fw-bold">
+                                                    {{ $displayUser($timeUser) }}
+                                                </a>
+                                                <div class="text-muted fs-7">{{ $timeUser->email }}</div>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge badge-light-primary fs-7">{{ $formatDuration((int) $timeUser->total_presence_seconds) }}</span>
+                                            </td>
+                                            <td class="text-end text-muted fs-7">
+                                                {{ \Illuminate\Support\Carbon::parse($timeUser->last_presence_at)->diffForHumans() }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="3" class="text-center text-muted py-8">Aún no hay tiempo acumulado.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5 g-xl-8 mb-7">
+            <div class="col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex flex-column">
+                            <h3 class="fw-bold mb-1">Últimas páginas vistas</h3>
+                            <span class="text-muted fs-7">Historial reciente de usuarios registrados</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-row-dashed gy-4 mb-0">
+                                <thead>
+                                    <tr class="text-muted fw-bold fs-7 text-uppercase">
+                                        <th>Usuario</th>
+                                        <th>Página</th>
+                                        <th class="text-end">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recentUserVisits as $visit)
+                                        <tr>
+                                            <td>
+                                                @if($visit->user)
+                                                    <a href="{{ route('admin.users.show', $visit->user) }}" class="text-gray-900 text-hover-primary fw-bold">
+                                                        {{ $displayUser($visit->user) }}
+                                                    </a>
+                                                    <div class="text-muted fs-7">{{ $visit->user->email }}</div>
+                                                @else
+                                                    <span class="text-muted">Usuario eliminado</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <a href="{{ url($visit->path) }}" class="text-gray-900 text-hover-primary fw-semibold" target="_blank" rel="noopener">
+                                                    {{ \Illuminate\Support\Str::limit($visit->path, 54) }}
+                                                </a>
+                                            </td>
+                                            <td class="text-end text-muted fs-7">{{ $visit->visited_at?->format('d/m H:i') }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="3" class="text-center text-muted py-8">Aún no hay visitas de usuarios registrados.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex flex-column">
+                            <h3 class="fw-bold mb-1">Progreso de episodios</h3>
+                            <span class="text-muted fs-7">Qué empezó, dónde va y qué ya completó cada usuario</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-row-dashed gy-4 mb-0">
+                                <thead>
+                                    <tr class="text-muted fw-bold fs-7 text-uppercase">
+                                        <th>Usuario</th>
+                                        <th>Episodio</th>
+                                        <th class="text-end">Avance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recentWatchProgress as $progress)
+                                        <tr>
+                                            <td>
+                                                @if($progress->user)
+                                                    <a href="{{ route('admin.users.show', $progress->user) }}" class="text-gray-900 text-hover-primary fw-bold">
+                                                        {{ $displayUser($progress->user) }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">Usuario eliminado</span>
+                                                @endif
+                                                <div class="text-muted fs-7">{{ $progress->last_watched_at?->diffForHumans() }}</div>
+                                            </td>
+                                            <td>
+                                                @if($progress->episode)
+                                                    <a href="{{ route('admin.episodes.show', $progress->episode) }}" class="text-gray-900 text-hover-primary fw-semibold">
+                                                        {{ \Illuminate\Support\Str::limit($progress->episode->title, 42) }}
+                                                    </a>
+                                                    <div class="text-muted fs-7">{{ $progress->episode->series?->title ?: 'Sin serie' }}</div>
+                                                @else
+                                                    <span class="text-muted">Episodio eliminado</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-end">
+                                                <span @class(['badge fs-7', 'badge-light-success' => $progress->completed, 'badge-light-warning' => ! $progress->completed])>
+                                                    {{ $progress->completed ? 'Completo' : number_format((float) $progress->progress_percent, 0).'%' }}
+                                                </span>
+                                                <div class="text-muted fs-8">{{ $formatDuration((int) $progress->position_seconds) }}</div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="3" class="text-center text-muted py-8">Aún no hay progreso de episodios.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if($currentWatchingEpisodes->isNotEmpty())
+                            <div class="separator separator-dashed my-6"></div>
+                            <div class="fw-bold text-gray-900 mb-3">Viendo episodio ahora</div>
+                            <div class="d-flex flex-column gap-3">
+                                @foreach($currentWatchingEpisodes as $progress)
+                                    <div class="d-flex align-items-center justify-content-between gap-3">
+                                        <div>
+                                            <div class="fw-semibold">{{ $displayUser($progress->user) }}</div>
+                                            <div class="text-muted fs-7">
+                                                {{ \Illuminate\Support\Str::limit($progress->episode?->title ?: 'Episodio eliminado', 54) }}
+                                            </div>
+                                        </div>
+                                        <span class="badge badge-light-success">en vivo</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
