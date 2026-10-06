@@ -52,6 +52,33 @@
             $resumeSeconds = $requestedResumeSeconds ?: $storedResumeSeconds;
             $resumeSourceId = (int) request()->query('source', $episodeProgress?->episode_source_id ?? ($primarySource?->id ?? 0));
             $watchProgressEnabled = $watchProgressEnabled ?? false;
+            $publicSourceLabels = [
+                'cloudflare_hls' => [
+                    'name' => 'video.mundoyuri',
+                    'meta' => 'Premium 👑',
+                ],
+                'byse' => [
+                    'name' => 'Con publicidad',
+                    'meta' => 'Siempre ayuda a la página',
+                ],
+                'backblaze_b2' => [
+                    'name' => 'mundoyuri.com premium',
+                    'meta' => 'Premium 👑',
+                ],
+            ];
+            $publicSourceLabel = function ($source) use ($publicSourceLabels) {
+                if (! $source) {
+                    return [
+                        'name' => 'FUENTE',
+                        'meta' => 'Audio original · Sub Español',
+                    ];
+                }
+
+                return $publicSourceLabels[$source->provider] ?? [
+                    'name' => strtoupper($source->provider),
+                    'meta' => $source->label ?: 'Audio original · Sub Español',
+                ];
+            };
         @endphp
 
         <div class="ep-layout">
@@ -98,7 +125,7 @@
                             T{{ $episode->season_number }} · E{{ $episode->episode_number }}
                         </span>
                         @if($primarySource)
-                            <span class="player-source-chip" id="activeSourceLabel">{{ strtoupper($primarySource->provider) }}</span>
+                            <span class="player-source-chip" id="activeSourceLabel">{{ $publicSourceLabel($primarySource)['name'] }}</span>
                         @endif
                     </div>
                 </div>
@@ -132,19 +159,20 @@
                     </div>
                     <div class="server-list">
                         @forelse($fullSources as $source)
+                            @php($sourcePublicLabel = $publicSourceLabel($source))
                             <button type="button"
                                 class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
                                 data-source-id="{{ $source->id }}"
                                 data-video-url="{{ $source->playable_url }}"
-                                data-provider="{{ strtoupper($source->provider) }}"
+                                data-provider="{{ $sourcePublicLabel['name'] }}"
                                 data-provider-key="{{ $source->provider }}"
                                 data-trackable="{{ in_array($source->provider, $trackableProviders, true) ? '1' : '0' }}"
                                 data-quality="{{ preg_match('/\b(360|480|720|1080|1440|2160)p\b/i', (string) $source->label, $qualityMatch) ? $qualityMatch[1] : '' }}"
                                 data-player-type="{{ $source->player_type }}">
                                 <div class="server-icon">⚡</div>
                                 <div class="server-info">
-                                    <div class="server-name">{{ strtoupper($source->provider) }}</div>
-                                    <div class="server-meta">{{ $source->label ?: 'Audio original · Sub Español' }}</div>
+                                    <div class="server-name">{{ $sourcePublicLabel['name'] }}</div>
+                                    <div class="server-meta">{{ $sourcePublicLabel['meta'] }}</div>
                                 </div>
                                 <span class="server-badge {{ $source->is_primary ? 'badge-clean' : 'badge-ads' }}">{{ $source->is_primary ? 'Principal' : 'Alterno' }}</span>
                             </button>
