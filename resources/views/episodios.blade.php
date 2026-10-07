@@ -56,6 +56,36 @@
             $resumeSeconds = $requestedResumeSeconds ?: $storedResumeSeconds;
             $resumeSourceId = (int) request()->query('source', $episodeProgress?->episode_source_id ?? ($primarySource?->id ?? 0));
             $watchProgressEnabled = $watchProgressEnabled ?? false;
+            $subtitleLanguageLabels = [
+                'es' => 'Español',
+                'spa' => 'Español',
+                'en' => 'English',
+                'eng' => 'English',
+            ];
+            $subtitleFiles = collect(glob(public_path('subtitles/episodes/'.$episode->slug.'.*.vtt')) ?: []);
+            $fallbackSubtitleFile = public_path('subtitles/episodes/'.$episode->slug.'.vtt');
+
+            if ($subtitleFiles->isEmpty() && file_exists($fallbackSubtitleFile)) {
+                $subtitleFiles = collect([$fallbackSubtitleFile]);
+            }
+
+            $episodeSubtitleTracks = $subtitleFiles
+                ->map(function (string $path) use ($episode, $subtitleLanguageLabels) {
+                    $basename = basename($path);
+                    $language = 'es';
+
+                    if (preg_match('/^'.preg_quote($episode->slug, '/').'\.([a-z]{2,3})\.vtt$/i', $basename, $matches) === 1) {
+                        $language = strtolower($matches[1]);
+                    }
+
+                    return [
+                        'src' => asset('subtitles/episodes/'.$basename).'?v='.filemtime($path),
+                        'srclang' => $language === 'spa' ? 'es' : $language,
+                        'label' => $subtitleLanguageLabels[$language] ?? strtoupper($language),
+                        'default' => in_array($language, ['es', 'spa'], true),
+                    ];
+                })
+                ->values();
             $publicSourceLabels = [
                 'cloudflare_hls' => [
                     'name' => 'video.mundoyuri',
@@ -113,6 +143,9 @@
                             @if($primarySource->player_type === 'video' && $primarySource->provider !== 'cloudflare_hls')
                                 <source src="{{ $primarySource->playable_url }}" type="video/mp4">
                             @endif
+                            @foreach($episodeSubtitleTracks as $track)
+                                <track kind="captions" src="{{ $track['src'] }}" srclang="{{ $track['srclang'] }}" label="{{ $track['label'] }}" @if($track['default']) default @endif>
+                            @endforeach
                         </video>
                     @else
                         <x-media-preview
@@ -384,6 +417,7 @@
         let lastProgressSaveAt = 0;
         let pendingResumeSeconds = Number(watchProgressConfig.resumeSeconds || 0);
         let resumeApplied = false;
+        const subtitleTracks = @json($episodeSubtitleTracks ?? []);
 
         function destroyHlsPlayer() {
             if (hlsPlayer) {
@@ -394,8 +428,9 @@
 
         if (playerVideo && window.Plyr) {
             directPlayer = new Plyr(playerVideo, {
-                controls: ['play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
-                settings: ['quality', 'speed'],
+                controls: ['play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time', 'duration', 'mute', 'volume', 'captions', 'settings', 'pip', 'fullscreen'],
+                settings: ['captions', 'quality', 'speed'],
+                captions: { active: true, language: 'es', update: true },
                 seekTime: 10,
                 speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
                 quality: { default: 1080, options: [2160, 1440, 1080, 720, 480, 360] },
@@ -422,9 +457,23 @@
             return sources.length > 1 ? sources : [{ src: fallbackUrl, type: 'video/mp4' }];
         }
 
+        function playerSource(sources) {
+            return {
+                type: 'video',
+                sources,
+                tracks: subtitleTracks.map((track) => ({
+                    kind: 'captions',
+                    label: track.label,
+                    srclang: track.srclang,
+                    src: track.src,
+                    default: Boolean(track.default),
+                })),
+            };
+        }
+
         @if($primarySource?->provider === 'backblaze_b2')
             if (directPlayer && backblazeQualityButtons.length > 1) {
-                directPlayer.source = { type: 'video', sources: backblazeSources(@json($primarySource->playable_url)) };
+                directPlayer.source = playerSource(backblazeSources(@json($primarySource->playable_url)));
             }
         @endif
 
@@ -467,7 +516,7 @@
             } else if (playerVideo.canPlayType('application/vnd.apple.mpegurl')) {
                 playerVideo.src = url;
             } else if (directPlayer) {
-                directPlayer.source = { type: 'video', sources: [{ src: url, type: 'application/x-mpegURL' }] };
+                directPlayer.source = playerSource([{ src: url, type: 'application/x-mpegURL' }]);
             } else {
                 playerVideo.src = url;
             }
@@ -503,7 +552,7 @@
                     destroyHlsPlayer();
                     const sources = providerKey === 'backblaze_b2' ? backblazeSources(url) : [{ src: url, type: 'video/mp4' }];
                     if (directPlayer) {
-                        directPlayer.source = { type: 'video', sources };
+                        directPlayer.source = playerSource(sources);
                         directPlayer.elements.container.style.display = '';
                     } else {
                         playerVideo.pause();
