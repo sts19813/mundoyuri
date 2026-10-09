@@ -22,6 +22,16 @@ trait SendsWebPushNotifications
         return $channels;
     }
 
+    /**
+     * @return array<int, string>
+     */
+    protected function webPushChannels(object $notifiable): array
+    {
+        return $this->shouldSendWebPush($notifiable)
+            ? [WebPushChannel::class]
+            : [];
+    }
+
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
         $data = $this->toArray($notifiable);

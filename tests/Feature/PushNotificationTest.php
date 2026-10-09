@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\DirectMessage;
 use App\Models\User;
+use App\Notifications\NewDirectMessageNotification;
 use App\Notifications\NewFollowerNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use NotificationChannels\WebPush\WebPushChannel;
@@ -71,6 +73,27 @@ class PushNotificationTest extends TestCase
         $channels = (new NewFollowerNotification($follower))->via($recipient);
 
         $this->assertContains('database', $channels);
+        $this->assertContains(WebPushChannel::class, $channels);
+    }
+
+    public function test_private_messages_can_push_without_creating_database_notifications(): void
+    {
+        config()->set('webpush.vapid.public_key', 'public-key');
+        config()->set('webpush.vapid.private_key', 'private-key');
+
+        $recipient = User::factory()->create(['push_notifications_enabled' => true]);
+        $sender = User::factory()->create();
+
+        $recipient->updatePushSubscription(
+            'https://push.example.test/subscription/abc',
+            'browser-public-key',
+            'browser-auth-token',
+            'aes128gcm'
+        );
+
+        $channels = (new NewDirectMessageNotification(new DirectMessage(['body' => 'Hola']), $sender))->via($recipient);
+
+        $this->assertNotContains('database', $channels);
         $this->assertContains(WebPushChannel::class, $channels);
     }
 }

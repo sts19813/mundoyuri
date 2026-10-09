@@ -23,7 +23,7 @@ class NewDirectMessageNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return $this->databaseAndWebPushChannels($notifiable);
+        return $this->webPushChannels($notifiable);
     }
 
     /**

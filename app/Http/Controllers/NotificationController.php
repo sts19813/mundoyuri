@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\NewDirectMessageNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -14,9 +15,10 @@ class NotificationController extends Controller
         return view('notifications.index', [
             'notifications' => $request->user()
                 ->notifications()
+                ->where('type', '!=', NewDirectMessageNotification::class)
                 ->latest()
                 ->paginate(25),
-            'unreadCount' => $request->user()->unreadNotifications()->count(),
+            'unreadCount' => $this->visibleUnreadNotifications($request)->count(),
         ]);
     }
 
@@ -27,6 +29,7 @@ class NotificationController extends Controller
             && (int) $notification->notifiable_id === $request->user()->id,
             404
         );
+        abort_if($notification->type === NewDirectMessageNotification::class, 404);
 
         $notification->markAsRead();
         $url = $notification->data['url'] ?? null;
@@ -40,15 +43,25 @@ class NotificationController extends Controller
 
     public function readAll(Request $request): RedirectResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $this->visibleUnreadNotifications($request)->update(['read_at' => now()]);
 
         return back()->with('success', 'Todas las notificaciones se marcaron como leídas.');
     }
 
     public function destroyAll(Request $request): RedirectResponse
     {
-        $request->user()->notifications()->delete();
+        $request->user()
+            ->notifications()
+            ->where('type', '!=', NewDirectMessageNotification::class)
+            ->delete();
 
         return back()->with('success', 'Todas las notificaciones se eliminaron.');
+    }
+
+    private function visibleUnreadNotifications(Request $request): mixed
+    {
+        return $request->user()
+            ->unreadNotifications()
+            ->where('type', '!=', NewDirectMessageNotification::class);
     }
 }

@@ -39,8 +39,8 @@
             @else
                 @php($portalUser = auth()->user())
                 @php($portalUnreadMessages = $portalUser->receivedMessages()->whereNull('read_at')->count())
-                @php($portalUnreadNotifications = $portalUser->unreadNotifications()->count())
-                @php($portalRecentNotifications = $portalUser->notifications()->latest()->limit(6)->get())
+                @php($portalUnreadNotifications = $portalUser->unreadNotifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->count())
+                @php($portalRecentNotifications = $portalUser->notifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->latest()->limit(6)->get())
 
                 <a href="{{ route('messages.index') }}" class="portal-nav-shortcut" aria-label="Mensajes{{ $portalUnreadMessages ? ': '.$portalUnreadMessages.' sin leer' : '' }}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -77,13 +77,8 @@
                                         <span class="portal-notification-avatar-fallback">MY</span>
                                     @endif
                                     <span>
-                                        @if(($notification->data['kind'] ?? null) === 'direct_message')
-                                            <strong>Nuevo mensaje privado</strong>
-                                            <small>Abre Mensajes para verlo.</small>
-                                        @else
-                                            <strong>{{ $notification->data['title'] ?? 'Nueva actividad' }}</strong>
-                                            <small>{{ $notification->data['message'] ?? '' }}</small>
-                                        @endif
+                                        <strong>{{ $notification->data['title'] ?? 'Nueva actividad' }}</strong>
+                                        <small>{{ $notification->data['message'] ?? '' }}</small>
                                         <time datetime="{{ $notification->created_at->toIso8601String() }}">{{ $notification->created_at->diffForHumans() }}</time>
                                     </span>
                                     @unless($notification->read_at)<i aria-label="Sin leer"></i>@endunless

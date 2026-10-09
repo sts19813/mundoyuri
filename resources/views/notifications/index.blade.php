@@ -65,7 +65,7 @@
                         @endif
 
                         <span class="notification-list-icon" aria-hidden="true">
-                            {{ ($notification->data['kind'] ?? null) === 'direct_message' ? '✉' : '♡' }}
+                            {{ ($notification->data['kind'] ?? null) === 'episode_available' ? '▶' : '♡' }}
                         </span>
 
                         <span class="conversation-list-copy">
@@ -84,7 +84,7 @@
                     <div class="social-empty-state">
                         <span aria-hidden="true">✦</span>
                         <h2>No hay notificaciones todavía</h2>
-                        <p>Aquí verás nuevos seguidores y mensajes privados.</p>
+                        <p>Aquí verás actividad de la comunidad y estrenos de capítulos.</p>
                     </div>
                 @endforelse
             </section>

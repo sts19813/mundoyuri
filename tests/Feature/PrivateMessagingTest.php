@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\DirectMessage;
 use App\Models\CommunityReaction;
-use Database\Seeders\RolePermissionSeeder;
+use App\Models\DirectMessage;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -44,7 +44,7 @@ class PrivateMessagingTest extends TestCase
             'body' => '¿Viste el nuevo episodio de la serie?',
             'read_at' => null,
         ]);
-        $this->assertDatabaseCount('notifications', 1);
+        $this->assertDatabaseCount('notifications', 0);
 
         $this->actingAs($recipient)
             ->get(route('messages.index'))
@@ -210,16 +210,14 @@ class PrivateMessagingTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_notifications_are_private_and_can_be_marked_as_read(): void
+    public function test_notification_center_items_are_private_and_can_be_marked_as_read(): void
     {
-        $sender = User::factory()->create();
+        $follower = User::factory()->create(['name' => 'Luna Seguidora']);
         $recipient = User::factory()->create();
         $stranger = User::factory()->create();
 
-        $this->actingAs($sender)
-            ->post(route('messages.store', $recipient), [
-                'body' => 'Este mensaje genera una notificación.',
-            ]);
+        $this->actingAs($follower)
+            ->post(route('users.follow.store', $recipient));
 
         $notification = $recipient->notifications()->firstOrFail();
 
@@ -230,17 +228,19 @@ class PrivateMessagingTest extends TestCase
         $this->actingAs($recipient)
             ->get(route('notifications.index'))
             ->assertOk()
-            ->assertSee('Nuevo mensaje')
+            ->assertSee('Tienes una nueva persona siguiéndote')
             ->assertSee('1 pendientes por leer')
             ->assertSee('Borrar todas');
 
         $this->actingAs($recipient)
             ->get(route('notifications.open', $notification))
-            ->assertRedirect(route('messages.show', $sender));
+            ->assertRedirect($follower->publicProfileUrl());
 
         $this->assertNotNull($notification->fresh()->read_at);
 
-        $this->actingAs($sender)
+        $secondFollower = User::factory()->create();
+
+        $this->actingAs($secondFollower)
             ->post(route('users.follow.store', $recipient));
 
         $this->actingAs($recipient)
@@ -253,12 +253,12 @@ class PrivateMessagingTest extends TestCase
 
     public function test_users_can_delete_only_their_own_notifications(): void
     {
-        $sender = User::factory()->create();
+        $follower = User::factory()->create();
         $recipient = User::factory()->create();
         $otherRecipient = User::factory()->create();
 
-        $this->actingAs($sender)->post(route('messages.store', $recipient), ['body' => 'Para ti.']);
-        $this->actingAs($sender)->post(route('messages.store', $otherRecipient), ['body' => 'Para la otra cuenta.']);
+        $this->actingAs($follower)->post(route('users.follow.store', $recipient));
+        $this->actingAs($follower)->post(route('users.follow.store', $otherRecipient));
 
         $this->assertSame(1, $recipient->notifications()->count());
         $this->assertSame(1, $otherRecipient->notifications()->count());
