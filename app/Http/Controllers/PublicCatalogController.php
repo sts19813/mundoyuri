@@ -307,8 +307,7 @@ class PublicCatalogController extends Controller
             return collect();
         }
 
-        $items = collect();
-        $seenEpisodeIds = [];
+        $bestProgressBySeries = [];
 
         EpisodeWatchProgress::query()
             ->with(['episode.series', 'source'])
@@ -321,42 +320,45 @@ class PublicCatalogController extends Controller
                     ->where('moderation_status', 'approved')
                     ->whereNotNull('published_at')))
             ->whereHas('source', fn($query) => $query->whereIn('provider', config('watch_progress.providers', [])))
-            ->latest('last_watched_at')
-            ->latest('id')
             ->limit(30)
             ->get()
-            ->each(function (EpisodeWatchProgress $progress) use ($items, &$seenEpisodeIds): void {
+            ->each(function (EpisodeWatchProgress $progress) use (&$bestProgressBySeries): void {
                 if (! $progress->episode || ! $progress->episode->series) {
                     return;
                 }
 
+                $candidate = null;
+
                 if ($progress->completed) {
-                    $nextItem = $this->nextEpisodeContinueItem($progress);
+                    $candidate = $this->nextEpisodeContinueItem($progress);
+                } elseif ($progress->position_seconds >= (int) config('watch_progress.minimum_seconds', 15)) {
+                    $progress->is_next_episode = false;
+                    $candidate = $progress;
+                }
 
-                    if (! $nextItem || in_array($nextItem->episode->id, $seenEpisodeIds, true)) {
-                        return;
-                    }
-
-                    $seenEpisodeIds[] = $nextItem->episode->id;
-                    $items->push($nextItem);
-
+                if (! $candidate?->episode) {
                     return;
                 }
 
-                if ($progress->position_seconds < (int) config('watch_progress.minimum_seconds', 15)) {
-                    return;
-                }
+                $seriesId = $candidate->episode->series_id;
+                $current = $bestProgressBySeries[$seriesId] ?? null;
 
-                if (in_array($progress->episode_id, $seenEpisodeIds, true)) {
-                    return;
+                if (! $current || $this->isLaterEpisode($candidate->episode, $current->episode)) {
+                    $bestProgressBySeries[$seriesId] = $candidate;
                 }
-
-                $progress->is_next_episode = false;
-                $seenEpisodeIds[] = $progress->episode_id;
-                $items->push($progress);
             });
 
-        return $items->take((int) config('watch_progress.keep_per_user', 10))->values();
+        return collect($bestProgressBySeries)
+            ->sortByDesc(fn ($progress) => $progress->last_watched_at?->getTimestamp() ?? 0)
+            ->take((int) config('watch_progress.keep_per_user', 10))
+            ->values();
+    }
+
+    private function isLaterEpisode(Episode $candidate, Episode $current): bool
+    {
+        return $candidate->season_number > $current->season_number
+            || ($candidate->season_number === $current->season_number
+                && $candidate->episode_number > $current->episode_number);
     }
 
     private function watchProgressEnabledForRequest(Request $request): bool

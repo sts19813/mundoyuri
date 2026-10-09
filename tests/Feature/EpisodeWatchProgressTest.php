@@ -190,6 +190,67 @@ class EpisodeWatchProgressTest extends TestCase
         $this->assertStringNotContainsString('t=1800', $html);
     }
 
+    public function test_continue_watching_shows_only_the_furthest_started_episode_per_series(): void
+    {
+        config()->set('watch_progress.hosts', ['video.mundoyuri.com']);
+
+        $user = User::factory()->create();
+        [$episodeOne, $sourceOne] = $this->episodeWithSource('cloudflare_hls', 1);
+
+        $episodes = collect([$episodeOne]);
+
+        foreach ([2, 3] as $number) {
+            $episode = Episode::query()->create([
+                'series_id' => $episodeOne->series_id,
+                'title' => "Capitulo {$number}",
+                'slug' => "serie-de-prueba-s1e{$number}",
+                'season_number' => 1,
+                'episode_number' => $number,
+                'moderation_status' => 'approved',
+                'published_at' => now(),
+            ]);
+            $source = EpisodeSource::query()->create([
+                'episode_id' => $episode->id,
+                'provider' => 'cloudflare_hls',
+                'source_type' => 'full',
+                'label' => 'Principal',
+                'sort_order' => 0,
+                'video_url' => "https://video.mundoyuri.com/episode-{$number}.m3u8",
+                'is_primary' => true,
+            ]);
+
+            $episodes->push($episode->setRelation('sources', collect([$source])));
+        }
+
+        foreach ($episodes as $index => $episode) {
+            $source = $index === 0 ? $sourceOne : $episode->sources->first();
+
+            EpisodeWatchProgress::query()->create([
+                'user_id' => $user->id,
+                'episode_id' => $episode->id,
+                'episode_source_id' => $source->id,
+                'provider' => 'cloudflare_hls',
+                'position_seconds' => [1800, 1350, 600][$index],
+                'duration_seconds' => 3600,
+                'progress_percent' => [50, 37.5, 16.67][$index],
+                'completed' => false,
+                'last_watched_at' => now()->subMinutes($index),
+            ]);
+        }
+
+        $html = $this->withServerVariables(['HTTP_HOST' => 'video.mundoyuri.com'])
+            ->actingAs($user)
+            ->get('http://video.mundoyuri.com/')
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('T1 · E3 · 10:00', $html);
+
+        $this->assertSame(1, substr_count($html, 'class="continue-card"'));
+        $this->assertStringNotContainsString('T1 · E1 · 30:00', $html);
+        $this->assertStringNotContainsString('T1 · E2 · 22:30', $html);
+    }
+
     /** @return array{Episode, EpisodeSource} */
     private function episodeWithSource(string $provider, int $episodeNumber = 1, string $seriesSlug = 'serie-de-prueba'): array
     {
