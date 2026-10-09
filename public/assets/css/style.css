@@ -60,6 +60,25 @@
         }
     }
 
+    /* Use the available viewport on laptops and desktops without crowding the edges. */
+    @media (min-width: 992px) {
+        .container-xl {
+            max-width: none;
+        }
+
+        .container-xl.px-4 {
+            padding-right: clamp(24px, 2.5vw, 56px) !important;
+            padding-left: clamp(24px, 2.5vw, 56px) !important;
+        }
+    }
+
+    @media (min-width: 1600px) {
+        .catalog-section .col-lg-2 {
+            flex: 0 0 auto;
+            width: 14.285714%;
+        }
+    }
+
     *,
     *::before,
     *::after {
