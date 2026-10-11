@@ -53,6 +53,34 @@ class AssistantMessageTest extends TestCase
             ->assertSee('value="member@example.com"', false);
     }
 
+    public function test_user_can_disable_the_persistent_assistant_for_their_account(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patch(route('miyu-preference.update'), ['enabled' => false])
+            ->assertRedirect();
+
+        $this->assertFalse($user->refresh()->miyu_enabled);
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('data-miyu-assistant', false);
+    }
+
+    public function test_disabled_assistant_preference_blocks_authenticated_assistant_messages(): void
+    {
+        $user = User::factory()->create(['miyu_enabled' => false]);
+
+        $this->actingAs($user)
+            ->postJson(route('assistant-messages.store'), [
+                'type' => 'message',
+                'message' => 'Quiero escribirle a Miyu aunque está desactivada.',
+            ])
+            ->assertForbidden();
+    }
+
     public function test_guest_can_send_a_request_from_the_assistant(): void
     {
         $response = $this->postJson(route('assistant-messages.store'), [

@@ -12,6 +12,8 @@ class AssistantMessageController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        abort_if($request->user() && ! $request->user()->miyu_enabled, 403);
+
         $validated = $request->validate([
             'type' => ['required', Rule::in(['report', 'message', 'request'])],
             'contact_email' => ['nullable', 'email:rfc', 'max:255'],

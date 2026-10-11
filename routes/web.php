@@ -41,6 +41,7 @@ use App\Http\Controllers\ForumSubscriptionController;
 use App\Http\Controllers\ForumThreadController;
 use App\Http\Controllers\LegacyProfileClaimController;
 use App\Http\Controllers\LegacyProfileController;
+use App\Http\Controllers\MiyuPreferenceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -110,6 +111,8 @@ Route::middleware(['auth'])
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
         Route::patch('/preferencias/correos-de-episodios', [EmailEpisodeNotificationPreferenceController::class, 'update'])
             ->name('email-episode-notifications.update');
+        Route::patch('/preferencias/miyu', [MiyuPreferenceController::class, 'update'])
+            ->name('miyu-preference.update');
         Route::post('/notificaciones-push/suscripcion', [PushSubscriptionController::class, 'store'])
             ->name('push-subscriptions.store');
         Route::delete('/notificaciones-push/suscripcion', [PushSubscriptionController::class, 'destroy'])

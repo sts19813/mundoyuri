@@ -153,18 +153,25 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
                             Mi perfil
                         </a>
-                        <a href="{{ route('messages.index') }}" class="portal-dropdown-item" role="menuitem">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-                            Mensajes
-                            <span class="portal-dropdown-badge" data-message-user-badge @if(!$portalUnreadMessages) hidden @endif>{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
-                        </a>
-                        <a href="{{ route('notifications.index') }}" class="portal-dropdown-item" role="menuitem">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-                            Notificaciones
-                            @if($portalUnreadNotifications)
-                                <span class="portal-dropdown-badge">{{ $portalUnreadNotifications > 99 ? '99+' : $portalUnreadNotifications }}</span>
-                            @endif
-                        </a>
+                        @if($portalUser->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="portal-dropdown-item" role="menuitem">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                                Panel
+                            </a>
+                        @endif
+                        <form method="POST" action="{{ route('miyu-preference.update') }}" class="portal-email-preference-form">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="enabled" value="{{ $portalUser->miyu_enabled ? 0 : 1 }}">
+                            <button type="submit" class="portal-dropdown-item portal-email-preference" role="menuitemcheckbox" aria-checked="{{ $portalUser->miyu_enabled ? 'true' : 'false' }}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                                <span class="portal-email-preference-copy">
+                                    <span>Miyu</span>
+                                    <small>{{ $portalUser->miyu_enabled ? 'Activada' : 'Desactivada' }}</small>
+                                </span>
+                                <span class="portal-preference-switch{{ $portalUser->miyu_enabled ? ' is-active' : '' }}" aria-hidden="true"><span></span></span>
+                            </button>
+                        </form>
                         <button type="button" class="portal-dropdown-item portal-email-preference" data-push-toggle aria-pressed="{{ $portalUser->push_notifications_enabled ? 'true' : 'false' }}">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
                             <span class="portal-email-preference-copy">
@@ -190,10 +197,6 @@
                                 <span class="portal-preference-switch{{ $portalUser->episode_email_notifications_enabled ? ' is-active' : '' }}" aria-hidden="true"><span></span></span>
                             </button>
                         </form>
-                        <a href="{{ route('submissions.create') }}" class="portal-dropdown-item" role="menuitem">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                            Subir contenido
-                        </a>
                         <div class="portal-dropdown-divider"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

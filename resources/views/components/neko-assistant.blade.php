@@ -3,9 +3,10 @@
     $assistantMessages = $assistantSettings->messagesFor(auth()->user());
     $assistantConfig = $assistantSettings->clientConfig();
     $assistantUserEmail = auth()->user()?->email;
+    $assistantEnabledForUser = ! auth()->check() || auth()->user()->miyu_enabled;
 @endphp
 
-@if($assistantSettings->enabled && count($assistantMessages) > 0)
+@if($assistantEnabledForUser && $assistantSettings->enabled && count($assistantMessages) > 0)
 <aside class="miyu-assistant" data-miyu-assistant aria-label="Miyu, asistente de Mundo Yuri">
     <div class="miyu-assistant__stage">
         <section class="miyu-assistant__bubble" data-miyu-bubble aria-live="polite">
