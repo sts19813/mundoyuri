@@ -39,6 +39,31 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function status(Request $request): JsonResponse
+    {
+        $viewer = $request->user();
+        $conversations = $this->conversationList($viewer, '')
+            ->orderByDesc('last_message_at')
+            ->limit(8)
+            ->get();
+        $latestUnread = DirectMessage::query()
+            ->where('recipient_id', $viewer->id)
+            ->whereNull('read_at')
+            ->with('sender')
+            ->latest('id')
+            ->first();
+
+        return response()->json([
+            'unread_count' => $viewer->receivedMessages()->whereNull('read_at')->count(),
+            'latest_unread_message_id' => $latestUnread?->id,
+            'latest_unread' => $latestUnread ? $this->unreadNotificationPayload($latestUnread, $viewer) : null,
+            'conversations' => $conversations
+                ->map(fn (Conversation $conversation) => $this->conversationPayload($conversation, $viewer))
+                ->values(),
+            'messages_url' => route('messages.index'),
+        ]);
+    }
+
     public function show(Request $request, User $user): View|RedirectResponse
     {
         $viewer = $request->user();
@@ -304,6 +329,40 @@ class ConversationController extends Controller
                     ->where('recipient_id', $viewer->id)
                     ->whereNull('read_at'),
             ]);
+    }
+
+    private function conversationPayload(Conversation $conversation, User $viewer): array
+    {
+        $otherUser = $conversation->otherParticipant($viewer);
+        $lastMessage = $conversation->lastMessage;
+
+        return [
+            'id' => $conversation->id,
+            'user_name' => $otherUser->displayName(),
+            'user_initials' => $otherUser->initials(),
+            'user_avatar' => $otherUser->hasProfileAvatar() ? $otherUser->avatarUrl() : null,
+            'is_online' => $otherUser->isOnlineForMessages(),
+            'url' => route('messages.show', $otherUser),
+            'preview' => ($lastMessage?->sender_id === $viewer->id ? 'Tú: ' : '').($lastMessage?->previewText() ?? 'Sin mensajes'),
+            'time' => $conversation->last_message_at?->isToday()
+                ? $conversation->last_message_at->timezone('America/Merida')->format('H:i')
+                : $conversation->last_message_at?->timezone('America/Merida')->translatedFormat('d M'),
+            'datetime' => $conversation->last_message_at?->toIso8601String(),
+            'unread_count' => (int) ($conversation->unread_messages_count ?? 0),
+        ];
+    }
+
+    private function unreadNotificationPayload(DirectMessage $message, User $viewer): array
+    {
+        $sender = $message->sender;
+
+        return [
+            'id' => $message->id,
+            'title' => $sender?->displayName() ?: 'Nuevo mensaje',
+            'body' => $message->previewText(),
+            'url' => $sender ? route('messages.show', $sender) : route('messages.index'),
+            'avatar' => $sender?->hasProfileAvatar() ? $sender->avatarUrl() : null,
+        ];
     }
 
     /**

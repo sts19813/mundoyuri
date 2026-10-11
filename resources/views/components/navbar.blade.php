@@ -42,14 +42,37 @@
                 @php($portalUnreadNotifications = $portalUser->unreadNotifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->count())
                 @php($portalRecentNotifications = $portalUser->notifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->latest()->limit(6)->get())
 
-                <a href="{{ route('messages.index') }}" class="portal-nav-shortcut" aria-label="Mensajes{{ $portalUnreadMessages ? ': '.$portalUnreadMessages.' sin leer' : '' }}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
-                    </svg>
-                    @if($portalUnreadMessages)
-                        <span class="portal-nav-badge">{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
-                    @endif
-                </a>
+                <div
+                    class="portal-message-menu"
+                    data-message-menu
+                    data-message-status-url="{{ route('messages.status') }}"
+                    data-message-index-url="{{ route('messages.index') }}"
+                    data-initial-unread-count="{{ $portalUnreadMessages }}"
+                    data-latest-unread-id="{{ optional($portalUser->receivedMessages()->whereNull('read_at')->latest('id')->first())->id ?: 0 }}"
+                >
+                    <a href="{{ route('messages.index') }}" class="portal-nav-shortcut" data-message-menu-trigger aria-haspopup="true" aria-expanded="false" aria-controls="portal-message-dropdown" aria-label="Mensajes{{ $portalUnreadMessages ? ': '.$portalUnreadMessages.' sin leer' : '' }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                        </svg>
+                        <span class="portal-nav-badge" data-message-badge @if(!$portalUnreadMessages) hidden @endif>{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
+                    </a>
+                    <div id="portal-message-dropdown" class="portal-message-dropdown" data-message-menu-dropdown>
+                        <header class="portal-notification-heading">
+                            <div>
+                                <strong>Chats</strong>
+                                <small data-message-heading-status>{{ $portalUnreadMessages ? $portalUnreadMessages.' sin leer' : 'Mensajes recientes' }}</small>
+                            </div>
+                            <a href="{{ route('messages.index') }}">Ver todos</a>
+                        </header>
+                        <div class="portal-message-list" data-message-list>
+                            <p class="portal-notification-empty">Cargando chats recientes...</p>
+                        </div>
+                        <footer class="portal-notification-actions">
+                            <a href="{{ route('messages.index') }}">Abrir mensajes</a>
+                            <a href="{{ route('community.members') }}">Nuevo chat</a>
+                        </footer>
+                    </div>
+                </div>
                 <div class="portal-notification-menu" data-notification-menu>
                     <button type="button" class="portal-nav-shortcut" data-notification-menu-trigger aria-haspopup="true" aria-expanded="false" aria-controls="portal-notification-dropdown" aria-label="Notificaciones{{ $portalUnreadNotifications ? ': '.$portalUnreadNotifications.' sin leer' : '' }}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -133,9 +156,7 @@
                         <a href="{{ route('messages.index') }}" class="portal-dropdown-item" role="menuitem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
                             Mensajes
-                            @if($portalUnreadMessages)
-                                <span class="portal-dropdown-badge">{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
-                            @endif
+                            <span class="portal-dropdown-badge" data-message-user-badge @if(!$portalUnreadMessages) hidden @endif>{{ $portalUnreadMessages > 99 ? '99+' : $portalUnreadMessages }}</span>
                         </a>
                         <a href="{{ route('notifications.index') }}" class="portal-dropdown-item" role="menuitem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
@@ -219,6 +240,13 @@
             });
         }
 
+        function closeMessageMenus() {
+            document.querySelectorAll('[data-message-menu].is-open').forEach(function (menu) {
+                menu.classList.remove('is-open');
+                menu.querySelector('[data-message-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+            });
+        }
+
         portalNavToggler?.addEventListener('click', function () {
             const isOpen = portalNavLinks?.classList.toggle('active') ?? false;
             portalNavToggler.classList.toggle('is-open', isOpen);
@@ -226,6 +254,7 @@
             portalNavToggler.setAttribute('aria-label', isOpen ? 'Cerrar menú principal' : 'Abrir menú principal');
             document.body.classList.toggle('portal-nav-open', isOpen);
             if (isOpen) {
+                closeMessageMenus();
                 closeNotificationMenus();
                 document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
                     menu.classList.remove('is-open');
@@ -251,6 +280,7 @@
 
                 if (clickedTrigger) {
                     closePortalNav();
+                    closeMessageMenus();
                     closeNotificationMenus();
                     const willOpen = !menu.classList.contains('is-open');
                     document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
@@ -274,6 +304,7 @@
 
                 if (clickedTrigger) {
                     closePortalNav();
+                    closeMessageMenus();
                     document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
                         openMenu.classList.remove('is-open');
                         openMenu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
@@ -290,12 +321,43 @@
                     trigger?.setAttribute('aria-expanded', 'false');
                 }
             });
+
+            document.querySelectorAll('[data-message-menu]').forEach(function (menu) {
+                const trigger = menu.querySelector('[data-message-menu-trigger]');
+                const clickedTrigger = trigger && trigger.contains(event.target);
+
+                if (clickedTrigger) {
+                    if (Number(menu.dataset.initialUnreadCount || 0) <= 0) return;
+
+                    event.preventDefault();
+                    closePortalNav();
+                    closeNotificationMenus();
+                    document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
+                        openMenu.classList.remove('is-open');
+                        openMenu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+                    });
+                    const willOpen = !menu.classList.contains('is-open');
+                    closeMessageMenus();
+                    menu.classList.toggle('is-open', willOpen);
+                    trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen) {
+                        window.MundoYuriMessages?.refresh?.({ render: true });
+                    }
+                    return;
+                }
+
+                if (!menu.contains(event.target)) {
+                    menu.classList.remove('is-open');
+                    trigger?.setAttribute('aria-expanded', 'false');
+                }
+            });
         });
 
         document.addEventListener('keydown', function (event) {
             if (event.key !== 'Escape') return;
             const navWasOpen = portalNavLinks?.classList.contains('active');
             closePortalNav();
+            closeMessageMenus();
             closeNotificationMenus();
             if (navWasOpen) portalNavToggler?.focus();
             document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
@@ -318,5 +380,176 @@
                 event.preventDefault();
             }
         });
+
+        (function () {
+            const menu = document.querySelector('[data-message-menu]');
+            if (!menu) return;
+
+            const statusUrl = menu.dataset.messageStatusUrl;
+            const indexUrl = menu.dataset.messageIndexUrl || '/mensajes';
+            const trigger = menu.querySelector('[data-message-menu-trigger]');
+            const navBadge = menu.querySelector('[data-message-badge]');
+            const userBadge = document.querySelector('[data-message-user-badge]');
+            const headingStatus = menu.querySelector('[data-message-heading-status]');
+            const list = menu.querySelector('[data-message-list]');
+            let unreadCount = Number(menu.dataset.initialUnreadCount || 0);
+            let latestUnreadId = Number(menu.dataset.latestUnreadId || 0);
+            let audioContext = null;
+
+            const badgeLabel = (count) => count > 99 ? '99+' : String(count);
+
+            const setBadge = (count) => {
+                [navBadge, userBadge].forEach((badge) => {
+                    if (!badge) return;
+                    badge.textContent = badgeLabel(count);
+                    badge.hidden = count <= 0;
+                });
+
+                menu.dataset.initialUnreadCount = String(count);
+                trigger?.setAttribute('aria-label', count > 0 ? `Mensajes: ${count} sin leer` : 'Mensajes');
+                if (headingStatus) headingStatus.textContent = count > 0 ? `${count} sin leer` : 'Mensajes recientes';
+            };
+
+            const avatarMarkup = (conversation) => {
+                const onlineClass = conversation.is_online ? ' is-online' : '';
+                if (conversation.user_avatar) {
+                    return `<span class="portal-message-avatar-wrap${onlineClass}"><img src="${escapeHtml(conversation.user_avatar)}" alt=""></span>`;
+                }
+
+                return `<span class="portal-message-avatar-wrap${onlineClass}"><span class="portal-message-avatar-fallback" aria-hidden="true">${escapeHtml(conversation.user_initials || 'MY')}</span></span>`;
+            };
+
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;',
+            }[character]));
+
+            const renderConversations = (conversations) => {
+                if (!list || !Array.isArray(conversations)) return;
+
+                if (conversations.length === 0) {
+                    list.innerHTML = '<p class="portal-notification-empty">No tienes conversaciones todavía.</p>';
+                    return;
+                }
+
+                list.innerHTML = conversations.map((conversation) => {
+                    const unread = Number(conversation.unread_count || 0);
+                    return `
+                        <a class="portal-message-item${unread > 0 ? ' is-unread' : ''}" href="${escapeHtml(conversation.url || indexUrl)}">
+                            ${avatarMarkup(conversation)}
+                            <span>
+                                <strong>${escapeHtml(conversation.user_name || 'Chat')}</strong>
+                                <small>${escapeHtml(conversation.preview || 'Sin mensajes')}</small>
+                            </span>
+                            <span class="portal-message-meta">
+                                ${conversation.time ? `<time datetime="${escapeHtml(conversation.datetime || '')}">${escapeHtml(conversation.time)}</time>` : ''}
+                                ${unread > 0 ? `<i aria-label="${unread} mensajes sin leer">${badgeLabel(unread)}</i>` : ''}
+                            </span>
+                        </a>
+                    `;
+                }).join('');
+            };
+
+            const unlockAudio = () => {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                audioContext ||= new AudioContext();
+                if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+            };
+
+            const playSound = () => {
+                try {
+                    unlockAudio();
+                    if (!audioContext || audioContext.state !== 'running') return;
+
+                    const oscillator = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(760, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(980, audioContext.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.015);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
+                    oscillator.connect(gain);
+                    gain.connect(audioContext.destination);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.24);
+                } catch (error) {
+                    // Audio may remain blocked until a user gesture.
+                }
+            };
+
+            const showBrowserNotification = (message) => {
+                if (!message || !('Notification' in window) || Notification.permission !== 'granted') return;
+
+                try {
+                    const notification = new Notification(message.title || 'Nuevo mensaje', {
+                        body: message.body || 'Tienes un mensaje nuevo.',
+                        icon: message.avatar || '/favicon.ico',
+                        tag: `mundo-yuri-message-${message.id || 'latest'}`,
+                    });
+                    notification.onclick = () => {
+                        window.focus();
+                        window.location.href = message.url || indexUrl;
+                    };
+                } catch (error) {
+                    // Some browsers only allow notifications through the service worker.
+                }
+            };
+
+            const refresh = async ({ render = false, notify = false } = {}) => {
+                if (!statusUrl) return null;
+
+                const response = await fetch(statusUrl, {
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) return null;
+
+                const data = await response.json();
+                const nextUnreadCount = Number(data.unread_count || 0);
+                const nextLatestUnreadId = Number(data.latest_unread_message_id || 0);
+                const hasNewUnread = nextUnreadCount > unreadCount && nextLatestUnreadId !== latestUnreadId;
+
+                setBadge(nextUnreadCount);
+                if (render || menu.classList.contains('is-open')) renderConversations(data.conversations || []);
+
+                const latestUnreadPath = data.latest_unread?.url
+                    ? new URL(data.latest_unread.url, window.location.origin).pathname
+                    : '';
+                const activeVisibleChatHasThisMessage = /^\/mensajes\/[^/]+/.test(window.location.pathname)
+                    && latestUnreadPath === window.location.pathname
+                    && !document.hidden;
+
+                if (notify && hasNewUnread && !activeVisibleChatHasThisMessage) {
+                    playSound();
+                    showBrowserNotification(data.latest_unread);
+                }
+
+                unreadCount = nextUnreadCount;
+                latestUnreadId = nextLatestUnreadId;
+                menu.dataset.latestUnreadId = String(latestUnreadId);
+
+                return data;
+            };
+
+            window.MundoYuriMessages = { refresh };
+            setBadge(unreadCount);
+            document.addEventListener('pointerdown', unlockAudio, { once: true });
+            document.addEventListener('keydown', unlockAudio, { once: true });
+
+            const interval = window.setInterval(() => refresh({ notify: true }).catch(() => {}), 15000);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) refresh({ render: menu.classList.contains('is-open') }).catch(() => {});
+            });
+            window.addEventListener('beforeunload', () => window.clearInterval(interval));
+        })();
     </script>
 @endonce

@@ -272,6 +272,7 @@
         position: relative;
     }
 
+    .portal-message-menu,
     .portal-notification-menu {
         position: relative;
     }
@@ -317,6 +318,9 @@
         font-weight: 600;
         line-height: 1;
     }
+
+    .portal-nav-badge[hidden],
+    .portal-dropdown-badge[hidden] { display: none !important; }
 
     .portal-user-trigger {
         padding: 4px 10px 4px 5px;
@@ -402,6 +406,7 @@
         transform: translateY(0) scale(1);
     }
 
+    .portal-message-dropdown,
     .portal-notification-dropdown {
         position: absolute;
         top: calc(100% + 12px);
@@ -422,6 +427,7 @@
         transition: opacity .18s, visibility .18s, transform .18s;
     }
 
+    .portal-message-menu.is-open .portal-message-dropdown,
     .portal-notification-menu.is-open .portal-notification-dropdown {
         opacity: 1;
         visibility: visible;
@@ -466,6 +472,34 @@
     .portal-notification-actions form { margin: 0; }
     .portal-notification-actions button { border: 0; padding: 0; color: #f7a7c9; background: transparent; font: 600 .7rem 'DM Sans', sans-serif; cursor: pointer; }
     .portal-notification-actions button:hover { color: #fff; }
+
+    .portal-message-list { max-height: min(430px, 58vh); overflow-y: auto; }
+    .portal-message-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 11px;
+        padding: 11px 14px;
+        color: #eee4f0;
+        text-decoration: none;
+    }
+    .portal-message-item:hover { color: #fff; background: rgba(244, 63, 142, .09); }
+    .portal-message-item.is-unread { background: rgba(244, 63, 142, .055); }
+    .portal-message-avatar-wrap { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; }
+    .portal-message-avatar-wrap img,
+    .portal-message-avatar-fallback { width: 42px; height: 42px; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(244, 63, 142, .25); border-radius: 50%; object-fit: cover; }
+    .portal-message-avatar-wrap.is-online::after { content: ''; position: absolute; right: 1px; bottom: 2px; width: 10px; height: 10px; border: 2px solid #160d18; border-radius: 50%; background: #22c55e; box-shadow: 0 0 9px rgba(34, 197, 94, .6); }
+    .portal-message-avatar-fallback { color: #fff; background: linear-gradient(135deg, var(--rose), #7137a7); font-size: .7rem; font-weight: 700; }
+    .portal-message-item > span:nth-child(2) { min-width: 0; }
+    .portal-message-item strong,
+    .portal-message-item small,
+    .portal-message-meta time { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .portal-message-item strong { color: inherit; font-size: .76rem; font-weight: 700; }
+    .portal-message-item small { margin-top: 3px; color: #b9a8bd; font-size: .65rem; }
+    .portal-message-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 38px; }
+    .portal-message-meta time { color: #9b879f; font-size: .58rem; }
+    .portal-message-meta i { min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 5px; border-radius: 9px; color: #fff; background: var(--rose); font-style: normal; font-size: .55rem; font-weight: 700; line-height: 1; }
 
     .portal-user-summary {
         display: flex;
@@ -4312,6 +4346,7 @@
             width: min(275px, calc(100vw - 32px));
         }
 
+        .portal-message-dropdown,
         .portal-notification-dropdown {
             position: fixed;
             top: 68px;

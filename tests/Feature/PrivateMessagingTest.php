@@ -95,6 +95,31 @@ class PrivateMessagingTest extends TestCase
             ->assertJsonPath('messages', []);
     }
 
+    public function test_private_message_status_returns_recent_chats_without_marking_unread_as_read(): void
+    {
+        $sender = User::factory()->create(['name' => 'Luna Remitente', 'alias' => 'luna']);
+        $recipient = User::factory()->create(['name' => 'Mio Receptora', 'alias' => 'mio']);
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'body' => 'Mensaje pendiente para el navbar.',
+            ]);
+
+        $message = DirectMessage::query()->firstOrFail();
+
+        $this->actingAs($recipient)
+            ->getJson(route('messages.status'))
+            ->assertOk()
+            ->assertJsonPath('unread_count', 1)
+            ->assertJsonPath('latest_unread_message_id', $message->id)
+            ->assertJsonPath('latest_unread.title', 'luna')
+            ->assertJsonPath('conversations.0.user_name', 'luna')
+            ->assertJsonPath('conversations.0.unread_count', 1)
+            ->assertJsonPath('conversations.0.preview', 'Mensaje pendiente para el navbar.');
+
+        $this->assertNull($message->fresh()->read_at);
+    }
+
     public function test_private_message_json_send_returns_rendered_message_without_redirect(): void
     {
         $sender = User::factory()->create();
