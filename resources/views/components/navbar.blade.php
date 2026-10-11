@@ -240,7 +240,7 @@
             });
         }
 
-        function closeMessageMenus() {
+        function closePortalMessageMenus() {
             document.querySelectorAll('[data-message-menu].is-open').forEach(function (menu) {
                 menu.classList.remove('is-open');
                 menu.querySelector('[data-message-menu-trigger]')?.setAttribute('aria-expanded', 'false');
@@ -254,7 +254,7 @@
             portalNavToggler.setAttribute('aria-label', isOpen ? 'Cerrar menú principal' : 'Abrir menú principal');
             document.body.classList.toggle('portal-nav-open', isOpen);
             if (isOpen) {
-                closeMessageMenus();
+                closePortalMessageMenus();
                 closeNotificationMenus();
                 document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
                     menu.classList.remove('is-open');
@@ -280,7 +280,7 @@
 
                 if (clickedTrigger) {
                     closePortalNav();
-                    closeMessageMenus();
+                    closePortalMessageMenus();
                     closeNotificationMenus();
                     const willOpen = !menu.classList.contains('is-open');
                     document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
@@ -304,7 +304,7 @@
 
                 if (clickedTrigger) {
                     closePortalNav();
-                    closeMessageMenus();
+                    closePortalMessageMenus();
                     document.querySelectorAll('[data-user-menu].is-open').forEach(function (openMenu) {
                         openMenu.classList.remove('is-open');
                         openMenu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
@@ -337,7 +337,7 @@
                         openMenu.querySelector('[data-user-menu-trigger]')?.setAttribute('aria-expanded', 'false');
                     });
                     const willOpen = !menu.classList.contains('is-open');
-                    closeMessageMenus();
+                    closePortalMessageMenus();
                     menu.classList.toggle('is-open', willOpen);
                     trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
                     if (willOpen) {
@@ -357,7 +357,7 @@
             if (event.key !== 'Escape') return;
             const navWasOpen = portalNavLinks?.classList.contains('active');
             closePortalNav();
-            closeMessageMenus();
+            closePortalMessageMenus();
             closeNotificationMenus();
             if (navWasOpen) portalNavToggler?.focus();
             document.querySelectorAll('[data-user-menu].is-open').forEach(function (menu) {
@@ -545,7 +545,9 @@
             document.addEventListener('pointerdown', unlockAudio, { once: true });
             document.addEventListener('keydown', unlockAudio, { once: true });
 
-            const interval = window.setInterval(() => refresh({ notify: true }).catch(() => {}), 15000);
+            const interval = window.setInterval(() => {
+                if (!document.hidden) refresh({ notify: true }).catch(() => {});
+            }, 15000);
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) refresh({ render: menu.classList.contains('is-open') }).catch(() => {});
             });

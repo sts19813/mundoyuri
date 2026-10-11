@@ -147,7 +147,7 @@ Route::middleware(['auth'])
         Route::get('/mensajes', [ConversationController::class, 'index'])
             ->name('messages.index');
         Route::get('/mensajes/estado', [ConversationController::class, 'status'])
-            ->middleware('throttle:120,1')
+            ->middleware('throttle:240,1')
             ->name('messages.status');
         Route::get('/mensajes/adjuntos/{message}', [ConversationController::class, 'attachment'])
             ->name('messages.attachments.show');
