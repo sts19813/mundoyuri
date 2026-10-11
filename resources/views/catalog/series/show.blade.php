@@ -4,12 +4,35 @@
 
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @php
+        $seoType = $series->catalog_section === 'anime' ? 'anime yuri' : 'serie GL';
+        $seoDescription = \Illuminate\Support\Str::limit(
+            $series->description ?: 'Mira '.$series->title.', una '.$seoType.' con episodios subtitulados en español en Mundo Yuri.',
+            155
+        );
+        $seriesSeoSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'TVSeries',
+            'name' => $series->title,
+            'description' => $seoDescription,
+            'url' => route('catalog.series.show', $series->slug),
+            'image' => $series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null,
+            'genre' => array_filter([$series->genre?->name, 'Girls Love', $series->catalog_section === 'anime' ? 'Yuri' : null]),
+            'numberOfEpisodes' => $series->episodes->count(),
+            'numberOfSeasons' => $series->total_seasons,
+            'datePublished' => $series->published_at?->toDateString(),
+            'inLanguage' => 'es-MX',
+            'countryOfOrigin' => $series->country_of_origin ? ['@type' => 'Country', 'name' => $series->country_of_origin] : null,
+        ];
+        $seriesSeoSchema = array_filter($seriesSeoSchema, fn ($value) => $value !== null && $value !== []);
+    @endphp
     <x-seo
-        :title="$series->title.' online'"
-        :description="\Illuminate\Support\Str::limit($series->description ?: 'Mira '.$series->title.', episodios e información de esta historia Girls’ Love en Mundo Yuri.', 155)"
+        :title="$series->title.' - '.$seoType.' subtitulada en español'"
+        :description="$seoDescription"
         :canonical="route('catalog.series.show', $series->slug)"
         :image="$series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null"
         type="video.tv_show"
+        :schema="$seriesSeoSchema"
     />
     <x-portal-favicon />
     <link

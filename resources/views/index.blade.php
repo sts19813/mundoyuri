@@ -17,14 +17,36 @@
         $catalogUrl = route('catalog.series.index', ['section' => $section?->slug]);
         $continueWatching = $continueWatching ?? collect();
         $homeSeoDescription = $isMixedHome
-            ? 'Explora anime y series GL con nuevos episodios, destacados y colecciones seleccionadas en Mundo Yuri.'
+            ? 'Mira series GL, yuri y anime gratis con subtítulos en español. Descubre episodios, estrenos y recomendaciones Girls Love en Mundo Yuri.'
             : ($section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.');
+        $homeSeoSchema = $isMixedHome ? [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'WebSite',
+                    '@id' => route('home').'#website',
+                    'name' => 'Mundo Yuri',
+                    'url' => route('home'),
+                    'inLanguage' => 'es-MX',
+                ],
+                [
+                    '@type' => 'CollectionPage',
+                    '@id' => route('home').'#webpage',
+                    'name' => 'Series GL, yuri y anime con subtítulos en español',
+                    'description' => $homeSeoDescription,
+                    'url' => route('home'),
+                    'inLanguage' => 'es-MX',
+                    'isPartOf' => ['@id' => route('home').'#website'],
+                    'about' => ['Girls Love', 'Yuri', 'Anime', 'Series GL'],
+                ],
+            ],
+        ] : null;
         $heroDesktopImageUrl = $section?->heroDesktopImageUrl() ?: '/assets/img/wallpaper-login.jpg';
         $heroMobileImageUrl = $section?->heroMobileImageUrl() ?: $heroDesktopImageUrl;
         $heroPrimaryUrl = $section?->heroButtonUrl($section->hero_primary_url, $catalogUrl) ?? $catalogUrl;
         $heroSecondaryUrl = $section?->heroButtonUrl($section->hero_secondary_url, '#novedades') ?? '#novedades';
     @endphp
-    <x-seo title="{{ $isMixedHome ? 'Mundo Yuri: Anime y Series GL' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" />
+    <x-seo title="{{ $isMixedHome ? 'Series GL, Yuri y Anime Gratis Sub Español' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" :schema="$homeSeoSchema" />
     <x-portal-favicon />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">

@@ -5,8 +5,8 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <x-seo
-        :title="$series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title"
-        :description="\Illuminate\Support\Str::limit($episode->description ?: 'Mira '.$episode->title.' de '.$series->title.' online en Mundo Yuri.', 155)"
+        :title="$series->title.' T'.$episode->season_number.' E'.$episode->episode_number.' - Subtítulos en español'"
+        :description="\Illuminate\Support\Str::limit($episode->description ?: 'Mira '.$episode->title.' de '.$series->title.' online gratis con subtítulos en español en Mundo Yuri.', 155)"
         :canonical="route('public.episodes.show', $episode->slug)"
         :image="$episode->imageUrl('1200/630')"
         type="video.episode"

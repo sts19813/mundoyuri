@@ -13,17 +13,26 @@
     $usesDefaultShareImage = blank($image);
     $shareImage = $image ?: asset('assets/img/social/mundo-yuri-og.jpg');
     $pageTitle = str_contains($title, $siteName) ? $title : $title.' | '.$siteName;
+    $siteUrl = route('home');
     $defaultSchema = [
         '@context' => 'https://schema.org',
-        '@type' => 'WebPage',
-        'name' => $pageTitle,
-        'description' => $description,
-        'url' => $canonicalUrl,
-        'inLanguage' => 'es-MX',
-        'isPartOf' => [
-            '@type' => 'WebSite',
-            'name' => $siteName,
-            'url' => route('home'),
+        '@graph' => [
+            [
+                '@type' => 'WebSite',
+                '@id' => $siteUrl.'#website',
+                'name' => $siteName,
+                'url' => $siteUrl,
+                'inLanguage' => 'es-MX',
+            ],
+            [
+                '@type' => 'WebPage',
+                '@id' => $canonicalUrl.'#webpage',
+                'name' => $pageTitle,
+                'description' => $description,
+                'url' => $canonicalUrl,
+                'inLanguage' => 'es-MX',
+                'isPartOf' => ['@id' => $siteUrl.'#website'],
+            ],
         ],
     ];
 @endphp

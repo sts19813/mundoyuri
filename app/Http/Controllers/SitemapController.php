@@ -24,11 +24,11 @@ class SitemapController extends Controller
                 $urls[] = ['loc' => route('catalog.genres.show', $genre->slug), 'lastmod' => $genre->updated_at?->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.7'];
             });
 
-            Series::query()->where('moderation_status', 'approved')->each(function (Series $series) use (&$urls): void {
+            Series::query()->where('moderation_status', 'approved')->whereNotNull('published_at')->each(function (Series $series) use (&$urls): void {
                 $urls[] = ['loc' => route('catalog.series.show', $series->slug), 'lastmod' => $series->updated_at?->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.8'];
             });
 
-            Episode::query()->where('moderation_status', 'approved')->each(function (Episode $episode) use (&$urls): void {
+            Episode::query()->where('moderation_status', 'approved')->whereNotNull('published_at')->each(function (Episode $episode) use (&$urls): void {
                 $urls[] = ['loc' => route('public.episodes.show', $episode->slug), 'lastmod' => $episode->updated_at?->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.6'];
             });
         }

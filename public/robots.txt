@@ -4,6 +4,8 @@ Disallow: /admin/
 Disallow: /dashboard
 Disallow: /profile
 Disallow: /perfil
+Disallow: /mensajes
+Disallow: /notificaciones
 Disallow: /player/
 Disallow: /login
 Disallow: /register

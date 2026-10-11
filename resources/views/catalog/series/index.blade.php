@@ -5,8 +5,8 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <x-seo
-        :title="'Catálogo'.($activeSection ? ' de '.$activeSection->name : '')"
-        :description="$activeSection ? 'Explora el catálogo de '.$activeSection->name.' de Mundo Yuri.' : 'Explora las series, películas y animes de Mundo Yuri.'"
+        :title="$activeSection ? 'Series '.$activeSection->name.' y Yuri subtituladas en español' : 'Series GL, Yuri y Anime Gratis Sub Español'"
+        :description="$activeSection ? 'Explora '.$activeSection->name.' con episodios y fichas en español en Mundo Yuri.' : 'Explora series GL, yuri, doramas y anime gratis con subtítulos en español. Encuentra episodios, estrenos y tus historias Girls Love favoritas.'"
         :canonical="route('catalog.series.index')"
     />
     <x-portal-favicon />
@@ -24,8 +24,8 @@
     <div class="container-xl px-4">
         <div class="catalog-heading">
             <div>
-                <p class="catalog-eyebrow">{{ $activeSection ? 'Explora '.$activeSection->name : 'Explora Mundo Yuri' }}</p>
-                <h1 class="section-title">{{ $activeSection ? 'Catálogo '.$activeSection->name : 'Catálogo' }}</h1>
+                <p class="catalog-eyebrow">{{ $activeSection ? 'Explora '.$activeSection->name : 'Series GL, Yuri y Anime' }}</p>
+                <h1 class="section-title">{{ $activeSection ? 'Catálogo '.$activeSection->name : 'Series GL y Yuri subtituladas en español' }}</h1>
             </div>
             <p class="catalog-results" id="catalogResults" aria-live="polite"></p>
         </div>
