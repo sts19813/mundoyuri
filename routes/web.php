@@ -161,7 +161,7 @@ Route::middleware(['auth'])
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
             ->name('messages.show');
         Route::post('/mensajes/{user}', [ConversationController::class, 'store'])
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:120,1')
             ->name('messages.store');
 
         Route::get('/notificaciones', [NotificationController::class, 'index'])

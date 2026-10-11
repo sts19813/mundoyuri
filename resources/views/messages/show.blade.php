@@ -526,6 +526,11 @@ class="messenger-body"
                 });
 
                 if (!response.ok) {
+                    if (response.status === 429) {
+                        showComposerError('Espera unos segundos y vuelve a intentar. La app recibió demasiadas solicitudes seguidas.');
+                        return;
+                    }
+
                     if (response.status === 422) {
                         const data = await response.json();
                         const firstError = Object.values(data.errors || {}).flat()[0] || data.message || 'No se pudo enviar el mensaje.';
@@ -533,7 +538,7 @@ class="messenger-body"
                         return;
                     }
 
-                    HTMLFormElement.prototype.submit.call(composer);
+                    showComposerError('No se pudo enviar el mensaje. Revisa tu conexión e inténtalo de nuevo.');
                     return;
                 }
 
