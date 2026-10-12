@@ -53,6 +53,7 @@ class EpisodeSourcePlayerController extends Controller
 
         abort_unless($playlistUrl, 404);
 
+        $cacheBuster = (string) $request->query('v', $this->stableHlsCacheBuster($source));
         $origin = $this->trustedMundoYuriOrigin($request);
         $remoteResponse = Http::timeout(15)
             ->withHeaders([
@@ -61,11 +62,10 @@ class EpisodeSourcePlayerController extends Controller
                 'Referer' => $origin.'/',
                 'User-Agent' => 'MundoYuriPlayer/1.0',
             ])
-            ->get($playlistUrl);
+            ->get($this->urlWithCacheBuster($playlistUrl, $cacheBuster));
 
         abort_unless($remoteResponse->successful(), $remoteResponse->status());
 
-        $cacheBuster = (string) $request->query('v', bin2hex(random_bytes(8)));
         $playlist = $this->rewriteHlsPlaylist($remoteResponse->body(), $playlistUrl, $source, $cacheBuster);
 
         return response($playlist, 200, [
@@ -116,7 +116,31 @@ class EpisodeSourcePlayerController extends Controller
             ]);
         }
 
+        $query = parse_url($absoluteUrl, PHP_URL_QUERY);
+
+        if (str_contains($path, '/audios/') && ($query === null || $query === false || $query === '')) {
+            return $this->urlWithCacheBuster($absoluteUrl, $cacheBuster);
+        }
+
         return $absoluteUrl;
+    }
+
+    private function urlWithCacheBuster(string $url, string $cacheBuster): string
+    {
+        if ($cacheBuster === '') {
+            return $url;
+        }
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'v='.rawurlencode($cacheBuster);
+    }
+
+    private function stableHlsCacheBuster(EpisodeSource $source): string
+    {
+        return 'audio4-ts-20261011-'.substr(hash('sha256', implode('|', [
+            $source->getKey(),
+            $source->video_url,
+            optional($source->updated_at)->timestamp ?? 0,
+        ])), 0, 16);
     }
 
     private function trustedMundoYuriOrigin(Request $request): string
