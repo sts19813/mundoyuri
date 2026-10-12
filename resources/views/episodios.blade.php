@@ -414,16 +414,79 @@
         };
         let directPlayer = null;
         let hlsPlayer = null;
+        let hlsStallMonitor = null;
+        let hlsLastPlaybackTime = 0;
+        let hlsLastPlaybackCheckAt = 0;
+        let hlsLastRecoveryAt = 0;
         let lastProgressSaveAt = 0;
         let pendingResumeSeconds = Number(watchProgressConfig.resumeSeconds || 0);
         let resumeApplied = false;
         const subtitleTracks = @json($episodeSubtitleTracks ?? []);
 
         function destroyHlsPlayer() {
+            stopHlsStallMonitor();
             if (hlsPlayer) {
                 hlsPlayer.destroy();
                 hlsPlayer = null;
             }
+        }
+
+        function stopHlsStallMonitor() {
+            if (hlsStallMonitor) {
+                window.clearInterval(hlsStallMonitor);
+                hlsStallMonitor = null;
+            }
+        }
+
+        function recoverHlsPlayback(reason = 'stall') {
+            if (!hlsPlayer || !playerVideo || playerVideo.paused || playerVideo.ended) {
+                return;
+            }
+
+            const now = Date.now();
+            if (now - hlsLastRecoveryAt < 8000) {
+                return;
+            }
+            hlsLastRecoveryAt = now;
+
+            const resumeAt = Math.max((playerVideo.currentTime || 0) - 0.25, 0);
+            try {
+                hlsPlayer.stopLoad();
+                hlsPlayer.startLoad(resumeAt);
+                hlsPlayer.recoverMediaError();
+            } catch (error) {
+                try {
+                    hlsPlayer.startLoad(resumeAt);
+                } catch (startError) {
+                    console.warn('No se pudo recuperar HLS', reason, startError);
+                }
+            }
+        }
+
+        function startHlsStallMonitor() {
+            stopHlsStallMonitor();
+            hlsLastPlaybackTime = playerVideo?.currentTime || 0;
+            hlsLastPlaybackCheckAt = Date.now();
+            hlsStallMonitor = window.setInterval(() => {
+                if (!hlsPlayer || !playerVideo || playerVideo.paused || playerVideo.ended || playerVideo.seeking) {
+                    hlsLastPlaybackTime = playerVideo?.currentTime || 0;
+                    hlsLastPlaybackCheckAt = Date.now();
+                    return;
+                }
+
+                const currentTime = playerVideo.currentTime || 0;
+                const moved = Math.abs(currentTime - hlsLastPlaybackTime) > 0.15;
+                if (moved) {
+                    hlsLastPlaybackTime = currentTime;
+                    hlsLastPlaybackCheckAt = Date.now();
+                    return;
+                }
+
+                if (Date.now() - hlsLastPlaybackCheckAt > 7000) {
+                    recoverHlsPlayback('playback-stall');
+                    hlsLastPlaybackCheckAt = Date.now();
+                }
+            }, 2500);
         }
 
         if (playerVideo && window.Plyr) {
@@ -496,12 +559,17 @@
 
             if (window.Hls && Hls.isSupported()) {
                 hlsPlayer = new Hls({
-                    manifestLoadingMaxRetry: 4,
-                    levelLoadingMaxRetry: 4,
-                    fragLoadingMaxRetry: 4,
+                    manifestLoadingMaxRetry: 6,
+                    manifestLoadingRetryDelay: 1000,
+                    levelLoadingMaxRetry: 6,
+                    levelLoadingRetryDelay: 1000,
+                    fragLoadingMaxRetry: 8,
+                    fragLoadingRetryDelay: 1000,
+                    fragLoadingTimeOut: 20000,
+                    appendErrorMaxRetry: 4,
                 });
                 hlsPlayer.on(Hls.Events.ERROR, (event, data) => {
-                    if (!data.fatal) {
+                    if (!data.fatal && data.details !== Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
                         return;
                     }
 
@@ -509,10 +577,13 @@
                         hlsPlayer.startLoad();
                     } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
                         hlsPlayer.recoverMediaError();
+                    } else {
+                        recoverHlsPlayback(data.details || 'hls-error');
                     }
                 });
                 hlsPlayer.loadSource(url);
                 hlsPlayer.attachMedia(playerVideo);
+                startHlsStallMonitor();
             } else if (playerVideo.canPlayType('application/vnd.apple.mpegurl')) {
                 playerVideo.src = url;
             } else if (directPlayer) {
