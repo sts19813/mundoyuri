@@ -138,6 +138,31 @@ class="messenger-body"
         </div>
     </main>
 
+    <div class="messenger-image-viewer" data-image-viewer hidden role="dialog" aria-modal="true" aria-label="Visor de imagen">
+        <div class="messenger-image-viewer-backdrop" data-image-viewer-close></div>
+        <header class="messenger-image-viewer-header">
+            <strong data-image-viewer-title>Imagen</strong>
+            <button type="button" data-image-viewer-close aria-label="Cerrar visor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </header>
+        <div class="messenger-image-viewer-stage" data-image-viewer-stage>
+            <button class="messenger-image-viewer-nav is-previous" type="button" data-image-viewer-previous aria-label="Imagen anterior">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <img data-image-viewer-image alt="" draggable="false">
+            <button class="messenger-image-viewer-nav is-next" type="button" data-image-viewer-next aria-label="Imagen siguiente">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+        <footer class="messenger-image-viewer-controls">
+            <button type="button" data-image-viewer-zoom-out aria-label="Alejar">−</button>
+            <button type="button" data-image-viewer-reset aria-label="Restablecer zoom"><span data-image-viewer-zoom>100%</span></button>
+            <button type="button" data-image-viewer-zoom-in aria-label="Acercar">+</button>
+            <small>Pellizca, arrastra o toca dos veces para ampliar</small>
+        </footer>
+    </div>
+
     <script>
         const syncMessengerViewport = () => {
             const viewport = window.visualViewport;
@@ -166,6 +191,209 @@ class="messenger-body"
         window.addEventListener('orientationchange', () => window.setTimeout(syncMessengerViewport, 250));
 
         const conversation = document.getElementById('conversationMessages');
+        const imageViewer = document.querySelector('[data-image-viewer]');
+        const imageViewerStage = imageViewer?.querySelector('[data-image-viewer-stage]');
+        const imageViewerImage = imageViewer?.querySelector('[data-image-viewer-image]');
+        const imageViewerTitle = imageViewer?.querySelector('[data-image-viewer-title]');
+        const imageViewerZoom = imageViewer?.querySelector('[data-image-viewer-zoom]');
+        const imageViewerPrevious = imageViewer?.querySelector('[data-image-viewer-previous]');
+        const imageViewerNext = imageViewer?.querySelector('[data-image-viewer-next]');
+        const imageViewerPointers = new Map();
+        let imageViewerIndex = 0;
+        let imageViewerScale = 1;
+        let imageViewerTranslateX = 0;
+        let imageViewerTranslateY = 0;
+        let imageViewerDragStart = null;
+        let imageViewerPinchStart = null;
+        let imageViewerTouchStart = null;
+        let imageViewerTouchPinched = false;
+        let imageViewerLastTap = 0;
+        let imageViewerReturnFocus = null;
+
+        const imageViewerItems = () => Array.from(conversation?.querySelectorAll('[data-image-lightbox]') || []);
+        const clampImageViewerScale = (scale) => Math.min(5, Math.max(1, scale));
+
+        const clampImageViewerPosition = () => {
+            if (!imageViewerStage || !imageViewerImage) return;
+            const maxX = Math.max(0, (imageViewerImage.clientWidth * imageViewerScale - imageViewerStage.clientWidth) / 2);
+            const maxY = Math.max(0, (imageViewerImage.clientHeight * imageViewerScale - imageViewerStage.clientHeight) / 2);
+            imageViewerTranslateX = Math.min(maxX, Math.max(-maxX, imageViewerTranslateX));
+            imageViewerTranslateY = Math.min(maxY, Math.max(-maxY, imageViewerTranslateY));
+        };
+
+        const renderImageViewerTransform = () => {
+            if (!imageViewerImage) return;
+            clampImageViewerPosition();
+            imageViewerImage.style.transform = `translate3d(${imageViewerTranslateX}px, ${imageViewerTranslateY}px, 0) scale(${imageViewerScale})`;
+            if (imageViewerZoom) imageViewerZoom.textContent = `${Math.round(imageViewerScale * 100)}%`;
+            imageViewerStage?.classList.toggle('is-zoomed', imageViewerScale > 1);
+        };
+
+        const resetImageViewerTransform = () => {
+            imageViewerScale = 1;
+            imageViewerTranslateX = 0;
+            imageViewerTranslateY = 0;
+            renderImageViewerTransform();
+        };
+
+        const setImageViewerScale = (scale) => {
+            imageViewerScale = clampImageViewerScale(scale);
+            if (imageViewerScale === 1) {
+                imageViewerTranslateX = 0;
+                imageViewerTranslateY = 0;
+            }
+            renderImageViewerTransform();
+        };
+
+        const showImageViewerItem = (index) => {
+            const items = imageViewerItems();
+            if (!imageViewerImage || items.length === 0) return;
+            imageViewerIndex = (index + items.length) % items.length;
+            const item = items[imageViewerIndex];
+            const alt = item.dataset.imageAlt || item.querySelector('img')?.alt || 'Imagen adjunta';
+            resetImageViewerTransform();
+            imageViewerImage.src = item.href;
+            imageViewerImage.alt = alt;
+            if (imageViewerTitle) imageViewerTitle.textContent = alt;
+            const hasMultipleImages = items.length > 1;
+            if (imageViewerPrevious) imageViewerPrevious.hidden = !hasMultipleImages;
+            if (imageViewerNext) imageViewerNext.hidden = !hasMultipleImages;
+        };
+
+        const openImageViewer = (item) => {
+            if (!imageViewer) return;
+            const items = imageViewerItems();
+            const index = items.indexOf(item);
+            if (index < 0) return;
+            imageViewerReturnFocus = item;
+            imageViewer.hidden = false;
+            document.body.classList.add('messenger-image-viewer-open');
+            showImageViewerItem(index);
+            imageViewer.querySelector('[data-image-viewer-close]:not(.messenger-image-viewer-backdrop)')?.focus({ preventScroll: true });
+        };
+
+        const closeImageViewer = () => {
+            if (!imageViewer || imageViewer.hidden) return;
+            imageViewer.hidden = true;
+            imageViewerImage?.removeAttribute('src');
+            imageViewerPointers.clear();
+            imageViewerDragStart = null;
+            imageViewerPinchStart = null;
+            imageViewerTouchStart = null;
+            imageViewerTouchPinched = false;
+            document.body.classList.remove('messenger-image-viewer-open');
+            imageViewerReturnFocus?.focus({ preventScroll: true });
+        };
+
+        imageViewer?.querySelectorAll('[data-image-viewer-close]').forEach((button) => {
+            button.addEventListener('click', closeImageViewer);
+        });
+        imageViewerPrevious?.addEventListener('click', () => showImageViewerItem(imageViewerIndex - 1));
+        imageViewerNext?.addEventListener('click', () => showImageViewerItem(imageViewerIndex + 1));
+        imageViewer?.querySelector('[data-image-viewer-zoom-in]')?.addEventListener('click', () => setImageViewerScale(imageViewerScale + .5));
+        imageViewer?.querySelector('[data-image-viewer-zoom-out]')?.addEventListener('click', () => setImageViewerScale(imageViewerScale - .5));
+        imageViewer?.querySelector('[data-image-viewer-reset]')?.addEventListener('click', resetImageViewerTransform);
+
+        imageViewerStage?.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            setImageViewerScale(imageViewerScale + (event.deltaY < 0 ? .35 : -.35));
+        }, { passive: false });
+
+        imageViewerStage?.addEventListener('pointerdown', (event) => {
+            if (event.target.closest('button')) return;
+            imageViewerStage.setPointerCapture?.(event.pointerId);
+            imageViewerPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+            if (imageViewerPointers.size === 1) {
+                if (event.pointerType === 'touch') {
+                    imageViewerTouchStart = { x: event.clientX, y: event.clientY, moved: false };
+                    imageViewerTouchPinched = false;
+                }
+                imageViewerDragStart = {
+                    x: event.clientX,
+                    y: event.clientY,
+                    translateX: imageViewerTranslateX,
+                    translateY: imageViewerTranslateY,
+                };
+            } else if (imageViewerPointers.size === 2) {
+                imageViewerTouchPinched = true;
+                const [first, second] = Array.from(imageViewerPointers.values());
+                imageViewerPinchStart = {
+                    distance: Math.hypot(second.x - first.x, second.y - first.y),
+                    scale: imageViewerScale,
+                    centerX: (first.x + second.x) / 2,
+                    centerY: (first.y + second.y) / 2,
+                    translateX: imageViewerTranslateX,
+                    translateY: imageViewerTranslateY,
+                };
+            }
+        });
+
+        imageViewerStage?.addEventListener('pointermove', (event) => {
+            if (!imageViewerPointers.has(event.pointerId)) return;
+            imageViewerPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            if (event.pointerType === 'touch' && imageViewerTouchStart
+                && Math.hypot(event.clientX - imageViewerTouchStart.x, event.clientY - imageViewerTouchStart.y) > 10) {
+                imageViewerTouchStart.moved = true;
+            }
+
+            if (imageViewerPointers.size === 2 && imageViewerPinchStart) {
+                const [first, second] = Array.from(imageViewerPointers.values());
+                const distance = Math.hypot(second.x - first.x, second.y - first.y);
+                const centerX = (first.x + second.x) / 2;
+                const centerY = (first.y + second.y) / 2;
+                imageViewerScale = clampImageViewerScale(imageViewerPinchStart.scale * (distance / Math.max(1, imageViewerPinchStart.distance)));
+                imageViewerTranslateX = imageViewerPinchStart.translateX + centerX - imageViewerPinchStart.centerX;
+                imageViewerTranslateY = imageViewerPinchStart.translateY + centerY - imageViewerPinchStart.centerY;
+                renderImageViewerTransform();
+                return;
+            }
+
+            if (imageViewerPointers.size === 1 && imageViewerDragStart && imageViewerScale > 1) {
+                imageViewerTranslateX = imageViewerDragStart.translateX + event.clientX - imageViewerDragStart.x;
+                imageViewerTranslateY = imageViewerDragStart.translateY + event.clientY - imageViewerDragStart.y;
+                renderImageViewerTransform();
+            }
+        });
+
+        const releaseImageViewerPointer = (event) => {
+            const isTouchTap = event.pointerType === 'touch'
+                && imageViewerPointers.size === 1
+                && imageViewerTouchStart
+                && !imageViewerTouchStart.moved
+                && !imageViewerTouchPinched;
+            imageViewerPointers.delete(event.pointerId);
+            imageViewerDragStart = null;
+            imageViewerPinchStart = null;
+
+            if (isTouchTap) {
+                const now = Date.now();
+                if (now - imageViewerLastTap < 300) setImageViewerScale(imageViewerScale > 1 ? 1 : 2.5);
+                imageViewerLastTap = now;
+            }
+
+            if (imageViewerPointers.size === 1) {
+                const remaining = Array.from(imageViewerPointers.values())[0];
+                imageViewerDragStart = {
+                    x: remaining.x,
+                    y: remaining.y,
+                    translateX: imageViewerTranslateX,
+                    translateY: imageViewerTranslateY,
+                };
+            } else if (imageViewerPointers.size === 0) {
+                imageViewerTouchStart = null;
+                imageViewerTouchPinched = false;
+            }
+        };
+
+        imageViewerStage?.addEventListener('pointerup', releaseImageViewerPointer);
+        imageViewerStage?.addEventListener('pointercancel', releaseImageViewerPointer);
+        imageViewerStage?.addEventListener('dblclick', () => {
+            if (Date.now() - imageViewerLastTap < 500) return;
+            setImageViewerScale(imageViewerScale > 1 ? 1 : 2.5);
+        });
+        window.addEventListener('resize', renderImageViewerTransform);
+
         let latestMessageId = conversation
             ? Math.max(0, ...Array.from(conversation.querySelectorAll('[data-message-id]')).map((message) => Number(message.dataset.messageId) || 0))
             : 0;
@@ -372,12 +600,27 @@ class="messenger-body"
         });
 
         document.addEventListener('keydown', (event) => {
+            if (!imageViewer?.hidden) {
+                if (event.key === 'Escape') closeImageViewer();
+                if (event.key === 'ArrowLeft') showImageViewerItem(imageViewerIndex - 1);
+                if (event.key === 'ArrowRight') showImageViewerItem(imageViewerIndex + 1);
+                if (['Escape', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault();
+                return;
+            }
             if (event.key !== 'Escape') return;
             closeMessageMenus();
             clearReplyTarget();
         });
 
         conversation?.addEventListener('click', async (event) => {
+            const imageAttachment = event.target.closest('[data-image-lightbox]');
+            if (imageAttachment) {
+                event.preventDefault();
+                openImageViewer(imageAttachment);
+                closeMessageMenus();
+                return;
+            }
+
             const replyButton = event.target.closest('[data-message-reply]');
             if (replyButton) {
                 event.preventDefault();

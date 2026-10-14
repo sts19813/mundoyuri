@@ -39,7 +39,13 @@
             @if(filled($message->body))<p>{{ $message->body }}</p>@endif
             @if($message->hasAttachment())
                 @if($message->attachmentIsImage())
-                    <a class="messenger-attachment-image" href="{{ route('messages.attachments.show', $message) }}" target="_blank" rel="noopener">
+                    <a
+                        class="messenger-attachment-image"
+                        href="{{ route('messages.attachments.show', $message) }}"
+                        data-image-lightbox
+                        data-image-alt="{{ $message->attachment_name }}"
+                        aria-label="Ver imagen {{ $message->attachment_name }}"
+                    >
                         <img src="{{ route('messages.attachments.show', $message) }}" alt="{{ $message->attachment_name }}" loading="lazy">
                     </a>
                 @else

@@ -316,10 +316,17 @@ class PrivateMessagingTest extends TestCase
         $this->assertTrue($imageMessage->attachmentIsImage());
         Storage::disk('local')->assertExists($imageMessage->attachment_path);
 
-        $this->get(route('messages.show', $recipient))
+        $conversationResponse = $this->get(route('messages.show', $recipient))
             ->assertOk()
             ->assertSee($imageMessage->attachment_name)
-            ->assertSee(route('messages.attachments.show', $imageMessage), false);
+            ->assertSee(route('messages.attachments.show', $imageMessage), false)
+            ->assertSee('data-image-lightbox', false)
+            ->assertSee('data-image-viewer', false)
+            ->assertSee('Pellizca, arrastra o toca dos veces para ampliar');
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a[^>]*class="messenger-attachment-image"[^>]*target="_blank"/',
+            $conversationResponse->getContent(),
+        );
         $this->get(route('messages.attachments.show', $imageMessage))
             ->assertOk()
             ->assertHeader('content-type', $imageMessage->attachment_mime);
