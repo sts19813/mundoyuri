@@ -18,8 +18,8 @@ class DirectMessageAttachmentService
      */
     public function store(UploadedFile $file): array
     {
-        $originalName = Str::limit(basename(str_replace('\\', '/', $file->getClientOriginalName())), 255, '');
         $mime = $file->getMimeType();
+        $originalName = Str::limit(basename(str_replace('\\', '/', $file->getClientOriginalName())), 255, '');
 
         if ($this->shouldCompress($file, $mime)) {
             $compressed = $this->compressImage($file, $originalName);
@@ -33,7 +33,9 @@ class DirectMessageAttachmentService
 
         return [
             'attachment_path' => $path,
-            'attachment_name' => $originalName,
+            'attachment_name' => str_starts_with((string) $mime, 'image/')
+                ? $this->imageName($this->extensionForMime($mime, $originalName))
+                : $originalName,
             'attachment_mime' => $mime,
             'attachment_size' => $file->getSize(),
         ];
@@ -104,7 +106,7 @@ class DirectMessageAttachmentService
 
         return [
             'attachment_path' => $path,
-            'attachment_name' => Str::limit(pathinfo($originalName, PATHINFO_FILENAME).'.'.$extension, 255, ''),
+            'attachment_name' => $this->imageName($extension),
             'attachment_mime' => $mime,
             'attachment_size' => Storage::disk('local')->size($path),
         ];
@@ -154,5 +156,21 @@ class DirectMessageAttachmentService
         @unlink($temporaryPath);
 
         return null;
+    }
+
+    private function imageName(string $extension): string
+    {
+        return 'mundoyuri-'.now('America/Merida')->format('Y-m-d-gia').'.'.strtolower($extension);
+    }
+
+    private function extensionForMime(?string $mime, string $originalName): string
+    {
+        return match ($mime) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            default => strtolower(pathinfo($originalName, PATHINFO_EXTENSION) ?: 'img'),
+        };
     }
 }

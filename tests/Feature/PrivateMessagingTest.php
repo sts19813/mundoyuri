@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\CommunityReaction;
+use App\Models\Conversation;
 use App\Models\DirectMessage;
+use App\Models\Sticker;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -312,7 +314,7 @@ class PrivateMessagingTest extends TestCase
 
         $imageMessage = DirectMessage::query()->firstOrFail();
         $this->assertSame('', $imageMessage->body);
-        $this->assertContains($imageMessage->attachment_name, ['recuerdo.png', 'recuerdo.webp', 'recuerdo.jpg']);
+        $this->assertMatchesRegularExpression('/^mundoyuri-\d{4}-\d{2}-\d{2}-\d{1,2}\d{2}(am|pm)\.(webp|jpg)$/', $imageMessage->attachment_name);
         $this->assertTrue($imageMessage->attachmentIsImage());
         Storage::disk('local')->assertExists($imageMessage->attachment_path);
 
@@ -364,9 +366,95 @@ class PrivateMessagingTest extends TestCase
 
         $message = DirectMessage::query()->firstOrFail();
 
-        $this->assertSame('animacion.gif', $message->attachment_name);
+        $this->assertMatchesRegularExpression('/^mundoyuri-\d{4}-\d{2}-\d{2}-\d{1,2}\d{2}(am|pm)\.gif$/', $message->attachment_name);
         $this->assertSame('image/gif', $message->attachment_mime);
         $this->assertStringEndsWith('.gif', $message->attachment_path);
+    }
+
+    public function test_chat_loads_older_messages_without_reloading_the_conversation(): void
+    {
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $conversation = Conversation::create([
+            'user_one_id' => min($sender->id, $recipient->id),
+            'user_two_id' => max($sender->id, $recipient->id),
+            'last_message_at' => now(),
+        ]);
+
+        foreach (range(1, 55) as $number) {
+            $conversation->messages()->create([
+                'sender_id' => $sender->id,
+                'recipient_id' => $recipient->id,
+                'body' => 'Mensaje de historial '.$number,
+            ]);
+        }
+
+        $oldestVisible = $conversation->messages()->latest('id')->skip(49)->firstOrFail();
+
+        $this->actingAs($recipient)
+            ->getJson(route('messages.older', $sender).'?before_id='.$oldestVisible->id)
+            ->assertOk()
+            ->assertJsonCount(5, 'messages')
+            ->assertJsonPath('has_more', false)
+            ->assertSee('Mensaje de historial 1');
+    }
+
+    public function test_chat_exposes_media_documents_and_links_only_to_participants(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->actingAs($sender)->post(route('messages.store', $recipient), [
+            'body' => 'Mira https://mundoyuri.com/series/harmony-secret.',
+            'attachment' => UploadedFile::fake()->image('foto.png', 20, 20),
+        ]);
+        $this->actingAs($sender)->post(route('messages.store', $recipient), [
+            'attachment' => UploadedFile::fake()->create('guia.pdf', 10, 'application/pdf'),
+        ]);
+
+        $this->actingAs($recipient)
+            ->getJson(route('messages.media', $sender).'?type=images')
+            ->assertOk()
+            ->assertJsonCount(1, 'items');
+        $this->getJson(route('messages.media', $sender).'?type=documents')
+            ->assertOk()
+            ->assertJsonCount(1, 'items');
+        $this->getJson(route('messages.media', $sender).'?type=links')
+            ->assertOk()
+            ->assertJsonPath('items.0.url', 'https://mundoyuri.com/series/harmony-secret');
+        $this->get(route('messages.show', $sender))
+            ->assertOk()
+            ->assertSee('messenger-inline-link', false)
+            ->assertSee('href="https://mundoyuri.com/series/harmony-secret"', false);
+
+        $this->actingAs($stranger)
+            ->getJson(route('messages.media', $sender).'?type=images')
+            ->assertOk()
+            ->assertJsonPath('items', []);
+    }
+
+    public function test_users_can_send_transparent_or_animated_stickers(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'is_sticker' => true,
+                'attachment' => UploadedFile::fake()->create('brillo.gif', 12, 'image/gif'),
+            ])
+            ->assertRedirect();
+
+        $sticker = DirectMessage::query()->firstOrFail();
+        $this->assertTrue($sticker->is_sticker);
+        $this->assertSame('image/gif', $sticker->attachment_mime);
+        $this->actingAs($recipient)
+            ->get(route('messages.show', $sender))
+            ->assertOk()
+            ->assertSee('is-sticker', false);
     }
 
     public function test_sender_can_delete_message_without_removing_database_content_for_moderation(): void
@@ -563,6 +651,117 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHasErrors('body');
 
         $this->assertDatabaseCount('direct_messages', 0);
+    }
+
+    public function test_users_only_see_and_manage_their_own_private_stickers(): void
+    {
+        Storage::fake('local');
+        $first = User::factory()->create();
+        $second = User::factory()->create();
+
+        $general = Sticker::query()->create([
+            'owner_id' => $first->id,
+            'name' => 'general.png',
+            'path' => 'stickers/general.png',
+            'mime' => 'image/png',
+            'size' => 42,
+            'is_general' => true,
+            'approved_at' => now(),
+            'approved_by' => $first->id,
+        ]);
+        $private = Sticker::query()->create([
+            'owner_id' => $first->id,
+            'name' => 'privado.png',
+            'path' => 'stickers/privado.png',
+            'mime' => 'image/png',
+            'size' => 42,
+        ]);
+        Storage::disk('local')->put($general->path, 'general');
+        Storage::disk('local')->put($private->path, 'privado');
+
+        $this->actingAs($second)
+            ->getJson(route('stickers.index'))
+            ->assertOk()
+            ->assertJsonPath('general.0.id', $general->id)
+            ->assertJsonPath('mine', [])
+            ->assertJsonMissing(['id' => $private->id]);
+
+        $this->actingAs($second)->get(route('stickers.file', $private))->assertNotFound();
+        $this->actingAs($second)->deleteJson(route('stickers.destroy', $private))->assertForbidden();
+        $this->actingAs($first)->deleteJson(route('stickers.destroy', $private))->assertNoContent();
+        $this->assertDatabaseMissing('stickers', ['id' => $private->id]);
+    }
+
+    public function test_user_can_create_a_private_sticker_and_send_only_visible_stickers(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $other = User::factory()->create();
+
+        $response = $this->actingAs($sender)
+            ->post(route('stickers.store'), ['sticker' => UploadedFile::fake()->image('mi-sticker.png', 120, 120)])
+            ->assertCreated();
+        $sticker = Sticker::query()->firstOrFail();
+
+        $response->assertJsonPath('sticker.id', $sticker->id);
+        $this->assertFalse($sticker->is_general);
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), ['sticker_id' => $sticker->id])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $this->assertDatabaseHas('direct_messages', [
+            'sender_id' => $sender->id,
+            'attachment_path' => $sticker->path,
+            'is_sticker' => true,
+        ]);
+
+        $this->actingAs($other)
+            ->post(route('messages.store', $recipient), ['sticker_id' => $sticker->id])
+            ->assertSessionHasErrors('sticker_id');
+    }
+
+    public function test_admin_can_publish_and_approve_personal_stickers(): void
+    {
+        Storage::fake('local');
+        $this->seed(RolePermissionSeeder::class);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->assignRole('admin');
+        $creator = User::factory()->create();
+        $private = Sticker::query()->create([
+            'owner_id' => $creator->id,
+            'name' => 'candidata.gif',
+            'path' => 'stickers/candidata.gif',
+            'mime' => 'image/gif',
+            'size' => 42,
+        ]);
+        Storage::disk('local')->put($private->path, 'GIF89a');
+
+        $this->actingAs($admin)
+            ->get(route('admin.stickers.index'))
+            ->assertOk()
+            ->assertSee('candidata.gif')
+            ->assertSee('Personal');
+
+        $this->patch(route('admin.stickers.approve', $private))
+            ->assertRedirect();
+        $this->assertDatabaseHas('stickers', [
+            'id' => $private->id,
+            'is_general' => true,
+            'approved_by' => $admin->id,
+        ]);
+
+        $this->post(route('admin.stickers.store'), [
+            'sticker' => UploadedFile::fake()->image('oficial.jpg', 120, 120),
+        ])->assertRedirect();
+        $this->assertDatabaseHas('stickers', [
+            'name' => 'oficial.jpg',
+            'is_general' => true,
+            'approved_by' => $admin->id,
+        ]);
     }
 
     public function test_admin_can_review_private_conversations_and_deleted_message_content(): void

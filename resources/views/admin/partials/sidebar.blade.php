@@ -178,6 +178,12 @@
                             </a>
                         </div>
                         <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.stickers.*') ? 'active' : '' }}" href="{{ route('admin.stickers.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-heart fs-2"></i></span>
+                                <span class="menu-title">Stickers</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.catalog-sections.*') ? 'active' : '' }}" href="{{ route('admin.catalog-sections.index') }}">
                                 <span class="menu-icon"><i class="ki-outline ki-abstract-26 fs-2"></i></span>
                                 <span class="menu-title">Inicio y portada</span>

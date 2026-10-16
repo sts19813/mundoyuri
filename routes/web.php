@@ -50,6 +50,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\RichEditorUploadController;
 use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StickerController;
 use App\Http\Controllers\UserPresenceController;
 use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserFollowController;
@@ -149,6 +150,12 @@ Route::middleware(['auth'])
 
         Route::get('/mensajes', [ConversationController::class, 'index'])
             ->name('messages.index');
+        Route::get('/stickers', [StickerController::class, 'index'])->name('stickers.index');
+        Route::post('/stickers', [StickerController::class, 'store'])
+            ->middleware('throttle:20,1')
+            ->name('stickers.store');
+        Route::delete('/stickers/{sticker}', [StickerController::class, 'destroy'])->name('stickers.destroy');
+        Route::get('/stickers/{sticker}/archivo', [StickerController::class, 'file'])->name('stickers.file');
         Route::get('/mensajes/estado', [ConversationController::class, 'status'])
             ->middleware('throttle:240,1')
             ->name('messages.status');
@@ -159,6 +166,10 @@ Route::middleware(['auth'])
         Route::post('/mensajes/mensaje/{message}/reacciones', [DirectMessageReactionController::class, 'store'])
             ->middleware('throttle:60,1')
             ->name('messages.reactions.store');
+        Route::get('/mensajes/{user}/anteriores', [ConversationController::class, 'older'])
+            ->name('messages.older');
+        Route::get('/mensajes/{user}/multimedia', [ConversationController::class, 'media'])
+            ->name('messages.media');
         Route::get('/mensajes/{user}/actualizaciones', [ConversationController::class, 'poll'])
             ->name('messages.poll');
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
@@ -321,6 +332,19 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
             'update' => 'admin.badges.update',
             'destroy' => 'admin.badges.destroy',
         ]);
+
+    Route::get('/stickers', [App\Http\Controllers\Admin\StickerController::class, 'index'])
+        ->middleware('admin')
+        ->name('admin.stickers.index');
+    Route::post('/stickers', [App\Http\Controllers\Admin\StickerController::class, 'store'])
+        ->middleware('admin')
+        ->name('admin.stickers.store');
+    Route::patch('/stickers/{sticker}/aprobar', [App\Http\Controllers\Admin\StickerController::class, 'approve'])
+        ->middleware('admin')
+        ->name('admin.stickers.approve');
+    Route::delete('/stickers/{sticker}', [App\Http\Controllers\Admin\StickerController::class, 'destroy'])
+        ->middleware('admin')
+        ->name('admin.stickers.destroy');
 
     Route::resource('categorias-foros', AdminForumCategoryController::class)
         ->except('show')

@@ -21,6 +21,7 @@ class DirectMessage extends Model
         'attachment_name',
         'attachment_mime',
         'attachment_size',
+        'is_sticker',
         'read_at',
         'deleted_at',
         'deleted_by',
@@ -32,6 +33,7 @@ class DirectMessage extends Model
             'read_at' => 'datetime',
             'deleted_at' => 'datetime',
             'attachment_size' => 'integer',
+            'is_sticker' => 'boolean',
         ];
     }
 

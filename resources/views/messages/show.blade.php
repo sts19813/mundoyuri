@@ -63,6 +63,7 @@ class="messenger-body"
                             <summary aria-label="Opciones de la conversación">•••</summary>
                             <div>
                                 <a href="{{ $otherUser->publicProfileUrl() }}">Ver perfil</a>
+                                <button type="button" data-media-panel-open>Multimedia, archivos y enlaces</button>
                                 @if($viewerHasBlocked)
                                     <form method="POST" action="{{ route('users.block.destroy', $otherUser) }}">
                                         @csrf @method('DELETE')
@@ -80,7 +81,10 @@ class="messenger-body"
 
                     <div class="messenger-message-pane" id="conversationMessages">
                         @if($messages->nextPageUrl())
-                            <div class="messenger-older-link"><a href="{{ $messages->nextPageUrl() }}">Ver mensajes anteriores</a></div>
+                            <div class="messenger-older-link" data-older-messages>
+                                <button type="button" data-load-older-messages data-older-url="{{ route('messages.older', $otherUser) }}">Cargar mensajes anteriores</button>
+                                <noscript><a href="{{ $messages->nextPageUrl() }}">Ver mensajes anteriores</a></noscript>
+                            </div>
                         @endif
 
                         @forelse($messages as $message)
@@ -108,6 +112,7 @@ class="messenger-body"
                         @else
                             <div class="messenger-reply-composer is-hidden" data-reply-composer-preview>
                                 <div>
+                                    <img data-reply-image alt="" hidden>
                                     <strong data-reply-author></strong>
                                     <span data-reply-preview></span>
                                 </div>
@@ -116,10 +121,15 @@ class="messenger-body"
                             <form method="POST" action="{{ route('messages.store', $otherUser) }}" class="messenger-composer" enctype="multipart/form-data" data-message-composer>
                                 @csrf
                                 <input type="hidden" name="reply_to_message_id" value="" data-reply-input>
+                                <input type="hidden" name="is_sticker" value="0" data-sticker-input>
+                                <input type="hidden" name="sticker_id" value="" data-sticker-id-input>
                                 <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
                                 <label for="message-attachment" class="messenger-attach-button" aria-label="Adjuntar imagen o documento" title="Adjuntar imagen o documento">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.5-9.5a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9"/></svg>
                                 </label>
+                                <button class="messenger-sticker-button" type="button" data-sticker-toggle aria-label="Abrir stickers" title="Stickers">
+                                    <span aria-hidden="true">♡</span>
+                                </button>
                                 <div class="messenger-compose-input">
                                     <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
                                     <textarea id="message-body" name="body" rows="1" maxlength="2000" placeholder="Aa">{{ old('body') }}</textarea>
@@ -129,6 +139,19 @@ class="messenger-body"
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.8 2.5a1 1 0 0 0-1.05-.18L2.9 10.15a1 1 0 0 0 .1 1.87l7.12 2.37 2.37 7.12a1 1 0 0 0 .9.68h.05a1 1 0 0 0 .91-.59l7.63-17.9a1 1 0 0 0-.18-1.2ZM12 13.06 6.12 11.1l11.9-5.22Z"/></svg>
                                 </button>
                             </form>
+                            <section class="messenger-sticker-panel" data-sticker-panel hidden aria-label="Stickers">
+                                <header><strong>Stickers</strong><button type="button" data-sticker-close aria-label="Cerrar stickers">×</button></header>
+                                <div class="messenger-media-tabs" role="tablist" aria-label="Tipo de stickers">
+                                    <button type="button" class="is-active" data-sticker-tab="general">Generales</button>
+                                    <button type="button" data-sticker-tab="mine">Mis stickers</button>
+                                </div>
+                                <div class="messenger-sticker-grid" data-sticker-grid aria-live="polite"></div>
+                                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-sticker-create-file hidden>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mt-3">
+                                    <small>Crea stickers privados con PNG, JPG, WebP o GIF. Se conservan transparencias y animaciones.</small>
+                                    <button type="button" class="btn btn-sm btn-light-primary" data-sticker-create>Crear</button>
+                                </div>
+                            </section>
                             @error('body')<p class="messenger-form-error">{{ $message }}</p>@enderror
                             @error('attachment')<p class="messenger-form-error">{{ $message }}</p>@enderror
                         @endif
@@ -162,6 +185,23 @@ class="messenger-body"
             <small>Pellizca, arrastra o toca dos veces para ampliar</small>
         </footer>
     </div>
+
+    <section class="messenger-media-panel" data-media-panel hidden role="dialog" aria-modal="true" aria-label="Multimedia, archivos y enlaces" data-media-url="{{ route('messages.media', $otherUser) }}">
+        <div class="messenger-media-panel-backdrop" data-media-panel-close></div>
+        <div class="messenger-media-panel-content">
+            <header>
+                <div><span>Conversación con {{ $otherUser->alias ?: $otherUser->name }}</span><h2>Multimedia</h2></div>
+                <button type="button" data-media-panel-close aria-label="Cerrar multimedia">×</button>
+            </header>
+            <div class="messenger-media-tabs" role="tablist" aria-label="Tipo de contenido">
+                <button type="button" role="tab" aria-selected="true" data-media-tab="images">Fotos</button>
+                <button type="button" role="tab" aria-selected="false" data-media-tab="documents">Archivos</button>
+                <button type="button" role="tab" aria-selected="false" data-media-tab="links">Enlaces</button>
+            </div>
+            <div class="messenger-media-results" data-media-results aria-live="polite"></div>
+            <button class="messenger-media-more" type="button" data-media-more hidden>Mostrar más</button>
+        </div>
+    </section>
 
     <script>
         const syncMessengerViewport = () => {
@@ -397,6 +437,9 @@ class="messenger-body"
         let latestMessageId = conversation
             ? Math.max(0, ...Array.from(conversation.querySelectorAll('[data-message-id]')).map((message) => Number(message.dataset.messageId) || 0))
             : 0;
+        let oldestMessageId = conversation
+            ? Math.min(...Array.from(conversation.querySelectorAll('[data-message-id]')).map((message) => Number(message.dataset.messageId) || Number.MAX_SAFE_INTEGER))
+            : 0;
 
         const shouldStayPinnedToLatest = () => {
             if (!conversation) return false;
@@ -444,6 +487,60 @@ class="messenger-body"
             });
         };
 
+        const olderMessages = conversation?.querySelector('[data-older-messages]');
+        const olderMessagesButton = olderMessages?.querySelector('[data-load-older-messages]');
+        let loadingOlderMessages = false;
+
+        const prependMessages = (messages) => {
+            if (!conversation || !Array.isArray(messages) || messages.length === 0) return;
+
+            const previousHeight = conversation.scrollHeight;
+            const previousTop = conversation.scrollTop;
+            const fragment = document.createDocumentFragment();
+
+            messages.forEach((message) => {
+                if (!message?.id || conversation.querySelector(`[data-message-id="${message.id}"]`)) return;
+                const template = document.createElement('template');
+                template.innerHTML = message.html || '';
+                const item = template.content.firstElementChild;
+                if (!item) return;
+                fragment.append(item);
+                oldestMessageId = Math.min(oldestMessageId || Number.MAX_SAFE_INTEGER, Number(message.id) || Number.MAX_SAFE_INTEGER);
+            });
+
+            if (fragment.childNodes.length) {
+                if (olderMessages) olderMessages.after(fragment);
+                else conversation.prepend(fragment);
+                conversation.scrollTop = previousTop + conversation.scrollHeight - previousHeight;
+            }
+        };
+
+        olderMessagesButton?.addEventListener('click', async () => {
+            if (loadingOlderMessages || !oldestMessageId) return;
+            loadingOlderMessages = true;
+            olderMessagesButton.disabled = true;
+            olderMessagesButton.textContent = 'Cargando mensajes…';
+
+            try {
+                const url = new URL(olderMessagesButton.dataset.olderUrl, window.location.origin);
+                url.searchParams.set('before_id', oldestMessageId);
+                const response = await fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!response.ok) throw new Error('No se pudieron cargar los mensajes.');
+                const data = await response.json();
+                prependMessages(data.messages || []);
+                if (!data.has_more) olderMessages?.remove();
+            } catch (error) {
+                olderMessagesButton.textContent = 'Reintentar cargar mensajes';
+                return;
+            } finally {
+                loadingOlderMessages = false;
+                if (olderMessages?.isConnected) {
+                    olderMessagesButton.disabled = false;
+                    if (olderMessagesButton.textContent !== 'Reintentar cargar mensajes') olderMessagesButton.textContent = 'Cargar mensajes anteriores';
+                }
+            }
+        });
+
         let audioContext = null;
         const unlockMessageAudio = () => {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -490,9 +587,147 @@ class="messenger-body"
         }
 
         const attachmentInput = document.getElementById('message-attachment');
+        const stickerInput = document.querySelector('[data-sticker-input]');
+        const stickerIdInput = document.querySelector('[data-sticker-id-input]');
+        const stickerPanel = document.querySelector('[data-sticker-panel]');
+        const stickerToggle = document.querySelector('[data-sticker-toggle]');
+        const attachmentHint = document.querySelector('[data-message-attachment-hint]');
+        const stickerGrid = document.querySelector('[data-sticker-grid]');
+        const stickerCreateFile = document.querySelector('[data-sticker-create-file]');
+        let stickerType = 'general';
+        let stickerCatalog = { general: [], mine: [] };
+        const clearStickerSelection = () => {
+            if (stickerInput) stickerInput.value = '0';
+            if (stickerIdInput) stickerIdInput.value = '';
+            stickerToggle?.classList.remove('is-active');
+        };
+        const selectSticker = (sticker) => {
+            if (attachmentInput) attachmentInput.value = '';
+            if (stickerInput) stickerInput.value = '1';
+            if (stickerIdInput) stickerIdInput.value = sticker.id;
+            stickerToggle?.classList.add('is-active');
+            if (attachmentHint) attachmentHint.textContent = `${sticker.name} listo para enviar`;
+            closeStickerPanel();
+        };
+        const renderStickerCatalog = () => {
+            if (!stickerGrid) return;
+            stickerGrid.replaceChildren();
+            const stickers = stickerCatalog[stickerType] || [];
+            if (!stickers.length) {
+                const empty = document.createElement('small');
+                empty.className = 'messenger-sticker-empty';
+                empty.textContent = stickerType === 'mine' ? 'Aún no tienes stickers personales.' : 'Todavía no hay stickers generales.';
+                stickerGrid.append(empty);
+                return;
+            }
+            stickers.forEach((sticker) => {
+                const item = document.createElement('span');
+                item.className = 'messenger-sticker-item';
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.stickerSelect = String(sticker.id);
+                button.setAttribute('aria-label', `Enviar sticker ${sticker.name}`);
+                const image = document.createElement('img');
+                image.src = sticker.url;
+                image.alt = sticker.name;
+                image.loading = 'lazy';
+                button.append(image);
+                item.append(button);
+                if (stickerType === 'mine') {
+                    const remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.className = 'messenger-sticker-delete';
+                    remove.dataset.stickerDelete = String(sticker.id);
+                    remove.setAttribute('aria-label', `Eliminar ${sticker.name}`);
+                    remove.textContent = '×';
+                    item.append(remove);
+                }
+                stickerGrid.append(item);
+            });
+        };
+        const loadStickerCatalog = async () => {
+            if (!stickerPanel) return;
+            try {
+                const response = await fetch(@js(route('stickers.index')), {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                if (!response.ok) throw new Error();
+                stickerCatalog = await response.json();
+                renderStickerCatalog();
+            } catch (error) {
+                if (stickerGrid) stickerGrid.textContent = 'No se pudieron cargar los stickers.';
+            }
+        };
+        const closeStickerPanel = () => { if (stickerPanel) stickerPanel.hidden = true; };
+
+        stickerToggle?.addEventListener('click', async () => {
+            stickerPanel.hidden = !stickerPanel.hidden;
+            if (!stickerPanel.hidden) {
+                await loadStickerCatalog();
+                stickerPanel.querySelector('button')?.focus();
+            }
+        });
+        document.querySelector('[data-sticker-close]')?.addEventListener('click', closeStickerPanel);
+        document.querySelector('.messenger-attach-button')?.addEventListener('click', clearStickerSelection);
+        stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.addEventListener('click', () => {
+            stickerType = tab.dataset.stickerTab;
+            stickerPanel.querySelectorAll('[data-sticker-tab]').forEach((candidate) => candidate.classList.toggle('is-active', candidate === tab));
+            renderStickerCatalog();
+        }));
+        stickerGrid?.addEventListener('click', async (event) => {
+            const select = event.target.closest('[data-sticker-select]');
+            if (select) {
+                const sticker = (stickerCatalog[stickerType] || []).find((item) => item.id === Number(select.dataset.stickerSelect));
+                if (sticker) selectSticker(sticker);
+                return;
+            }
+            const remove = event.target.closest('[data-sticker-delete]');
+            if (!remove || !window.confirm('¿Eliminar este sticker personal?')) return;
+            try {
+                const response = await fetch(`${@js(url('/stickers'))}/${remove.dataset.stickerDelete}`, {
+                    method: 'DELETE',
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    credentials: 'same-origin',
+                });
+                if (!response.ok) throw new Error();
+                clearStickerSelection();
+                await loadStickerCatalog();
+            } catch (error) {
+                showComposerError('No se pudo eliminar el sticker. Inténtalo de nuevo.');
+            }
+        });
+        document.querySelector('[data-sticker-create]')?.addEventListener('click', () => {
+            stickerCreateFile?.click();
+        });
+        stickerCreateFile?.addEventListener('change', async () => {
+            const file = stickerCreateFile.files?.[0];
+            if (!file) return;
+            const data = new FormData();
+            data.append('sticker', file);
+            try {
+                const response = await fetch(@js(route('stickers.store')), {
+                    method: 'POST',
+                    body: data,
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    credentials: 'same-origin',
+                });
+                if (!response.ok) throw new Error();
+                const result = await response.json();
+                stickerType = 'mine';
+                stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.stickerTab === 'mine'));
+                await loadStickerCatalog();
+                selectSticker(result.sticker);
+            } catch (error) {
+                showComposerError('No se pudo crear el sticker. Usa una imagen de hasta 10 MB e inténtalo de nuevo.');
+            } finally {
+                stickerCreateFile.value = '';
+            }
+        });
         attachmentInput?.addEventListener('change', () => {
-            const hint = document.querySelector('[data-message-attachment-hint]');
-            if (hint) hint.textContent = attachmentInput.files?.[0]?.name || 'Imagen o documento · máximo 20 MB';
+            if (attachmentHint) attachmentHint.textContent = attachmentInput.files?.[0]?.name || 'Imagen o documento · máximo 20 MB';
+            if (attachmentInput.files?.[0]) clearStickerSelection();
+            closeStickerPanel();
         });
 
         const messageBody = document.getElementById('message-body');
@@ -556,12 +791,17 @@ class="messenger-body"
         const replyPreview = document.querySelector('[data-reply-composer-preview]');
         const replyAuthor = document.querySelector('[data-reply-author]');
         const replyPreviewText = document.querySelector('[data-reply-preview]');
+        const replyImage = document.querySelector('[data-reply-image]');
 
         const clearReplyTarget = () => {
             if (replyInput) replyInput.value = '';
             replyPreview?.classList.add('is-hidden');
             if (replyAuthor) replyAuthor.textContent = '';
             if (replyPreviewText) replyPreviewText.textContent = '';
+            if (replyImage) {
+                replyImage.hidden = true;
+                replyImage.removeAttribute('src');
+            }
         };
 
         const setReplyTarget = (message) => {
@@ -569,12 +809,112 @@ class="messenger-body"
             replyInput.value = message.dataset.messageId || '';
             if (replyAuthor) replyAuthor.textContent = `Responder a ${message.dataset.messageAuthor || 'mensaje'}`;
             if (replyPreviewText) replyPreviewText.textContent = message.dataset.messagePreview || '';
+            if (replyImage) {
+                const imageUrl = message.dataset.messageImageUrl;
+                replyImage.hidden = !imageUrl;
+                if (imageUrl) replyImage.src = imageUrl;
+                else replyImage.removeAttribute('src');
+            }
             replyPreview.classList.remove('is-hidden');
             messageBody?.focus({ preventScroll: true });
             message.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         };
 
         document.querySelector('[data-clear-reply]')?.addEventListener('click', clearReplyTarget);
+
+        const mediaPanel = document.querySelector('[data-media-panel]');
+        const mediaResults = mediaPanel?.querySelector('[data-media-results]');
+        const mediaMore = mediaPanel?.querySelector('[data-media-more]');
+        let mediaType = 'images';
+        let mediaPage = 1;
+        let loadingMedia = false;
+
+        const renderMediaItems = (items, replace = false) => {
+            if (!mediaResults) return;
+            if (replace) mediaResults.replaceChildren();
+            if (!items.length && replace) {
+                const empty = document.createElement('p');
+                empty.className = 'messenger-media-empty';
+                empty.textContent = mediaType === 'images' ? 'Aún no hay fotos en esta conversación.' : (mediaType === 'documents' ? 'Aún no hay archivos en esta conversación.' : 'Aún no hay enlaces en esta conversación.');
+                mediaResults.append(empty);
+                return;
+            }
+
+            items.forEach((item) => {
+                const link = document.createElement('a');
+                link.href = item.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+
+                if (mediaType === 'images') {
+                    link.className = 'messenger-media-image';
+                    const image = document.createElement('img');
+                    image.src = item.url;
+                    image.alt = item.name || 'Imagen compartida';
+                    image.loading = 'lazy';
+                    link.append(image);
+                } else {
+                    link.className = 'messenger-media-item';
+                    const title = document.createElement('strong');
+                    title.textContent = mediaType === 'links' ? (item.title || item.url) : (item.name || 'Archivo');
+                    const detail = document.createElement('small');
+                    detail.textContent = mediaType === 'links' ? item.url : `${item.size || ''} · ${item.sent_at || ''}`;
+                    link.append(title, detail);
+                }
+                mediaResults.append(link);
+            });
+        };
+
+        const loadMedia = async ({ reset = false } = {}) => {
+            if (!mediaPanel || loadingMedia) return;
+            loadingMedia = true;
+            if (reset) {
+                mediaPage = 1;
+                mediaResults.replaceChildren();
+            }
+            mediaResults?.classList.add('is-loading');
+
+            try {
+                const url = new URL(mediaPanel.dataset.mediaUrl, window.location.origin);
+                url.searchParams.set('type', mediaType);
+                url.searchParams.set('page', mediaPage);
+                const response = await fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                renderMediaItems(data.items || [], mediaPage === 1);
+                mediaMore.hidden = !data.has_more;
+                if (data.has_more) mediaPage += 1;
+            } catch (error) {
+                renderMediaItems([], true);
+                if (mediaResults?.firstChild) mediaResults.firstChild.textContent = 'No se pudo cargar el contenido. Inténtalo otra vez.';
+                mediaMore.hidden = true;
+            } finally {
+                loadingMedia = false;
+                mediaResults?.classList.remove('is-loading');
+            }
+        };
+
+        const closeMediaPanel = () => {
+            if (!mediaPanel || mediaPanel.hidden) return;
+            mediaPanel.hidden = true;
+            document.body.classList.remove('messenger-media-panel-open');
+            document.querySelector('[data-media-panel-open]')?.focus({ preventScroll: true });
+        };
+        document.querySelector('[data-media-panel-open]')?.addEventListener('click', () => {
+            mediaPanel.hidden = false;
+            document.body.classList.add('messenger-media-panel-open');
+            document.querySelector('.messenger-chat-actions[open]')?.removeAttribute('open');
+            loadMedia({ reset: true });
+            mediaPanel.querySelector('[data-media-panel-close]')?.focus({ preventScroll: true });
+        });
+        mediaPanel?.querySelectorAll('[data-media-panel-close]').forEach((button) => button.addEventListener('click', closeMediaPanel));
+        mediaPanel?.querySelectorAll('[data-media-tab]').forEach((tab) => tab.addEventListener('click', () => {
+            if (tab.dataset.mediaTab === mediaType) return;
+            mediaType = tab.dataset.mediaTab;
+            mediaPanel.querySelectorAll('[data-media-tab]').forEach((candidate) => candidate.setAttribute('aria-selected', candidate === tab ? 'true' : 'false'));
+            loadMedia({ reset: true });
+        }));
+        mediaMore?.addEventListener('click', () => loadMedia());
 
         document.addEventListener('click', (event) => {
             const menu = event.target.closest('.messenger-message-menu');
@@ -605,6 +945,11 @@ class="messenger-body"
                 if (event.key === 'ArrowLeft') showImageViewerItem(imageViewerIndex - 1);
                 if (event.key === 'ArrowRight') showImageViewerItem(imageViewerIndex + 1);
                 if (['Escape', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault();
+                return;
+            }
+            if (mediaPanel && !mediaPanel.hidden && event.key === 'Escape') {
+                closeMediaPanel();
+                event.preventDefault();
                 return;
             }
             if (event.key !== 'Escape') return;
@@ -789,10 +1134,11 @@ class="messenger-body"
                 appendMessages(data.messages || [], { forceScroll: true });
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
                 composer.reset();
+                clearStickerSelection();
+                closeStickerPanel();
                 clearReplyTarget();
                 if (attachmentInput) {
-                    const hint = document.querySelector('[data-message-attachment-hint]');
-                    if (hint) hint.textContent = 'Imagen o documento · máximo 20 MB';
+                    if (attachmentHint) attachmentHint.textContent = 'Imagen o documento · máximo 20 MB';
                 }
                 resizeMessageBody();
                 syncMessengerViewport();

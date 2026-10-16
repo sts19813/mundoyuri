@@ -12,10 +12,12 @@
         'messenger-message',
         'is-outgoing' => $outgoing,
         'is-incoming' => ! $outgoing,
+        'is-sticker' => $message->is_sticker,
     ])
     data-message-id="{{ $message->id }}"
     data-message-author="{{ $messageAuthor }}"
     data-message-preview="{{ $message->previewText() }}"
+    @if($message->attachmentIsImage()) data-message-image-url="{{ route('messages.attachments.show', $message) }}" @endif
 >
     @if(!$outgoing)
         <span @class(['messenger-avatar-wrap', 'messenger-message-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()])>
@@ -32,11 +34,14 @@
         @else
             @if($message->replyTo)
                 <a class="messenger-reply-quote" href="#message-{{ $message->replyTo->id }}" data-jump-message="{{ $message->replyTo->id }}">
+                    @if($message->replyTo->attachmentIsImage())
+                        <img src="{{ route('messages.attachments.show', $message->replyTo) }}" alt="" loading="lazy">
+                    @endif
                     <strong>{{ $message->replyTo->sender_id === $viewer->id ? 'Tú' : $message->replyTo->sender?->displayName() }}</strong>
-                    <span>{{ $message->replyTo->previewText() }}</span>
+                    <span>{{ $message->replyTo->attachmentIsImage() ? 'Imagen' : $message->replyTo->previewText() }}</span>
                 </a>
             @endif
-            @if(filled($message->body))<p>{{ $message->body }}</p>@endif
+            @if(filled($message->body))<p>{!! \App\Support\DirectMessageLinkFormatter::html($message->body) !!}</p>@endif
             @if($message->hasAttachment())
                 @if($message->attachmentIsImage())
                     <a

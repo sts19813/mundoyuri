@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Conversation;
 use App\Models\CommunityReaction;
 use App\Models\DirectMessage;
+use App\Models\Sticker;
 use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
 use App\Services\DirectMessageAttachmentService;
+use App\Support\DirectMessageLinkFormatter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -174,6 +176,102 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function older(Request $request, User $user): JsonResponse
+    {
+        $viewer = $request->user();
+        abort_if($viewer->is($user), 404);
+
+        $conversation = Conversation::between($viewer, $user)->first();
+        $beforeId = max(0, $request->integer('before_id'));
+
+        if (! $conversation || $beforeId === 0) {
+            return response()->json(['messages' => [], 'has_more' => false]);
+        }
+
+        $messages = $conversation->messages()
+            ->where('id', '<', $beforeId)
+            ->with(['sender', 'recipient', 'replyTo.sender'])
+            ->latest('id')
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->values();
+        $this->hydrateMessages($messages, $viewer);
+
+        $oldestId = $messages->first()?->id;
+
+        return response()->json([
+            'messages' => $messages
+                ->map(fn (DirectMessage $message) => $this->messagePayload($message, $viewer, $user))
+                ->values(),
+            'has_more' => $oldestId
+                ? $conversation->messages()->where('id', '<', $oldestId)->exists()
+                : false,
+        ]);
+    }
+
+    public function media(Request $request, User $user): JsonResponse
+    {
+        $viewer = $request->user();
+        abort_if($viewer->is($user), 404);
+
+        $conversation = Conversation::between($viewer, $user)->first();
+        $type = $request->string('type', 'images')->toString();
+        abort_unless(in_array($type, ['images', 'documents', 'links'], true), 404);
+
+        if (! $conversation) {
+            return response()->json(['items' => [], 'has_more' => false]);
+        }
+
+        $messages = $conversation->messages()
+            ->whereNull('deleted_at')
+            ->latest('id');
+
+        if ($type === 'images') {
+            $page = $messages
+                ->whereNotNull('attachment_path')
+                ->where('attachment_mime', 'like', 'image/%')
+                ->simplePaginate(24);
+
+            return response()->json([
+                'items' => $page->getCollection()->map(fn (DirectMessage $message) => $this->mediaAttachmentPayload($message, $viewer, 'image'))->values(),
+                'has_more' => $page->hasMorePages(),
+            ]);
+        }
+
+        if ($type === 'documents') {
+            $page = $messages
+                ->whereNotNull('attachment_path')
+                ->where(function (Builder $query): void {
+                    $query->whereNull('attachment_mime')->orWhere('attachment_mime', 'not like', 'image/%');
+                })
+                ->simplePaginate(24);
+
+            return response()->json([
+                'items' => $page->getCollection()->map(fn (DirectMessage $message) => $this->mediaAttachmentPayload($message, $viewer, 'document'))->values(),
+                'has_more' => $page->hasMorePages(),
+            ]);
+        }
+
+        $page = $messages
+            ->where('body', 'like', '%http%')
+            ->simplePaginate(50);
+        $links = $page->getCollection()
+            ->flatMap(fn (DirectMessage $message) => collect(DirectMessageLinkFormatter::urls($message->body))
+                ->map(fn (string $url) => [
+                    'url' => $url,
+                    'title' => parse_url($url, PHP_URL_HOST) ?: $url,
+                    'sent_at' => $message->created_at?->timezone('America/Merida')->format('d M · g:i a'),
+                    'outgoing' => $message->sender_id === $viewer->id,
+                ]))
+            ->values();
+
+        return response()->json([
+            'items' => $links,
+            'has_more' => $page->hasMorePages(),
+        ]);
+    }
+
     public function store(Request $request, User $user, DirectMessageAttachmentService $attachments): JsonResponse|RedirectResponse
     {
         $viewer = $request->user();
@@ -186,8 +284,10 @@ class ConversationController extends Controller
         }
 
         $validated = $request->validate([
-            'body' => ['nullable', 'string', 'max:2000', 'required_without:attachment'],
+            'body' => ['nullable', 'string', 'max:2000', 'required_without_all:attachment,sticker_id'],
             'reply_to_message_id' => ['nullable', 'integer'],
+            'is_sticker' => ['nullable', 'boolean'],
+            'sticker_id' => ['nullable', 'integer'],
             'attachment' => [
                 'nullable',
                 'file',
@@ -197,15 +297,35 @@ class ConversationController extends Controller
         ]);
 
         $body = trim($validated['body'] ?? '');
+        $sticker = null;
+        if (! empty($validated['sticker_id'])) {
+            $sticker = Sticker::query()
+                ->visibleTo($viewer)
+                ->find($validated['sticker_id']);
+
+            if (! $sticker) {
+                throw ValidationException::withMessages(['sticker_id' => 'Este sticker ya no está disponible.']);
+            }
+        }
+
+        if ($sticker && $request->hasFile('attachment')) {
+            throw ValidationException::withMessages(['attachment' => 'Envía un sticker o un archivo, no ambos a la vez.']);
+        }
+
+        $isSticker = $sticker !== null || $request->boolean('is_sticker');
         $replyToMessageId = $this->validReplyTargetId($viewer, $user, $validated['reply_to_message_id'] ?? null);
 
-        if ($body === '' && ! $request->hasFile('attachment')) {
+        if ($body === '' && ! $request->hasFile('attachment') && ! $sticker) {
             return back()
                 ->withErrors(['body' => 'Escribe un mensaje o adjunta un archivo antes de enviarlo.'])
                 ->withInput();
         }
 
-        $attachment = null;
+        if ($isSticker && ! $sticker && (! $request->hasFile('attachment') || ! str_starts_with((string) $request->file('attachment')->getMimeType(), 'image/'))) {
+            throw ValidationException::withMessages(['attachment' => 'El sticker debe ser una imagen PNG, WebP o GIF.']);
+        }
+
+        $attachment = $sticker?->attachmentPayload();
         if ($request->hasFile('attachment')) {
             $attachment = $attachments->store($request->file('attachment'));
 
@@ -215,7 +335,7 @@ class ConversationController extends Controller
         }
 
         try {
-            $message = DB::transaction(function () use ($viewer, $user, $body, $attachment, $replyToMessageId): DirectMessage {
+            $message = DB::transaction(function () use ($viewer, $user, $body, $attachment, $replyToMessageId, $isSticker): DirectMessage {
                 [$userOneId, $userTwoId] = Conversation::participantIds($viewer, $user);
 
                 $conversation = Conversation::query()->firstOrCreate([
@@ -228,6 +348,7 @@ class ConversationController extends Controller
                     'recipient_id' => $user->id,
                     'reply_to_message_id' => $replyToMessageId,
                     'body' => $body,
+                    'is_sticker' => $isSticker,
                     ...($attachment ?? []),
                 ]);
 
@@ -417,6 +538,22 @@ class ConversationController extends Controller
                 'viewer' => $viewer,
                 'otherUser' => $otherUser,
             ])->render(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mediaAttachmentPayload(DirectMessage $message, User $viewer, string $type): array
+    {
+        return [
+            'id' => $message->id,
+            'type' => $type,
+            'url' => route('messages.attachments.show', $message),
+            'name' => $message->attachment_name ?: 'Archivo',
+            'size' => $message->attachmentSizeLabel(),
+            'sent_at' => $message->created_at?->timezone('America/Merida')->format('d M · g:i a'),
+            'outgoing' => $message->sender_id === $viewer->id,
         ];
     }
 
