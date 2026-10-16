@@ -54,7 +54,7 @@ class PublicCatalogController extends Controller
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
             ->whereHas('series', fn($query) => $query->where('catalog_section', $section->slug))
-            ->orderByDesc('published_at')
+            ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->orderByDesc('id')
             ->get()
             ->unique('series_id')
@@ -123,7 +123,7 @@ class PublicCatalogController extends Controller
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at')
                 ->whereIn('catalog_section', ['series-gl', 'anime']))
-            ->orderByDesc('published_at')
+            ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->orderByDesc('id')
             ->get()
             ->unique('series_id')
@@ -138,7 +138,7 @@ class PublicCatalogController extends Controller
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
             ->whereHas('series', fn($query) => $query->where('catalog_section', $sectionSlug))
-            ->orderByDesc('published_at')
+            ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->orderByDesc('id')
             ->get()
             ->unique('series_id')
@@ -195,7 +195,7 @@ class PublicCatalogController extends Controller
                 ->with('series')
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at')
-                ->latest('published_at')
+                ->orderByRaw('COALESCE(release_date, published_at) DESC')
                 ->first();
         }
 
@@ -241,7 +241,7 @@ class PublicCatalogController extends Controller
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->latest('published_at')
+            ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->take(8)
             ->get();
 

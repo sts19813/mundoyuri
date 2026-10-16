@@ -106,6 +106,49 @@ class HomeLatestEpisodesSectionTest extends TestCase
         $this->assertStringNotContainsString('moonshadow-episodio-3', $episodesSection);
     }
 
+    public function test_home_latest_episodes_use_the_original_release_date_over_the_upload_date(): void
+    {
+        $genre = Genre::query()->create([
+            'name' => 'GL',
+            'slug' => 'gl',
+            'is_active' => true,
+        ]);
+
+        $lateUpload = $this->createSeries($genre->id, 'Serie antigua cargada tarde', 'serie-antigua-cargada-tarde', 'series-gl');
+        Episode::query()->create([
+            'series_id' => $lateUpload->id,
+            'title' => 'Episodio antiguo',
+            'slug' => 'episodio-antiguo-cargado-tarde',
+            'season_number' => 1,
+            'episode_number' => 8,
+            'release_date' => now()->subYear(),
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
+
+        foreach (range(1, 12) as $number) {
+            $series = $this->createSeries($genre->id, "Estreno {$number}", "estreno-{$number}", 'series-gl');
+
+            Episode::query()->create([
+                'series_id' => $series->id,
+                'title' => "Episodio estreno {$number}",
+                'slug' => "episodio-estreno-{$number}",
+                'season_number' => 1,
+                'episode_number' => 1,
+                'release_date' => now()->subDays($number),
+                'moderation_status' => 'approved',
+                'published_at' => now()->subMinutes($number),
+            ]);
+        }
+
+        $episodesSection = $this->extractLatestEpisodesSection(
+            $this->get(route('home'))->assertOk()->getContent()
+        );
+
+        $this->assertStringNotContainsString('episodio-antiguo-cargado-tarde', $episodesSection);
+        $this->assertStringContainsString('episodio-estreno-12', $episodesSection);
+    }
+
     private function createSeries(int $genreId, string $title, string $slug, string $catalogSection): Series
     {
         return Series::query()->create([
