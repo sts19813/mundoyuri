@@ -601,13 +601,16 @@ class="messenger-body"
             if (stickerIdInput) stickerIdInput.value = '';
             stickerToggle?.classList.remove('is-active');
         };
-        const selectSticker = (sticker) => {
+        const sendSticker = (sticker) => {
+            if (!composer || stickerGrid?.dataset.sending === 'true') return;
             if (attachmentInput) attachmentInput.value = '';
+            if (messageBody) messageBody.value = '';
             if (stickerInput) stickerInput.value = '1';
             if (stickerIdInput) stickerIdInput.value = sticker.id;
-            stickerToggle?.classList.add('is-active');
-            if (attachmentHint) attachmentHint.textContent = `${sticker.name} listo para enviar`;
+            clearReplyTarget();
             closeStickerPanel();
+            stickerGrid?.setAttribute('data-sending', 'true');
+            composer.requestSubmit();
         };
         const renderStickerCatalog = () => {
             if (!stickerGrid) return;
@@ -680,7 +683,7 @@ class="messenger-body"
             const select = event.target.closest('[data-sticker-select]');
             if (select) {
                 const sticker = (stickerCatalog[stickerType] || []).find((item) => item.id === Number(select.dataset.stickerSelect));
-                if (sticker) selectSticker(sticker);
+                if (sticker) sendSticker(sticker);
                 return;
             }
             const remove = event.target.closest('[data-sticker-delete]');
@@ -718,7 +721,7 @@ class="messenger-body"
                 stickerType = 'mine';
                 stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.stickerTab === 'mine'));
                 await loadStickerCatalog();
-                selectSticker(result.sticker);
+                sendSticker(result.sticker);
             } catch (error) {
                 showComposerError('No se pudo crear el sticker. Usa una imagen de hasta 10 MB e inténtalo de nuevo.');
             } finally {
@@ -1146,6 +1149,7 @@ class="messenger-body"
                 messageBody?.focus({ preventScroll: true });
             } finally {
                 submitButton?.removeAttribute('disabled');
+                stickerGrid?.removeAttribute('data-sending');
             }
         });
     </script>
