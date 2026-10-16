@@ -128,7 +128,7 @@ class="messenger-body"
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.5-9.5a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9"/></svg>
                                 </label>
                                 <button class="messenger-sticker-button" type="button" data-sticker-toggle aria-label="Abrir stickers" title="Stickers">
-                                    <span aria-hidden="true">♡</span>
+                                    <span class="brand-heart messenger-sticker-heart" aria-hidden="true"></span>
                                 </button>
                                 <div class="messenger-compose-input">
                                     <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
@@ -147,9 +147,8 @@ class="messenger-body"
                                 </div>
                                 <div class="messenger-sticker-grid" data-sticker-grid aria-live="polite"></div>
                                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-sticker-create-file hidden>
-                                <div class="d-flex align-items-center justify-content-between gap-2 mt-3">
-                                    <small>Crea stickers privados con PNG, JPG, WebP o GIF. Se conservan transparencias y animaciones.</small>
-                                    <button type="button" class="btn btn-sm btn-light-primary" data-sticker-create>Crear</button>
+                                <div class="messenger-sticker-create" data-sticker-create-controls hidden>
+                                    <button type="button" class="messenger-sticker-create-button" data-sticker-create>Crear</button>
                                 </div>
                             </section>
                             @error('body')<p class="messenger-form-error">{{ $message }}</p>@enderror
@@ -594,6 +593,7 @@ class="messenger-body"
         const attachmentHint = document.querySelector('[data-message-attachment-hint]');
         const stickerGrid = document.querySelector('[data-sticker-grid]');
         const stickerCreateFile = document.querySelector('[data-sticker-create-file]');
+        const stickerCreateControls = document.querySelector('[data-sticker-create-controls]');
         let stickerType = 'general';
         let stickerCatalog = { general: [], mine: [] };
         const clearStickerSelection = () => {
@@ -611,6 +611,7 @@ class="messenger-body"
         };
         const renderStickerCatalog = () => {
             if (!stickerGrid) return;
+            if (stickerCreateControls) stickerCreateControls.hidden = stickerType !== 'mine';
             stickerGrid.replaceChildren();
             const stickers = stickerCatalog[stickerType] || [];
             if (!stickers.length) {

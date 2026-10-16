@@ -199,7 +199,7 @@
                             </div>
                         @else
                             <div class="public-profile-empty">
-                                <span aria-hidden="true">♡</span>
+                                <span class="brand-heart" aria-hidden="true"></span>
                                 <p>{{ $isOwner ? 'Aún no has agregado series a tus favoritas.' : 'Esta persona todavía no ha compartido series favoritas.' }}</p>
                                 @if($isOwner)
                                     <a href="{{ route('catalog.series.index') }}">Explorar el catálogo</a>

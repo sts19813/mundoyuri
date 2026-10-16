@@ -44,7 +44,7 @@
         @if(session('error'))<div class="legacy-profile-notice mt-3"><strong>Atención</strong><span>{{ session('error') }}</span></div>@endif
 
         <section class="forum-category question-directory" aria-label="Preguntas de la comunidad">
-            <header><span aria-hidden="true">♡</span><div><h2>{{ $search !== '' ? 'Resultados de tu búsqueda' : 'Nos ayudamos entre todas' }}</h2><p>{{ number_format($questions->total()) }} {{ $questions->total() === 1 ? 'pregunta' : 'preguntas' }} · Anime, manga, series y comunidad</p></div></header>
+            <header><span class="brand-heart" aria-hidden="true"></span><div><h2>{{ $search !== '' ? 'Resultados de tu búsqueda' : 'Nos ayudamos entre todas' }}</h2><p>{{ number_format($questions->total()) }} {{ $questions->total() === 1 ? 'pregunta' : 'preguntas' }} · Anime, manga, series y comunidad</p></div></header>
             @forelse($questions as $question)
                 <article class="question-row question-directory-row">
                     <span class="forum-row-icon" aria-hidden="true">{{ $question->isResolved() ? '✓' : '?' }}</span>

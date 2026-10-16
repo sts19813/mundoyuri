@@ -16,7 +16,11 @@
         @auth
             <details class="community-reaction-picker">
                 <summary class="community-reaction-trigger {{ $selected ? 'is-active' : '' }}" aria-label="{{ $selected ? 'Cambiar reacción: '.$selected['label'] : 'Elegir una reacción' }}">
-                    <span aria-hidden="true">{{ $selected['emoji'] ?? '♡' }}</span>
+                    @if($selected)
+                        <span aria-hidden="true">{{ $selected['emoji'] }}</span>
+                    @else
+                        <span class="brand-heart community-reaction-heart" aria-hidden="true"></span>
+                    @endif
                     {{ $selected['label'] ?? 'Reaccionar' }}
                 </summary>
                 <div class="community-reaction-palette">
@@ -37,7 +41,7 @@
                 </div>
             </details>
         @else
-            <a href="{{ route('login') }}" class="community-reaction-trigger" aria-label="Inicia sesión para reaccionar"><span aria-hidden="true">♡</span> Reaccionar</a>
+            <a href="{{ route('login') }}" class="community-reaction-trigger" aria-label="Inicia sesión para reaccionar"><span class="brand-heart community-reaction-heart" aria-hidden="true"></span> Reaccionar</a>
         @endauth
         @if($total > 0)
             <span class="community-reaction-total" title="{{ $breakdown }}" aria-label="{{ $total }} reacciones. {{ $breakdown }}">

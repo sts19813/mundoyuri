@@ -56,7 +56,7 @@
             </a>
         @empty
             <div class="messenger-list-empty">
-                <span aria-hidden="true">♡</span>
+                <span class="brand-heart messenger-empty-heart" aria-hidden="true"></span>
                 @if($search !== '')
                     <strong>No encontramos ese chat</strong>
                     <p>Prueba con otro nombre o alias.</p>

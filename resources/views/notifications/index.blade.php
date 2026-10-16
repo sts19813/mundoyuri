@@ -65,7 +65,11 @@
                         @endif
 
                         <span class="notification-list-icon" aria-hidden="true">
-                            {{ ($notification->data['kind'] ?? null) === 'episode_available' ? '▶' : '♡' }}
+                            @if(($notification->data['kind'] ?? null) === 'episode_available')
+                                ▶
+                            @else
+                                <span class="brand-heart notification-heart"></span>
+                            @endif
                         </span>
 
                         <span class="conversation-list-copy">

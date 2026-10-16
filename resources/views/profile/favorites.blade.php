@@ -59,7 +59,7 @@
                     {{ $favorites->links() }}
                 @else
                     <div class="public-profile-empty">
-                        <span aria-hidden="true">♡</span>
+                        <span class="brand-heart" aria-hidden="true"></span>
                         <p>Este perfil todavía no tiene series favoritas.</p>
                     </div>
                 @endif

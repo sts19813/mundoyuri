@@ -53,7 +53,7 @@
                         </a>
                     @empty
                         <div class="public-profile-empty profile-connections-empty">
-                            <span aria-hidden="true">♡</span>
+                            <span class="brand-heart" aria-hidden="true"></span>
                             <p>{{ $type === 'followers' ? 'Este perfil todavía no tiene seguidores.' : 'Este perfil todavía no sigue a otras personas.' }}</p>
                         </div>
                     @endforelse
