@@ -186,7 +186,15 @@ class PrivateMessagingTest extends TestCase
             ]);
 
         $message = DirectMessage::query()->firstOrFail();
+        $this->assertArrayHasKey('surprise', CommunityReaction::types());
         $this->assertArrayHasKey('yuri', CommunityReaction::types());
+
+        $this->actingAs($recipient)
+            ->postJson(route('messages.reactions.store', $message), [
+                'type' => 'surprise',
+            ])
+            ->assertOk()
+            ->assertJsonPath('active_type', 'surprise');
 
         $response = $this->actingAs($recipient)
             ->postJson(route('messages.reactions.store', $message), [

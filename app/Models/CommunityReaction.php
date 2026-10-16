@@ -12,10 +12,13 @@ class CommunityReaction extends Model
     use HasFactory;
 
     public const TYPES = [
-        'love' => ['emoji' => '❤️', 'label' => 'Me encanta'],
+        'surprise' => ['emoji' => '😮', 'label' => 'Me sorprende'],
         'like' => ['emoji' => '👍', 'label' => 'Me gusta'],
+        'love' => ['emoji' => '❤️', 'label' => 'Me encanta'],
         'laugh' => ['emoji' => '😂', 'label' => 'Me divierte'],
-        'cry' => ['emoji' => '😭', 'label' => 'Me emociona'],
+        'cry' => ['emoji' => '😢', 'label' => 'Me entristece'],
+        'pray' => ['emoji' => '🙏', 'label' => 'Gracias'],
+        'fire' => ['emoji' => '🔥', 'label' => 'Me encanta'],
         'yuri' => ['emoji' => '🌸', 'label' => 'Yuri'],
     ];
 
