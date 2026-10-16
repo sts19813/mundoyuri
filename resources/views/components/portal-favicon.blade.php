@@ -2,7 +2,8 @@
 @php($portalFavicon32 = asset('assets/img/pwa/favicon-32.png').'?v='.filemtime(public_path('assets/img/pwa/favicon-32.png')))
 @php($portalFavicon16 = asset('assets/img/pwa/favicon-16.png').'?v='.filemtime(public_path('assets/img/pwa/favicon-16.png')))
 @php($appleTouchIcon = asset('assets/img/pwa/apple-touch-icon.png').'?v='.filemtime(public_path('assets/img/pwa/apple-touch-icon.png')))
-<link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+@php($webManifest = asset('manifest.webmanifest').'?v='.filemtime(public_path('manifest.webmanifest')))
+<link rel="manifest" href="{{ $webManifest }}">
 <meta name="theme-color" content="#e83691">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">

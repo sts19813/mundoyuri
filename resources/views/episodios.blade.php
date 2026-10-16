@@ -423,6 +423,48 @@
         let resumeApplied = false;
         const subtitleTracks = @json($episodeSubtitleTracks ?? []);
 
+        const isMobileStandaloneApp = () => {
+            const isMobile = window.matchMedia?.('(max-width: 767px) and (pointer: coarse)').matches;
+            const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            return Boolean(isMobile && isStandalone);
+        };
+
+        const lockEpisodeLandscape = async () => {
+            if (!isMobileStandaloneApp() || !window.screen?.orientation?.lock) {
+                return;
+            }
+
+            try {
+                await window.screen.orientation.lock('landscape');
+            } catch (_) {
+                // Some mobile browsers expose fullscreen without supporting orientation locks.
+            }
+        };
+
+        const unlockEpisodeOrientation = () => {
+            if (!isMobileStandaloneApp() || !window.screen?.orientation?.unlock) {
+                return;
+            }
+
+            try {
+                window.screen.orientation.unlock();
+            } catch (_) {
+                // Keep the player usable when the browser rejects an orientation change.
+            }
+        };
+
+        const syncEpisodeOrientation = () => {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+            if (isFullscreen) {
+                lockEpisodeLandscape();
+                return;
+            }
+
+            unlockEpisodeOrientation();
+        };
+
         function destroyHlsPlayer() {
             stopHlsStallMonitor();
             if (hlsPlayer) {
@@ -508,7 +550,14 @@
                 }
             });
             directPlayer.elements.container.style.display = @json($primarySource?->player_type === 'video' ? '' : 'none');
+            directPlayer.on('enterfullscreen', lockEpisodeLandscape);
+            directPlayer.on('exitfullscreen', unlockEpisodeOrientation);
         }
+
+        document.addEventListener('fullscreenchange', syncEpisodeOrientation);
+        document.addEventListener('webkitfullscreenchange', syncEpisodeOrientation);
+        playerVideo?.addEventListener('webkitbeginfullscreen', lockEpisodeLandscape);
+        playerVideo?.addEventListener('webkitendfullscreen', unlockEpisodeOrientation);
 
         function backblazeSources(fallbackUrl) {
             const sources = backblazeQualityButtons.map((button) => ({
