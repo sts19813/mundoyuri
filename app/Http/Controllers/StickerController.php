@@ -48,6 +48,7 @@ class StickerController extends Controller
 
         return Storage::disk('local')->response($sticker->path, $sticker->name, [
             'Content-Type' => $sticker->mime,
+            'Cache-Control' => 'private, max-age=86400',
         ], 'inline');
     }
 

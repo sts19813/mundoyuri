@@ -634,7 +634,8 @@ class="messenger-body"
                 const image = document.createElement('img');
                 image.src = sticker.url;
                 image.alt = sticker.name;
-                image.loading = 'lazy';
+                image.loading = 'eager';
+                image.decoding = 'async';
                 button.append(image);
                 item.append(button);
                 if (stickerType === 'mine') {
@@ -649,8 +650,20 @@ class="messenger-body"
                 stickerGrid.append(item);
             });
         };
-        const loadStickerCatalog = async () => {
+        let stickerCatalogLoaded = false;
+        const preloadStickerImages = () => {
+            Object.values(stickerCatalog).flat().forEach((sticker) => {
+                const image = new Image();
+                image.decoding = 'async';
+                image.src = sticker.url;
+            });
+        };
+        const loadStickerCatalog = async ({ force = false, render = true } = {}) => {
             if (!stickerPanel) return;
+            if (stickerCatalogLoaded && !force) {
+                if (render) renderStickerCatalog();
+                return;
+            }
             try {
                 const response = await fetch(@js(route('stickers.index')), {
                     headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -658,12 +671,21 @@ class="messenger-body"
                 });
                 if (!response.ok) throw new Error();
                 stickerCatalog = await response.json();
-                renderStickerCatalog();
+                stickerCatalogLoaded = true;
+                preloadStickerImages();
+                if (render) renderStickerCatalog();
             } catch (error) {
-                if (stickerGrid) stickerGrid.textContent = 'No se pudieron cargar los stickers.';
+                if (render && stickerGrid) stickerGrid.textContent = 'No se pudieron cargar los stickers.';
             }
         };
         const closeStickerPanel = () => { if (stickerPanel) stickerPanel.hidden = true; };
+
+        const preloadStickerCatalog = () => loadStickerCatalog({ render: false });
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(preloadStickerCatalog, { timeout: 2500 });
+        } else {
+            window.setTimeout(preloadStickerCatalog, 900);
+        }
 
         stickerToggle?.addEventListener('click', async () => {
             stickerPanel.hidden = !stickerPanel.hidden;
@@ -696,7 +718,7 @@ class="messenger-body"
                 });
                 if (!response.ok) throw new Error();
                 clearStickerSelection();
-                await loadStickerCatalog();
+                await loadStickerCatalog({ force: true });
             } catch (error) {
                 showComposerError('No se pudo eliminar el sticker. Inténtalo de nuevo.');
             }
@@ -720,7 +742,7 @@ class="messenger-body"
                 const result = await response.json();
                 stickerType = 'mine';
                 stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.stickerTab === 'mine'));
-                await loadStickerCatalog();
+                await loadStickerCatalog({ force: true });
                 sendSticker(result.sticker);
             } catch (error) {
                 showComposerError('No se pudo crear el sticker. Usa una imagen de hasta 10 MB e inténtalo de nuevo.');

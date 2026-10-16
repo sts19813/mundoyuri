@@ -686,6 +686,11 @@ class PrivateMessagingTest extends TestCase
             ->assertJsonPath('mine', [])
             ->assertJsonMissing(['id' => $private->id]);
 
+        $this->actingAs($second)
+            ->get(route('stickers.file', $general))
+            ->assertOk()
+            ->assertHeader('cache-control', 'max-age=86400, private');
+
         $this->actingAs($second)->get(route('stickers.file', $private))->assertNotFound();
         $this->actingAs($second)->deleteJson(route('stickers.destroy', $private))->assertForbidden();
         $this->actingAs($first)->deleteJson(route('stickers.destroy', $private))->assertNoContent();
