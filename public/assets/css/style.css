@@ -5803,8 +5803,8 @@ img.messenger-avatar { display: block; }
 .messenger-sticker-create-button { min-height: 32px; padding: 7px 14px; border: 0; border-radius: 8px; color: #fff; background: #e83482; font: 700 .66rem 'DM Sans', sans-serif; cursor: pointer; box-shadow: 0 5px 12px rgba(232, 52, 130, .24); }
 .messenger-sticker-create-button:hover { background: #f34894; }
 .messenger-sticker-create-button:focus-visible { outline: 2px solid #ffc1da; outline-offset: 2px; }
-.community-reaction-heart { width: 16px; height: 16px; flex: 0 0 16px; }
-.notification-heart { width: 14px; height: 14px; }
+.community-reaction-heart { width: 22px; height: 22px; flex: 0 0 22px; }
+.notification-heart { width: 22px; height: 22px; }
 .messenger-media-panel[hidden] { display: none; }
 .messenger-media-panel { position: fixed; inset: 0; z-index: 2100; display: flex; justify-content: flex-end; color: #f8eef7; font-family: 'DM Sans', sans-serif; }
 .messenger-media-panel-backdrop { position: absolute; inset: 0; background: rgba(5, 3, 7, .66); }
