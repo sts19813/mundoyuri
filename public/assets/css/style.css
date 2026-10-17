@@ -3942,11 +3942,20 @@
     }
 
     .footer-brand {
+        display: inline-block;
         font-family: 'Playfair Display', serif;
         font-size: 1.4rem;
         font-weight: 700;
         color: #fff;
         margin-bottom: 10px;
+    }
+
+    .footer-logo {
+        display: block;
+        width: auto;
+        height: 58px;
+        max-width: 220px;
+        object-fit: contain;
     }
 
     .footer-desc {

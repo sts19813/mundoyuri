@@ -3,9 +3,8 @@
     <div class="container-xl px-4">
         <div class="row g-4 mb-2">
             <div class="col-md-4">
-                <a href="{{ route('home') }}" class="brand">
-                    <span class="brand-heart"></span>
-                    Mundo Yuri
+                <a href="{{ route('home') }}" class="footer-brand" aria-label="Mundo Yuri">
+                    <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri" class="footer-logo">
                 </a>
                 <p class="footer-desc">Tu espacio para descubrir historias GL de todo el mundo. Series, doramas y
                     películas actualizadas cada día.</p>
@@ -55,13 +54,6 @@
                 </ul>
             </div>
         </div>
-        <hr class="footer-divider">
-        <p class="footer-copy">© {{ date('Y') }} Mundo Yuri · Ninguno de los derechos reservados</p>
-        <p class="footer-copy">Hecho con ❤️ por
-            <a href="https://mundoyuri.com/usuarios/1/admin">
-                sts19813
-            </a>
-        </p>
     </div>
 </footer>
 
