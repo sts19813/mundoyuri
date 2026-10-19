@@ -40,7 +40,6 @@
             <div class="col-6 col-md-2">
                 <div class="footer-heading">Info</div>
                 <ul class="footer-links">
-                    <li><a href="{{ route('about') }}">Quiénes somos</a></li>
                     <li><a href="{{ route('catalog.series.index') }}">Catalogo</a></li>
                     @auth
                         <li><a href="{{ route('submissions.create') }}">Aportar contenido</a></li>
