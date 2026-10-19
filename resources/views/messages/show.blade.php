@@ -996,6 +996,44 @@ class="messenger-body"
                 return;
             }
 
+            const saveStickerForm = event.target.closest('[data-save-sticker-form]');
+            if (saveStickerForm) {
+                event.preventDefault();
+                const button = saveStickerForm.querySelector('button');
+                if (button?.disabled || saveStickerForm.classList.contains('is-saved')) return;
+
+                button?.setAttribute('disabled', 'disabled');
+                try {
+                    const response = await fetch(saveStickerForm.action, {
+                        method: 'POST',
+                        body: new FormData(saveStickerForm),
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        showComposerError('No se pudo guardar el sticker. Inténtalo de nuevo.');
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.sticker) {
+                        stickerCatalog.mine = [result.sticker, ...(stickerCatalog.mine || []).filter((item) => item.id !== result.sticker.id)];
+                        stickerCatalogLoaded = true;
+                    }
+                    saveStickerForm.classList.add('is-saved');
+                    button?.querySelector('span')?.replaceChildren('Guardado');
+                } finally {
+                    button?.removeAttribute('disabled');
+                }
+
+                return;
+            }
+
             const replyButton = event.target.closest('[data-message-reply]');
             if (replyButton) {
                 event.preventDefault();

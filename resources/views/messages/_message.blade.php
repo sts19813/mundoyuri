@@ -43,7 +43,20 @@
             @endif
             @if(filled($message->body))<p>{!! \App\Support\DirectMessageLinkFormatter::html($message->body) !!}</p>@endif
             @if($message->hasAttachment())
-                @if($message->attachmentIsImage())
+                @if($message->is_sticker)
+                    <div class="messenger-sticker-image" role="img" aria-label="Sticker enviado por {{ $outgoing ? 'ti' : $otherUser->displayName() }}">
+                        <img src="{{ route('messages.attachments.show', $message) }}" alt="Sticker" loading="lazy">
+                    </div>
+                    @if(! $outgoing)
+                        <form class="messenger-sticker-save" method="POST" action="{{ route('messages.stickers.store', $message) }}" data-save-sticker-form>
+                            @csrf
+                            <button type="submit" aria-label="Guardar sticker en Mis stickers">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                                <span>Guardar sticker</span>
+                            </button>
+                        </form>
+                    @endif
+                @elseif($message->attachmentIsImage())
                     <a
                         class="messenger-attachment-image"
                         href="{{ route('messages.attachments.show', $message) }}"

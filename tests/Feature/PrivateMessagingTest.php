@@ -740,6 +740,45 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHasErrors('sticker_id');
     }
 
+    public function test_recipient_can_save_an_incoming_sticker_to_their_private_library(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('stickers.store'), ['sticker' => UploadedFile::fake()->image('compartido.png', 120, 120)])
+            ->assertCreated();
+        $sourceSticker = Sticker::query()->firstOrFail();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), ['sticker_id' => $sourceSticker->id])
+            ->assertRedirect(route('messages.show', $recipient));
+        $message = DirectMessage::query()->firstOrFail();
+
+        $response = $this->actingAs($recipient)
+            ->postJson(route('messages.stickers.store', $message))
+            ->assertCreated()
+            ->assertJsonPath('sticker.is_general', false);
+
+        $savedSticker = Sticker::query()->latest('id')->firstOrFail();
+        $this->assertSame($recipient->id, $savedSticker->owner_id);
+        $this->assertNotSame($sourceSticker->path, $savedSticker->path);
+        Storage::disk('local')->assertExists($savedSticker->path);
+
+        $messageHtml = $this->actingAs($recipient)
+            ->getJson(route('messages.poll', $sender).'?after_id=0')
+            ->assertOk()
+            ->json('messages.0.html');
+        $this->assertStringContainsString('Guardar sticker', $messageHtml);
+        $this->assertStringContainsString('messenger-sticker-image', $messageHtml);
+        $this->assertStringNotContainsString('data-image-lightbox', $messageHtml);
+
+        $this->actingAs($sender)
+            ->postJson(route('messages.stickers.store', $message))
+            ->assertUnprocessable();
+    }
+
     public function test_admin_can_publish_and_approve_personal_stickers(): void
     {
         Storage::fake('local');

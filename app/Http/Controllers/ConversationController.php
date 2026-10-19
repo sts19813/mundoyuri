@@ -9,6 +9,7 @@ use App\Models\Sticker;
 use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
 use App\Services\DirectMessageAttachmentService;
+use App\Services\StickerService;
 use App\Support\DirectMessageLinkFormatter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -399,6 +400,36 @@ class ConversationController extends Controller
         }
 
         return back()->with('success', 'Mensaje eliminado.');
+    }
+
+    public function saveSticker(Request $request, DirectMessage $message, StickerService $stickers): JsonResponse
+    {
+        $viewer = $request->user();
+        $message->loadMissing('conversation');
+
+        abort_unless(in_array($viewer->id, [
+            $message->conversation->user_one_id,
+            $message->conversation->user_two_id,
+        ], true), 404);
+        abort_unless($message->sender_id !== $viewer->id, 422);
+        abort_unless($message->is_sticker && $message->attachmentIsImage(), 422);
+        abort_unless(Storage::disk('local')->exists($message->attachment_path), 404);
+
+        $sticker = $stickers->copyFromStoredFile(
+            $message->attachment_path,
+            $message->attachment_name ?: 'sticker.png',
+            $message->attachment_mime ?: 'image/png',
+            $viewer,
+        );
+
+        return response()->json([
+            'sticker' => [
+                'id' => $sticker->id,
+                'name' => $sticker->name,
+                'url' => route('stickers.file', $sticker),
+                'is_general' => false,
+            ],
+        ], 201);
     }
 
     public function attachment(Request $request, DirectMessage $message): StreamedResponse

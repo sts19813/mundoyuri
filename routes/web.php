@@ -161,6 +161,9 @@ Route::middleware(['auth'])
             ->name('messages.status');
         Route::get('/mensajes/adjuntos/{message}', [ConversationController::class, 'attachment'])
             ->name('messages.attachments.show');
+        Route::post('/mensajes/mensaje/{message}/guardar-sticker', [ConversationController::class, 'saveSticker'])
+            ->middleware('throttle:20,1')
+            ->name('messages.stickers.store');
         Route::delete('/mensajes/mensaje/{message}', [ConversationController::class, 'destroy'])
             ->name('messages.destroy');
         Route::post('/mensajes/mensaje/{message}/reacciones', [DirectMessageReactionController::class, 'store'])
