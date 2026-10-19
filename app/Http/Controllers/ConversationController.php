@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Conversation;
 use App\Models\CommunityReaction;
+use App\Models\Conversation;
 use App\Models\DirectMessage;
 use App\Models\Sticker;
 use App\Models\User;
@@ -15,9 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -218,7 +218,7 @@ class ConversationController extends Controller
 
         $conversation = Conversation::between($viewer, $user)->first();
         $type = $request->string('type', 'images')->toString();
-        abort_unless(in_array($type, ['images', 'documents', 'links'], true), 404);
+        abort_unless(in_array($type, ['images', 'documents', 'links', 'favorites'], true), 404);
 
         if (! $conversation) {
             return response()->json(['items' => [], 'has_more' => false]);
@@ -251,6 +251,21 @@ class ConversationController extends Controller
 
             return response()->json([
                 'items' => $page->getCollection()->map(fn (DirectMessage $message) => $this->mediaAttachmentPayload($message, $viewer, 'document'))->values(),
+                'has_more' => $page->hasMorePages(),
+            ]);
+        }
+
+        if ($type === 'favorites') {
+            $page = $messages
+                ->whereIn('id', DB::table('direct_message_favorites')
+                    ->where('user_id', $viewer->id)
+                    ->select('direct_message_id'))
+                ->simplePaginate(50);
+
+            return response()->json([
+                'items' => $page->getCollection()
+                    ->map(fn (DirectMessage $message) => $this->favoriteMessagePayload($message, $viewer, $user))
+                    ->values(),
                 'has_more' => $page->hasMorePages(),
             ]);
         }
@@ -543,9 +558,15 @@ class ConversationController extends Controller
             ->whereIn('direct_message_id', $ids)
             ->pluck('type', 'direct_message_id');
 
+        $viewerFavoriteMessageIds = DB::table('direct_message_favorites')
+            ->where('user_id', $viewer->id)
+            ->whereIn('direct_message_id', $ids)
+            ->pluck('direct_message_id')
+            ->flip();
+
         $emptySummary = array_fill_keys(CommunityReaction::typeKeys(), 0);
 
-        $collection->each(function (DirectMessage $message) use ($summary, $viewerReactions, $emptySummary): void {
+        $collection->each(function (DirectMessage $message) use ($summary, $viewerReactions, $viewerFavoriteMessageIds, $emptySummary): void {
             $messageSummary = $emptySummary;
 
             foreach ($summary->get($message->id, collect()) as $reaction) {
@@ -554,6 +575,7 @@ class ConversationController extends Controller
 
             $message->setAttribute('reaction_summary', $messageSummary);
             $message->setAttribute('viewer_reaction_type', $viewerReactions[$message->id] ?? null);
+            $message->setAttribute('viewer_has_favorited', $viewerFavoriteMessageIds->has($message->id));
         });
     }
 
@@ -586,6 +608,26 @@ class ConversationController extends Controller
             'size' => $message->attachmentSizeLabel(),
             'sent_at' => $message->created_at?->timezone('America/Merida')->format('d M · g:i a'),
             'outgoing' => $message->sender_id === $viewer->id,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function favoriteMessagePayload(DirectMessage $message, User $viewer, User $otherUser): array
+    {
+        $title = $message->is_sticker
+            ? 'Sticker'
+            : ($message->attachmentIsImage()
+                ? 'Foto'
+                : ($message->hasAttachment() ? ($message->attachment_name ?: 'Archivo') : $message->previewText()));
+
+        return [
+            'message_id' => $message->id,
+            'url' => route('messages.show', $otherUser).'#message-'.$message->id,
+            'title' => $title,
+            'sender' => $message->sender_id === $viewer->id ? 'Tú' : $otherUser->displayName(),
+            'sent_at' => $message->created_at?->timezone('America/Merida')->format('d M · g:i a'),
         ];
     }
 

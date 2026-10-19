@@ -196,6 +196,7 @@ class="messenger-body"
                 <button type="button" role="tab" aria-selected="true" data-media-tab="images">Fotos</button>
                 <button type="button" role="tab" aria-selected="false" data-media-tab="documents">Archivos</button>
                 <button type="button" role="tab" aria-selected="false" data-media-tab="links">Enlaces</button>
+                <button type="button" role="tab" aria-selected="false" data-media-tab="favorites">Favoritos</button>
             </div>
             <div class="messenger-media-results" data-media-results aria-live="polite"></div>
             <button class="messenger-media-more" type="button" data-media-more hidden>Mostrar más</button>
@@ -864,7 +865,11 @@ class="messenger-body"
             if (!items.length && replace) {
                 const empty = document.createElement('p');
                 empty.className = 'messenger-media-empty';
-                empty.textContent = mediaType === 'images' ? 'Aún no hay fotos en esta conversación.' : (mediaType === 'documents' ? 'Aún no hay archivos en esta conversación.' : 'Aún no hay enlaces en esta conversación.');
+                empty.textContent = mediaType === 'images'
+                    ? 'Aún no hay fotos en esta conversación.'
+                    : (mediaType === 'documents'
+                        ? 'Aún no hay archivos en esta conversación.'
+                        : (mediaType === 'links' ? 'Aún no hay enlaces en esta conversación.' : 'Aún no has marcado mensajes como favoritos.'));
                 mediaResults.append(empty);
                 return;
             }
@@ -872,8 +877,6 @@ class="messenger-body"
             items.forEach((item) => {
                 const link = document.createElement('a');
                 link.href = item.url;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
 
                 if (mediaType === 'images') {
                     link.className = 'messenger-media-image';
@@ -881,14 +884,30 @@ class="messenger-body"
                     image.src = item.url;
                     image.alt = item.name || 'Imagen compartida';
                     image.loading = 'lazy';
+                    image.addEventListener('error', () => {
+                        image.remove();
+                        link.classList.add('is-unavailable');
+                        link.setAttribute('aria-label', 'Foto no disponible');
+                    }, { once: true });
                     link.append(image);
                 } else {
                     link.className = 'messenger-media-item';
                     const title = document.createElement('strong');
-                    title.textContent = mediaType === 'links' ? (item.title || item.url) : (item.name || 'Archivo');
+                    title.textContent = mediaType === 'links'
+                        ? (item.title || item.url)
+                        : (mediaType === 'favorites' ? (item.title || 'Mensaje guardado') : (item.name || 'Archivo'));
                     const detail = document.createElement('small');
-                    detail.textContent = mediaType === 'links' ? item.url : `${item.size || ''} · ${item.sent_at || ''}`;
+                    detail.textContent = mediaType === 'links'
+                        ? item.url
+                        : (mediaType === 'favorites' ? `${item.sender || ''} · ${item.sent_at || ''}` : `${item.size || ''} · ${item.sent_at || ''}`);
                     link.append(title, detail);
+                }
+
+                if (mediaType === 'favorites') {
+                    link.dataset.favoriteJump = item.message_id || '';
+                } else {
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
                 }
                 mediaResults.append(link);
             });
@@ -945,6 +964,17 @@ class="messenger-body"
             loadMedia({ reset: true });
         }));
         mediaMore?.addEventListener('click', () => loadMedia());
+        mediaResults?.addEventListener('click', (event) => {
+            const favorite = event.target.closest('[data-favorite-jump]');
+            const message = favorite && conversation?.querySelector(`[data-message-id="${favorite.dataset.favoriteJump}"]`);
+            if (!favorite || !message) return;
+
+            event.preventDefault();
+            closeMediaPanel();
+            message.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            message.classList.add('is-highlighted');
+            window.setTimeout(() => message.classList.remove('is-highlighted'), 1200);
+        });
 
         document.addEventListener('click', (event) => {
             const menu = event.target.closest('.messenger-message-menu');
@@ -1027,6 +1057,43 @@ class="messenger-body"
                     }
                     saveStickerForm.classList.add('is-saved');
                     button?.querySelector('span')?.replaceChildren('Guardado');
+                } finally {
+                    button?.removeAttribute('disabled');
+                }
+
+                return;
+            }
+
+            const favoriteForm = event.target.closest('[data-message-favorite-form]');
+            if (favoriteForm) {
+                event.preventDefault();
+                const button = favoriteForm.querySelector('button');
+                if (button?.disabled) return;
+
+                button?.setAttribute('disabled', 'disabled');
+                try {
+                    const response = await fetch(favoriteForm.action, {
+                        method: 'POST',
+                        body: new FormData(favoriteForm),
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        showComposerError('No se pudo actualizar el favorito. Inténtalo de nuevo.');
+                        return;
+                    }
+
+                    const data = await response.json();
+                    const article = favoriteForm.closest('[data-message-id]');
+                    const template = document.createElement('template');
+                    template.innerHTML = data.html || '';
+                    const updated = template.content.querySelector('[data-message-id]');
+                    if (article && updated) article.replaceWith(updated);
                 } finally {
                     button?.removeAttribute('disabled');
                 }

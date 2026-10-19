@@ -3,6 +3,7 @@
 @php($reactionTypes = \App\Models\CommunityReaction::types())
 @php($reactionSummary = $message->reaction_summary ?? array_fill_keys(array_keys($reactionTypes), 0))
 @php($viewerReaction = $message->viewer_reaction_type ?? null)
+@php($viewerHasFavorited = (bool) ($message->viewer_has_favorited ?? false))
 @php($selectedReaction = $reactionTypes[$viewerReaction] ?? null)
 @php($receivedReactions = collect($reactionSummary)->filter(fn ($count) => $count > 0)->sortDesc())
 @php($reactionTotal = $receivedReactions->sum())
@@ -47,15 +48,6 @@
                     <div class="messenger-sticker-image" role="img" aria-label="Sticker enviado por {{ $outgoing ? 'ti' : $otherUser->displayName() }}">
                         <img src="{{ route('messages.attachments.show', $message) }}" alt="Sticker" loading="lazy">
                     </div>
-                    @if(! $outgoing)
-                        <form class="messenger-sticker-save" method="POST" action="{{ route('messages.stickers.store', $message) }}" data-save-sticker-form>
-                            @csrf
-                            <button type="submit" aria-label="Guardar sticker en Mis stickers">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-                                <span>Guardar sticker</span>
-                            </button>
-                        </form>
-                    @endif
                 @elseif($message->attachmentIsImage())
                     <a
                         class="messenger-attachment-image"
@@ -93,6 +85,16 @@
                 <summary aria-label="Opciones del mensaje">•••</summary>
                 <div class="messenger-message-menu-panel">
                     <button type="button" data-message-reply>Responder</button>
+                    <form method="POST" action="{{ route('messages.favorites.toggle', $message) }}" data-message-favorite-form>
+                        @csrf
+                        <button type="submit">{{ $viewerHasFavorited ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</button>
+                    </form>
+                    @if($message->is_sticker && ! $outgoing)
+                        <form method="POST" action="{{ route('messages.stickers.store', $message) }}" data-save-sticker-form>
+                            @csrf
+                            <button type="submit">Guardar sticker</button>
+                        </form>
+                    @endif
                     <div class="messenger-message-reactions" role="group" aria-label="Reaccionar">
                         @foreach($reactionTypes as $type => $reaction)
                             <form method="POST" action="{{ route('messages.reactions.store', $message) }}" data-message-reaction-form>

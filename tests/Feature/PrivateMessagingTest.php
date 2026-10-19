@@ -245,6 +245,51 @@ class PrivateMessagingTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_users_can_favorite_messages_and_list_them_per_conversation(): void
+    {
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'body' => 'Este mensaje debe quedar en favoritos.',
+            ]);
+
+        $message = DirectMessage::query()->firstOrFail();
+
+        $this->actingAs($recipient)
+            ->postJson(route('messages.favorites.toggle', $message))
+            ->assertOk()
+            ->assertJsonPath('favorited', true)
+            ->assertJsonPath('html', fn (string $html) => str_contains($html, 'Quitar de favoritos'));
+
+        $this->assertDatabaseHas('direct_message_favorites', [
+            'direct_message_id' => $message->id,
+            'user_id' => $recipient->id,
+        ]);
+
+        $this->actingAs($recipient)
+            ->getJson(route('messages.media', $sender).'?type=favorites')
+            ->assertOk()
+            ->assertJsonPath('items.0.message_id', $message->id)
+            ->assertJsonPath('items.0.title', 'Este mensaje debe quedar en favoritos.');
+
+        $this->actingAs($recipient)
+            ->postJson(route('messages.favorites.toggle', $message))
+            ->assertOk()
+            ->assertJsonPath('favorited', false);
+
+        $this->assertDatabaseMissing('direct_message_favorites', [
+            'direct_message_id' => $message->id,
+            'user_id' => $recipient->id,
+        ]);
+
+        $this->actingAs($stranger)
+            ->postJson(route('messages.favorites.toggle', $message))
+            ->assertNotFound();
+    }
+
     public function test_notification_center_items_are_private_and_can_be_marked_as_read(): void
     {
         $follower = User::factory()->create(['name' => 'Luna Seguidora']);

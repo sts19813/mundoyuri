@@ -11,9 +11,9 @@ use App\Http\Controllers\Admin\BackblazeB2SettingController;
 use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionController;
 use App\Http\Controllers\Admin\CommentModerationController as AdminCommentModerationController;
-use App\Http\Controllers\Admin\ConversationModerationController as AdminConversationModerationController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\CommunityReportController as AdminCommunityReportController;
+use App\Http\Controllers\Admin\ConversationModerationController as AdminConversationModerationController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\ForumCategoryController as AdminForumCategoryController;
 use App\Http\Controllers\Admin\ForumController as AdminForumController;
@@ -30,6 +30,7 @@ use App\Http\Controllers\CommunityReactionController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\ContentSubmissionController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\DirectMessageFavoriteController;
 use App\Http\Controllers\DirectMessageReactionController;
 use App\Http\Controllers\EmailEpisodeNotificationPreferenceController;
 use App\Http\Controllers\EpisodeSourcePlayerController;
@@ -44,16 +45,16 @@ use App\Http\Controllers\LegacyProfileController;
 use App\Http\Controllers\MiyuPreferenceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\PublicCatalogController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\RichEditorUploadController;
 use App\Http\Controllers\SeriesFavoriteController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StickerController;
-use App\Http\Controllers\UserPresenceController;
 use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserFollowController;
+use App\Http\Controllers\UserPresenceController;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 
@@ -164,6 +165,9 @@ Route::middleware(['auth'])
         Route::post('/mensajes/mensaje/{message}/guardar-sticker', [ConversationController::class, 'saveSticker'])
             ->middleware('throttle:20,1')
             ->name('messages.stickers.store');
+        Route::post('/mensajes/mensaje/{message}/favorito', [DirectMessageFavoriteController::class, 'toggle'])
+            ->middleware('throttle:60,1')
+            ->name('messages.favorites.toggle');
         Route::delete('/mensajes/mensaje/{message}', [ConversationController::class, 'destroy'])
             ->name('messages.destroy');
         Route::post('/mensajes/mensaje/{message}/reacciones', [DirectMessageReactionController::class, 'store'])

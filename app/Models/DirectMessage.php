@@ -68,6 +68,11 @@ class DirectMessage extends Model
         return max(1, (int) ceil($bytes / 1024)).' KB';
     }
 
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(DirectMessageFavorite::class);
+    }
+
     public function previewText(): string
     {
         if ($this->isDeleted()) {
