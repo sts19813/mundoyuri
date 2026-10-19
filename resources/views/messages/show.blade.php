@@ -857,7 +857,10 @@ class="messenger-body"
 
         const renderMediaItems = (items, replace = false) => {
             if (!mediaResults) return;
-            if (replace) mediaResults.replaceChildren();
+            if (replace) {
+                mediaResults.replaceChildren();
+                mediaResults.classList.toggle('is-image-grid', mediaType === 'images');
+            }
             if (!items.length && replace) {
                 const empty = document.createElement('p');
                 empty.className = 'messenger-media-empty';
@@ -897,6 +900,7 @@ class="messenger-body"
             if (reset) {
                 mediaPage = 1;
                 mediaResults.replaceChildren();
+                mediaResults.classList.toggle('is-image-grid', mediaType === 'images');
             }
             mediaResults?.classList.add('is-loading');
 

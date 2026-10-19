@@ -231,6 +231,7 @@ class ConversationController extends Controller
             $page = $messages
                 ->whereNotNull('attachment_path')
                 ->where('attachment_mime', 'like', 'image/%')
+                ->where('is_sticker', false)
                 ->simplePaginate(24);
 
             return response()->json([

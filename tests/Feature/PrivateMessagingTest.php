@@ -421,11 +421,16 @@ class PrivateMessagingTest extends TestCase
         $this->actingAs($sender)->post(route('messages.store', $recipient), [
             'attachment' => UploadedFile::fake()->create('guia.pdf', 10, 'application/pdf'),
         ]);
+        $this->actingAs($sender)->post(route('messages.store', $recipient), [
+            'is_sticker' => true,
+            'attachment' => UploadedFile::fake()->image('sticker.png', 20, 20),
+        ]);
 
         $this->actingAs($recipient)
             ->getJson(route('messages.media', $sender).'?type=images')
             ->assertOk()
-            ->assertJsonCount(1, 'items');
+            ->assertJsonCount(1, 'items')
+            ->assertJsonMissing(['name' => 'sticker.png']);
         $this->getJson(route('messages.media', $sender).'?type=documents')
             ->assertOk()
             ->assertJsonCount(1, 'items');
