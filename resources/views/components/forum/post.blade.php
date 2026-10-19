@@ -22,10 +22,10 @@
                         <a href="{{ $post->is_initial && !$post->thread->isQuestion() ? route('forum.threads.edit', $post->thread) : route('forum.posts.edit', $post) }}">Editar</a>
                     @endcan
                     @can('delete', $post)
-                        <form method="POST" action="{{ route('forum.posts.destroy', $post) }}">
+                        <form method="POST" action="{{ route('forum.posts.destroy', $post) }}" data-dialog-confirm="Esta acción no se puede deshacer." data-dialog-title="¿Eliminar este mensaje?" data-dialog-confirm-text="Eliminar">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" onclick="return confirm('¿Eliminar este mensaje?')">Eliminar</button>
+                            <button type="submit">Eliminar</button>
                         </form>
                     @endcan
                     @can('moderate', $post)

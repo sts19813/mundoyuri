@@ -55,7 +55,7 @@
                                             <button type="submit" class="btn btn-sm btn-light-primary me-1">Aprobar</button>
                                         </form>
                                     @endunless
-                                    <form method="POST" action="{{ route('admin.stickers.destroy', $sticker) }}" class="d-inline" onsubmit="return confirm('¿Eliminar este sticker del catálogo? Los mensajes ya enviados no se alterarán.')">
+                                    <form method="POST" action="{{ route('admin.stickers.destroy', $sticker) }}" class="d-inline" data-dialog-confirm="Los mensajes ya enviados no se alterarán." data-dialog-title="¿Eliminar este sticker del catálogo?" data-dialog-confirm-text="Eliminar">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light-danger">Eliminar</button>
                                     </form>

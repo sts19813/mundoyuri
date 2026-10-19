@@ -42,9 +42,9 @@
                             <div class="forum-action-menu-panel">
                                 @can('update', $thread)<a href="{{ route('forum.threads.edit', $thread) }}">Editar tema</a>@endcan
                                 @can('delete', $thread)
-                                    <form method="POST" action="{{ route('forum.threads.destroy', $thread) }}">
+                                    <form method="POST" action="{{ route('forum.threads.destroy', $thread) }}" data-dialog-confirm="Esta acción no se puede deshacer." data-dialog-title="¿Eliminar este tema?" data-dialog-confirm-text="Eliminar">
                                         @csrf @method('DELETE')
-                                        <button type="submit" onclick="return confirm('¿Eliminar este tema?')">Eliminar tema</button>
+                                        <button type="submit">Eliminar tema</button>
                                     </form>
                                 @endcan
                                 <x-community.report-form :reportable="$thread" />

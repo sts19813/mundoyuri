@@ -70,7 +70,7 @@
                                     <a href="{{ route('admin.community-ranks.edit', $communityRank) }}" class="btn btn-sm btn-light-primary me-1">
                                         <i class="ki-outline ki-pencil fs-4"></i>Editar
                                     </a>
-                                    <form method="POST" action="{{ route('admin.community-ranks.destroy', $communityRank) }}" class="d-inline" onsubmit="return confirm('¿Eliminar este rango? Las asignaciones manuales volverán al cálculo automático.')">
+                                    <form method="POST" action="{{ route('admin.community-ranks.destroy', $communityRank) }}" class="d-inline" data-dialog-confirm="Las asignaciones manuales volverán al cálculo automático." data-dialog-title="¿Eliminar este rango?" data-dialog-confirm-text="Eliminar">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light-danger"><i class="ki-outline ki-trash fs-4"></i>Eliminar</button>

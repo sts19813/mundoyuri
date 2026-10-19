@@ -192,7 +192,7 @@
                                                             <a href="{{ route('admin.episodes.edit', $episode) }}" class="btn btn-sm btn-light-primary">Editar</a>
                                                         @endcan
                                                         @can('delete episodes')
-                                                            <form method="POST" action="{{ route('admin.episodes.destroy', $episode) }}" class="d-inline" onsubmit="return confirm('¿Eliminar este episodio?')">
+                                                            <form method="POST" action="{{ route('admin.episodes.destroy', $episode) }}" class="d-inline" data-dialog-confirm="Esta acción no se puede deshacer." data-dialog-title="¿Eliminar este episodio?" data-dialog-confirm-text="Eliminar">
                                                                 @csrf @method('DELETE')
                                                                 <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
                                                             </form>

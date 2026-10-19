@@ -47,7 +47,7 @@
                     </form>
                 @endif
                 @if($notifications->isNotEmpty())
-                    <form method="POST" action="{{ route('notifications.destroy-all') }}" onsubmit="return confirm('¿Borrar todas tus notificaciones? Esta acción no se puede deshacer.');">
+                    <form method="POST" action="{{ route('notifications.destroy-all') }}" data-dialog-confirm="Esta acción no se puede deshacer." data-dialog-title="¿Borrar todas las notificaciones?" data-dialog-confirm-text="Borrar todo">
                         @csrf
                         @method('DELETE')
                         <button class="profile-btn profile-btn-text" type="submit">Borrar todas</button>

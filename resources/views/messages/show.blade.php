@@ -70,7 +70,7 @@ class="messenger-body"
                                         <button type="submit">Desbloquear</button>
                                     </form>
                                 @else
-                                    <form method="POST" action="{{ route('users.block.store', $otherUser) }}" onsubmit="return confirm('¿Quieres bloquear a esta persona? Ya no podrán seguirse ni enviarse mensajes.')">
+                                    <form method="POST" action="{{ route('users.block.store', $otherUser) }}" data-dialog-confirm="Ya no podrán seguirse ni enviarse mensajes." data-dialog-title="¿Bloquear a esta persona?" data-dialog-confirm-text="Bloquear">
                                         @csrf
                                         <button type="submit">Bloquear</button>
                                     </form>
@@ -710,7 +710,13 @@ class="messenger-body"
                 return;
             }
             const remove = event.target.closest('[data-sticker-delete]');
-            if (!remove || !window.confirm('¿Eliminar este sticker personal?')) return;
+            if (!remove) return;
+            const confirmed = await window.MundoYuriDialog?.confirm({
+                title: '¿Eliminar sticker?',
+                message: 'Se quitará de Mis stickers.',
+                confirmText: 'Eliminar',
+            });
+            if (!confirmed) return;
             try {
                 const response = await fetch(`${@js(url('/stickers'))}/${remove.dataset.stickerDelete}`, {
                     method: 'DELETE',
@@ -1057,6 +1063,7 @@ class="messenger-body"
                     }
                     saveStickerForm.classList.add('is-saved');
                     button?.querySelector('span')?.replaceChildren('Guardado');
+                    window.MundoYuriDialog?.toast('success', 'Sticker guardado en Mis stickers.');
                 } finally {
                     button?.removeAttribute('disabled');
                 }

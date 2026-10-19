@@ -7,6 +7,7 @@
 <head>
     <x-google-tag-manager />
     <x-google-analytics />
+    <link rel="stylesheet" href="{{ asset('assets/css/dialogs.css') }}?v={{ filemtime(public_path('assets/css/dialogs.css')) }}">
     @yield('head')
 </head>
 @hasSection('body_attributes')
@@ -17,6 +18,7 @@
     <x-google-tag-manager-noscript />
     @yield('body')
     <script src="{{ asset('assets/js/lazy-media.js') }}?v={{ filemtime(public_path('assets/js/lazy-media.js')) }}" defer></script>
+    <script src="{{ asset('assets/js/dialogs.js') }}?v={{ filemtime(public_path('assets/js/dialogs.js')) }}" defer></script>
     @php($pwaConfig = [
         'csrfToken' => csrf_token(),
         'pushPublicKey' => config('webpush.vapid.public_key'),

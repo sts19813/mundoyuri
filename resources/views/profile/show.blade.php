@@ -109,7 +109,7 @@
                                     <button class="profile-btn profile-btn-soft" type="submit">Desbloquear</button>
                                 </form>
                             @else
-                                <form method="POST" action="{{ route('users.block.store', $profileUser) }}" onsubmit="return confirm('¿Quieres bloquear a esta persona? Ya no podrán seguirse ni enviarse mensajes.')">
+                                <form method="POST" action="{{ route('users.block.store', $profileUser) }}" data-dialog-confirm="Ya no podrán seguirse ni enviarse mensajes." data-dialog-title="¿Bloquear a esta persona?" data-dialog-confirm-text="Bloquear">
                                     @csrf
                                     <button class="profile-btn profile-btn-danger-soft" type="submit">Bloquear</button>
                                 </form>

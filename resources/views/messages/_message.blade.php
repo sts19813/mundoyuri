@@ -107,7 +107,7 @@
                         @endforeach
                     </div>
                     @if($outgoing)
-                        <form method="POST" action="{{ route('messages.destroy', $message) }}" onsubmit="return confirm('¿Eliminar este mensaje? Se ocultará de la conversación.');">
+                        <form method="POST" action="{{ route('messages.destroy', $message) }}" data-dialog-confirm="Se ocultará de la conversación." data-dialog-title="¿Eliminar este mensaje?" data-dialog-confirm-text="Eliminar">
                             @csrf
                             @method('DELETE')
                             <button type="submit">Eliminar</button>

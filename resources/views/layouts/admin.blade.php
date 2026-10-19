@@ -19,6 +19,7 @@
     <!-- Global Stylesheets Bundle -->
     <link href="{{ asset('metronic/assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('metronic/assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/dialogs.css') }}?v={{ filemtime(public_path('assets/css/dialogs.css')) }}">
 
     @stack('styles')
 </head>
@@ -103,6 +104,7 @@
     <script src="{{ asset('metronic/assets/js/scripts.bundle.js') }}"></script>
     <script src="{{ asset('metronic/assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/lazy-media.js') }}?v={{ filemtime(public_path('assets/js/lazy-media.js')) }}" defer></script>
+    <script src="{{ asset('assets/js/dialogs.js') }}?v={{ filemtime(public_path('assets/js/dialogs.js')) }}" defer></script>
 
     <script>
         function setThemeMode(mode) {
@@ -116,20 +118,12 @@
         }
 
         function adminToast(type, message) {
-            if (typeof Swal === 'undefined') {
-                alert(message);
+            if (window.MundoYuriDialog) {
+                window.MundoYuriDialog.toast(type, message);
                 return;
             }
 
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: type === 'error' ? 5500 : 2600,
-                timerProgressBar: true,
-                icon: type,
-                title: message,
-            });
+            console.warn(message);
         }
 
         document.addEventListener('click', function (event) {

@@ -110,8 +110,12 @@
                             });
                             input.click();
                         },
-                        video() {
-                            const raw = window.prompt('Pega un enlace de YouTube');
+                        async video() {
+                            const raw = await window.MundoYuriDialog?.prompt({
+                                title: 'Insertar video de YouTube',
+                                message: 'Pega el enlace del video que quieres insertar.',
+                                placeholder: 'https://www.youtube.com/watch?v=…',
+                            });
                             if (!raw) return;
                             const embed = youtubeEmbedUrl(raw);
                             if (!embed) {

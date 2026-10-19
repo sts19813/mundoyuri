@@ -448,7 +448,11 @@
 
         if (isCreating && notifySubscribersInput?.checked) {
             if (typeof Swal === 'undefined') {
-                notifySubscribersInput.checked = window.confirm('¿Quieres enviar el correo a todos los usuarios?');
+                notifySubscribersInput.checked = await window.MundoYuriDialog?.confirm({
+                    title: '¿Enviar correo a todas?',
+                    message: 'Se notificará que este episodio ya está disponible.',
+                    confirmText: 'Sí, enviar correo',
+                });
             } else {
                 const confirmation = await Swal.fire({
                     icon: 'question',

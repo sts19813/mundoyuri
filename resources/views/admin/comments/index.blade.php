@@ -83,7 +83,7 @@
                                                 {{ $comment->is_approved ? 'Ocultar' : 'Restaurar' }}
                                             </button>
                                         </form>
-                                        <form method="POST" action="{{ route('admin.comments.destroy', $comment) }}" onsubmit="return confirm('¿Eliminar este comentario? Esta acción también elimina sus respuestas.');">
+                                        <form method="POST" action="{{ route('admin.comments.destroy', $comment) }}" data-dialog-confirm="Esta acción también elimina sus respuestas." data-dialog-title="¿Eliminar este comentario?" data-dialog-confirm-text="Eliminar">
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-sm btn-light-danger">Eliminar</button>

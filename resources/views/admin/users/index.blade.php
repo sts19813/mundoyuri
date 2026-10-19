@@ -443,7 +443,7 @@
                 window.adminToast(type, message);
                 return;
             }
-            alert(message);
+            window.MundoYuriDialog?.toast(type, message);
         };
 
         const badges = (items, variant = 'primary', emptyText = 'Sin permisos') => {
@@ -716,7 +716,12 @@
 
         const destroyAjax = async (url, message, onSuccess) => {
             if (typeof Swal === 'undefined') {
-                if (!confirm(message)) {
+                const confirmed = await window.MundoYuriDialog?.confirm({
+                    title: '¿Eliminar elemento?',
+                    message,
+                    confirmText: 'Eliminar',
+                });
+                if (!confirmed) {
                     return;
                 }
 

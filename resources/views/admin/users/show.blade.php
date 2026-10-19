@@ -200,7 +200,7 @@
                         <button type="submit" class="btn btn-sm btn-light-warning mt-3">Guardar suspensión</button>
                     </form>
                     @if(filled($user->signature_text) || $user->signatureImageUrl())
-                        <form method="POST" action="{{ route('admin.users.signature.destroy', $user) }}" onsubmit="return confirm('¿Eliminar permanentemente esta firma?')">
+                        <form method="POST" action="{{ route('admin.users.signature.destroy', $user) }}" data-dialog-confirm="Esta acción no se puede deshacer." data-dialog-title="¿Eliminar permanentemente esta firma?" data-dialog-confirm-text="Eliminar">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-light-danger">Eliminar firma</button>
                         </form>
@@ -256,7 +256,7 @@
                                 <td>{{ $badge->pivot->awarded_at?->format('d/m/Y H:i') ?: 'Sin fecha' }}</td>
                                 <td class="text-muted">{{ $badge->pivot->note ?: '—' }}</td>
                                 <td class="text-end">
-                                    <form method="POST" action="{{ route('admin.users.badges.destroy', [$user, $badge]) }}" onsubmit="return confirm('¿Retirar esta insignia?')">
+                                    <form method="POST" action="{{ route('admin.users.badges.destroy', [$user, $badge]) }}" data-dialog-confirm="La usuaria dejará de mostrar esta insignia." data-dialog-title="¿Retirar esta insignia?" data-dialog-confirm-text="Retirar">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light-danger">Retirar</button>
                                     </form>

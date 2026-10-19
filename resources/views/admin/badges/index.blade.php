@@ -40,7 +40,7 @@
                                 <td><span class="badge {{ $badge->is_active ? 'badge-light-success' : 'badge-light-danger' }}">{{ $badge->is_active ? 'Activa' : 'Inactiva' }}</span></td>
                                 <td class="text-end text-nowrap">
                                     <a href="{{ route('admin.badges.edit', $badge) }}" class="btn btn-sm btn-light-primary me-1"><i class="ki-outline ki-pencil fs-4"></i>Editar</a>
-                                    <form method="POST" action="{{ route('admin.badges.destroy', $badge) }}" class="d-inline" onsubmit="return confirm('¿Eliminar esta insignia? También se retirará de las personas que la tengan.')">
+                                    <form method="POST" action="{{ route('admin.badges.destroy', $badge) }}" class="d-inline" data-dialog-confirm="También se retirará de las personas que la tengan." data-dialog-title="¿Eliminar esta insignia?" data-dialog-confirm-text="Eliminar">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light-danger"><i class="ki-outline ki-trash fs-4"></i>Eliminar</button>
                                     </form>

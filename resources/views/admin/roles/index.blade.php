@@ -30,7 +30,7 @@
                     <td class="text-end">
                         <a href="{{ route('admin.roles.show', $role) }}" class="btn btn-sm btn-light">Ver</a>
                         <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-light-primary">Editar</a>
-                        <form method="POST" action="{{ route('admin.roles.destroy', $role) }}" class="d-inline" onsubmit="return confirm('Eliminar rol?')">
+                        <form method="POST" action="{{ route('admin.roles.destroy', $role) }}" class="d-inline" data-dialog-confirm="Esta acción no se puede deshacer." data-dialog-title="¿Eliminar rol?" data-dialog-confirm-text="Eliminar">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-light-danger" type="submit">Eliminar</button>
                         </form>
