@@ -1063,6 +1063,7 @@ class="messenger-body"
                     }
                     saveStickerForm.classList.add('is-saved');
                     button?.querySelector('span')?.replaceChildren('Guardado');
+                    closeMessageMenus();
                     window.MundoYuriDialog?.toast('success', 'Sticker guardado en Mis stickers.');
                 } finally {
                     button?.removeAttribute('disabled');
