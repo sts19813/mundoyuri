@@ -4782,6 +4782,33 @@
             gap: 10px;
         }
 
+        .public-profile-page .public-profile-content {
+            margin-top: 0;
+            padding-top: 30px;
+        }
+
+        .public-profile-page .profile-grid {
+            gap: 38px;
+            margin-top: 0;
+        }
+
+        .public-profile-page .public-profile-main {
+            gap: 42px;
+        }
+
+        .public-profile-page .profile-panel {
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .public-profile-page .profile-panel-main,
+        .public-profile-page .public-profile-badges-card,
+        .public-profile-page .community-profile-signature {
+            padding: 0;
+        }
+
         .profile-panel-main {
             padding: 23px 20px;
         }
