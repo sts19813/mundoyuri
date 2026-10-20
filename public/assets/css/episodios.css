@@ -1345,6 +1345,10 @@
           display: none !important;
       }
 
+      .episode-page-body .ep-sidebar {
+          display: none;
+      }
+
       .episode-page-body .ep-layout {
           padding: 73px 0 48px;
           gap: 28px;
@@ -1367,26 +1371,32 @@
       }
 
       .episode-page-body .ep-main > :not(.player-wrap):not(.ep-breadcrumb) {
-          margin-left: 16px;
-          margin-right: 16px;
+          margin-left: 20px;
+          margin-right: 20px;
       }
 
       .episode-page-body .ep-title-section {
-          margin-top: 18px;
+          margin-top: 0;
+          padding-top: 26px;
+          padding-bottom: 28px;
       }
 
       .episode-page-body .ep-heading-row {
           align-items: flex-start;
+          flex-direction: column;
+          gap: 16px;
       }
 
       .episode-page-body .ep-title-section h1 {
-          font-size: 1.28rem;
-          line-height: 1.22;
+          max-width: 100%;
+          font-size: 1.36rem;
+          line-height: 1.28;
       }
 
       .episode-page-body .ep-episode-label {
-          font-size: .78rem;
-          line-height: 1.45;
+          margin-top: 9px;
+          font-size: .8rem;
+          line-height: 1.5;
       }
 
       .episode-page-body .favorite-series-control {
@@ -1395,25 +1405,28 @@
       }
 
       .episode-page-body .favorite-series-btn {
-          min-height: 38px;
-          padding: 8px 11px;
+          min-height: 40px;
+          padding: 9px 14px;
+          border-radius: 20px;
       }
 
       .episode-page-body .ep-nav {
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 8px;
-          margin-top: 16px;
+          gap: 12px;
+          margin-top: 24px;
       }
 
       .episode-page-body .ep-nav-btn {
           min-width: 0;
-          gap: 8px;
-          padding: 11px 10px;
+          min-height: 72px;
+          gap: 10px;
+          padding: 13px 12px;
+          border-radius: 14px;
       }
 
       .episode-page-body .ep-nav-arrow {
-          width: 30px;
-          height: 30px;
+          width: 34px;
+          height: 34px;
       }
 
       .episode-page-body .ep-nav-title {
@@ -1425,36 +1438,50 @@
 
       .episode-page-body .ep-list-section,
       .episode-page-body .comments-section {
-          margin-top: 26px;
+          margin-top: 42px;
       }
 
       .episode-page-body .ep-list-header {
-          margin-bottom: 12px;
-      }
-
-      .episode-page-body .ep-number-grid {
-          grid-template-columns: repeat(auto-fill, minmax(43px, 1fr));
-          gap: 8px;
-      }
-
-      .episode-page-body .ep-number-btn {
-          min-height: 44px;
-          border-radius: 10px;
-      }
-
-      .episode-page-body .comments-header {
           margin-bottom: 18px;
       }
 
+      .episode-page-body .ep-number-grid {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 10px;
+          max-height: 300px;
+      }
+
+      .episode-page-body .ep-number-btn {
+          min-height: 52px;
+          border-radius: 12px;
+      }
+
+      .episode-page-body .comments-header {
+          margin-bottom: 22px;
+      }
+
+      .episode-page-body .comments-empty {
+          margin-bottom: 26px;
+          line-height: 1.65;
+      }
+
       .episode-page-body .comment-form {
-          margin-top: 18px;
-          padding: 18px;
+          margin-top: 0;
+          padding: 22px;
+          border-radius: 18px;
       }
 
       .episode-page-body .comment-form-title {
           align-items: flex-start;
           font-size: 1rem;
-          line-height: 1.35;
+          line-height: 1.45;
+          margin-bottom: 20px;
+      }
+
+      .episode-page-body .cf-textarea {
+          min-height: 112px;
+          padding: 16px;
+          line-height: 1.55;
       }
 
       .episode-page-body .cf-submit {
@@ -1505,6 +1532,6 @@
       }
 
       .episode-page-body .favorite-series-btn span {
-          font-size: .7rem;
+          font-size: .74rem;
       }
   }

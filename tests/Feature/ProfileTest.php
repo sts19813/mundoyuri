@@ -254,6 +254,11 @@ class ProfileTest extends TestCase
         $this->actingAs($user)->get('/')
             ->assertOk()
             ->assertSee('LR')
+            ->assertSee('nav-toggler--user', false)
+            ->assertSee('nav-toggler-avatar--fallback', false)
+            ->assertSee('Todo lo que necesitas, bien organizado')
+            ->assertSee('Tu cuenta')
+            ->assertDontSee('nav-toggler-lines', false)
             ->assertSee('Mi perfil')
             ->assertSee('Cerrar sesión');
     }

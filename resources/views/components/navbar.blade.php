@@ -6,20 +6,7 @@
             <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri" class="brand-logo">
         </a>
         <ul class="nav-links" id="navLinks">
-            <li class="nav-mobile-heading"><span>Menú</span><small>Navegación y cuenta en un solo lugar</small></li>
-            <li class="nav-mobile-search">
-                <form action="{{ route('catalog.series.index') }}" method="GET" role="search">
-                    <label class="visually-hidden" for="mobile-nav-search">Buscar series</label>
-                    <input id="mobile-nav-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar series…">
-                    <button type="submit" aria-label="Buscar">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                    </button>
-                </form>
-            </li>
-            <li><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif>Inicio</a></li>
-            <li><a href="{{ route('community.index') }}" @if(request()->routeIs('community.index', 'community.members', 'community.activity')) aria-current="page" @endif>Comunidad</a></li>
-            <li><a href="{{ route('forums.index') }}" @if(request()->routeIs('forums.*', 'forum.*')) aria-current="page" @endif>Foros</a></li>
-            <li><a href="{{ route('questions.index') }}" @if(request()->routeIs('questions.*')) aria-current="page" @endif>Preguntas</a></li>
+            <li class="nav-mobile-heading"><span>Menú</span><small>Todo lo que necesitas, bien organizado</small></li>
             @auth
                 @php($mobileNavUser = auth()->user())
                 <li class="nav-mobile-account-summary">
@@ -30,8 +17,26 @@
                             <span class="portal-avatar portal-avatar-fallback" aria-hidden="true">{{ $mobileNavUser->initials() }}</span>
                         @endif
                         <span><strong>{{ $mobileNavUser->alias ?: $mobileNavUser->name }}</strong><small>Ver mi perfil</small></span>
+                        <svg class="nav-mobile-row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     </a>
                 </li>
+            @endauth
+            <li class="nav-mobile-search">
+                <form action="{{ route('catalog.series.index') }}" method="GET" role="search">
+                    <label class="visually-hidden" for="mobile-nav-search">Buscar series</label>
+                    <input id="mobile-nav-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar series…">
+                    <button type="submit" aria-label="Buscar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    </button>
+                </form>
+            </li>
+            <li class="nav-mobile-section-label"><span>Explorar</span></li>
+            <li class="nav-primary-link"><a href="{{ route('home') }}" @if(request()->routeIs('home')) aria-current="page" @endif><span class="nav-link-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span><span>Inicio</span></a></li>
+            <li class="nav-primary-link"><a href="{{ route('community.index') }}" @if(request()->routeIs('community.index', 'community.members', 'community.activity')) aria-current="page" @endif><span class="nav-link-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Comunidad</span></a></li>
+            <li class="nav-primary-link"><a href="{{ route('forums.index') }}" @if(request()->routeIs('forums.*', 'forum.*')) aria-current="page" @endif><span class="nav-link-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></span><span>Foros</span></a></li>
+            <li class="nav-primary-link"><a href="{{ route('questions.index') }}" @if(request()->routeIs('questions.*')) aria-current="page" @endif><span class="nav-link-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 18h.01"/></svg></span><span>Preguntas</span></a></li>
+            @auth
+                <li class="nav-mobile-section-label nav-mobile-account-label"><span>Tu cuenta</span></li>
                 <li class="nav-mobile-account-link"><a href="{{ route('profile.edit') }}">Configuración</a></li>
                 @if($mobileNavUser->isAdmin())
                     <li class="nav-mobile-account-link"><a href="{{ route('admin.dashboard') }}">Panel</a></li>
@@ -231,8 +236,17 @@
                 </div>
             @endguest
         </div>
-        <button class="nav-toggler" id="navToggler" type="button" aria-label="Abrir menú principal" aria-controls="navLinks" aria-expanded="false">
-            <span class="nav-toggler-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+        <button @class(['nav-toggler', 'nav-toggler--user' => auth()->check()]) id="navToggler" type="button" aria-label="Abrir menú principal" aria-controls="navLinks" aria-expanded="false">
+            @auth
+                @php($navToggleUser = auth()->user())
+                @if($navToggleUser->hasProfileAvatar())
+                    <img src="{{ $navToggleUser->avatarUrl() }}" alt="" class="nav-toggler-avatar">
+                @else
+                    <span class="nav-toggler-avatar nav-toggler-avatar--fallback" aria-hidden="true">{{ $navToggleUser->initials() }}</span>
+                @endif
+            @else
+                <span class="nav-toggler-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+            @endauth
         </button>
     </div>
     <button type="button" class="nav-mobile-backdrop" data-nav-backdrop aria-label="Cerrar menú principal" tabindex="-1"></button>
