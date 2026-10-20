@@ -1613,7 +1613,9 @@
       }
 
       .episode-page-body .ep-sidebar {
-          display: none;
+          display: block;
+          width: auto;
+          margin: 0 20px;
       }
 
       .episode-page-body .ep-layout {

@@ -35,7 +35,6 @@
         aria-labelledby="sidebar-tab-marathoners"
         data-sidebar-panel="marathoners"
     >
-        <p class="sidebar-panel-intro">Quienes más tiempo comparten con la comunidad.</p>
         <ol class="marathoner-list">
             @forelse($marathoners as $marathoner)
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
