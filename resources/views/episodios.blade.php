@@ -46,8 +46,6 @@
             $partSources = $episode->sources->where('source_type', 'part')->sortBy('sort_order')->values();
             $fullSources = $episode->sources->where('source_type', '!=', 'part')->values();
             $primarySource = $partSources->firstWhere('is_primary', true) ?: $partSources->first() ?: $fullSources->firstWhere('is_primary', true) ?: $fullSources->first();
-            $shareUrl = route('public.episodes.show', $episode->slug);
-            $releaseDate = $episode->release_date ?: $episode->published_at;
             $avatarClasses = ['', 'av2', 'av3'];
             $comments = $episode->comments;
             $trackableProviders = config('watch_progress.providers', []);
@@ -56,6 +54,13 @@
             $resumeSeconds = $requestedResumeSeconds ?: $storedResumeSeconds;
             $resumeSourceId = (int) request()->query('source', $episodeProgress?->episode_source_id ?? ($primarySource?->id ?? 0));
             $watchProgressEnabled = $watchProgressEnabled ?? false;
+            $episodeDisplayTitle = trim((string) $episode->title);
+            $showEpisodeDisplayTitle = filled($episodeDisplayTitle)
+                && strcasecmp($episodeDisplayTitle, $series->title) !== 0
+                && ! in_array(mb_strtolower($episodeDisplayTitle), [
+                    'episodio '.$episode->episode_number,
+                    'episode '.$episode->episode_number,
+                ], true);
             $subtitleLanguageLabels = [
                 'es' => 'Español',
                 'spa' => 'Español',
@@ -220,42 +225,18 @@
                 @endif
 
                 <div class="ep-title-section">
-                    <h1>{{ $series->title }} · <em>Temporada {{ $episode->season_number }} Episodio {{ $episode->episode_number }}</em></h1>
-                    <div class="ep-meta-row">
-                        <div class="ep-meta-item">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" />
-                                <line x1="16" y1="2" x2="16" y2="6" />
-                                <line x1="8" y1="2" x2="8" y2="6" />
-                                <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            {{ $releaseDate ? $releaseDate->format('d/m/Y') : 'Sin fecha' }}
+                    <div class="ep-heading-row">
+                        <div class="ep-heading-copy">
+                            <h1>{{ $series->title }}</h1>
+                            <p class="ep-episode-label">
+                                Temporada {{ $episode->season_number }} · Episodio {{ $episode->episode_number }}
+                                @if($showEpisodeDisplayTitle)
+                                    <span>{{ $episodeDisplayTitle }}</span>
+                                @endif
+                            </p>
                         </div>
-                        <div class="ep-meta-dot"></div>
-                        <div class="ep-meta-item">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            {{ $episode->duration_minutes ? $episode->duration_minutes.' min' : 'Sin duración' }}
-                        </div>
-                        <div class="ep-meta-dot"></div>
-                        <div class="ep-meta-item" title="Vistas">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            {{ number_format($episode->views_count) }} {{ $episode->views_count === 1 ? 'vista' : 'vistas' }}
-                        </div>
-                        <div class="ep-meta-dot"></div>
-                        <div class="ep-meta-item">{{ $series->country_of_origin ?: 'País no definido' }}</div>
+                        <x-favorite-series-button :series="$series" compact />
                     </div>
-                    <x-episode-share
-                        :url="$shareUrl"
-                        :title="$series->title.' · Temporada '.$episode->season_number.' Episodio '.$episode->episode_number"
-                        :text="'Mira '.$series->title.' · Episodio '.$episode->episode_number.' en Mundo Yuri.'"
-                    />
-                    <x-favorite-series-button :series="$series" />
                 </div>
 
                 <div class="ep-nav">
@@ -272,7 +253,7 @@
                             </div>
                         </a>
                     @else
-                        <a href="#" class="ep-nav-btn prev">
+                        <span class="ep-nav-btn prev is-disabled" aria-disabled="true">
                             <div class="ep-nav-arrow">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="15 18 9 12 15 6" />
@@ -280,9 +261,9 @@
                             </div>
                             <div>
                                 <div class="ep-nav-label">Anterior</div>
-                                <div class="ep-nav-title">— Sin episodio —</div>
+                                <div class="ep-nav-title">No disponible</div>
                             </div>
-                        </a>
+                        </span>
                     @endif
 
                     @if($nextEpisode)
@@ -298,7 +279,7 @@
                             </div>
                         </a>
                     @else
-                        <a href="#" class="ep-nav-btn next">
+                        <span class="ep-nav-btn next is-disabled" aria-disabled="true">
                             <div class="ep-nav-arrow">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="9 18 15 12 9 6" />
@@ -306,41 +287,28 @@
                             </div>
                             <div>
                                 <div class="ep-nav-label">Siguiente</div>
-                                <div class="ep-nav-title">— Sin episodio —</div>
+                                <div class="ep-nav-title">No disponible</div>
                             </div>
-                        </a>
+                        </span>
                     @endif
                 </div>
 
                 <div class="ep-list-section">
                     <div class="ep-list-header">
                         <span class="ep-list-title">Episodios · Temporada {{ $episode->season_number }}</span>
-                        <div class="ep-list-filter">
-                            <button class="ep-filter-pill active">Todos</button>
-                            <button class="ep-filter-pill">Recientes</button>
-                        </div>
                     </div>
-                    <div class="ep-list">
+                    <nav class="ep-number-grid" aria-label="Episodios de la temporada {{ $episode->season_number }}">
                         @foreach($seriesEpisodes as $item)
-                            <a href="{{ route('public.episodes.show', $item->slug) }}" class="ep-list-item {{ $item->id === $episode->id ? 'current' : '' }}">
-                                <div class="ep-list-thumb">
-                                    <img src="{{ $item->imageUrl('140/90') }}" alt="">
-                                    <div class="ep-thumb-num">E{{ $item->episode_number }}</div>
-                                </div>
-                                <div class="ep-list-info">
-                                    <div class="ep-list-ep-title">Episodio {{ $item->episode_number }}</div>
-                                    <div class="ep-list-date">{{ optional($item->release_date)->format('d/m/Y') ?: 'Sin fecha' }}</div>
-                                </div>
-                                @if($item->id === $episode->id)
-                                    <div class="ep-list-playing">
-                                        <div class="playing-bar"></div>
-                                        <div class="playing-bar"></div>
-                                        <div class="playing-bar"></div>
-                                    </div>
-                                @endif
+                            <a
+                                href="{{ route('public.episodes.show', $item->slug) }}"
+                                class="ep-number-btn {{ $item->id === $episode->id ? 'current' : '' }}"
+                                aria-label="Ver episodio {{ $item->episode_number }}"
+                                @if($item->id === $episode->id) aria-current="page" @endif
+                            >
+                                {{ $item->episode_number }}
                             </a>
                         @endforeach
-                    </div>
+                    </nav>
                 </div>
 
                 @include('catalog.partials.threaded-comments', [

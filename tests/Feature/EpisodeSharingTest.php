@@ -13,7 +13,7 @@ class EpisodeSharingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_public_episode_has_prominent_sharing_options(): void
+    public function test_public_episode_focuses_on_watching_and_navigation_instead_of_sharing(): void
     {
         $genre = Genre::query()->create([
             'name' => 'Romance',
@@ -43,17 +43,15 @@ class EpisodeSharingTest extends TestCase
         $response = $this->get(route('public.episodes.show', $episode->slug));
 
         $response->assertOk()
-            ->assertSee('aria-label="Compartir episodio"', false)
-            ->assertSee('aria-label="Compartir por WhatsApp"', false)
-            ->assertSee('aria-label="Compartir en Facebook"', false)
-            ->assertSee('aria-label="Compartir en X"', false)
-            ->assertSee('aria-label="Compartir en Instagram"', false)
-            ->assertSee('aria-label="Copiar enlace del episodio"', false)
-            ->assertSee('data-share-network="wa"', false)
-            ->assertSee('data-share-network="fb"', false)
-            ->assertSee('data-share-network="x"', false)
-            ->assertSee('data-share-network="ig"', false)
-            ->assertSee(route('public.episodes.show', $episode->slug), false);
+            ->assertDontSee('data-episode-share', false)
+            ->assertDontSee('data-share-network', false)
+            ->assertSee('Guardar serie')
+            ->assertSee('class="ep-number-grid"', false)
+            ->assertSee('aria-current="page"', false)
+            ->assertSee('data-auth-open="register"', false)
+            ->assertDontSee('name="alias"', false)
+            ->assertDontSee('Comentarás como')
+            ->assertDontSee('Guarda mi nombre y correo');
     }
 
     public function test_public_episode_uses_friendly_video_source_labels(): void

@@ -433,20 +433,38 @@
   /* ── EPISODE TITLE INFO ── */
   .ep-title-section {
       margin-top: 24px;
-      padding-bottom: 20px;
+      padding-bottom: 18px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .ep-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+  }
+
+  .ep-heading-copy {
+      min-width: 0;
   }
 
   .ep-title-section h1 {
       font-family: 'Playfair Display', serif;
       font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 6px;
+      margin: 0;
   }
 
-  .ep-title-section h1 em {
-      font-style: italic;
+  .ep-episode-label {
+      margin: 7px 0 0;
       color: var(--rose);
+      font-size: .86rem;
+      font-weight: 500;
+  }
+
+  .ep-episode-label span {
+      color: #c7b8ce;
+      font-weight: 400;
   }
 
   .ep-meta-row {
@@ -499,6 +517,16 @@
       color: var(--text);
   }
 
+  .ep-nav-btn.is-disabled {
+      opacity: .5;
+      cursor: default;
+  }
+
+  .ep-nav-btn.is-disabled:hover {
+      border-color: rgba(244, 63, 142, 0.1);
+      background: var(--dark-card);
+  }
+
   .ep-nav-btn.next {
       flex-direction: row-reverse;
       text-align: right;
@@ -532,6 +560,46 @@
   /* ── EPISODE LIST ── */
   .ep-list-section {
       margin-top: 32px;
+  }
+
+  .ep-number-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+      gap: 9px;
+      max-height: 250px;
+      padding: 2px;
+      overflow-y: auto;
+  }
+
+  .ep-number-btn {
+      min-width: 0;
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: 11px;
+      color: #d7cadc;
+      background: rgba(255, 255, 255, .035);
+      font-size: .86rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color .18s, border-color .18s, background .18s, transform .18s;
+  }
+
+  .ep-number-btn:hover,
+  .ep-number-btn:focus-visible {
+      border-color: rgba(244, 63, 142, .45);
+      color: #fff;
+      background: rgba(244, 63, 142, .12);
+      outline: 0;
+      transform: translateY(-1px);
+  }
+
+  .ep-number-btn.current {
+      border-color: var(--rose);
+      color: #fff;
+      background: var(--rose);
+      box-shadow: 0 7px 20px rgba(244, 63, 142, .24);
   }
 
   .ep-list-header {
@@ -781,6 +849,13 @@
       margin-top: 32px;
   }
 
+  .comments-empty {
+      margin: -5px 0 20px;
+      color: #c8b9cf;
+      font-size: .86rem;
+      line-height: 1.55;
+  }
+
   .comments-header {
       display: flex;
       align-items: center;
@@ -972,7 +1047,7 @@
 
   /* Comment form */
   .comment-form {
-      margin-top: 28px;
+      margin-top: 22px;
       background: var(--dark-card);
       border-radius: 16px;
       padding: 24px;
@@ -981,7 +1056,7 @@
 
   .comment-form-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1rem;
+      font-size: 1.08rem;
       font-weight: 700;
       margin-bottom: 16px;
       display: flex;
@@ -1013,7 +1088,20 @@
   }
 
   .cf-textarea::placeholder {
-      color: var(--muted);
+      color: #aa9ab3;
+      opacity: 1;
+  }
+
+  .cf-textarea-guest {
+      min-height: 92px;
+      color: #d8cbdc;
+      cursor: pointer;
+  }
+
+  .cf-textarea-guest:hover,
+  .cf-textarea-guest:focus {
+      border-color: rgba(244, 63, 142, .55);
+      background: rgba(244, 63, 142, .07);
   }
 
   .cf-fields {
@@ -1258,7 +1346,7 @@
       }
 
       .episode-page-body .ep-layout {
-          padding: 80px 0 48px;
+          padding: 73px 0 48px;
           gap: 28px;
       }
 
@@ -1281,6 +1369,97 @@
       .episode-page-body .ep-main > :not(.player-wrap):not(.ep-breadcrumb) {
           margin-left: 16px;
           margin-right: 16px;
+      }
+
+      .episode-page-body .ep-title-section {
+          margin-top: 18px;
+      }
+
+      .episode-page-body .ep-heading-row {
+          align-items: flex-start;
+      }
+
+      .episode-page-body .ep-title-section h1 {
+          font-size: 1.28rem;
+          line-height: 1.22;
+      }
+
+      .episode-page-body .ep-episode-label {
+          font-size: .78rem;
+          line-height: 1.45;
+      }
+
+      .episode-page-body .favorite-series-control {
+          flex: 0 0 auto;
+          margin: 0;
+      }
+
+      .episode-page-body .favorite-series-btn {
+          min-height: 38px;
+          padding: 8px 11px;
+      }
+
+      .episode-page-body .ep-nav {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 16px;
+      }
+
+      .episode-page-body .ep-nav-btn {
+          min-width: 0;
+          gap: 8px;
+          padding: 11px 10px;
+      }
+
+      .episode-page-body .ep-nav-arrow {
+          width: 30px;
+          height: 30px;
+      }
+
+      .episode-page-body .ep-nav-title {
+          overflow: hidden;
+          font-size: .78rem;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+      }
+
+      .episode-page-body .ep-list-section,
+      .episode-page-body .comments-section {
+          margin-top: 26px;
+      }
+
+      .episode-page-body .ep-list-header {
+          margin-bottom: 12px;
+      }
+
+      .episode-page-body .ep-number-grid {
+          grid-template-columns: repeat(auto-fill, minmax(43px, 1fr));
+          gap: 8px;
+      }
+
+      .episode-page-body .ep-number-btn {
+          min-height: 44px;
+          border-radius: 10px;
+      }
+
+      .episode-page-body .comments-header {
+          margin-bottom: 18px;
+      }
+
+      .episode-page-body .comment-form {
+          margin-top: 18px;
+          padding: 18px;
+      }
+
+      .episode-page-body .comment-form-title {
+          align-items: flex-start;
+          font-size: 1rem;
+          line-height: 1.35;
+      }
+
+      .episode-page-body .cf-submit {
+          width: 100%;
+          justify-content: center;
       }
   }
 
@@ -1311,11 +1490,21 @@
           display: none;
       }
 
-      .ep-nav {
-          grid-template-columns: 1fr;
-      }
-
       .player-center {
           gap: 20px;
+      }
+
+      .episode-page-body .ep-disclaimer {
+          display: none;
+      }
+  }
+
+  @media (max-width: 430px) {
+      .episode-page-body .ep-layout {
+          padding-top: 55px;
+      }
+
+      .episode-page-body .favorite-series-btn span {
+          font-size: .7rem;
       }
   }

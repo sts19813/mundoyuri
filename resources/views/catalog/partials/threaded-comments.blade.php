@@ -7,6 +7,21 @@
     $commentCount = $renderedComments->count();
     $replyTo = (int) old('parent_id');
     $previousRootSignatureUserId = null;
+    $commentPrompts = $targetType === 'episode'
+        ? [
+            '¿Qué te pareció este capítulo?',
+            '¿Qué escena te dejó pensando?',
+            '¿Qué crees que pasará después?',
+            '¿Hubo algún momento que te sorprendió?',
+            '¿Con qué personaje conectaste más?',
+        ]
+        : [
+            '¿Qué te pareció esta serie?',
+            '¿Por qué la recomendarías?',
+            '¿Cuál fue tu personaje favorito?',
+            '¿Qué fue lo que más te atrapó?',
+        ];
+    $commentPrompt = $commentPrompts[array_rand($commentPrompts)];
 @endphp
 
 <div class="comments-section">
@@ -28,65 +43,45 @@
         <x-community.catalog-comment-node :comment="$comment" :target-type="$targetType" :target-id="$targetId" :previous-user-id="$previousRootSignatureUserId" />
         @php($previousRootSignatureUserId = $comment->user_id)
     @empty
-        <div class="text-muted small mb-4">Todavía no hay comentarios. Sé la primera persona en comentar.</div>
+        <p class="comments-empty">Aún nadie ha comentado. Puedes abrir la conversación.</p>
     @endforelse
 
     <div class="comment-form">
-        <form method="POST" action="{{ route('comments.store') }}">
-            @csrf
-            <input type="hidden" name="target_type" value="{{ $targetType }}">
-            <input type="hidden" name="target_id" value="{{ $targetId }}">
+        <div class="comment-form-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            {{ $commentPrompt }}
+        </div>
 
-            <div class="comment-form-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                Deja un comentario
-            </div>
-
-            <textarea class="cf-textarea" name="body" placeholder="Tu comentario...">{{ $replyTo ? '' : old('body') }}</textarea>
-            @if(!$replyTo)
-                @error('body')
-                    <div class="text-danger small mb-2">{{ $message }}</div>
-                @enderror
-            @endif
-
-            <div class="cf-fields">
-                @guest
-                    <div class="cf-field">
-                        <label>Alias <span>*</span></label>
-                        <input type="text" name="alias" class="cf-input" placeholder="Tu alias" value="{{ $replyTo ? '' : old('alias') }}">
-                        @if(!$replyTo)
-                            @error('alias')
-                                <div class="text-danger small">{{ $message }}</div>
-                            @enderror
-                        @endif
-                    </div>
-                @else
-                    <div class="cf-field">
-                        <label>Comentarás como</label>
-                        <input type="text" class="cf-input" value="{{ auth()->user()->alias ?: auth()->user()->name }}" disabled>
-                    </div>
-                @endguest
-
-                <div class="cf-field">
-                    <label>Correo electrónico</label>
-                    <input type="email" class="cf-input" placeholder="No será publicado" disabled>
-                </div>
-            </div>
-
-            <div class="cf-check-row">
-                <input type="checkbox" class="cf-check" id="saveInfo-{{ $targetType }}-{{ $targetId }}" disabled>
-                <label for="saveInfo-{{ $targetType }}-{{ $targetId }}">Guarda mi nombre y correo para la próxima vez que comente</label>
-            </div>
-            <button class="cf-submit" type="submit">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
-                Publicar comentario
-            </button>
-        </form>
+        @auth
+            <form method="POST" action="{{ route('comments.store') }}">
+                @csrf
+                <input type="hidden" name="target_type" value="{{ $targetType }}">
+                <input type="hidden" name="target_id" value="{{ $targetId }}">
+                <textarea class="cf-textarea" name="body" required minlength="2" maxlength="2500" placeholder="Escribe lo que pensaste…">{{ $replyTo ? '' : old('body') }}</textarea>
+                @if(!$replyTo)
+                    @error('body')
+                        <div class="text-danger small mb-2">{{ $message }}</div>
+                    @enderror
+                @endif
+                <button class="cf-submit" type="submit">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Comentar
+                </button>
+            </form>
+        @else
+            <textarea
+                class="cf-textarea cf-textarea-guest"
+                readonly
+                data-auth-open="register"
+                aria-label="Regístrate o inicia sesión para comentar"
+                placeholder="Regístrate o inicia sesión para escribir tu comentario…"
+            ></textarea>
+        @endauth
     </div>
 </div>
 

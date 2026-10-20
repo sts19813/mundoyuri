@@ -6,7 +6,7 @@
             <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri" class="brand-logo">
         </a>
         <ul class="nav-links" id="navLinks">
-            <li class="nav-mobile-heading"><span>Explorar Mundo Yuri</span><small>Elige dónde quieres ir</small></li>
+            <li class="nav-mobile-heading"><span>Menú</span><small>Navegación y cuenta en un solo lugar</small></li>
             <li class="nav-mobile-search">
                 <form action="{{ route('catalog.series.index') }}" method="GET" role="search">
                     <label class="visually-hidden" for="mobile-nav-search">Buscar series</label>
@@ -20,6 +20,29 @@
             <li><a href="{{ route('community.index') }}" @if(request()->routeIs('community.index', 'community.members', 'community.activity')) aria-current="page" @endif>Comunidad</a></li>
             <li><a href="{{ route('forums.index') }}" @if(request()->routeIs('forums.*', 'forum.*')) aria-current="page" @endif>Foros</a></li>
             <li><a href="{{ route('questions.index') }}" @if(request()->routeIs('questions.*')) aria-current="page" @endif>Preguntas</a></li>
+            @auth
+                @php($mobileNavUser = auth()->user())
+                <li class="nav-mobile-account-summary">
+                    <a href="{{ route('profile.show') }}">
+                        @if($mobileNavUser->hasProfileAvatar())
+                            <img src="{{ $mobileNavUser->avatarUrl() }}" alt="" class="portal-avatar portal-avatar-image">
+                        @else
+                            <span class="portal-avatar portal-avatar-fallback" aria-hidden="true">{{ $mobileNavUser->initials() }}</span>
+                        @endif
+                        <span><strong>{{ $mobileNavUser->alias ?: $mobileNavUser->name }}</strong><small>Ver mi perfil</small></span>
+                    </a>
+                </li>
+                <li class="nav-mobile-account-link"><a href="{{ route('profile.edit') }}">Configuración</a></li>
+                @if($mobileNavUser->isAdmin())
+                    <li class="nav-mobile-account-link"><a href="{{ route('admin.dashboard') }}">Panel</a></li>
+                @endif
+                <li class="nav-mobile-account-action">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit">Cerrar sesión</button>
+                    </form>
+                </li>
+            @endauth
         </ul>
         <div class="nav-actions">
             <form action="{{ route('catalog.series.index') }}" method="GET" class="nav-search-form" role="search">

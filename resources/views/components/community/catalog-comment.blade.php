@@ -16,22 +16,22 @@
         <x-community.reactions :reactable="$comment" />
         <details class="message-reply-box" @if((int) old('parent_id') === $comment->id) open @endif>
             <summary>↳ Responder</summary>
-            <form method="POST" action="{{ route('comments.store') }}" class="message-inline-form">
-                @csrf
-                <input type="hidden" name="target_type" value="{{ $targetType }}">
-                <input type="hidden" name="target_id" value="{{ $targetId }}">
-                <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                <label for="comment-reply-{{ $comment->id }}">Responder a {{ $comment->display_alias }}</label>
-                <textarea id="comment-reply-{{ $comment->id }}" name="body" rows="3" minlength="2" maxlength="2500" required placeholder="Escribe tu respuesta…">{{ (int) old('parent_id') === $comment->id ? old('body') : '' }}</textarea>
-                @guest
-                    <label for="comment-alias-{{ $comment->id }}">Tu alias</label>
-                    <input id="comment-alias-{{ $comment->id }}" type="text" name="alias" required minlength="2" maxlength="120" value="{{ (int) old('parent_id') === $comment->id ? old('alias') : '' }}">
-                @endguest
-                <div class="message-inline-buttons"><button type="submit" class="profile-btn profile-btn-primary">Publicar respuesta</button><button type="button" class="profile-btn profile-btn-text" data-cancel-reply>Cancelar</button></div>
-                @if((int) old('parent_id') === $comment->id)
-                    <p role="alert">{{ $errors->first('body') ?: $errors->first('parent_id') ?: $errors->first('alias') }}</p>
-                @endif
-            </form>
+            @auth
+                <form method="POST" action="{{ route('comments.store') }}" class="message-inline-form">
+                    @csrf
+                    <input type="hidden" name="target_type" value="{{ $targetType }}">
+                    <input type="hidden" name="target_id" value="{{ $targetId }}">
+                    <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                    <label for="comment-reply-{{ $comment->id }}">Responder a {{ $comment->display_alias }}</label>
+                    <textarea id="comment-reply-{{ $comment->id }}" name="body" rows="3" minlength="2" maxlength="2500" required placeholder="Escribe tu respuesta…">{{ (int) old('parent_id') === $comment->id ? old('body') : '' }}</textarea>
+                    <div class="message-inline-buttons"><button type="submit" class="profile-btn profile-btn-primary">Responder</button><button type="button" class="profile-btn profile-btn-text" data-cancel-reply>Cancelar</button></div>
+                    @if((int) old('parent_id') === $comment->id)
+                        <p role="alert">{{ $errors->first('body') ?: $errors->first('parent_id') }}</p>
+                    @endif
+                </form>
+            @else
+                <textarea class="cf-textarea cf-textarea-guest" readonly data-auth-open="register" aria-label="Regístrate o inicia sesión para responder" placeholder="Regístrate o inicia sesión para responder…"></textarea>
+            @endauth
         </details>
         {{ $slot }}
     </div>

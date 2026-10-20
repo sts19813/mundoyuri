@@ -691,7 +691,10 @@
 
     .nav-mobile-backdrop,
     .nav-mobile-heading,
-    .nav-mobile-search {
+    .nav-mobile-search,
+    .nav-mobile-account-summary,
+    .nav-mobile-account-link,
+    .nav-mobile-account-action {
         display: none;
     }
 
@@ -4338,6 +4341,74 @@
             width: 40px;
             padding: 3px;
             border-radius: 50%;
+        }
+
+        .portal-user-menu {
+            display: none;
+        }
+
+        .gl-nav .nav-links .nav-mobile-account-summary,
+        .gl-nav .nav-links .nav-mobile-account-link,
+        .gl-nav .nav-links .nav-mobile-account-action {
+            display: block;
+        }
+
+        .gl-nav .nav-links .nav-mobile-account-summary {
+            grid-column: 1 / -1;
+            margin-top: 5px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .gl-nav .nav-links .nav-mobile-account-summary a {
+            gap: 10px;
+            min-height: 58px;
+        }
+
+        .nav-mobile-account-summary a > span:last-child {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+        }
+
+        .nav-mobile-account-summary strong {
+            overflow: hidden;
+            color: #fff;
+            font-size: .8rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nav-mobile-account-summary small {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: .65rem;
+        }
+
+        .gl-nav .nav-links .nav-mobile-account-action form {
+            height: 100%;
+            margin: 0;
+        }
+
+        .gl-nav .nav-links .nav-mobile-account-action button {
+            width: 100%;
+            min-height: 46px;
+            border: 1px solid rgba(244, 63, 142, .16);
+            border-radius: 12px;
+            padding: 0 14px;
+            color: #ffb6d3;
+            background: rgba(244, 63, 142, .055);
+            font: 500 .82rem 'DM Sans', sans-serif;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .gl-nav .nav-links .nav-mobile-account-action button:hover,
+        .gl-nav .nav-links .nav-mobile-account-action button:focus-visible {
+            border-color: rgba(244, 63, 142, .35);
+            color: #fff;
+            background: rgba(244, 63, 142, .12);
+            outline: 0;
         }
 
         .nav-login {
