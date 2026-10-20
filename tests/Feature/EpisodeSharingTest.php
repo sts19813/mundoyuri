@@ -46,6 +46,8 @@ class EpisodeSharingTest extends TestCase
             ->assertDontSee('data-episode-share', false)
             ->assertDontSee('data-share-network', false)
             ->assertSee('Guardar serie')
+            ->assertSee('class="player-favorite-action"', false)
+            ->assertDontSee('activeSourceLabel', false)
             ->assertSee('class="ep-number-grid"', false)
             ->assertSee('aria-current="page"', false)
             ->assertSee('data-auth-open="register"', false)

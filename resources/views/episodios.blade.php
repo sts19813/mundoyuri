@@ -166,9 +166,9 @@
                         <span class="player-title-badge">
                             T{{ $episode->season_number }} · E{{ $episode->episode_number }}
                         </span>
-                        @if($primarySource)
-                            <span class="player-source-chip" id="activeSourceLabel">{{ $publicSourceLabel($primarySource)['name'] }}</span>
-                        @endif
+                        <div class="player-favorite-action">
+                            <x-favorite-series-button :series="$series" compact />
+                        </div>
                     </div>
                 </div>
 
@@ -235,7 +235,6 @@
                                 @endif
                             </p>
                         </div>
-                        <x-favorite-series-button :series="$series" compact />
                     </div>
                 </div>
 
@@ -367,7 +366,6 @@
 
         const playerFrame = document.getElementById('episodePlayer');
         const playerVideo = document.getElementById('episodeVideoPlayer');
-        const activeSourceLabel = document.getElementById('activeSourceLabel');
         const sourceButtons = document.querySelectorAll('.source-switcher');
         const backblazeQualityButtons = Array.from(sourceButtons).filter((button) =>
             button.dataset.providerKey === 'backblaze_b2' && button.dataset.quality
@@ -694,9 +692,6 @@
                     button.classList.remove('btn-light-primary');
                     button.classList.add('btn-primary');
 
-                    if (activeSourceLabel) {
-                        activeSourceLabel.textContent = provider || 'FUENTE';
-                    }
                 });
             });
         }
