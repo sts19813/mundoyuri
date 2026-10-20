@@ -897,46 +897,6 @@
       margin-top: 32px;
   }
 
-  .comments-empty {
-      margin: -5px 0 20px;
-      color: #c8b9cf;
-      font-size: .86rem;
-      line-height: 1.55;
-  }
-
-  .comments-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 24px;
-  }
-
-  .comments-icon {
-      width: 32px;
-      height: 32px;
-      background: rgba(244, 63, 142, 0.15);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--rose);
-  }
-
-  .comments-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-  }
-
-  .comments-count {
-      background: rgba(244, 63, 142, 0.15);
-      color: var(--rose);
-      font-size: 0.75rem;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 12px;
-  }
-
   .comment-item {
       display: flex;
       gap: 14px;
@@ -1104,16 +1064,10 @@
 
   .comment-form-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1.08rem;
+      font-size: 1.18rem;
       font-weight: 700;
       margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-  }
-
-  .comment-form-title svg {
-      color: var(--rose);
+      line-height: 1.4;
   }
 
   .cf-textarea {
@@ -1731,15 +1685,6 @@
           border-radius: 12px;
       }
 
-      .episode-page-body .comments-header {
-          margin-bottom: 22px;
-      }
-
-      .episode-page-body .comments-empty {
-          margin-bottom: 26px;
-          line-height: 1.65;
-      }
-
       .episode-page-body .comment-form {
           margin-top: 4px;
           padding: 0;
@@ -1749,8 +1694,7 @@
       }
 
       .episode-page-body .comment-form-title {
-          align-items: flex-start;
-          font-size: 1rem;
+          font-size: 1.2rem;
           line-height: 1.45;
           margin-bottom: 20px;
       }

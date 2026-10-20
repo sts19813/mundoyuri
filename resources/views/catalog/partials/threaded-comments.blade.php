@@ -4,7 +4,6 @@
     };
     $renderedComments = new \Illuminate\Database\Eloquent\Collection($flattenTree($comments)->all());
     app(\App\Services\CommunityReactionService::class)->hydrateSummaries($renderedComments, auth()->user());
-    $commentCount = $renderedComments->count();
     $replyTo = (int) old('parent_id');
     $previousRootSignatureUserId = null;
     $commentPrompts = $targetType === 'episode'
@@ -25,32 +24,17 @@
 @endphp
 
 <div class="comments-section">
-    <div class="comments-header">
-        <div class="comments-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-        </div>
-        <span class="comments-title">Comentarios</span>
-        <span class="comments-count">{{ $commentCount }}</span>
-    </div>
-
     @if(session('success'))
         <div class="comments-notice" role="status">{{ session('success') }}</div>
     @endif
 
-    @forelse($comments as $comment)
+    @foreach($comments as $comment)
         <x-community.catalog-comment-node :comment="$comment" :target-type="$targetType" :target-id="$targetId" :previous-user-id="$previousRootSignatureUserId" />
         @php($previousRootSignatureUserId = $comment->user_id)
-    @empty
-        <p class="comments-empty">Aún nadie ha comentado. Puedes abrir la conversación.</p>
-    @endforelse
+    @endforeach
 
     <div class="comment-form">
         <div class="comment-form-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
             {{ $commentPrompt }}
         </div>
 
