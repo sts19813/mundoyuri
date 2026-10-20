@@ -328,6 +328,9 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
         ->middleware('admin')
         ->name('admin.legacy-profile-claims.update');
 
+    Route::post('/insignias-comunidad/sincronizar', [AdminBadgeController::class, 'syncAutomation'])
+        ->name('admin.badges.sync-automation');
+
     Route::resource('insignias-comunidad', AdminBadgeController::class)
         ->except('show')
         ->parameters(['insignias-comunidad' => 'badge'])

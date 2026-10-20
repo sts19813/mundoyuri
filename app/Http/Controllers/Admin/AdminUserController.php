@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Badge;
 use App\Models\CommunityRank;
 use App\Models\User;
+use App\Services\BadgeAutomationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -53,7 +54,7 @@ class AdminUserController extends Controller
         return view('admin.users.create', compact('roles'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, BadgeAutomationService $automation)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -78,6 +79,7 @@ class AdminUserController extends Controller
             $user->syncPermissions($validated['permissions'] ?? []);
         }
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $automation->sync($user);
 
         $user->load(['roles', 'permissions', 'communityRank', 'badges']);
 
@@ -116,7 +118,7 @@ class AdminUserController extends Controller
         return view('admin.users.edit', compact('user', 'roles', 'communityRanks', 'communityBadges'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user, BadgeAutomationService $automation)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -181,15 +183,26 @@ class AdminUserController extends Controller
             $badgeIds = collect($validated['community_badges'] ?? [])->map(fn (int|string $badgeId): int => (int) $badgeId);
             $currentBadgeIds = $user->badges()->pluck('badges.id');
 
-            $user->badges()->detach($currentBadgeIds->diff($badgeIds));
+            $badgesToRemove = $user->badges()
+                ->whereIn('badges.id', $currentBadgeIds->diff($badgeIds))
+                ->where('badges.slug', '!=', 'fundadora')
+                ->get();
+            $currentBadges = $badgesToRemove;
+            $user->badges()->detach($badgesToRemove->pluck('id'));
+            $currentBadges->each(fn (Badge $badge) => $automation->recordManual($user, $badge, $request->user(), 'revoked', $badge->pivot->note));
 
             foreach ($badgeIds->diff($currentBadgeIds) as $badgeId) {
-                $user->badges()->attach($badgeId, [
+                $badge = Badge::query()->findOrFail($badgeId);
+                $user->badges()->attach($badge->id, [
                     'awarded_by' => $request->user()->id,
                     'awarded_at' => now(),
+                    'assignment_source' => 'manual',
                 ]);
+                $automation->recordManual($user, $badge, $request->user(), 'assigned');
             }
         }
+
+        $automation->sync($user);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -307,6 +320,10 @@ class AdminUserController extends Controller
             'community_rank_id' => $user->community_rank_id,
             'community_rank' => $user->communityRank?->name,
             'community_badges' => $user->badges->pluck('id')->values(),
+            'community_badge_labels' => $user->badges
+                ->sortByDesc('priority')
+                ->map(fn (Badge $badge) => trim(($badge->icon ?: '✦').' '.$badge->name))
+                ->values(),
             'is_legacy' => (bool) $user->is_legacy,
             'legacy_joined_at' => $user->legacy_joined_at?->format('Y-m-d'),
             'legacy_source' => $user->legacy_source,

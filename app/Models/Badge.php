@@ -38,7 +38,7 @@ class Badge extends Model
     {
         return $this->belongsToMany(User::class, 'badge_user')
             ->using(BadgeAward::class)
-            ->withPivot(['awarded_by', 'awarded_at', 'note'])
+            ->withPivot(['awarded_by', 'awarded_at', 'note', 'assignment_source', 'automation_rule'])
             ->withTimestamps();
     }
 

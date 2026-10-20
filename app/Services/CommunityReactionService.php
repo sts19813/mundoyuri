@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 class CommunityReactionService
 {
+    public function __construct(private readonly BadgeAutomationService $badges) {}
+
     /**
      * Toggles an equal reaction off, or replaces the member's previous reaction.
      *
@@ -52,6 +54,11 @@ class CommunityReactionService
 
         if ($reaction) {
             $this->notifyAuthor($actor, $reactable, $type);
+        }
+
+        $author = $this->authorOf($reactable);
+        if ($author) {
+            $this->badges->sync($author);
         }
 
         return $reaction;

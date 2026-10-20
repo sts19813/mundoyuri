@@ -1,6 +1,8 @@
 # Insignias comunitarias
 
-El catálogo de insignias es independiente de rangos, roles y permisos. Todas las concesiones son manuales por ahora: el seeder crea definiciones, pero nunca asigna una insignia a una persona.
+El catálogo de insignias es independiente de rangos y permisos. Las insignias con una condición objetiva se sincronizan automáticamente; los reconocimientos de criterio humano, eventos, contribuciones externas y secretos conservan asignación manual.
+
+La actividad automática no depende del foro: cuenta mensajes enviados por chat y comentarios aprobados en capítulos. El sistema solo evalúa cantidades y relaciones de respuesta; nunca lee ni expone el contenido de los mensajes privados.
 
 ## Importar el catálogo aprobado
 
@@ -19,9 +21,10 @@ No está registrado en `DatabaseSeeder`: se ejecuta de forma explícita también
 
 1. Entra a `/admin/insignias-comunidad` para revisar, crear o editar insignias.
 2. Abre `/admin/usuarios/{id}` para la persona destinataria.
-3. En **Insignias comunitarias**, selecciona una insignia, añade una nota interna opcional como evidencia y pulsa **Asignar**.
+3. En **Insignias comunitarias**, revisa la columna **Asignación y condición exacta**. Puedes usar **Sincronizar ahora** para aplicar todas las reglas a la base actual. La tarea `badges:sync-automation` también se ejecuta cada día a las 03:15.
+4. Para un reconocimiento manual, entra al perfil de la persona, selecciona una insignia, añade una nota interna opcional como evidencia y pulsa **Asignar**.
 
-El sistema registra quién la concedió y la fecha. Puede retirarse desde el mismo bloque. Las insignias no otorgan permisos: estos continúan dependiendo de roles y permisos de Spatie.
+El sistema registra altas y retiros en el historial del módulo, incluyendo si el origen fue manual o automático, la regla evaluada y la fecha. Una concesión manual no es retirada por la automatización. Las insignias no otorgan permisos: estos continúan dependiendo de roles y permisos de Spatie.
 
 ## Emojis ahora; imágenes después
 

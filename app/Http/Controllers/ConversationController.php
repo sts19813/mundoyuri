@@ -8,6 +8,7 @@ use App\Models\DirectMessage;
 use App\Models\Sticker;
 use App\Models\User;
 use App\Notifications\NewDirectMessageNotification;
+use App\Services\BadgeAutomationService;
 use App\Services\DirectMessageAttachmentService;
 use App\Services\StickerService;
 use App\Support\DirectMessageLinkFormatter;
@@ -289,7 +290,7 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function store(Request $request, User $user, DirectMessageAttachmentService $attachments): JsonResponse|RedirectResponse
+    public function store(Request $request, User $user, DirectMessageAttachmentService $attachments, BadgeAutomationService $badges): JsonResponse|RedirectResponse
     {
         $viewer = $request->user();
 
@@ -382,6 +383,8 @@ class ConversationController extends Controller
         }
 
         $user->notify(new NewDirectMessageNotification($message, $viewer));
+        $badges->sync($viewer);
+        $badges->sync($user);
 
         if ($request->expectsJson()) {
             $message->load(['sender', 'recipient', 'replyTo.sender']);

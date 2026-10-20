@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Episode;
 use App\Models\EpisodeSource;
 use App\Models\EpisodeWatchProgress;
+use App\Services\BadgeAutomationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class EpisodeWatchProgressController extends Controller
 {
-    public function store(Request $request, Episode $episode): JsonResponse
+    public function store(Request $request, Episode $episode, BadgeAutomationService $badges): JsonResponse
     {
         abort_unless($this->hostIsAllowed($request), 404);
 
@@ -65,6 +66,7 @@ class EpisodeWatchProgressController extends Controller
         );
 
         $this->pruneOldProgress($request->user()->id);
+        $badges->sync($request->user());
 
         return response()->json([
             'saved' => true,

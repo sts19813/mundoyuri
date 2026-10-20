@@ -17,6 +17,8 @@ class BadgeAward extends Pivot
         'awarded_by',
         'awarded_at',
         'note',
+        'assignment_source',
+        'automation_rule',
     ];
 
     protected function casts(): array

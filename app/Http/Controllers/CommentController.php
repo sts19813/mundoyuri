@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Models\Episode;
 use App\Models\Series;
+use App\Services\BadgeAutomationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, BadgeAutomationService $badges): RedirectResponse
     {
         $validated = $request->validate([
             'target_type' => ['required', 'in:series,episode'],
@@ -62,6 +63,10 @@ class CommentController extends Controller
             'body' => $validated['body'],
             'is_approved' => true,
         ]);
+
+        if ($request->user()) {
+            $badges->sync($request->user());
+        }
 
         return back()->with('success', $parent ? 'Respuesta publicada correctamente.' : 'Comentario publicado correctamente.');
     }

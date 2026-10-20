@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBadgeRequest;
 use App\Http\Requests\Admin\UpdateBadgeRequest;
 use App\Models\Badge;
+use App\Models\BadgeAwardLog;
+use App\Services\BadgeAutomationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BadgeController extends Controller
@@ -16,13 +19,17 @@ class BadgeController extends Controller
         $this->middleware(['auth', 'admin']);
     }
 
-    public function index(): View
+    public function index(BadgeAutomationService $automation): View
     {
         $this->authorize('manage', Badge::class);
 
-        $badges = Badge::query()->withCount(['users', 'legacyProfiles'])->ordered()->paginate(20);
+        $badges = Badge::query()->withCount(['users', 'legacyProfiles'])->ordered()->paginate(100);
+        $logs = BadgeAwardLog::query()->with(['user', 'actor'])->latest()->paginate(100, ['*'], 'history_page');
+        $automationRules = collect($automation->definitions())
+            ->map(fn (array $definition) => $definition['condition'])
+            ->all();
 
-        return view('admin.badges.index', compact('badges'));
+        return view('admin.badges.index', compact('badges', 'logs', 'automationRules'));
     }
 
     public function create(): View
@@ -59,5 +66,14 @@ class BadgeController extends Controller
         $badge->delete();
 
         return redirect()->route('admin.badges.index')->with('success', 'Insignia eliminada correctamente.');
+    }
+
+    public function syncAutomation(Request $request, BadgeAutomationService $automation): RedirectResponse
+    {
+        $this->authorize('manage', Badge::class);
+
+        $result = $automation->syncAll();
+
+        return back()->with('success', "Automatización revisada para {$result['users']} usuarios: {$result['awarded']} insignias asignadas y {$result['revoked']} retiradas.");
     }
 }

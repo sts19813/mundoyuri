@@ -134,7 +134,7 @@
                                 <tr class="text-start text-muted fw-bold fs-7 text-uppercase">
                                     <th>Usuario</th>
                                     <th>Rol</th>
-                                    <th>Permisos directos</th>
+                                    <th>Insignias</th>
                                     <th>Estado</th>
                                     <th>Correos</th>
                                     <th>Última sesión</th>
@@ -505,7 +505,7 @@
             const tbody = document.getElementById('usersTableBody');
             const query = normalize(filters.users);
             const visibleUsers = users.filter((user) => {
-                const haystack = normalize(`${user.name} ${user.email} ${user.role} ${user.community_rank || ''} ${(user.permissions || []).join(' ')}`);
+                const haystack = normalize(`${user.name} ${user.email} ${user.role} ${user.community_rank || ''} ${(user.community_badge_labels || []).join(' ')}`);
                 return !query || haystack.includes(query);
             });
 
@@ -531,7 +531,7 @@
                             </div>
                         </td>
                         <td><span class="badge badge-light-primary">${escapeHtml(titleCase(role))}</span></td>
-                        <td>${badges(user.permissions || [], 'info', 'Sin permisos directos')}</td>
+                        <td>${badges(user.community_badge_labels || [], 'success', 'Sin insignias')}</td>
                         <td>
                             <span class="badge ${user.is_active ? 'badge-light-success' : 'badge-light-danger'}">
                                 ${user.is_active ? 'Activo' : 'Inactivo'}
