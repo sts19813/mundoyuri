@@ -8,6 +8,7 @@ use App\Models\Genre;
 use App\Models\Series;
 use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
+use App\Services\PresenceLeaderboard;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -121,7 +122,12 @@ class CatalogController extends Controller
         return view('catalog.genres.show', compact('genre', 'series'));
     }
 
-    public function showSeries(Series $series, CommunityRankResolver $rankResolver, CommentConversationTree $commentTree): View
+    public function showSeries(
+        Series $series,
+        CommunityRankResolver $rankResolver,
+        CommentConversationTree $commentTree,
+        PresenceLeaderboard $presenceLeaderboard
+    ): View
     {
         if (! $this->catalogTablesReady()) {
             abort(404);
@@ -154,7 +160,9 @@ class CatalogController extends Controller
             ->take(8)
             ->get();
 
-        return view('catalog.series.show', compact('series', 'recentEpisodes', 'rankResolver'));
+        $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user());
+
+        return view('catalog.series.show', compact('series', 'recentEpisodes', 'marathoners', 'rankResolver'));
     }
 
     public function showEpisode(Series $series, Episode $episode): RedirectResponse

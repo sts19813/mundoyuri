@@ -8,6 +8,7 @@ use App\Models\EpisodeWatchProgress;
 use App\Models\Series;
 use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
+use App\Services\PresenceLeaderboard;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -174,7 +175,12 @@ class PublicCatalogController extends Controller
             ->get();
     }
 
-    public function episodes(CommunityRankResolver $rankResolver, CommentConversationTree $commentTree, ?Episode $episode = null): View
+    public function episodes(
+        CommunityRankResolver $rankResolver,
+        CommentConversationTree $commentTree,
+        PresenceLeaderboard $presenceLeaderboard,
+        ?Episode $episode = null
+    ): View
     {
         if (! $this->catalogTablesReady()) {
             return view('episodios', [
@@ -245,6 +251,8 @@ class PublicCatalogController extends Controller
             ->take(8)
             ->get();
 
+        $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user());
+
         $watchProgressEnabled = $this->watchProgressEnabledForRequest(request()) && auth()->check();
         $episodeProgress = $watchProgressEnabled
             ? EpisodeWatchProgress::query()
@@ -258,6 +266,7 @@ class PublicCatalogController extends Controller
             'series',
             'seriesEpisodes',
             'recentEpisodes',
+            'marathoners',
             'previousEpisode',
             'nextEpisode',
             'rankResolver',

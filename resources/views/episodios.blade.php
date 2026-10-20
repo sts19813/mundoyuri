@@ -328,31 +328,7 @@
             </main>
 
             <aside class="ep-sidebar">
-                <div class="sidebar-section">
-                    <div class="sidebar-header">
-                        <span class="sidebar-title">Lo más visto</span>
-                        <span class="sidebar-fire">🔥</span>
-                    </div>
-                    <div class="sidebar-list">
-                        @forelse($recentEpisodes as $item)
-                            <a href="{{ route('public.episodes.show', $item->slug) }}" class="sidebar-item">
-                                <span class="sidebar-rank {{ $loop->iteration <= 3 ? 'top3' : '' }}">{{ $loop->iteration }}</span>
-                                <div class="sidebar-thumb">
-                                    <img src="{{ $item->imageUrl('200/130') }}" alt="">
-                                    <div class="sidebar-thumb-overlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                                            <path d="M8 5v14l11-7z" />
-                                        </svg></div>
-                                </div>
-                                <div class="sidebar-info">
-                                    <div class="sidebar-series">{{ $item->series->title ?? 'Serie' }}</div>
-                                    <div class="sidebar-year">{{ $item->series->release_year ?: 'S/F' }} · {{ $item->series->country_of_origin ?: 'GL' }}</div>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="sidebar-item">Sin episodios recientes.</div>
-                        @endforelse
-                    </div>
-                </div>
+                <x-catalog.sidebar-tabs :marathoners="$marathoners" :recent-episodes="$recentEpisodes" />
             </aside>
 
         </div>
