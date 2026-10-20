@@ -1607,6 +1607,12 @@
       }
   }
 
+  @media (min-width: 1081px) {
+      .ep-layout {
+          max-width: none;
+      }
+  }
+
   @media (max-width: 767px) {
       .episode-page-body .miyu-assistant {
           display: none !important;
