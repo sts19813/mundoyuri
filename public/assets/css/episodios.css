@@ -111,7 +111,43 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       pointer-events: none;
+  }
+
+  .player-source-label,
+  .player-favorite-action .favorite-series-btn {
+      min-height: 40px;
+      box-sizing: border-box;
+      border-radius: 999px;
+  }
+
+  .player-source-label {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 13px;
+      border: 1px solid rgba(244, 63, 142, 0.5);
+      color: #fff;
+      background: rgba(13, 8, 16, 0.78);
+      box-shadow: 0 8px 22px rgba(8, 3, 10, 0.24);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font: 600 0.72rem 'DM Sans', sans-serif;
+      letter-spacing: 0.02em;
+      line-height: 1;
+  }
+
+  .player-source-label svg {
+      flex: 0 0 auto;
+      color: var(--rose);
+  }
+
+  .player-source-label span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
   }
 
   .player-favorite-action {
@@ -125,8 +161,8 @@
   }
 
   .player-favorite-action .favorite-series-btn {
-      min-height: 36px;
-      padding: 7px 12px;
+      min-height: 40px;
+      padding: 8px 13px;
       border-color: rgba(244, 63, 142, 0.55);
       border-radius: 999px;
       color: #fff;

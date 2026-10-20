@@ -163,8 +163,12 @@
                     @endif
 
                     <div class="player-source-indicator">
-                        <span class="player-title-badge">
-                            T{{ $episode->season_number }} · E{{ $episode->episode_number }}
+                        <span class="player-source-label" data-active-source-label>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M4 5h16v14H4z" />
+                                <path d="m9 9 6 3-6 3V9Z" />
+                            </svg>
+                            <span>{{ $publicSourceLabel($primarySource)['name'] }}</span>
                         </span>
                         <div class="player-favorite-action">
                             <x-favorite-series-button :series="$series" compact />
@@ -679,8 +683,13 @@
                     const providerKey = button.getAttribute('data-provider-key') || '';
                     const sourceId = button.getAttribute('data-source-id') || '';
                     const trackable = button.getAttribute('data-trackable') || '0';
+                    const activeSourceLabel = document.querySelector('[data-active-source-label] span');
 
                     switchEpisodePlayer(playerType, nextUrl, providerKey, sourceId, trackable);
+
+                    if (activeSourceLabel && provider) {
+                        activeSourceLabel.textContent = provider;
+                    }
 
                     sourceButtons.forEach((item) => {
                         item.classList.remove('active');
