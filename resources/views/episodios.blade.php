@@ -420,7 +420,9 @@
             const canTransmit = canTransmitActiveSource();
 
             if (remotePlaybackButton) {
-                remotePlaybackButton.hidden = !canTransmit || !(castDeviceAvailable || remotePlaybackAvailable);
+                // Keep the Cast entry point visible as soon as the browser has
+                // the sender SDK. Discovery can take a few seconds on Google TV.
+                remotePlaybackButton.hidden = !canTransmit || !(castSdkReady || remotePlaybackAvailable);
             }
 
             if (airplayButton) {
