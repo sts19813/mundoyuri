@@ -9,7 +9,6 @@ use App\Support\SeriesMedia;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 #[Signature('catalog:optimize-images {--dry-run : Calcula el ahorro sin modificar archivos ni base de datos}')]
@@ -32,9 +31,6 @@ class OptimizeCatalogImages extends Command
         });
 
         $saved = max(0, $totals['source'] - $totals['optimized_bytes']);
-        if (! $dryRun && $totals['optimized'] > 0) {
-            Cache::forget('catalog.public-home.v1');
-        }
         $verb = $dryRun ? 'Se optimizarían' : 'Se optimizaron';
         $this->info(sprintf('%s %d imágenes; ahorro estimado: %s. Omitidas: %d.', $verb, $totals['optimized'], $this->humanBytes($saved), $totals['skipped']));
 

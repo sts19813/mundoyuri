@@ -5,18 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class CatalogSection extends Model
 {
     use HasFactory;
-
-    protected static function booted(): void
-    {
-        static::saved(fn () => Cache::forget('catalog.public-home.v1'));
-        static::deleted(fn () => Cache::forget('catalog.public-home.v1'));
-    }
 
     protected $fillable = [
         'slug',
