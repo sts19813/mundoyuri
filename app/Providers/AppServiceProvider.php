@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
             return [
                 Limit::perMinutes(10, 3)->by('registration:ip:'.$visitorAddress),
                 Limit::perDay(3)->by('registration:email:'.hash('sha256', $email)),
+                Limit::perMinutes(10, 12)->by('registration:global'),
             ];
         });
 

@@ -104,6 +104,10 @@ class GoogleAuthController extends Controller
             return $user->refresh();
         }
 
+        if (! config('services.registration.enabled')) {
+            throw new \RuntimeException('El registro esta temporalmente pausado mientras reforzamos la seguridad de la comunidad. Intenta de nuevo en unos minutos.');
+        }
+
         $user = User::create([
             'name' => $name,
             'email' => $email,

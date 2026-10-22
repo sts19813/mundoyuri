@@ -48,6 +48,10 @@ return [
         'enabled' => filled(env('TURNSTILE_SITE_KEY')) && filled(env('TURNSTILE_SECRET_KEY')),
     ],
 
+    'registration' => [
+        'enabled' => env('REGISTRATION_ENABLED', true),
+    ],
+
     'bunny' => [
         'library_id' => env('BUNNY_STREAM_LIBRARY_ID'),
         'api_key' => env('BUNNY_STREAM_API_KEY'),

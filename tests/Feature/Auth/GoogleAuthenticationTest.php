@@ -129,6 +129,28 @@ class GoogleAuthenticationTest extends TestCase
         Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail): bool => $mail->hasTo('nuevo@example.com'));
     }
 
+    public function test_new_google_users_are_blocked_while_registration_is_paused(): void
+    {
+        config()->set('services.registration.enabled', false);
+
+        $service = Mockery::mock(GoogleOAuthService::class);
+        $service->shouldReceive('getUserFromCode')->once()->andReturn(new GoogleUser([
+            'sub' => 'blocked-google-user',
+            'email' => 'blocked-google@example.com',
+            'name' => 'Cuenta Bloqueada',
+        ]));
+        $this->app->instance(GoogleOAuthService::class, $service);
+
+        $this->withSession([
+            'google_oauth_state' => 'paused-state',
+            'google_oauth_intent' => 'register',
+        ])->get(route('auth.google.callback', ['code' => 'paused-code', 'state' => 'paused-state']))
+            ->assertRedirect(route('register'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('users', ['email' => 'blocked-google@example.com']);
+    }
+
     public function test_google_login_returns_to_the_original_page(): void
     {
         $user = User::factory()->create(['google_id' => 'return-google-user']);

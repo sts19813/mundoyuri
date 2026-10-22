@@ -76,6 +76,35 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'bot@example.com']);
     }
 
+    public function test_registration_rejects_links_in_public_identity_fields(): void
+    {
+        $response = $this->withSession(['registration_started_at' => now()->subSeconds(3)->timestamp])->post('/register', [
+            'name' => 'Вам перевод 122844 руб. получить тут fredmer.buzz/bonus',
+            'email' => 'spam-link@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('name');
+        $this->assertDatabaseMissing('users', ['email' => 'spam-link@example.com']);
+    }
+
+    public function test_registration_can_be_temporarily_paused(): void
+    {
+        config()->set('services.registration.enabled', false);
+
+        $this->withSession(['registration_started_at' => now()->subSeconds(3)->timestamp])
+            ->post('/register', [
+                'name' => 'Cuenta Nueva',
+                'email' => 'paused@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])
+            ->assertSessionHasErrors('email');
+
+        $this->assertDatabaseMissing('users', ['email' => 'paused@example.com']);
+    }
+
     public function test_registration_rejects_an_invalid_turnstile_challenge(): void
     {
         config()->set('services.turnstile.enabled', true);

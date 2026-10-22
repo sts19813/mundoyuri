@@ -23,6 +23,7 @@ class CommunityDirectoryTest extends TestCase
         User::factory()->create(['name' => 'Solo Miembros', 'profile_visibility' => 'members']);
         User::factory()->create(['name' => 'Perfil Privado', 'profile_visibility' => 'private']);
         User::factory()->create(['name' => 'Perfil Inactivo', 'profile_visibility' => 'public', 'is_active' => false]);
+        User::factory()->unverified()->create(['name' => 'Perfil Sin Verificar', 'profile_visibility' => 'public']);
 
         $this->get(route('community.members'))
             ->assertOk()
@@ -32,7 +33,8 @@ class CommunityDirectoryTest extends TestCase
             ->assertDontSee('visible-private@example.com')
             ->assertDontSee('Solo Miembros')
             ->assertDontSee('Perfil Privado')
-            ->assertDontSee('Perfil Inactivo');
+            ->assertDontSee('Perfil Inactivo')
+            ->assertDontSee('Perfil Sin Verificar');
     }
 
     public function test_directory_search_and_legacy_filter_mix_archived_and_modern_members(): void

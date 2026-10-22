@@ -397,6 +397,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query
             ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
             ->where('profile_visibility', 'public');
     }
 

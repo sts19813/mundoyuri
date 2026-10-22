@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -37,11 +38,18 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         AuthReturnUrl::remember($request);
+
+        if (! config('services.registration.enabled')) {
+            throw ValidationException::withMessages([
+                'email' => 'El registro esta temporalmente pausado mientras reforzamos la seguridad de la comunidad. Intenta de nuevo en unos minutos.',
+            ]);
+        }
+
         $this->ensureHumanRegistration($request);
 
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'alias' => ['nullable', 'string', 'max:120', 'unique:users,alias'],
+            'name' => ['required', 'string', 'max:80', $this->withoutLinks()],
+            'alias' => ['nullable', 'string', 'max:50', $this->withoutLinks(), 'unique:users,alias'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -108,5 +116,16 @@ class RegisteredUserController extends Controller
                 'email' => 'Confirma la verificación de seguridad para crear tu cuenta.',
             ]);
         }
+    }
+
+    private function withoutLinks(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            $text = Str::lower(trim((string) $value));
+
+            if (preg_match('/(?:https?:\/\/|www\.)|\b[\pL\pN-]+\.(?:com|net|org|ru|buzz|info|xyz|top|site|online|click|shop|io|co)(?:\/|\b)/iu', $text)) {
+                $fail('El :attribute no puede contener enlaces.');
+            }
+        };
     }
 }
