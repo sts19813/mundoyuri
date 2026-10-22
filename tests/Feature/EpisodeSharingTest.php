@@ -169,6 +169,10 @@ class EpisodeSharingTest extends TestCase
 
         $response->assertOk()
             ->assertSee('episode-page-body', false)
+            ->assertSee('episodeRemotePlaybackButton', false)
+            ->assertSee('activeCastUrl =', false)
+            ->assertSee('cast_sender.js', false)
+            ->assertSee('webkitShowPlaybackTargetPicker', false)
             ->assertDontSee('Fuentes de vídeo');
     }
 }

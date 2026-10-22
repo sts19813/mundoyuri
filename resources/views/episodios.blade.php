@@ -120,6 +120,12 @@
             };
         @endphp
 
+        @php
+            $primaryCastUrl = $primarySource?->provider === 'cloudflare_hls'
+                ? $primarySource->direct_video_url
+                : null;
+        @endphp
+
         <div class="ep-layout">
             <main class="ep-main">
                 <div class="ep-breadcrumb">
@@ -140,7 +146,7 @@
                             referrerpolicy="strict-origin-when-cross-origin"
                             loading="lazy"
                             @if($primarySource->player_type !== 'iframe') style="display:none;" @endif></iframe>
-                        <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata"
+                        <video id="episodeVideoPlayer" class="player-embed" controls playsinline preload="metadata" x-webkit-airplay="allow"
                             data-provider="{{ $primarySource->provider }}"
                             data-source-id="{{ $primarySource->id }}"
                             data-trackable="{{ in_array($primarySource->provider, $trackableProviders, true) ? '1' : '0' }}"
@@ -170,8 +176,24 @@
                             </svg>
                             <span>{{ $publicSourceLabel($primarySource)['name'] }}</span>
                         </span>
-                        <div class="player-favorite-action">
-                            <x-favorite-series-button :series="$series" compact />
+                        <div class="player-actions">
+                            <button type="button" class="player-remote-action" id="episodeRemotePlaybackButton" hidden aria-label="Transmitir a una TV" title="Transmitir a una TV">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="13" rx="2" />
+                                    <path d="M8 21h8M12 17v4M16.5 8.5a3.5 3.5 0 0 1 0 5M19 6a7 7 0 0 1 0 10" />
+                                </svg>
+                                <span>Transmitir</span>
+                            </button>
+                            <button type="button" class="player-remote-action" id="episodeAirplayButton" hidden aria-label="Transmitir con AirPlay" title="Transmitir con AirPlay">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="13" rx="2" />
+                                    <path d="m8 21 4-4 4 4" />
+                                </svg>
+                                <span>AirPlay</span>
+                            </button>
+                            <div class="player-favorite-action">
+                                <x-favorite-series-button :series="$series" compact />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -184,7 +206,7 @@
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($partSources as $part)
-                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-source-id="{{ $part->id }}" data-video-url="{{ $part->playable_url }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-provider-key="{{ $part->provider }}" data-trackable="{{ in_array($part->provider, $trackableProviders, true) ? '1' : '0' }}" data-player-type="{{ $part->player_type }}">
+                                <button type="button" class="btn btn-sm {{ $part->is_primary || ($loop->first && !$partSources->contains(fn($item) => $item->is_primary)) ? 'btn-primary' : 'btn-light-primary' }} source-switcher" data-source-id="{{ $part->id }}" data-video-url="{{ $part->playable_url }}" data-cast-url="{{ $part->provider === 'cloudflare_hls' ? $part->direct_video_url : '' }}" data-provider="PARTE {{ $part->sort_order ?: $loop->iteration }}" data-provider-key="{{ $part->provider }}" data-trackable="{{ in_array($part->provider, $trackableProviders, true) ? '1' : '0' }}" data-player-type="{{ $part->player_type }}">
                                     {{ $part->label ?: 'Parte '.($part->sort_order ?: $loop->iteration) }}
                                 </button>
                             @endforeach
@@ -211,6 +233,7 @@
                                     class="server-item source-switcher {{ $source->is_primary ? 'active' : '' }}"
                                     data-source-id="{{ $source->id }}"
                                     data-video-url="{{ $source->playable_url }}"
+                                    data-cast-url="{{ $source->provider === 'cloudflare_hls' ? $source->direct_video_url : '' }}"
                                     data-provider="{{ $sourcePublicLabel['name'] }}"
                                     data-provider-key="{{ $source->provider }}"
                                     data-trackable="{{ in_array($source->provider, $trackableProviders, true) ? '1' : '0' }}"
@@ -340,12 +363,20 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.14/dist/hls.min.js"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script>
+        window.__onGCastApiAvailable = (isAvailable) => {
+            window.dispatchEvent(new CustomEvent('mundo-yuri-cast-ready', { detail: { isAvailable } }));
+        };
+    </script>
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" async defer></script>
+    <script>
         window.addEventListener('scroll', () => {
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
         });
 
         const playerFrame = document.getElementById('episodePlayer');
         const playerVideo = document.getElementById('episodeVideoPlayer');
+        const remotePlaybackButton = document.getElementById('episodeRemotePlaybackButton');
+        const airplayButton = document.getElementById('episodeAirplayButton');
         const sourceButtons = document.querySelectorAll('.source-switcher');
         const backblazeQualityButtons = Array.from(sourceButtons).filter((button) =>
             button.dataset.providerKey === 'backblaze_b2' && button.dataset.quality
@@ -367,7 +398,113 @@
         let lastProgressSaveAt = 0;
         let pendingResumeSeconds = Number(watchProgressConfig.resumeSeconds || 0);
         let resumeApplied = false;
+        let activeCastUrl = @json($primaryCastUrl);
+        let activePlayerType = @json($primarySource?->player_type);
+        let activeProviderKey = @json($primarySource?->provider);
+        let castSdkReady = false;
+        let castDeviceAvailable = false;
+        let airplayAvailable = false;
+        let remotePlaybackAvailable = false;
         const subtitleTracks = @json($episodeSubtitleTracks ?? []);
+        const castMetadata = {
+            title: @json($series->title),
+            subtitle: @json('Temporada '.$episode->season_number.' · Episodio '.$episode->episode_number),
+            image: @json($episode->previewMediaUrl('1200/675')),
+        };
+
+        const canTransmitActiveSource = () => activePlayerType === 'video'
+            && activeProviderKey === 'cloudflare_hls'
+            && Boolean(activeCastUrl);
+
+        const setRemoteButtonVisibility = () => {
+            const canTransmit = canTransmitActiveSource();
+
+            if (remotePlaybackButton) {
+                remotePlaybackButton.hidden = !canTransmit || !(castDeviceAvailable || remotePlaybackAvailable);
+            }
+
+            if (airplayButton) {
+                airplayButton.hidden = !canTransmit || !airplayAvailable;
+            }
+        };
+
+        const updateRemoteSource = (providerKey, playerType, castUrl = '') => {
+            activeProviderKey = providerKey;
+            activePlayerType = playerType;
+            activeCastUrl = providerKey === 'cloudflare_hls' && playerType === 'video' ? castUrl : '';
+            setRemoteButtonVisibility();
+        };
+
+        const playerCurrentTime = () => Math.max(0, Number(playerVideo?.currentTime || 0));
+
+        function configureCastSdk() {
+            if (!window.cast?.framework || !window.chrome?.cast || castSdkReady) {
+                return;
+            }
+
+            castSdkReady = true;
+            const castContext = window.cast.framework.CastContext.getInstance();
+            castContext.setOptions({
+                receiverApplicationId: window.chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+            });
+            castContext.addEventListener(window.cast.framework.CastContextEventType.CAST_STATE_CHANGED, (event) => {
+                castDeviceAvailable = event.castState !== window.cast.framework.CastState.NO_DEVICES_AVAILABLE;
+                setRemoteButtonVisibility();
+            });
+            castDeviceAvailable = castContext.getCastState() !== window.cast.framework.CastState.NO_DEVICES_AVAILABLE;
+            setRemoteButtonVisibility();
+        }
+
+        async function loadCastMedia() {
+            if (!canTransmitActiveSource() || !window.cast?.framework || !window.chrome?.cast) {
+                return;
+            }
+
+            const session = window.cast.framework.CastContext.getInstance().getCurrentSession();
+            if (!session) {
+                return;
+            }
+
+            const mediaInfo = new window.chrome.cast.media.MediaInfo(activeCastUrl, 'application/x-mpegURL');
+            const metadata = new window.chrome.cast.media.GenericMediaMetadata();
+            metadata.title = castMetadata.title;
+            metadata.subtitle = castMetadata.subtitle;
+            if (castMetadata.image) {
+                metadata.images = [new window.chrome.cast.Image(castMetadata.image)];
+            }
+            mediaInfo.metadata = metadata;
+
+            const request = new window.chrome.cast.media.LoadRequest(mediaInfo);
+            request.currentTime = playerCurrentTime();
+            request.autoplay = !playerVideo?.paused;
+            await session.loadMedia(request);
+            directPlayer?.pause();
+        }
+
+        async function startRemotePlayback() {
+            if (!canTransmitActiveSource()) {
+                return;
+            }
+
+            try {
+                if (castSdkReady) {
+                    const castContext = window.cast.framework.CastContext.getInstance();
+                    if (!castContext.getCurrentSession()) {
+                        await castContext.requestSession();
+                    }
+                    await loadCastMedia();
+                    return;
+                }
+
+                if (playerVideo?.remote?.prompt) {
+                    await playerVideo.remote.prompt();
+                }
+            } catch (error) {
+                // Closing the native device picker is an expected user action.
+                console.info('La transmisión a la TV se canceló o no estuvo disponible.', error);
+            }
+        }
 
         const isMobileStandaloneApp = () => {
             const isMobile = window.matchMedia?.('(max-width: 767px) and (pointer: coarse)').matches;
@@ -500,6 +637,38 @@
             directPlayer.on('exitfullscreen', unlockEpisodeOrientation);
         }
 
+        window.addEventListener('mundo-yuri-cast-ready', (event) => {
+            if (event.detail?.isAvailable) {
+                configureCastSdk();
+            }
+        });
+        configureCastSdk();
+
+        if (playerVideo?.remote?.watchAvailability) {
+            playerVideo.remote.watchAvailability((available) => {
+                remotePlaybackAvailable = Boolean(available);
+                setRemoteButtonVisibility();
+            }).catch(() => {
+                remotePlaybackAvailable = false;
+                setRemoteButtonVisibility();
+            });
+        }
+
+        if (playerVideo?.webkitShowPlaybackTargetPicker) {
+            playerVideo.addEventListener('webkitplaybacktargetavailabilitychanged', (event) => {
+                airplayAvailable = event.availability === 'available';
+                setRemoteButtonVisibility();
+            });
+        }
+
+        remotePlaybackButton?.addEventListener('click', startRemotePlayback);
+        airplayButton?.addEventListener('click', () => {
+            if (canTransmitActiveSource() && playerVideo?.webkitShowPlaybackTargetPicker) {
+                playerVideo.webkitShowPlaybackTargetPicker();
+            }
+        });
+        setRemoteButtonVisibility();
+
         document.addEventListener('fullscreenchange', syncEpisodeOrientation);
         document.addEventListener('webkitfullscreenchange', syncEpisodeOrientation);
         playerVideo?.addEventListener('webkitbeginfullscreen', lockEpisodeLandscape);
@@ -594,7 +763,7 @@
             }
         }
 
-        function switchEpisodePlayer(type, url, providerKey = '', sourceId = '', trackable = '0') {
+        function switchEpisodePlayer(type, url, providerKey = '', sourceId = '', trackable = '0', castUrl = '') {
             if (!url) {
                 return;
             }
@@ -611,6 +780,7 @@
 
                     if (providerKey === 'cloudflare_hls') {
                         loadHlsSource(url);
+                        updateRemoteSource(providerKey, type, castUrl);
 
                         return;
                     }
@@ -627,6 +797,8 @@
                         playerVideo.style.display = 'block';
                     }
                 }
+
+                updateRemoteSource(providerKey, type, castUrl);
 
                 return;
             }
@@ -648,6 +820,7 @@
                 playerFrame.src = url;
                 playerFrame.style.display = 'block';
             }
+            updateRemoteSource(providerKey, type);
         }
 
         if (sourceButtons.length > 0) {
@@ -659,9 +832,10 @@
                     const providerKey = button.getAttribute('data-provider-key') || '';
                     const sourceId = button.getAttribute('data-source-id') || '';
                     const trackable = button.getAttribute('data-trackable') || '0';
+                    const castUrl = button.getAttribute('data-cast-url') || '';
                     const activeSourceLabel = document.querySelector('[data-active-source-label] span');
 
-                    switchEpisodePlayer(playerType, nextUrl, providerKey, sourceId, trackable);
+                    switchEpisodePlayer(playerType, nextUrl, providerKey, sourceId, trackable, castUrl);
 
                     if (activeSourceLabel && provider) {
                         activeSourceLabel.textContent = provider;

@@ -116,6 +116,7 @@
   }
 
   .player-source-label,
+  .player-remote-action,
   .player-favorite-action .favorite-series-btn {
       min-height: 40px;
       box-sizing: border-box;
@@ -154,6 +155,45 @@
       position: relative;
       z-index: 2;
       pointer-events: auto;
+  }
+
+  .player-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 0;
+      pointer-events: auto;
+  }
+
+  .player-remote-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 1px solid rgba(244, 63, 142, 0.55);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(13, 8, 16, 0.78);
+      box-shadow: 0 8px 22px rgba(8, 3, 10, 0.24);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font: 600 0.72rem 'DM Sans', sans-serif;
+      line-height: 1;
+      cursor: pointer;
+  }
+
+  .player-remote-action:hover,
+  .player-remote-action:focus-visible {
+      border-color: #ff8fc7;
+      background: rgba(244, 63, 142, 0.92);
+      outline: none;
+  }
+
+  .player-remote-action[hidden] {
+      display: none;
   }
 
   .player-favorite-action .favorite-series-control {
@@ -1735,6 +1775,25 @@
       }
 
       .player-wrap .plyr__volume input[type="range"] {
+          display: none;
+      }
+
+      .player-source-indicator {
+          top: 10px;
+          left: 12px;
+          right: 12px;
+      }
+
+      .player-actions {
+          gap: 6px;
+      }
+
+      .player-remote-action {
+          width: 40px;
+          padding: 0;
+      }
+
+      .player-remote-action span {
           display: none;
       }
 
