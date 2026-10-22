@@ -55,21 +55,12 @@ use App\Http\Controllers\StickerController;
 use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\UserPresenceController;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/index', [PublicCatalogController::class, 'home'])->name('legacy.index');
 Route::view('/quienes-somos', 'about')->name('about');
-Route::get('/test', function () {
-    $template = file_get_contents(resource_path('views/index.blade.20260524-191213.bak.php'));
-
-    abort_if($template === false, 404);
-
-    return Blade::render($template, deleteCachedView: true);
-})->name('test.index-backup');
-
 Route::get('/inicio-catalogo', [CatalogController::class, 'home'])->name('catalog.home');
 Route::get('/series', [CatalogController::class, 'series'])->name('catalog.series.index');
 Route::get('/generos', [CatalogController::class, 'genres'])->name('catalog.genres.index');

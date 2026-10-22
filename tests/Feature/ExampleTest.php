@@ -18,7 +18,7 @@ class ExampleTest extends TestCase
             ->assertDontSee('BG.mp4', false)
             ->assertDontSee('youtube.com/embed', false)
             ->assertDontSee('googlevideo.com', false)
-            ->assertSee('Mundo Yuri: Anime y Series GL', false)
+            ->assertSee('Series GL, Yuri y Anime Gratis Sub Español', false)
             ->assertSee('Últimos episodios', false)
             ->assertSee('Destacados', false)
             ->assertSee('Títulos', false)

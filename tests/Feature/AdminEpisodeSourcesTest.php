@@ -662,7 +662,7 @@ class AdminEpisodeSourcesTest extends TestCase
         $this->assertStringContainsString('max-age=0', $cacheControl);
         $response->assertSee('/player/episode-sources/'.$source->id.'?', false);
         $response->assertSee('url=https%3A%2F%2Fvideo.mundoyuri.com%2FMoonshadow%2Fvariant%2F720p.m3u8', false);
-        $response->assertSee('v=test-session', false);
+        $response->assertDontSee('v=test-session', false);
         $response->assertSee('signature=', false);
 
         $variantResponse = $this->get(VideoSource::temporaryPlayerUrl($source, [
