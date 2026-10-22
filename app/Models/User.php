@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Support\YouTubeVideoUrl;
+use App\Notifications\PasswordResetNotification;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -75,6 +76,11 @@ class User extends Authenticatable implements MustVerifyEmail
             'legacy_verified' => 'boolean',
             'profile_claimed_at' => 'datetime',
         ];
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new PasswordResetNotification($token));
     }
 
     public function communityRank(): BelongsTo
