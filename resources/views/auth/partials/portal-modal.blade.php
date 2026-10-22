@@ -1,4 +1,9 @@
-@php($authReturn = request()->routeIs('login', 'register', 'password.*') ? null : request()->fullUrl())
+@php
+    $authReturn = request()->routeIs('login', 'register', 'password.*') ? null : request()->fullUrl();
+    if (! session()->has('registration_started_at')) {
+        session(['registration_started_at' => now()->timestamp]);
+    }
+@endphp
 
 <div class="portal-auth-overlay" data-auth-overlay hidden>
     <div class="portal-auth-backdrop" data-auth-close></div>
@@ -47,6 +52,10 @@
             <form method="POST" action="{{ route('register') }}" data-auth-form="register">
                 @csrf
                 @if($authReturn)<input type="hidden" name="return" value="{{ $authReturn }}">@endif
+                <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
+                    <label for="portal-auth-register-website">Sitio web</label>
+                    <input id="portal-auth-register-website" type="text" name="website" tabindex="-1" autocomplete="off">
+                </div>
                 <div class="portal-auth-feedback" role="alert" data-auth-feedback hidden></div>
                 <label for="portal-auth-register-name">Nombre</label>
                 <input id="portal-auth-register-name" name="name" type="text" autocomplete="name" required>
@@ -56,6 +65,12 @@
                 <input id="portal-auth-register-password" name="password" type="password" autocomplete="new-password" required minlength="8">
                 <label for="portal-auth-register-confirmation">Confirmar contraseña</label>
                 <input id="portal-auth-register-confirmation" name="password_confirmation" type="password" autocomplete="new-password" required minlength="8">
+                @if(config('services.turnstile.enabled'))
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                    @once
+                        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                    @endonce
+                @endif
                 <button class="portal-auth-submit" type="submit">Crear mi perfil</button>
             </form>
         </div>

@@ -23,10 +23,14 @@ use App\Policies\LegacyProfileClaimPolicy;
 use App\Policies\LegacyProfilePolicy;
 use App\Services\CommunityRankResolver;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -46,8 +50,21 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
+        RateLimiter::for('registration', function (Request $request): array {
+            $cloudflareAddress = $request->header('CF-Connecting-IP');
+            $visitorAddress = filter_var($cloudflareAddress, FILTER_VALIDATE_IP)
+                ? $cloudflareAddress
+                : $request->ip();
+            $email = Str::lower(trim((string) $request->input('email')));
+
+            return [
+                Limit::perMinutes(10, 3)->by('registration:ip:'.$visitorAddress),
+                Limit::perDay(3)->by('registration:email:'.hash('sha256', $email)),
+            ];
+        });
+
         Event::listen(Login::class, RecordUserLogin::class);
-        Event::listen(Registered::class, SendWelcomeEmail::class);
+        Event::listen(Verified::class, fn (Verified $event) => app(SendWelcomeEmail::class)->send($event->user));
 
         Gate::policy(Badge::class, BadgePolicy::class);
         Gate::policy(CommunityReport::class, CommunityReportPolicy::class);

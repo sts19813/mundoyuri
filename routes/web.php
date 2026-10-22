@@ -79,7 +79,9 @@ Route::get('/series/{series:slug}/episodios/{episode:slug}', [CatalogController:
 Route::get('/player/episode-sources/{source}', EpisodeSourcePlayerController::class)
     ->middleware('signed:relative')
     ->name('episode-sources.player');
-Route::post('/comentarios', [CommentController::class, 'store'])->name('comments.store');
+Route::post('/comentarios', [CommentController::class, 'store'])
+    ->middleware(['auth', 'verified', 'throttle:5,10'])
+    ->name('comments.store');
 Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
     ->middleware('throttle:5,10')
     ->name('assistant-messages.store');
@@ -104,7 +106,7 @@ Route::get('/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin.panel'])
     ->name('dashboard');
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'verified'])
     ->group(function () {
         Route::get('/profile', [ProfileController::class, 'showCurrent'])->name('profile.show');
         Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');

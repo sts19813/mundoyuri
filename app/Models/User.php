@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Support\YouTubeVideoUrl;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
@@ -23,7 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'alias', 'email', 'email_verified_at', 'password', 'role', 'is_active', 'episode_email_notifications_enabled', 'push_notifications_enabled', 'miyu_enabled', 'last_login_at', 'last_seen_at', 'google_id', 'google_avatar', 'profile_image', 'cover_image', 'cover_video_url', 'biography', 'profile_visibility', 'show_last_seen', 'show_join_date', 'show_favorites', 'show_activity', 'signature_text', 'signature_image', 'signature_enabled', 'show_signatures', 'signature_suspended_until', 'location', 'website', 'occupation', 'interests', 'community_message_count', 'community_reputation', 'community_rank_id', 'is_legacy', 'legacy_joined_at', 'legacy_source', 'legacy_notes', 'legacy_verified', 'profile_claimed_at'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasPushSubscriptions, HasRoles, Notifiable;

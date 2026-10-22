@@ -11,6 +11,10 @@
                 <!--begin::Form-->
                 <form method="POST" action="{{ route('register') }}" class="form w-100" novalidate>
                     @csrf
+                    <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
+                        <label for="register-website">Sitio web</label>
+                        <input id="register-website" type="text" name="website" tabindex="-1" autocomplete="off">
+                    </div>
 
                     {{-- HEADING --}}
                     <div class="text-center mb-11">
@@ -112,6 +116,15 @@
                             autocomplete="new-password"
                             class="form-control bg-transparent" required />
                     </div>
+
+                    @if(config('services.turnstile.enabled'))
+                        <div class="mb-8">
+                            <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                        </div>
+                        @once
+                            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                        @endonce
+                    @endif
 
                     {{-- SUBMIT --}}
                     <div class="d-grid mb-10">

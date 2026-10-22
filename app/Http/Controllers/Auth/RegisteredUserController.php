@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -23,6 +24,7 @@ class RegisteredUserController extends Controller
     public function create(Request $request): View
     {
         AuthReturnUrl::remember($request);
+        $request->session()->put('registration_started_at', now()->timestamp);
 
         return view('auth.register');
     }
@@ -35,6 +37,8 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         AuthReturnUrl::remember($request);
+        $this->ensureHumanRegistration($request);
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'alias' => ['nullable', 'string', 'max:120', 'unique:users,alias'],
@@ -57,11 +61,52 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->forget('registration_started_at');
 
-        $redirect = redirect()->intended(route('home', absolute: false));
+        $redirect = redirect()->intended(route('verification.notice', absolute: false));
 
         return $request->expectsJson()
             ? response()->json(['redirect' => $redirect->getTargetUrl()])
             : $redirect;
+    }
+
+    private function ensureHumanRegistration(Request $request): void
+    {
+        if (filled($request->input('website'))) {
+            throw ValidationException::withMessages([
+                'email' => 'No fue posible completar el registro.',
+            ]);
+        }
+
+        $startedAt = (int) $request->session()->get('registration_started_at', 0);
+        $elapsed = now()->timestamp - $startedAt;
+
+        if ($startedAt === 0 || $elapsed < 2 || $elapsed > 7200) {
+            throw ValidationException::withMessages([
+                'email' => 'Actualiza la página y vuelve a intentar crear tu cuenta.',
+            ]);
+        }
+
+        if (! config('services.turnstile.enabled')) {
+            return;
+        }
+
+        try {
+            $verified = Http::asForm()
+                ->timeout(5)
+                ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => config('services.turnstile.secret_key'),
+                    'response' => $request->input('cf-turnstile-response'),
+                ])
+                ->json('success') === true;
+        } catch (\Throwable) {
+            $verified = false;
+        }
+
+        if (! $verified) {
+            throw ValidationException::withMessages([
+                'email' => 'Confirma la verificación de seguridad para crear tu cuenta.',
+            ]);
+        }
     }
 }
