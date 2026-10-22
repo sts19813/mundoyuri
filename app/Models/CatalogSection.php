@@ -5,11 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class CatalogSection extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget('catalog.public-home.v1'));
+        static::deleted(fn () => Cache::forget('catalog.public-home.v1'));
+    }
 
     protected $fillable = [
         'slug',
@@ -45,7 +52,11 @@ class CatalogSection extends Model
 
     public function heroDesktopImageUrl(): ?string
     {
-        return $this->heroImageUrl($this->hero_desktop_image) ?? $this->hero_image_url;
+        $legacyImage = $this->hero_image_url === '/assets/img/wallpaper-login.jpg'
+            ? '/assets/img/wallpaper-login.webp'
+            : $this->hero_image_url;
+
+        return $this->heroImageUrl($this->hero_desktop_image) ?? $legacyImage;
     }
 
     public function heroMobileImageUrl(): ?string

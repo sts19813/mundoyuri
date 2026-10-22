@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CatalogSection;
+use App\Services\CatalogImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -12,7 +13,7 @@ use Illuminate\View\View;
 
 class CatalogSectionController extends Controller
 {
-    public function __construct()
+    public function __construct(private readonly CatalogImageOptimizer $imageOptimizer)
     {
         $this->middleware(['auth', 'admin']);
     }
@@ -103,9 +104,12 @@ class CatalogSectionController extends Controller
             return $currentPath;
         }
 
+        $profile = $field === 'hero_desktop_image' ? 'hero-desktop' : 'hero-mobile';
+        $path = $this->imageOptimizer->store($request->file($field), 'portal-hero-images', $profile);
+
         $this->deleteHeroImage($currentPath);
 
-        return $request->file($field)->store('portal-hero-images', 'public');
+        return $path;
     }
 
     private function deleteHeroImage(?string $path): void

@@ -12,6 +12,7 @@ use App\Services\PresenceLeaderboard;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class PublicCatalogController extends Controller
@@ -81,17 +82,23 @@ class PublicCatalogController extends Controller
     /** @return array<string, mixed> */
     private function mixedHomeData(): array
     {
-        $featuredGlSeries = $this->featuredSeriesForSection('series-gl');
-        $featuredAnimeSeries = $this->featuredSeriesForSection('anime');
-        $glSeries = $this->allTitlesForSection('series-gl');
-        $animeSeries = $this->allTitlesForSection('anime');
+        $catalog = Cache::remember('catalog.public-home.v1', now()->addMinutes(10), function (): array {
+            $featuredGlSeries = $this->featuredSeriesForSection('series-gl');
+            $featuredAnimeSeries = $this->featuredSeriesForSection('anime');
+            $glSeries = $this->allTitlesForSection('series-gl');
+            $animeSeries = $this->allTitlesForSection('anime');
+
+            return [
+                'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
+                'isMixedHome' => true,
+                'latestEpisodes' => $this->latestEpisodesForMixedHome(),
+                'featuredSeries' => $this->interleave($featuredGlSeries, $featuredAnimeSeries),
+                'mixedSeries' => $this->interleave($glSeries, $animeSeries),
+            ];
+        });
 
         return [
-            'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
-            'isMixedHome' => true,
-            'latestEpisodes' => $this->latestEpisodesForMixedHome(),
-            'featuredSeries' => $this->interleave($featuredGlSeries, $featuredAnimeSeries),
-            'mixedSeries' => $this->interleave($glSeries, $animeSeries),
+            ...$catalog,
             'continueWatching' => $this->continueWatchingEpisodes(),
         ];
     }

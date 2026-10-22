@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Services\CatalogImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,9 +23,16 @@ class SeriesMedia
             return $existingPath;
         }
 
+        $file = $request->file($field);
+        $directory = self::directoryFor($field);
+        $profile = self::profileFor($field);
+        $path = $profile && $file->getMimeType() !== 'image/gif'
+            ? app(CatalogImageOptimizer::class)->store($file, $directory, $profile)
+            : $file->store($directory, 'public');
+
         self::deleteIfStored($existingPath);
 
-        return $request->file($field)->store(self::directoryFor($field), 'public');
+        return $path;
     }
 
     public static function deleteIfStored(?string $path): void
@@ -84,6 +92,16 @@ class SeriesMedia
             'cover_image' => 'series/covers',
             'thumbnail_image' => 'episodes/thumbnails',
             default => 'series/media',
+        };
+    }
+
+    private static function profileFor(string $field): ?string
+    {
+        return match ($field) {
+            'banner_image' => 'banner',
+            'cover_image' => 'cover',
+            'thumbnail_image' => 'thumbnail',
+            default => null,
         };
     }
 }

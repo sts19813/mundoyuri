@@ -41,13 +41,15 @@
                 ],
             ],
         ] : null;
-        $heroDesktopImageUrl = $section?->heroDesktopImageUrl() ?: '/assets/img/wallpaper-login.jpg';
+        $heroDesktopImageUrl = $section?->heroDesktopImageUrl() ?: '/assets/img/wallpaper-login.webp';
         $heroMobileImageUrl = $section?->heroMobileImageUrl() ?: $heroDesktopImageUrl;
         $heroPrimaryUrl = $section?->heroButtonUrl($section->hero_primary_url, $catalogUrl) ?? $catalogUrl;
         $heroSecondaryUrl = $section?->heroButtonUrl($section->hero_secondary_url, '#novedades') ?? '#novedades';
     @endphp
     <x-seo title="{{ $isMixedHome ? 'Series GL, Yuri y Anime Gratis Sub Español' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" :schema="$homeSeoSchema" />
     <x-portal-favicon />
+    <link rel="preload" as="image" href="{{ $heroDesktopImageUrl }}" media="(min-width: 769px)" fetchpriority="high">
+    <link rel="preload" as="image" href="{{ $heroMobileImageUrl }}" media="(max-width: 768px)" fetchpriority="high">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
@@ -62,7 +64,7 @@
     <section @class(['hero', 'hero-video-on-mobile' => $section?->hero_video_on_mobile])>
         <picture class="hero-cover-media" aria-hidden="true">
             <source media="(max-width: 768px)" srcset="{{ $heroMobileImageUrl }}">
-            <img class="hero-cover-image" src="{{ $heroDesktopImageUrl }}" alt="">
+            <img class="hero-cover-image" src="{{ $heroDesktopImageUrl }}" alt="" loading="eager" fetchpriority="high" decoding="async">
         </picture>
         @if($section?->heroVideoEmbedUrl())
             <iframe id="heroYoutubeVideo" class="hero-video" src="{{ $section->heroVideoEmbedUrl() }}" title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>

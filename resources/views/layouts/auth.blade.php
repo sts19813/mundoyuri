@@ -23,7 +23,7 @@ lang="{{ str_replace('_', '-', app()->getLocale()) }}"
             margin: 0;
             color: #f7eef8;
             background: linear-gradient(90deg, rgba(8, 5, 11, .72), rgba(8, 5, 11, .4) 52%, rgba(8, 5, 11, .68)),
-                url('{{ asset('assets/img/wallpaper-login.jpg') }}') center center / cover fixed no-repeat;
+                url('{{ asset('assets/img/wallpaper-login.webp') }}') center center / cover fixed no-repeat;
         }
 
         .auth-portal-page .gl-nav { top: 0 !important; }

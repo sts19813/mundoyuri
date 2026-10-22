@@ -19,7 +19,7 @@ class CatalogSectionHeroTest extends TestCase
             ->assertOk()
             ->assertSee('Compartiendo el yuri con elegancia')
             ->assertSee('class="hero-cover-image"', false)
-            ->assertSee('src="/assets/img/wallpaper-login.jpg"', false);
+            ->assertSee('wallpaper-login.webp', false);
     }
 
     public function test_legacy_section_urls_use_the_same_portal_home_configuration(): void
@@ -50,5 +50,7 @@ class CatalogSectionHeroTest extends TestCase
 
         Storage::disk('public')->assertExists($section->hero_desktop_image);
         Storage::disk('public')->assertExists($section->hero_mobile_image);
+        $this->assertStringEndsWith('.webp', $section->hero_desktop_image);
+        $this->assertStringEndsWith('.webp', $section->hero_mobile_image);
     }
 }
