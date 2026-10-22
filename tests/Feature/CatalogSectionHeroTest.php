@@ -53,4 +53,32 @@ class CatalogSectionHeroTest extends TestCase
         $this->assertStringEndsWith('.webp', $section->hero_desktop_image);
         $this->assertStringEndsWith('.webp', $section->hero_mobile_image);
     }
+
+    public function test_youtube_hero_is_not_requested_on_mobile_when_disabled(): void
+    {
+        $section = CatalogSection::query()->where('slug', 'series-gl')->firstOrFail();
+        $section->update([
+            'hero_video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'hero_video_on_mobile' => false,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-desktop-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertDontSee('id="heroYoutubeVideo" class="hero-video" src=', false);
+    }
+
+    public function test_youtube_hero_loads_normally_when_mobile_video_is_enabled(): void
+    {
+        $section = CatalogSection::query()->where('slug', 'series-gl')->firstOrFail();
+        $section->update([
+            'hero_video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'hero_video_on_mobile' => true,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertDontSee('data-desktop-src=', false);
+    }
 }

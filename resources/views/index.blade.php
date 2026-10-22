@@ -48,10 +48,12 @@
     @endphp
     <x-seo title="{{ $isMixedHome ? 'Series GL, Yuri y Anime Gratis Sub Español' : 'Mundo Yuri: '.$sectionName }}" :description="$homeSeoDescription" :canonical="$sectionUrl" :schema="$homeSeoSchema" />
     <x-portal-favicon />
+    <link rel="preload" href="{{ asset('assets/fonts/dm-sans-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('assets/fonts/playfair-display-latin-700.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" as="image" href="{{ $heroDesktopImageUrl }}" media="(min-width: 769px)" fetchpriority="high">
     <link rel="preload" as="image" href="{{ $heroMobileImageUrl }}" media="(max-width: 768px)" fetchpriority="high">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/portal-fonts.css') }}?v={{ filemtime(public_path('assets/css/portal-fonts.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/home-grid.css') }}?v={{ filemtime(public_path('assets/css/home-grid.css')) }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
 
 
@@ -67,7 +69,7 @@
             <img class="hero-cover-image" src="{{ $heroDesktopImageUrl }}" alt="" loading="eager" fetchpriority="high" decoding="async">
         </picture>
         @if($section?->heroVideoEmbedUrl())
-            <iframe id="heroYoutubeVideo" class="hero-video" src="{{ $section->heroVideoEmbedUrl() }}" title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe id="heroYoutubeVideo" class="hero-video" @if($section->hero_video_on_mobile) src="{{ $section->heroVideoEmbedUrl() }}" @else data-desktop-src="{{ $section->heroVideoEmbedUrl() }}" @endif title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>
         @elseif($section?->hasDirectVideo())
             <video class="hero-video is-ready" autoplay muted loop playsinline aria-hidden="true"><source src="{{ $section->hero_video_url }}"></video>
         @endif
@@ -88,6 +90,16 @@
             @endif
         </div>
     </section>
+
+    @if($section?->heroVideoEmbedUrl() && ! $section->hero_video_on_mobile)
+        <script>
+            (() => {
+                if (window.matchMedia('(max-width: 768px)').matches) return;
+                const video = document.querySelector('#heroYoutubeVideo[data-desktop-src]');
+                if (video) video.src = video.dataset.desktopSrc;
+            })();
+        </script>
+    @endif
 
     @include('partials.home.continue-watching-section', ['continueWatching' => $continueWatching])
 
@@ -153,7 +165,6 @@
     @endif
 
     <x-footer />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
         const heroYoutubeVideo = document.getElementById('heroYoutubeVideo');
