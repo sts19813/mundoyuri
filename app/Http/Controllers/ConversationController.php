@@ -26,6 +26,31 @@ use Throwable;
 
 class ConversationController extends Controller
 {
+    private const MESSAGE_DOCUMENT_MIME_TYPES = [
+        'application/pdf',
+        'text/plain',
+        'text/csv',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.oasis.opendocument.text',
+        'application/vnd.oasis.opendocument.spreadsheet',
+        'application/vnd.oasis.opendocument.presentation',
+        'application/zip',
+        'application/x-zip-compressed',
+        'multipart/x-zip',
+    ];
+
+    private const VIDEO_EXTENSIONS = [
+        '3g2', '3gp', '3gpp', 'amv', 'asf', 'avi', 'divx', 'drc', 'f4v', 'flv',
+        'm2t', 'm2ts', 'm2v', 'm4v', 'mkv', 'mov', 'mp4', 'mpe', 'mpeg', 'mpg',
+        'mpv', 'mts', 'mxf', 'ogm', 'ogv', 'qt', 'rm', 'rmvb', 'ts', 'vob',
+        'webm', 'wmv', 'yuv',
+    ];
+
     public function index(Request $request): View
     {
         $viewer = $request->user();
@@ -310,7 +335,11 @@ class ConversationController extends Controller
                 'nullable',
                 'file',
                 'max:'.config('messenger.attachment_max_kilobytes'),
-                'mimes:jpg,jpeg,png,webp,gif,pdf,txt,csv,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp',
+                function (string $attribute, mixed $file, \Closure $fail): void {
+                    if (! $this->isSupportedMessageAttachment($file)) {
+                        $fail('Adjunta una imagen, video, documento o archivo ZIP válido.');
+                    }
+                },
             ],
         ]);
 
@@ -596,6 +625,21 @@ class ConversationController extends Controller
                 'otherUser' => $otherUser,
             ])->render(),
         ];
+    }
+
+    private function isSupportedMessageAttachment(mixed $file): bool
+    {
+        if (! is_object($file) || ! method_exists($file, 'getMimeType') || ! method_exists($file, 'getClientOriginalExtension')) {
+            return false;
+        }
+
+        $mime = strtolower((string) $file->getMimeType());
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+
+        return str_starts_with($mime, 'image/')
+            || str_starts_with($mime, 'video/')
+            || in_array($mime, self::MESSAGE_DOCUMENT_MIME_TYPES, true)
+            || in_array($extension, self::VIDEO_EXTENSIONS, true);
     }
 
     /**

@@ -564,6 +564,29 @@ class PrivateMessagingTest extends TestCase
         $this->assertSame([], Storage::disk('local')->allFiles('direct-message-attachments'));
     }
 
+    public function test_private_message_attachments_allow_videos_and_zip_archives(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('episodio.mkv', 80, 'application/octet-stream'),
+            ])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('capturas.zip', 80, 'application/zip'),
+            ])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $this->assertDatabaseCount('direct_messages', 2);
+        $this->assertSame('application/octet-stream', DirectMessage::query()->oldest('id')->value('attachment_mime'));
+        $this->assertSame('application/zip', DirectMessage::query()->latest('id')->value('attachment_mime'));
+    }
+
     public function test_private_message_attachments_allow_up_to_200_megabytes_and_reject_larger_files(): void
     {
         Storage::fake('local');

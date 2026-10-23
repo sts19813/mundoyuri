@@ -123,8 +123,8 @@ class="messenger-body"
                                 <input type="hidden" name="reply_to_message_id" value="" data-reply-input>
                                 <input type="hidden" name="is_sticker" value="0" data-sticker-input>
                                 <input type="hidden" name="sticker_id" value="" data-sticker-id-input>
-                                <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
-                                <label for="message-attachment" class="messenger-attach-button" aria-label="Adjuntar imagen o documento" title="Adjuntar imagen o documento">
+                                <input id="message-attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif,video/*,.zip,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp">
+                                <label for="message-attachment" class="messenger-attach-button" aria-label="Adjuntar archivo" title="Adjuntar archivo">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.5-9.5a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9"/></svg>
                                 </label>
                                 <button class="messenger-sticker-button" type="button" data-sticker-toggle aria-label="Abrir stickers" title="Stickers">
@@ -133,7 +133,7 @@ class="messenger-body"
                                 <div class="messenger-compose-input">
                                     <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
                                     <textarea id="message-body" name="body" rows="1" maxlength="2000" placeholder="Aa">{{ old('body') }}</textarea>
-                                    <small data-message-attachment-hint>Imagen o documento · máximo 200 MB</small>
+                                    <small data-message-attachment-hint>Archivo · máximo 200 MB</small>
                                 </div>
                                 <button class="messenger-send-button" type="submit" aria-label="Enviar mensaje">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.8 2.5a1 1 0 0 0-1.05-.18L2.9 10.15a1 1 0 0 0 .1 1.87l7.12 2.37 2.37 7.12a1 1 0 0 0 .9.68h.05a1 1 0 0 0 .91-.59l7.63-17.9a1 1 0 0 0-.18-1.2ZM12 13.06 6.12 11.1l11.9-5.22Z"/></svg>
@@ -771,7 +771,7 @@ class="messenger-body"
                 return;
             }
             clearComposerError();
-            if (attachmentHint) attachmentHint.textContent = file?.name || 'Imagen o documento · máximo 200 MB';
+            if (attachmentHint) attachmentHint.textContent = file?.name || 'Archivo · máximo 200 MB';
             if (file) clearStickerSelection();
             closeStickerPanel();
         });
@@ -1350,7 +1350,7 @@ class="messenger-body"
                 closeStickerPanel();
                 clearReplyTarget();
                 if (attachmentInput) {
-                    if (attachmentHint) attachmentHint.textContent = 'Imagen o documento · máximo 200 MB';
+                    if (attachmentHint) attachmentHint.textContent = 'Archivo · máximo 200 MB';
                 }
                 resizeMessageBody();
                 syncMessengerViewport();
