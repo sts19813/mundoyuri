@@ -1,57 +1,32 @@
 <!-- ══ FOOTER ══ -->
 <footer class="gl-footer">
-    <div class="container-xl px-4">
-        <div class="row g-4 mb-2">
-            <div class="col-md-4">
-                <a href="{{ route('home') }}" class="footer-brand" aria-label="Mundo Yuri">
-                    <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri" class="footer-logo">
-                </a>
-                <p class="footer-desc">Tu espacio para descubrir historias GL de todo el mundo. Series, doramas y
-                    películas actualizadas cada día.</p>
-            </div>
-            <div class="col-6 col-md-2 offset-md-2">
-                <div class="footer-heading">Navegar</div>
-                <ul class="footer-links">
-                    <li><a href="{{ route('home') }}">Inicio</a></li>
-                    <li><a href="{{ route('catalog.series.index', ['type' => 'series']) }}">Series</a></li>
-                    <li><a href="{{ route('catalog.series.index', ['type' => 'movie']) }}">Peliculas</a></li>
-                    <li><a href="{{ route('catalog.genres.index') }}">Generos</a></li>
-                </ul>
-            </div>
-            <div class="col-6 col-md-2">
-                <div class="footer-heading">Géneros</div>
-                <ul class="footer-links">
-                    @php
-                        $footerGenres = \Illuminate\Support\Facades\Schema::hasTable('genres')
-                            ? \App\Models\Genre::query()->where('is_active', true)->orderBy('name')->take(4)->get()
-                            : collect();
-                    @endphp
+    <div class="gl-footer__inner">
+        <a href="{{ route('home') }}" class="gl-footer__brand" aria-label="Ir al inicio de Mundo Yuri">
+            <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri">
+        </a>
 
-                    @forelse($footerGenres as $footerGenre)
-                        <li><a href="{{ route('catalog.genres.show', $footerGenre->slug) }}">{{ $footerGenre->name }}</a></li>
-                    @empty
-                        <li><a href="{{ route('catalog.genres.index') }}">Romance</a></li>
-                        <li><a href="{{ route('catalog.genres.index') }}">Drama</a></li>
-                        <li><a href="{{ route('catalog.genres.index') }}">Comedia</a></li>
-                        <li><a href="{{ route('catalog.genres.index') }}">Accion</a></li>
-                    @endforelse
-                </ul>
-            </div>
-            <div class="col-6 col-md-2">
-                <div class="footer-heading">Info</div>
-                <ul class="footer-links">
-                    <li><a href="{{ route('catalog.series.index') }}">Catalogo</a></li>
-                    @auth
-                        <li><a href="{{ route('submissions.create') }}">Aportar contenido</a></li>
-                    @else
-                        <li><a href="{{ route('register') }}">Crear cuenta</a></li>
-                    @endauth
-                    <li><a href="{{ route('login') }}">Acceso</a></li>
-                    @if(auth()->user()?->shouldEnterAdminPanel())
-                        <li><a href="{{ route('admin.dashboard') }}">Panel admin</a></li>
-                    @endif
-                </ul>
-            </div>
+        <nav class="gl-footer__nav" aria-label="Explorar el catálogo">
+            <h2>Explora</h2>
+            <a href="{{ route('catalog.series.index', ['section' => 'series-gl']) }}">Series GL</a>
+            <a href="{{ route('catalog.series.index', ['section' => 'anime']) }}">Anime yuri</a>
+            <a href="{{ route('catalog.series.index', ['type' => 'movie']) }}">Películas</a>
+            <a href="{{ route('legacy.episodios') }}">Últimos episodios</a>
+        </nav>
+
+        <nav class="gl-footer__nav" aria-label="Comunidad">
+            <h2>Comunidad</h2>
+            <a href="{{ route('community.index') }}">Comunidad</a>
+            <a href="{{ route('forums.index') }}">Foros</a>
+            <a href="{{ route('questions.index') }}">Preguntas</a>
+            <a href="{{ route('catalog.series.index') }}">Catálogo completo</a>
+        </nav>
+    </div>
+
+    <div class="gl-footer__bottom">
+        <div>
+            <span>© {{ now()->year }} Mundo Yuri</span>
+            <span aria-hidden="true">·</span>
+            <span>Historias GL, yuri y anime</span>
         </div>
     </div>
 </footer>
