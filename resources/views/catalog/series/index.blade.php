@@ -42,10 +42,21 @@
                     @foreach($duos as $duo)<option value="{{ $duo->name }}">Dupla</option>@endforeach
                 </datalist>
             </div>
-            <details class="catalog-advanced-filters" id="catalogFiltersPanel">
-                <summary class="catalog-filters-heading">Filtros <span aria-hidden="true">⌄</span></summary>
-                <button class="catalog-clear-filters" id="catalogClearFilters" type="button" disabled>Limpiar filtros</button>
-                <div class="catalog-advanced-grid">
+            <div class="catalog-filter-shell">
+                <div class="catalog-filter-toolbar">
+                    <button class="catalog-filter-toggle" id="catalogFiltersToggle" type="button" aria-expanded="false" aria-controls="catalogFiltersPanel">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                        <span>Filtros</span>
+                        <span class="catalog-filter-count" id="catalogFilterCount" hidden></span>
+                        <svg class="catalog-filter-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <button class="catalog-clear-filters" id="catalogClearFilters" type="button" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        <span>Limpiar filtros</span>
+                    </button>
+                </div>
+                <div class="catalog-filter-panel" id="catalogFiltersPanel" hidden>
+                    <div class="catalog-advanced-grid">
                     <div class="catalog-filter">
                         <label class="visually-hidden" for="catalogType">Tipo de contenido</label>
                         <select id="catalogType">
@@ -113,8 +124,9 @@
                             </select>
                         </div>
                     @endif
+                    </div>
                 </div>
-            </details>
+            </div>
         </div>
 
         <div class="row g-3" id="catalogGrid">
@@ -187,6 +199,8 @@
         const duo = document.getElementById('catalogDuo');
         const clear = document.getElementById('catalogClearFilters');
         const panel = document.getElementById('catalogFiltersPanel');
+        const toggle = document.getElementById('catalogFiltersToggle');
+        const activeCount = document.getElementById('catalogFilterCount');
         const items = [...document.querySelectorAll('[data-catalog-item]')];
         const results = document.getElementById('catalogResults');
         const empty = document.getElementById('catalogEmpty');
@@ -228,20 +242,27 @@
 
             results.textContent = `${matches} ${matches === 1 ? 'título' : 'títulos'}`;
             empty.hidden = matches !== 0;
-            clear.disabled = ![search, type, genre, tag, country, year, status, artist, duo]
+            const activeFilters = [search, type, genre, tag, country, year, status, artist, duo]
                 .filter(Boolean)
-                .some((filter) => filter.value);
+                .filter((filter) => filter.value);
+            clear.disabled = activeFilters.length === 0;
+            activeCount.textContent = activeFilters.length;
+            activeCount.hidden = activeFilters.length === 0;
             updateUrl();
         }
 
-        if (window.matchMedia('(max-width: 768px)').matches) {
-            panel.open = true;
+        function setFiltersOpen(isOpen) {
+            panel.hidden = !isOpen;
+            toggle.setAttribute('aria-expanded', String(isOpen));
         }
+
+        setFiltersOpen(window.matchMedia('(max-width: 768px)').matches);
 
         search.addEventListener('input', filterCatalogue);
         type.addEventListener('change', filterCatalogue);
         genre.addEventListener('change', filterCatalogue);
         [tag, country, year, status, artist, duo].filter(Boolean).forEach((filter) => filter.addEventListener('change', filterCatalogue));
+        toggle.addEventListener('click', () => setFiltersOpen(toggle.getAttribute('aria-expanded') !== 'true'));
         clear.addEventListener('click', () => {
             [search, type, genre, tag, country, year, status, artist, duo]
                 .filter(Boolean)
