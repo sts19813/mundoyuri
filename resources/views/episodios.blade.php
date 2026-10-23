@@ -362,7 +362,6 @@
                                     <span>{{ $episodeDisplayTitle }}</span>
                                 @endif
                             </p>
-                            <p class="ep-seo-summary">Mira {{ $series->title }} episodio {{ $episode->episode_number }} gratis y online, subtitulado en español.</p>
                             @if(filled($episode->description))
                                 <p class="ep-seo-description">{{ $episode->description }}</p>
                             @endif

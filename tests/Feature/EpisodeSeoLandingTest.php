@@ -60,6 +60,8 @@ class EpisodeSeoLandingTest extends TestCase
             ->assertSee('<title>Pls.Love episodio 7 gratis sub español | Mundo Yuri</title>', false)
             ->assertSee('Mira Pls.Love episodio 7 gratis y online, subtitulado en español.', false)
             ->assertSee('<h1>Pls.Love episodio 7</h1>', false)
+            ->assertDontSee('class="ep-seo-summary"', false)
+            ->assertSee('<p class="ep-seo-description">Las protagonistas deben decidir si están listas para avanzar juntas.</p>', false)
             ->assertSee('<link rel="canonical" href="'.route('public.episodes.show', $episode->slug).'">', false)
             ->assertSee('Más episodios de Pls.Love')
             ->assertSee('"@type":"TVEpisode"', false)

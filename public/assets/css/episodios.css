@@ -596,21 +596,12 @@
       font-weight: 400;
   }
 
-  .ep-seo-summary,
   .ep-seo-description {
       max-width: 780px;
       color: var(--muted);
       font-size: .88rem;
       line-height: 1.65;
-  }
-
-  .ep-seo-summary {
       margin: 13px 0 0;
-      color: #d9c9df;
-  }
-
-  .ep-seo-description {
-      margin: 7px 0 0;
   }
 
   .ep-meta-row {
@@ -1825,7 +1816,6 @@
           line-height: 1.5;
       }
 
-      .episode-page-body .ep-seo-summary,
       .episode-page-body .ep-seo-description {
           font-size: .84rem;
       }
