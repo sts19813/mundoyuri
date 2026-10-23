@@ -60,7 +60,7 @@ class HomeLatestEpisodesSectionTest extends TestCase
         );
     }
 
-    public function test_home_latest_episodes_only_show_the_latest_episode_per_series(): void
+    public function test_home_latest_episodes_keep_every_episode_in_the_latest_release_batch(): void
     {
         $genre = Genre::query()->create([
             'name' => 'Drama',
@@ -76,6 +76,7 @@ class HomeLatestEpisodesSectionTest extends TestCase
                 'slug' => "moonshadow-episodio-{$episodeNumber}",
                 'season_number' => 1,
                 'episode_number' => $episodeNumber,
+                'release_date' => $episodeNumber >= 4 ? now() : now()->subDays(8),
                 'moderation_status' => 'approved',
                 'published_at' => now()->subMinutes($index + 1),
             ]);
@@ -91,6 +92,7 @@ class HomeLatestEpisodesSectionTest extends TestCase
                 'slug' => "episodio-unico-{$number}",
                 'season_number' => 1,
                 'episode_number' => 1,
+                'release_date' => now()->subDay(),
                 'moderation_status' => 'approved',
                 'published_at' => now()->subMinutes($number + 10),
             ]);
@@ -100,10 +102,49 @@ class HomeLatestEpisodesSectionTest extends TestCase
             $this->get(route('home'))->assertOk()->getContent()
         );
 
-        $this->assertSame(12, substr_count($episodesSection, 'class="episode-card"'));
+        $this->assertSame(13, substr_count($episodesSection, 'class="episode-card"'));
         $this->assertStringContainsString('moonshadow-episodio-5', $episodesSection);
-        $this->assertStringNotContainsString('moonshadow-episodio-4', $episodesSection);
+        $this->assertStringContainsString('moonshadow-episodio-4', $episodesSection);
         $this->assertStringNotContainsString('moonshadow-episodio-3', $episodesSection);
+    }
+
+    public function test_home_latest_episodes_excludes_titles_not_released_in_the_last_month(): void
+    {
+        $genre = Genre::query()->create([
+            'name' => 'Romance',
+            'slug' => 'romance',
+            'is_active' => true,
+        ]);
+        $recent = $this->createSeries($genre->id, 'Estreno reciente', 'estreno-reciente', 'series-gl');
+        $old = $this->createSeries($genre->id, 'Estreno antiguo', 'estreno-antiguo', 'anime');
+
+        Episode::query()->create([
+            'series_id' => $recent->id,
+            'title' => 'Episodio reciente',
+            'slug' => 'episodio-reciente',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'release_date' => now()->subDays(29),
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
+        Episode::query()->create([
+            'series_id' => $old->id,
+            'title' => 'Episodio antiguo',
+            'slug' => 'episodio-antiguo',
+            'season_number' => 1,
+            'episode_number' => 1,
+            'release_date' => now()->subMonth()->subDay(),
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
+
+        $episodesSection = $this->extractLatestEpisodesSection(
+            $this->get(route('home'))->assertOk()->getContent()
+        );
+
+        $this->assertStringContainsString('episodio-reciente', $episodesSection);
+        $this->assertStringNotContainsString('episodio-antiguo', $episodesSection);
     }
 
     public function test_home_latest_episodes_use_the_original_release_date_over_the_upload_date(): void

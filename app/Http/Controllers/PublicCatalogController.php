@@ -9,6 +9,7 @@ use App\Models\Series;
 use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
 use App\Services\PresenceLeaderboard;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,17 +51,14 @@ class PublicCatalogController extends Controller
             ->take(12)
             ->get();
 
-        $latestEpisodes = Episode::query()
+        $latestEpisodes = $this->latestEpisodeBatches(Episode::query()
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
             ->whereHas('series', fn($query) => $query->where('catalog_section', $section->slug))
             ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->orderByDesc('id')
-            ->get()
-            ->unique('series_id')
-            ->take(12)
-            ->values();
+            ->get());
 
         $seriesCount = Series::query()
             ->where('moderation_status', 'approved')
@@ -116,7 +114,7 @@ class PublicCatalogController extends Controller
 
     private function latestEpisodesForMixedHome(): Collection
     {
-        return Episode::query()
+        return $this->latestEpisodeBatches(Episode::query()
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
@@ -126,25 +124,71 @@ class PublicCatalogController extends Controller
                 ->whereIn('catalog_section', ['series-gl', 'anime']))
             ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->orderByDesc('id')
-            ->get()
-            ->unique('series_id')
-            ->take(12)
-            ->values();
+            ->get());
     }
 
     private function latestEpisodesForSection(string $sectionSlug): Collection
     {
-        return Episode::query()
+        return $this->latestEpisodeBatches(Episode::query()
             ->with('series')
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
             ->whereHas('series', fn($query) => $query->where('catalog_section', $sectionSlug))
             ->orderByRaw('COALESCE(release_date, published_at) DESC')
             ->orderByDesc('id')
-            ->get()
-            ->unique('series_id')
+            ->get());
+    }
+
+    /**
+     * Keeps a complete latest release batch for each title. A series can therefore
+     * show its episode 1 and 2 together when both were released on the same date.
+     */
+    private function latestEpisodeBatches(Collection $episodes): Collection
+    {
+        $cutoff = now()->subMonth()->startOfDay();
+
+        return $episodes
+            ->filter(fn (Episode $episode) => $this->episodeReleaseMoment($episode)->gte($cutoff))
+            ->groupBy('series_id')
+            ->map(function (Collection $seriesEpisodes): Collection {
+                $ordered = $this->orderLatestEpisodes($seriesEpisodes);
+                $latest = $ordered->first();
+
+                return $ordered
+                    ->filter(function (Episode $episode) use ($latest): bool {
+                        if ($latest->release_date) {
+                            return $episode->release_date?->isSameDay($latest->release_date) ?? false;
+                        }
+
+                        return ! $episode->release_date
+                            && $episode->published_at?->equalTo($latest->published_at);
+                    })
+                    ->values();
+            })
+            ->sort(function (Collection $left, Collection $right): int {
+                return $this->episodeReleaseMoment($right->first())->getTimestamp()
+                    <=> $this->episodeReleaseMoment($left->first())->getTimestamp();
+            })
             ->take(12)
+            ->flatMap(fn (Collection $seriesEpisodes) => $seriesEpisodes)
+            ->pipe(fn (Collection $latestEpisodes) => $this->orderLatestEpisodes($latestEpisodes));
+    }
+
+    private function orderLatestEpisodes(Collection $episodes): Collection
+    {
+        return $episodes
+            ->sort(function (Episode $left, Episode $right): int {
+                $dateComparison = $this->episodeReleaseMoment($right)->getTimestamp()
+                    <=> $this->episodeReleaseMoment($left)->getTimestamp();
+
+                return $dateComparison !== 0 ? $dateComparison : $right->id <=> $left->id;
+            })
             ->values();
+    }
+
+    private function episodeReleaseMoment(Episode $episode): CarbonInterface
+    {
+        return $episode->release_date?->copy()->startOfDay() ?? $episode->published_at;
     }
 
     private function featuredSeriesForSection(string $sectionSlug): Collection
