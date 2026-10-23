@@ -133,12 +133,16 @@ class="messenger-body"
                                 <div class="messenger-compose-input">
                                     <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
                                     <textarea id="message-body" name="body" rows="1" maxlength="2000" placeholder="Aa">{{ old('body') }}</textarea>
-                                    <small data-message-attachment-hint>Imagen o documento · máximo 20 MB</small>
+                                    <small data-message-attachment-hint>Imagen o documento · máximo 200 MB</small>
                                 </div>
                                 <button class="messenger-send-button" type="submit" aria-label="Enviar mensaje">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.8 2.5a1 1 0 0 0-1.05-.18L2.9 10.15a1 1 0 0 0 .1 1.87l7.12 2.37 2.37 7.12a1 1 0 0 0 .9.68h.05a1 1 0 0 0 .91-.59l7.63-17.9a1 1 0 0 0-.18-1.2ZM12 13.06 6.12 11.1l11.9-5.22Z"/></svg>
                                 </button>
                             </form>
+                            <div class="messenger-upload-progress" data-message-upload-progress hidden role="status" aria-live="polite">
+                                <div><span data-message-upload-label>Subiendo archivo...</span><strong data-message-upload-percent>0%</strong></div>
+                                <span class="messenger-upload-progress-track"><span data-message-upload-progress-fill></span></span>
+                            </div>
                             <section class="messenger-sticker-panel" data-sticker-panel hidden aria-label="Stickers">
                                 <header><strong>Stickers</strong><button type="button" data-sticker-close aria-label="Cerrar stickers">×</button></header>
                                 <div class="messenger-media-tabs" role="tablist" aria-label="Tipo de stickers">
@@ -587,6 +591,7 @@ class="messenger-body"
         }
 
         const attachmentInput = document.getElementById('message-attachment');
+        const maximumAttachmentBytes = @js((int) config('messenger.attachment_max_kilobytes') * 1024);
         const stickerInput = document.querySelector('[data-sticker-input]');
         const stickerIdInput = document.querySelector('[data-sticker-id-input]');
         const stickerPanel = document.querySelector('[data-sticker-panel]');
@@ -758,8 +763,16 @@ class="messenger-body"
             }
         });
         attachmentInput?.addEventListener('change', () => {
-            if (attachmentHint) attachmentHint.textContent = attachmentInput.files?.[0]?.name || 'Imagen o documento · máximo 20 MB';
-            if (attachmentInput.files?.[0]) clearStickerSelection();
+            const file = attachmentInput.files?.[0];
+            if (file && file.size > maximumAttachmentBytes) {
+                attachmentInput.value = '';
+                if (attachmentHint) attachmentHint.textContent = 'El archivo supera el máximo de 200 MB';
+                showComposerError('El archivo no puede superar 200 MB.');
+                return;
+            }
+            clearComposerError();
+            if (attachmentHint) attachmentHint.textContent = file?.name || 'Imagen o documento · máximo 200 MB';
+            if (file) clearStickerSelection();
             closeStickerPanel();
         });
 
@@ -1223,6 +1236,10 @@ class="messenger-body"
         window.addEventListener('beforeunload', () => window.clearInterval(pollInterval));
 
         const composer = document.querySelector('[data-message-composer]');
+        const uploadProgress = document.querySelector('[data-message-upload-progress]');
+        const uploadProgressLabel = document.querySelector('[data-message-upload-label]');
+        const uploadProgressPercent = document.querySelector('[data-message-upload-percent]');
+        const uploadProgressFill = document.querySelector('[data-message-upload-progress-fill]');
         const showComposerError = (message) => {
             if (!composer) return;
             composer.parentElement?.querySelectorAll('[data-ajax-message-error]').forEach((error) => error.remove());
@@ -1237,6 +1254,47 @@ class="messenger-body"
             composer?.parentElement?.querySelectorAll('[data-ajax-message-error]').forEach((error) => error.remove());
         };
 
+        const setUploadProgress = (percent, label = 'Subiendo archivo...') => {
+            if (!uploadProgress) return;
+            const normalizedPercent = Math.max(0, Math.min(100, Math.round(percent)));
+            uploadProgress.hidden = false;
+            if (uploadProgressLabel) uploadProgressLabel.textContent = label;
+            if (uploadProgressPercent) uploadProgressPercent.textContent = `${normalizedPercent}%`;
+            if (uploadProgressFill) uploadProgressFill.style.width = `${normalizedPercent}%`;
+        };
+
+        const hideUploadProgress = () => {
+            if (!uploadProgress) return;
+            uploadProgress.hidden = true;
+            if (uploadProgressFill) uploadProgressFill.style.width = '0%';
+        };
+
+        const sendAttachmentWithProgress = (formData) => new Promise((resolve, reject) => {
+            const request = new XMLHttpRequest();
+            request.open('POST', composer.action);
+            request.setRequestHeader('Accept', 'application/json');
+            request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            request.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            request.upload.addEventListener('loadstart', () => setUploadProgress(0));
+            request.upload.addEventListener('progress', (progress) => {
+                if (progress.lengthComputable) {
+                    setUploadProgress((progress.loaded / progress.total) * 100);
+                }
+            });
+            request.addEventListener('load', () => {
+                let data = {};
+                try {
+                    data = JSON.parse(request.responseText || '{}');
+                } catch (error) {
+                    // A non-JSON error response is handled by its HTTP status below.
+                }
+                resolve({ ok: request.status >= 200 && request.status < 300, status: request.status, data });
+            });
+            request.addEventListener('error', () => reject(new Error('network_error')));
+            request.addEventListener('abort', () => reject(new Error('aborted')));
+            request.send(formData);
+        });
+
         composer?.addEventListener('submit', async (event) => {
             event.preventDefault();
             unlockMessageAudio();
@@ -1245,16 +1303,26 @@ class="messenger-body"
             const submitButton = composer.querySelector('button[type="submit"]');
             submitButton?.setAttribute('disabled', 'disabled');
 
+            const attachment = attachmentInput?.files?.[0];
+            if (attachment && attachment.size > maximumAttachmentBytes) {
+                showComposerError('El archivo no puede superar 200 MB.');
+                submitButton?.removeAttribute('disabled');
+                return;
+            }
+
             try {
-                const response = await fetch(composer.action, {
-                    method: 'POST',
-                    body: new FormData(composer),
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
+                const formData = new FormData(composer);
+                const response = attachment
+                    ? await sendAttachmentWithProgress(formData)
+                    : await fetch(composer.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                    });
 
                 if (!response.ok) {
                     if (response.status === 429) {
@@ -1263,7 +1331,7 @@ class="messenger-body"
                     }
 
                     if (response.status === 422) {
-                        const data = await response.json();
+                        const data = attachment ? response.data : await response.json();
                         const firstError = Object.values(data.errors || {}).flat()[0] || data.message || 'No se pudo enviar el mensaje.';
                         showComposerError(firstError);
                         return;
@@ -1273,7 +1341,8 @@ class="messenger-body"
                     return;
                 }
 
-                const data = await response.json();
+                if (attachment) setUploadProgress(100, 'Guardando mensaje...');
+                const data = attachment ? response.data : await response.json();
                 appendMessages(data.messages || [], { forceScroll: true });
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
                 composer.reset();
@@ -1281,12 +1350,15 @@ class="messenger-body"
                 closeStickerPanel();
                 clearReplyTarget();
                 if (attachmentInput) {
-                    if (attachmentHint) attachmentHint.textContent = 'Imagen o documento · máximo 20 MB';
+                    if (attachmentHint) attachmentHint.textContent = 'Imagen o documento · máximo 200 MB';
                 }
                 resizeMessageBody();
                 syncMessengerViewport();
                 messageBody?.focus({ preventScroll: true });
+            } catch (error) {
+                showComposerError('No se pudo enviar el mensaje. Revisa tu conexión e inténtalo de nuevo.');
             } finally {
+                hideUploadProgress();
                 submitButton?.removeAttribute('disabled');
                 stickerGrid?.removeAttribute('data-sending');
             }

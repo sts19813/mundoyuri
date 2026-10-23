@@ -564,6 +564,62 @@ class PrivateMessagingTest extends TestCase
         $this->assertSame([], Storage::disk('local')->allFiles('direct-message-attachments'));
     }
 
+    public function test_private_message_attachments_allow_up_to_200_megabytes_and_reject_larger_files(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('en-el-limite.pdf', 200 * 1024, 'application/pdf'),
+            ])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('demasiado-grande.pdf', 200 * 1024 + 1, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('attachment');
+
+        $this->assertDatabaseCount('direct_messages', 1);
+    }
+
+    public function test_large_private_message_attachments_are_purged_after_thirty_days_without_deleting_the_message(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+        $conversation = Conversation::query()->create([
+            'user_one_id' => min($sender->id, $recipient->id),
+            'user_two_id' => max($sender->id, $recipient->id),
+            'last_message_at' => now()->subDays(31),
+        ]);
+        $path = 'direct-message-attachments/archivo-grande.pdf';
+        Storage::disk('local')->put($path, 'contenido');
+        $message = DirectMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $sender->id,
+            'recipient_id' => $recipient->id,
+            'body' => 'Te comparto este archivo.',
+            'attachment_path' => $path,
+            'attachment_name' => 'archivo-grande.pdf',
+            'attachment_mime' => 'application/pdf',
+            'attachment_size' => 20 * 1024 * 1024,
+        ]);
+        $message->forceFill([
+            'created_at' => now()->subDays(31),
+            'updated_at' => now()->subDays(31),
+        ])->saveQuietly();
+
+        $this->artisan('messages:prune-large-attachments')->assertSuccessful();
+
+        Storage::disk('local')->assertMissing($path);
+        $this->assertNull($message->fresh()->attachment_path);
+        $this->assertNotNull($message->fresh()->attachment_purged_at);
+        $this->assertSame('Te comparto este archivo.', $message->fresh()->body);
+    }
+
     public function test_messenger_workspace_keeps_the_conversation_list_beside_the_active_chat_and_supports_search(): void
     {
         $viewer = User::factory()->create();

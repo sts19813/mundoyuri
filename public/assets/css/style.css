@@ -5996,6 +5996,12 @@ img.messenger-avatar,
 .messenger-send-button { color: #fff; background: linear-gradient(135deg, #ef3e8e, #9a2fa0); box-shadow: 0 5px 15px rgba(244, 63, 142, .2); }
 .messenger-disabled { padding: 9px; color: var(--muted); font-size: .7rem; text-align: center; }
 .messenger-form-error { margin: 6px 46px 0; color: #fda4af; font-size: .64rem; }
+.messenger-upload-progress { margin: 7px 46px 0; color: #d8cad9; font-size: .62rem; }
+.messenger-upload-progress > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.messenger-upload-progress strong { color: #ff8fbe; font-variant-numeric: tabular-nums; }
+.messenger-upload-progress-track { height: 4px; display: block; margin-top: 4px; overflow: hidden; border-radius: 99px; background: rgba(255, 255, 255, .12); }
+.messenger-upload-progress-track > span { width: 0; height: 100%; display: block; border-radius: inherit; background: #f43f8e; transition: width .12s linear; }
+.messenger-expired-attachment { margin: 5px 0 2px; color: rgba(255, 255, 255, .58); font-size: .62rem; font-style: italic; }
 .messenger-sticker-panel { position: absolute; bottom: calc(100% + 9px); left: 14px; z-index: 30; width: min(540px, calc(100vw - 32px)); max-height: min(520px, calc(100dvh - 156px)); margin: 0; padding: 12px; overflow-y: auto; border: 1px solid rgba(244, 63, 142, .28); border-radius: 14px; color: #eaddea; background: #241326; box-shadow: 0 18px 42px rgba(0, 0, 0, .42); }
 .messenger-sticker-panel[hidden] { display: none; }
 .messenger-sticker-panel header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -6107,6 +6113,7 @@ img.messenger-avatar,
     .messenger-compose-input { padding: 8px 11px 6px; }
     .messenger-compose-input small { max-width: 64vw; }
     .messenger-form-error { margin-inline: 40px; }
+    .messenger-upload-progress { margin-inline: 40px; }
     .messenger-sticker-panel { left: 8px; width: calc(100vw - 16px); max-height: min(500px, calc(100dvh - 132px)); padding: 10px; }
     .messenger-sticker-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
     .messenger-media-panel-content { width: 100%; }

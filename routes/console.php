@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('badges:sync-automation')->dailyAt('03:15')->withoutOverlapping();
+Schedule::command('messages:prune-large-attachments')->dailyAt('03:35')->withoutOverlapping();

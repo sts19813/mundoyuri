@@ -64,6 +64,8 @@
                         <span><strong>{{ $message->attachment_name }}</strong><small>{{ $message->attachmentSizeLabel() }}</small></span>
                     </a>
                 @endif
+            @elseif($message->attachmentWasPurged())
+                <p class="messenger-expired-attachment">Archivo eliminado automáticamente después de 30 días.</p>
             @endif
         @endif
         <div class="messenger-message-meta">

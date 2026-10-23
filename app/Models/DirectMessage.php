@@ -21,6 +21,7 @@ class DirectMessage extends Model
         'attachment_name',
         'attachment_mime',
         'attachment_size',
+        'attachment_purged_at',
         'is_sticker',
         'read_at',
         'deleted_at',
@@ -33,6 +34,7 @@ class DirectMessage extends Model
             'read_at' => 'datetime',
             'deleted_at' => 'datetime',
             'attachment_size' => 'integer',
+            'attachment_purged_at' => 'datetime',
             'is_sticker' => 'boolean',
         ];
     }
@@ -50,6 +52,11 @@ class DirectMessage extends Model
     public function hasStoredAttachment(): bool
     {
         return filled($this->attachment_path);
+    }
+
+    public function attachmentWasPurged(): bool
+    {
+        return $this->attachment_purged_at !== null;
     }
 
     public function attachmentIsImage(): bool

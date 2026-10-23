@@ -309,7 +309,7 @@ class ConversationController extends Controller
             'attachment' => [
                 'nullable',
                 'file',
-                'max:20480',
+                'max:'.config('messenger.attachment_max_kilobytes'),
                 'mimes:jpg,jpeg,png,webp,gif,pdf,txt,csv,doc,docx,xls,xlsx,ppt,pptx,odt,ods,odp',
             ],
         ]);
