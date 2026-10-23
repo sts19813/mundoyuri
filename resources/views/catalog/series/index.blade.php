@@ -42,27 +42,26 @@
                     @foreach($duos as $duo)<option value="{{ $duo->name }}">Dupla</option>@endforeach
                 </datalist>
             </div>
-            <div class="catalog-filter">
-                <label class="visually-hidden" for="catalogType">Tipo de contenido</label>
-                <select id="catalogType">
-                    <option value="">Todos los tipos</option>
-                    <option value="series" @selected(request('type') === 'series')>Series</option>
-                    <option value="movie" @selected(request('type') === 'movie')>Películas</option>
-                </select>
-            </div>
-            <div class="catalog-filter">
-                <label class="visually-hidden" for="catalogGenre">Género</label>
-                <select id="catalogGenre">
-                    <option value="">Todos los géneros</option>
-                    @foreach($genres as $genre)
-                        <option value="{{ $genre->slug }}" @selected(request('genre') === $genre->slug)>{{ $genre->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <details class="catalog-advanced-filters" @if(request()->filled('tag') || request()->filled('country') || request()->filled('year') || request()->filled('status') || request()->filled('artist') || request()->filled('duo')) open @endif>
-                <summary>Filtros avanzados <span aria-hidden="true">⌄</span></summary>
+            <div class="catalog-advanced-filters">
+                <div class="catalog-filters-heading">Filtros</div>
                 <div class="catalog-advanced-grid">
+                    <div class="catalog-filter">
+                        <label class="visually-hidden" for="catalogType">Tipo de contenido</label>
+                        <select id="catalogType">
+                            <option value="">Todos los tipos</option>
+                            <option value="series" @selected(request('type') === 'series')>Series</option>
+                            <option value="movie" @selected(request('type') === 'movie')>Películas</option>
+                        </select>
+                    </div>
+                    <div class="catalog-filter">
+                        <label class="visually-hidden" for="catalogGenre">Género</label>
+                        <select id="catalogGenre">
+                            <option value="">Todos los géneros</option>
+                            @foreach($genres as $genre)
+                                <option value="{{ $genre->slug }}" @selected(request('genre') === $genre->slug)>{{ $genre->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="catalog-filter">
                         <label class="visually-hidden" for="catalogTag">Etiqueta</label>
                         <select id="catalogTag">
@@ -114,7 +113,7 @@
                         </div>
                     @endif
                 </div>
-            </details>
+            </div>
         </div>
 
         <div class="row g-3" id="catalogGrid">

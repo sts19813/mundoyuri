@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Series;
 use App\Models\Tag;
+use App\Models\Artist;
+use App\Models\Duo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -37,6 +39,8 @@ class SyncDiscoveryTags extends Command
                 $count++;
             }
         });
+
+        $this->syncVerifiedDuos();
 
         $this->info("Etiquetas base sincronizadas para {$count} títulos.");
 
@@ -124,5 +128,134 @@ class SyncDiscoveryTags extends Command
         }
 
         return array_values(array_unique($slugs));
+    }
+
+    private function syncVerifiedDuos(): void
+    {
+        $this->syncDuo(
+            ['hometown-romance', 'harmony-secret'],
+            'lmsy',
+            'LMSY',
+            'Lookmhee & Sonya',
+            [
+                ['slug' => 'lookmhee-punyapat', 'name' => 'Lookmhee Punyapat', 'aliases' => 'Punyapat Wangpongsathaporn, Lookmhee'],
+                ['slug' => 'sonya-saranphat', 'name' => 'Sonya Saranphat', 'aliases' => 'Saranphat Pedersen, Sonya'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['apple-my-love-temporada-1', 'apple-my-love-temporada-2'],
+            'ormfolk',
+            'OrmFolk',
+            'Ormsin & Folk',
+            [
+                ['slug' => 'ormsin-supitcha-limsommut', 'name' => 'Ormsin Supitcha Limsommut', 'aliases' => 'Supitcha Limsommut, Ormsin, Orm'],
+                ['slug' => 'folk-sutima-kokiatwanit', 'name' => 'Folk Sutima Kokiatwanit', 'aliases' => 'Sutima Kokiatwanit, Folk'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['uranus-2324'],
+            'freenbecky',
+            'FreenBecky',
+            'Freen & Becky',
+            [
+                ['slug' => 'freen-sarocha-chankimha', 'name' => 'Freen Sarocha Chankimha', 'aliases' => 'Freen Sarocha, Freen'],
+                ['slug' => 'becky-armstrong', 'name' => 'Becky Armstrong', 'aliases' => 'Rebecca Patricia Armstrong, Becky'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['my-safe-zone'],
+            'lenamiu',
+            'LenaMiu',
+            'Lena & Miu',
+            [
+                ['slug' => 'lena-lalina-schuett', 'name' => 'Lena Lalina Schuett', 'aliases' => 'Lorena Schuett, Lena'],
+                ['slug' => 'miu-natsha-taechamongkalapiwat', 'name' => 'Miu Natsha Taechamongkalapiwat', 'aliases' => 'Natsha Taechamongkalapiwat, Miu'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['love-on-hire'],
+            'ginjay',
+            'GinJay',
+            'Ginny & Jayna',
+            [
+                ['slug' => 'ginny-natnicha-pratipnatsiri', 'name' => 'Ginny Natnicha Pratipnatsiri', 'aliases' => 'Natnicha Pratipnatsiri, Ginny'],
+                ['slug' => 'jayna-angelina-stevens', 'name' => 'Jayna Angelina Stevens', 'aliases' => 'Angelina Stevens, Jayna'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['love-beyond-dreams'],
+            'mieaya',
+            'MieAya',
+            'Miephat & Aya',
+            [
+                ['slug' => 'miephat-phattaranan-padpai', 'name' => 'Miephat Phattaranan Padpai', 'aliases' => 'Mie Phattaranan, Miephat'],
+                ['slug' => 'aya-orapan-phongmaykin', 'name' => 'Aya Orapan Phongmaykin', 'aliases' => 'Aya Orapan, Aya'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['broken-of-love'],
+            'fayeatom',
+            'FayeAtom',
+            'Faye & Atom',
+            [
+                ['slug' => 'faye-peraya-malisorn', 'name' => 'Faye Peraya Malisorn', 'aliases' => 'Faye Peraya, Faye'],
+                ['slug' => 'atom-pariya-piyapanopas', 'name' => 'Atom Pariya Piyapanopas', 'aliases' => 'Atom Pariya, Atom'],
+            ]
+        );
+
+        $this->syncDuo(
+            ['whale-store-xoxo'],
+            'milklove',
+            'MilkLove',
+            'Milk & Love',
+            [
+                ['slug' => 'milk-pansa-vosbein', 'name' => 'Milk Pansa Vosbein', 'aliases' => 'Pansa Vosbein, Milk'],
+                ['slug' => 'love-pattranite-limpatiyakorn', 'name' => 'Love Pattranite Limpatiyakorn', 'aliases' => 'Pattranite Limpatiyakorn, Love'],
+            ]
+        );
+    }
+
+    /** @param array<int, string> $seriesSlugs
+     *  @param array<int, array{slug: string, name: string, aliases: string}> $artists
+     */
+    private function syncDuo(array $seriesSlugs, string $duoSlug, string $tagName, string $members, array $artists): void
+    {
+        $series = Series::query()->whereIn('slug', $seriesSlugs)->get();
+
+        if ($series->isEmpty()) {
+            return;
+        }
+
+        $artistIds = collect($artists)->map(function (array $artist): int {
+            return Artist::query()->updateOrCreate(
+                ['slug' => $artist['slug']],
+                $artist + ['country_of_origin' => 'Tailandia', 'is_active' => true]
+            )->id;
+        })->all();
+
+        $duo = Duo::query()->updateOrCreate(
+            ['slug' => $duoSlug],
+            [
+                'name' => "{$tagName} · {$members}",
+                'description' => "Dupla de {$members}.",
+                'is_active' => true,
+            ]
+        );
+        $tag = Tag::query()->updateOrCreate(
+            ['slug' => $duoSlug],
+            ['name' => $tagName, 'category' => 'duo', 'is_active' => true]
+        );
+
+        $series->each(function (Series $item) use ($artistIds, $duo, $tag): void {
+            $item->artists()->syncWithoutDetaching($artistIds);
+            $item->duos()->syncWithoutDetaching([$duo->id]);
+            $item->tags()->syncWithoutDetaching([$tag->id]);
+        });
     }
 }
