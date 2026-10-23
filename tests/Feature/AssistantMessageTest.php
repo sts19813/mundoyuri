@@ -42,15 +42,16 @@ class AssistantMessageTest extends TestCase
             ->assertDontSee('yuri-neko-open.webp', false);
     }
 
-    public function test_authenticated_portal_prefills_the_assistant_email_field(): void
+    public function test_authenticated_portal_uses_the_account_email_without_rendering_an_email_field(): void
     {
         $user = User::factory()->create(['email' => 'member@example.com']);
 
         $this->actingAs($user)
             ->get(route('home'))
             ->assertOk()
-            ->assertSee('id="miyu-contact-email"', false)
-            ->assertSee('value="member@example.com"', false);
+            ->assertDontSee('id="miyu-contact-email"', false)
+            ->assertDontSee('value="member@example.com"', false)
+            ->assertSee('Quitar a Miyu definitivamente');
     }
 
     public function test_user_can_disable_the_persistent_assistant_for_their_account(): void
@@ -99,6 +100,15 @@ class AssistantMessageTest extends TestCase
             'contact_email' => 'viewer@example.com',
             'status' => 'unread',
         ]);
+    }
+
+    public function test_guest_must_include_an_email_for_every_assistant_message(): void
+    {
+        $this->postJson(route('assistant-messages.store'), [
+            'type' => 'request',
+            'message' => 'Me gustaría que agregaran esta película al catálogo.',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['contact_email']);
     }
 
     public function test_authenticated_message_uses_the_account_email_when_none_is_supplied(): void

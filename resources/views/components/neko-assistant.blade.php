@@ -2,7 +2,6 @@
     $assistantSettings = \App\Models\AssistantSetting::current();
     $assistantMessages = $assistantSettings->messagesFor(auth()->user());
     $assistantConfig = $assistantSettings->clientConfig();
-    $assistantUserEmail = auth()->user()?->email;
     $assistantEnabledForUser = ! auth()->check() || auth()->user()->miyu_enabled;
 @endphp
 
@@ -19,6 +18,23 @@
                 </span>
                 <p data-miyu-message></p>
                 <a class="miyu-assistant__action" data-miyu-action href="#"></a>
+                @auth
+                    <form class="miyu-assistant__disable-form" method="POST"
+                        action="{{ route('miyu-preference.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit">Quitar a Miyu definitivamente</button>
+                    </form>
+                @endauth
+            </div>
+
+            <div class="miyu-assistant__questions" data-miyu-questions hidden>
+                <span class="miyu-assistant__eyebrow">
+                    <span aria-hidden="true">✦</span> Miyu · asistente
+                </span>
+                <p>¿Sobre qué quieres hablar?</p>
+                <div class="miyu-assistant__question-list" data-miyu-question-list></div>
             </div>
 
             <form class="miyu-assistant__form" data-miyu-form hidden>
@@ -28,10 +44,11 @@
                 <button class="miyu-assistant__back" type="button" data-miyu-back>
                     ← Volver
                 </button>
-                <label for="miyu-contact-email">Tu correo <span>(opcional)</span></label>
-                <input id="miyu-contact-email" name="contact_email" type="email"
-                    autocomplete="email" maxlength="255" placeholder="Para poder responderte"
-                    value="{{ $assistantUserEmail }}">
+                @guest
+                    <label for="miyu-contact-email">Tu correo electrónico</label>
+                    <input id="miyu-contact-email" name="contact_email" type="email"
+                        autocomplete="email" maxlength="255" placeholder="Para poder responderte" required>
+                @endguest
 
                 <label for="miyu-contact-message" data-miyu-form-label>Cuéntanos</label>
                 <textarea id="miyu-contact-message" name="message" rows="4" minlength="10"
@@ -176,6 +193,66 @@
         font-size: 13px;
         font-weight: 600;
         line-height: 1.5;
+    }
+
+    .miyu-assistant__questions > p {
+        margin: 0 28px 11px 0;
+        color: var(--miyu-ink);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .miyu-assistant__question-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .miyu-assistant__question {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid rgba(244, 63, 142, .2);
+        border-radius: 14px 14px 14px 5px;
+        background: rgba(244, 63, 142, .07);
+        color: var(--miyu-ink);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.35;
+        text-align: left;
+        cursor: pointer;
+        transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .miyu-assistant__question:hover,
+    .miyu-assistant__question:focus-visible {
+        border-color: rgba(244, 63, 142, .5);
+        background: rgba(244, 63, 142, .13);
+        outline: none;
+        transform: translateX(-2px);
+    }
+
+    .miyu-assistant__disable-form {
+        margin: 11px 0 0;
+    }
+
+    .miyu-assistant__disable-form button {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #9d6b82;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+    }
+
+    .miyu-assistant__disable-form button:hover,
+    .miyu-assistant__disable-form button:focus-visible {
+        color: var(--miyu-wine);
+        outline: none;
     }
 
     .miyu-assistant__message p[role="button"] { cursor: pointer; }
@@ -443,6 +520,7 @@
         background: #23131d;
     }
     [data-bs-theme="dark"] .miyu-assistant__message p,
+    [data-bs-theme="dark"] .miyu-assistant__questions > p,
     [data-bs-theme="dark"] .miyu-assistant__form label { color: #fff5fa; }
     [data-bs-theme="dark"] .miyu-assistant__form input,
     [data-bs-theme="dark"] .miyu-assistant__form textarea {
@@ -486,13 +564,14 @@
 
         const messages = @js($assistantMessages);
         const config = @js($assistantConfig);
-        const userEmail = @js($assistantUserEmail);
         const storageKey = 'mundoyuri.miyu.minimized';
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         const mascot = root.querySelector('[data-miyu-mascot]');
         const messageView = root.querySelector('[data-miyu-message-view]');
         const messageText = root.querySelector('[data-miyu-message]');
         const action = root.querySelector('[data-miyu-action]');
+        const questions = root.querySelector('[data-miyu-questions]');
+        const questionList = root.querySelector('[data-miyu-question-list]');
         const form = root.querySelector('[data-miyu-form]');
         const formType = root.querySelector('[data-miyu-form-type]');
         const formLabel = root.querySelector('[data-miyu-form-label]');
@@ -501,20 +580,24 @@
         const pageUrl = root.querySelector('[data-miyu-page-url]');
         const peek = root.querySelector('[data-miyu-peek]');
         const peekText = root.querySelector('[data-miyu-peek-text]');
+        const questionMessages = messages.filter((message) => message.formType).slice(0, 2);
+        const carouselMessages = questionMessages.length ? questionMessages : messages.slice(0, 2);
         let index = -1;
+        let carouselIndex = -1;
         let bubbleTimer;
         let blinkTimer;
         let messageTimer;
         let peekTimer;
         let pointerFrame;
         let peekMessage;
+        let formOpenedFromQuestions = false;
 
         const setSpeaking = (speaking) => {
             root.classList.toggle('is-speaking', speaking);
             mascot.setAttribute('aria-expanded', speaking ? 'true' : 'false');
             window.clearTimeout(bubbleTimer);
 
-            if (speaking && form.hidden) {
+            if (speaking && form.hidden && questions.hidden) {
                 bubbleTimer = window.setTimeout(() => setSpeaking(false), config.bubbleDurationMs);
             }
         };
@@ -524,6 +607,7 @@
             const message = messages[index];
 
             form.hidden = true;
+            questions.hidden = true;
             messageView.hidden = false;
             messageText.textContent = message.text;
             action.hidden = !message.label;
@@ -557,18 +641,38 @@
             root.classList.remove('is-peeking');
         };
 
-        const showPeek = (nextIndex) => {
-            index = (nextIndex + messages.length) % messages.length;
-            peekMessage = messages[index];
+        const showPeek = () => {
+            carouselIndex = (carouselIndex + 1) % carouselMessages.length;
+            peekMessage = carouselMessages[carouselIndex];
             peekText.textContent = peekMessage.peek || peekMessage.text;
-            peek.dataset.messageIndex = String(index);
-            peek.dataset.formType = peekMessage.formType || '';
             root.classList.add('is-peeking');
-            window.clearTimeout(peekTimer);
-            peekTimer = window.setTimeout(hidePeek, config.peekDurationMs);
         };
 
-        const showForm = (type) => {
+        const showQuestionChoices = () => {
+            if (!questionMessages.length) {
+                showMessage(index + 1);
+                return;
+            }
+
+            window.clearTimeout(bubbleTimer);
+            form.hidden = true;
+            messageView.hidden = true;
+            questions.hidden = false;
+            questionList.replaceChildren();
+
+            questionMessages.forEach((message) => {
+                const question = document.createElement('button');
+                question.type = 'button';
+                question.className = 'miyu-assistant__question';
+                question.textContent = message.text;
+                question.addEventListener('click', () => showForm(message.formType, true));
+                questionList.append(question);
+            });
+
+            setSpeaking(true);
+        };
+
+        const showForm = (type, openedFromQuestions = false) => {
             const labels = {
                 report: '¿Qué problema encontraste?',
                 request: '¿Qué serie o película buscas?',
@@ -577,15 +681,19 @@
 
             window.clearTimeout(bubbleTimer);
             messageView.hidden = true;
+            questions.hidden = true;
             form.hidden = false;
             form.reset();
-            contactEmail.value = userEmail || '';
+            if (contactEmail) {
+                contactEmail.value = '';
+            }
             formType.value = type;
             pageUrl.value = window.location.href;
             formLabel.textContent = labels[type] || 'Cuéntanos';
             formStatus.textContent = '';
+            formOpenedFromQuestions = openedFromQuestions;
             setSpeaking(true);
-            form.querySelector('textarea').focus();
+            window.requestAnimationFrame(() => form.querySelector('textarea').focus());
         };
 
         const minimize = () => {
@@ -596,21 +704,28 @@
             }
             window.clearTimeout(bubbleTimer);
             hidePeek();
+            showPeek();
             scheduleMessage();
         };
 
-        const expandAssistant = () => {
+        const expandAssistant = (openQuestions = false) => {
             hidePeek();
             root.classList.remove('is-minimized');
             if (config.rememberUserState) {
                 localStorage.setItem(storageKey, 'expanded');
             }
-            setSpeaking(false);
             scheduleBlink();
             scheduleMessage();
+
+            if (openQuestions) {
+                showQuestionChoices();
+                return;
+            }
+
+            setSpeaking(false);
         };
 
-        const restore = () => expandAssistant();
+        const restore = () => expandAssistant(true);
 
         const scheduleBlink = () => {
             window.clearTimeout(blinkTimer);
@@ -647,7 +762,7 @@
             window.clearTimeout(messageTimer);
             messageTimer = window.setTimeout(() => {
                 if (root.classList.contains('is-minimized')) {
-                    showPeek(index + 1);
+                    showPeek();
                 } else if (!root.classList.contains('is-speaking')) {
                     showMessage(index + 1);
                 }
@@ -658,25 +773,16 @@
 
         root.querySelector('[data-miyu-minimize]').addEventListener('click', minimize);
         root.querySelector('[data-miyu-restore]').addEventListener('click', restore);
-        root.querySelector('[data-miyu-back]').addEventListener('click', () => showMessage(index));
-        peek.addEventListener('click', () => {
-            const selectedIndex = Number.parseInt(peek.dataset.messageIndex || '', 10);
-            const selectedType = peek.dataset.formType;
-
-            if (!Number.isFinite(selectedIndex)) {
+        root.querySelector('[data-miyu-back]').addEventListener('click', () => {
+            if (formOpenedFromQuestions) {
+                showQuestionChoices();
                 return;
             }
 
-            expandAssistant();
-
-            window.requestAnimationFrame(() => {
-                if (selectedType) {
-                    showForm(selectedType);
-                    return;
-                }
-
-                showMessage(selectedIndex);
-            });
+            showMessage(index);
+        });
+        peek.addEventListener('click', () => {
+            expandAssistant(true);
         });
 
         mascot.addEventListener('click', () => {
@@ -728,12 +834,15 @@
                 const payload = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    throw new Error(payload.message || 'No pude enviar el mensaje. Inténtalo de nuevo.');
+                    const validationMessage = Object.values(payload.errors || {}).flat()[0];
+                    throw new Error(validationMessage || payload.message || 'No pude enviar el mensaje. Inténtalo de nuevo.');
                 }
 
                 formStatus.textContent = payload.message || '¡Listo! Tu mensaje llegó al equipo.';
                 form.reset();
-                contactEmail.value = userEmail || '';
+                if (contactEmail) {
+                    contactEmail.value = '';
+                }
                 window.setTimeout(() => setSpeaking(false), 2400);
             } catch (error) {
                 formStatus.textContent = error.message;
@@ -759,7 +868,7 @@
         }
 
         root.setAttribute('data-ready', '');
-        startsMinimized ? hidePeek() : setSpeaking(false);
+        startsMinimized ? showPeek() : setSpeaking(false);
         scheduleBlink();
         scheduleMessage(config.initialDelayMs);
     })();
