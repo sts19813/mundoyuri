@@ -58,6 +58,21 @@
                     >
                         <img src="{{ route('messages.attachments.show', $message) }}" alt="{{ $message->attachment_name }}" loading="lazy">
                     </a>
+                @elseif($message->attachmentIsVideo())
+                    <button
+                        class="messenger-attachment-video"
+                        type="button"
+                        data-video-lightbox
+                        data-video-url="{{ route('messages.attachments.show', $message) }}"
+                        data-video-name="{{ $message->attachment_name }}"
+                        aria-label="Reproducir video {{ $message->attachment_name }}"
+                    >
+                        <video preload="metadata" muted playsinline>
+                            <source src="{{ route('messages.attachments.show', $message) }}" type="{{ $message->attachment_mime }}">
+                        </video>
+                        <span class="messenger-attachment-video-play" aria-hidden="true">▶</span>
+                        <span class="messenger-attachment-video-meta"><strong>{{ $message->attachment_name }}</strong><small>{{ $message->attachmentSizeLabel() }}</small></span>
+                    </button>
                 @else
                     <a class="messenger-attachment-file" href="{{ route('messages.attachments.show', $message) }}">
                         <span aria-hidden="true">▤</span>

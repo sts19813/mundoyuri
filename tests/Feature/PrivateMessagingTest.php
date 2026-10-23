@@ -583,8 +583,34 @@ class PrivateMessagingTest extends TestCase
             ->assertRedirect(route('messages.show', $recipient));
 
         $this->assertDatabaseCount('direct_messages', 2);
-        $this->assertSame('application/octet-stream', DirectMessage::query()->oldest('id')->value('attachment_mime'));
+        $videoMessage = DirectMessage::query()->oldest('id')->firstOrFail();
+        $this->assertSame('application/octet-stream', $videoMessage->attachment_mime);
+        $this->assertTrue($videoMessage->attachmentIsVideo());
         $this->assertSame('application/zip', DirectMessage::query()->latest('id')->value('attachment_mime'));
+    }
+
+    public function test_private_message_videos_are_playable_with_byte_ranges(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), [
+                'attachment' => UploadedFile::fake()->create('recuerdo.mp4', 80, 'video/mp4'),
+            ])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $message = DirectMessage::query()->firstOrFail();
+        Storage::disk('local')->put($message->attachment_path, str_repeat('video', 64));
+        $this->get(route('messages.show', $recipient))
+            ->assertOk()
+            ->assertSee('data-video-lightbox', false)
+            ->assertSee('recuerdo.mp4');
+        $this->get(route('messages.attachments.show', $message), ['Range' => 'bytes=0-10'])
+            ->assertStatus(206)
+            ->assertHeader('accept-ranges', 'bytes')
+            ->assertHeader('content-range');
     }
 
     public function test_private_message_attachments_allow_up_to_200_megabytes_and_reject_larger_files(): void

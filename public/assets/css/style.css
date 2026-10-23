@@ -5933,6 +5933,15 @@ img.messenger-avatar,
 .messenger-bubble p + .messenger-attachment-image { margin-top: 7px; }
 .messenger-attachment-image img { display: block; width: 100%; max-height: 390px; object-fit: contain; }
 .messenger-attachment-image:focus-visible { outline: 3px solid rgba(255, 255, 255, .82); outline-offset: 3px; }
+.messenger-attachment-video { position: relative; width: min(420px, 100%); display: block; overflow: hidden; border: 0; border-radius: 13px; padding: 0; color: #fff; background: rgba(0, 0, 0, .24); cursor: pointer; text-align: left; }
+.messenger-bubble p + .messenger-attachment-video { margin-top: 7px; }
+.messenger-attachment-video video { width: 100%; max-height: 300px; display: block; background: #08050a; object-fit: contain; pointer-events: none; }
+.messenger-attachment-video-play { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: rgba(244, 63, 142, .9); box-shadow: 0 8px 20px rgba(0, 0, 0, .36); transform: translate(-50%, -50%); font-size: 1.1rem; }
+.messenger-attachment-video-meta { min-width: 0; display: block; padding: 8px 10px; background: rgba(13, 7, 15, .84); }
+.messenger-attachment-video-meta strong, .messenger-attachment-video-meta small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.messenger-attachment-video-meta strong { font-size: .68rem; }
+.messenger-attachment-video-meta small { margin-top: 2px; color: rgba(255, 255, 255, .62); font-size: .56rem; }
+.messenger-attachment-video:focus-visible { outline: 3px solid rgba(255, 255, 255, .82); outline-offset: 3px; }
 .messenger-message.is-sticker .messenger-bubble { padding: 0; background: transparent; box-shadow: none; }
 .messenger-message.is-sticker .messenger-attachment-image { max-width: 220px; margin: 0; overflow: visible; background: transparent; }
 .messenger-message.is-sticker .messenger-attachment-image img { max-height: 250px; }
@@ -5960,6 +5969,10 @@ img.messenger-avatar,
 .messenger-image-viewer-controls button { font-size: 1.4rem; line-height: 1; }
 .messenger-image-viewer-controls [data-image-viewer-reset] { width: 64px; border-radius: 22px; font-size: .72rem; font-weight: 700; }
 .messenger-image-viewer-controls small { margin-left: 8px; color: #bdaebe; font-size: .68rem; }
+.messenger-video-viewer-stage { cursor: default; touch-action: auto; user-select: auto; }
+.messenger-video-viewer-stage > video { width: min(100%, 1180px); max-height: 100%; display: block; background: #050306; }
+.messenger-video-viewer-controls a { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(244, 63, 142, .6); border-radius: 20px; padding: 0 18px; color: #fff; background: rgba(244, 63, 142, .22); font-size: .72rem; font-weight: 700; text-decoration: none; }
+.messenger-video-viewer-controls a:hover { background: rgba(244, 63, 142, .42); }
 .messenger-image-viewer-open { touch-action: none; }
 .messenger-attachment-file { min-width: min(260px, 100%); display: flex; align-items: center; gap: 9px; padding: 8px; border: 1px solid rgba(255, 255, 255, .12); border-radius: 11px; color: #fff; background: rgba(0, 0, 0, .14); text-decoration: none; }
 .messenger-attachment-file > span:first-child { font-size: 1.15rem; }
@@ -6099,9 +6112,12 @@ img.messenger-avatar,
     .messenger-bubble p { font-size: .78rem; }
     .messenger-attachment-image { max-width: min(310px, calc(82vw - 28px)); margin: -4px -6px 2px; }
     .messenger-attachment-image img { max-height: 46dvh; }
+    .messenger-attachment-video { max-width: min(310px, calc(82vw - 28px)); }
+    .messenger-attachment-video video { max-height: 46dvh; }
     .messenger-image-viewer { padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }
     .messenger-image-viewer-header { min-height: 46px; padding: 0 0 6px 8px; }
     .messenger-image-viewer-stage > img { max-width: 100%; max-height: 100%; }
+    .messenger-video-viewer-stage > video { max-width: 100%; }
     .messenger-image-viewer-nav { top: auto; bottom: 10px; width: 42px; height: 42px; background: rgba(20, 10, 22, .72); }
     .messenger-image-viewer-nav.is-previous { left: 8px; }
     .messenger-image-viewer-nav.is-next { right: 8px; }

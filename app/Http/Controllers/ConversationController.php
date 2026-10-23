@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -42,13 +43,6 @@ class ConversationController extends Controller
         'application/zip',
         'application/x-zip-compressed',
         'multipart/x-zip',
-    ];
-
-    private const VIDEO_EXTENSIONS = [
-        '3g2', '3gp', '3gpp', 'amv', 'asf', 'avi', 'divx', 'drc', 'f4v', 'flv',
-        'm2t', 'm2ts', 'm2v', 'm4v', 'mkv', 'mov', 'mp4', 'mpe', 'mpeg', 'mpg',
-        'mpv', 'mts', 'mxf', 'ogm', 'ogv', 'qt', 'rm', 'rmvb', 'ts', 'vob',
-        'webm', 'wmv', 'yuv',
     ];
 
     public function index(Request $request): View
@@ -489,12 +483,76 @@ class ConversationController extends Controller
         ], true), 404);
         abort_unless(! $message->isDeleted() && $message->hasStoredAttachment() && Storage::disk('local')->exists($message->attachment_path), 404);
 
+        if ($message->attachmentIsVideo()) {
+            return $this->streamVideoAttachment($request, $message);
+        }
+
         return Storage::disk('local')->response(
             $message->attachment_path,
             $message->attachment_name,
             ['Content-Type' => $message->attachment_mime ?: 'application/octet-stream'],
             $message->attachmentIsImage() ? 'inline' : 'attachment',
         );
+    }
+
+    private function streamVideoAttachment(Request $request, DirectMessage $message): StreamedResponse
+    {
+        $path = Storage::disk('local')->path($message->attachment_path);
+        $size = filesize($path);
+        abort_unless(is_int($size) && $size > 0, 404);
+
+        $start = 0;
+        $end = $size - 1;
+        $status = 200;
+        $range = (string) $request->header('Range');
+
+        if (preg_match('/bytes=(\d*)-(\d*)/', $range, $matches)) {
+            if ($matches[1] === '') {
+                $length = min((int) $matches[2], $size);
+                $start = max(0, $size - $length);
+            } else {
+                $start = (int) $matches[1];
+                $end = $matches[2] === '' ? $end : min((int) $matches[2], $end);
+            }
+
+            abort_if($start > $end || $start >= $size, 416);
+            $status = 206;
+        }
+
+        $length = $end - $start + 1;
+        $headers = [
+            'Accept-Ranges' => 'bytes',
+            'Content-Length' => (string) $length,
+            'Content-Type' => $message->attachment_mime ?: 'video/mp4',
+            'Content-Disposition' => (new ResponseHeaderBag())->makeDisposition(
+                ResponseHeaderBag::DISPOSITION_INLINE,
+                $message->attachment_name ?: 'video',
+            ),
+        ];
+
+        if ($status === 206) {
+            $headers['Content-Range'] = "bytes {$start}-{$end}/{$size}";
+        }
+
+        return response()->stream(function () use ($path, $start, $length): void {
+            $stream = fopen($path, 'rb');
+            if (! is_resource($stream)) {
+                return;
+            }
+
+            fseek($stream, $start);
+            $remaining = $length;
+            while ($remaining > 0 && ! feof($stream)) {
+                $chunk = fread($stream, min(1024 * 1024, $remaining));
+                if ($chunk === false) {
+                    break;
+                }
+
+                echo $chunk;
+                $remaining -= strlen($chunk);
+            }
+            fclose($stream);
+        }, $status, $headers);
     }
 
     private function conversationList(User $viewer, string $search): Builder
@@ -639,7 +697,7 @@ class ConversationController extends Controller
         return str_starts_with($mime, 'image/')
             || str_starts_with($mime, 'video/')
             || in_array($mime, self::MESSAGE_DOCUMENT_MIME_TYPES, true)
-            || in_array($extension, self::VIDEO_EXTENSIONS, true);
+            || in_array($extension, DirectMessage::VIDEO_EXTENSIONS, true);
     }
 
     /**

@@ -189,6 +189,28 @@ class="messenger-body"
         </footer>
     </div>
 
+    <div class="messenger-image-viewer messenger-video-viewer" data-video-viewer hidden role="dialog" aria-modal="true" aria-label="Visor de video">
+        <div class="messenger-image-viewer-backdrop" data-video-viewer-close></div>
+        <header class="messenger-image-viewer-header">
+            <strong data-video-viewer-title>Video</strong>
+            <button type="button" data-video-viewer-close aria-label="Cerrar visor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </header>
+        <div class="messenger-image-viewer-stage messenger-video-viewer-stage">
+            <button class="messenger-image-viewer-nav is-previous" type="button" data-video-viewer-previous aria-label="Video anterior">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <video data-video-viewer-video controls playsinline preload="metadata"></video>
+            <button class="messenger-image-viewer-nav is-next" type="button" data-video-viewer-next aria-label="Video siguiente">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+        <footer class="messenger-image-viewer-controls messenger-video-viewer-controls">
+            <a data-video-viewer-download href="#" download>Descargar video</a>
+        </footer>
+    </div>
+
     <section class="messenger-media-panel" data-media-panel hidden role="dialog" aria-modal="true" aria-label="Multimedia, archivos y enlaces" data-media-url="{{ route('messages.media', $otherUser) }}">
         <div class="messenger-media-panel-backdrop" data-media-panel-close></div>
         <div class="messenger-media-panel-content">
@@ -236,6 +258,12 @@ class="messenger-body"
 
         const conversation = document.getElementById('conversationMessages');
         const imageViewer = document.querySelector('[data-image-viewer]');
+        const videoViewer = document.querySelector('[data-video-viewer]');
+        const videoViewerVideo = videoViewer?.querySelector('[data-video-viewer-video]');
+        const videoViewerTitle = videoViewer?.querySelector('[data-video-viewer-title]');
+        const videoViewerPrevious = videoViewer?.querySelector('[data-video-viewer-previous]');
+        const videoViewerNext = videoViewer?.querySelector('[data-video-viewer-next]');
+        const videoViewerDownload = videoViewer?.querySelector('[data-video-viewer-download]');
         const imageViewerStage = imageViewer?.querySelector('[data-image-viewer-stage]');
         const imageViewerImage = imageViewer?.querySelector('[data-image-viewer-image]');
         const imageViewerTitle = imageViewer?.querySelector('[data-image-viewer-title]');
@@ -255,6 +283,9 @@ class="messenger-body"
         let imageViewerReturnFocus = null;
 
         const imageViewerItems = () => Array.from(conversation?.querySelectorAll('[data-image-lightbox]') || []);
+        const videoViewerItems = () => Array.from(conversation?.querySelectorAll('[data-video-lightbox]') || []);
+        let videoViewerIndex = 0;
+        let videoViewerReturnFocus = null;
         const clampImageViewerScale = (scale) => Math.min(5, Math.max(1, scale));
 
         const clampImageViewerPosition = () => {
@@ -329,11 +360,58 @@ class="messenger-body"
             imageViewerReturnFocus?.focus({ preventScroll: true });
         };
 
+        const showVideoViewerItem = (index) => {
+            const items = videoViewerItems();
+            if (!videoViewerVideo || items.length === 0) return;
+            videoViewerIndex = (index + items.length) % items.length;
+            const item = items[videoViewerIndex];
+            const url = item.dataset.videoUrl;
+            const name = item.dataset.videoName || 'Video adjunto';
+            videoViewerVideo.pause();
+            videoViewerVideo.src = url;
+            videoViewerVideo.load();
+            videoViewerVideo.play().catch(() => {});
+            if (videoViewerTitle) videoViewerTitle.textContent = name;
+            if (videoViewerDownload) {
+                videoViewerDownload.href = url;
+                videoViewerDownload.download = name;
+            }
+            const hasMultipleVideos = items.length > 1;
+            if (videoViewerPrevious) videoViewerPrevious.hidden = !hasMultipleVideos;
+            if (videoViewerNext) videoViewerNext.hidden = !hasMultipleVideos;
+        };
+
+        const openVideoViewer = (item) => {
+            if (!videoViewer) return;
+            const index = videoViewerItems().indexOf(item);
+            if (index < 0) return;
+            videoViewerReturnFocus = item;
+            videoViewer.hidden = false;
+            document.body.classList.add('messenger-image-viewer-open');
+            showVideoViewerItem(index);
+            videoViewer.querySelector('[data-video-viewer-close]:not(.messenger-image-viewer-backdrop)')?.focus({ preventScroll: true });
+        };
+
+        const closeVideoViewer = () => {
+            if (!videoViewer || videoViewer.hidden) return;
+            videoViewer.hidden = true;
+            videoViewerVideo?.pause();
+            videoViewerVideo?.removeAttribute('src');
+            videoViewerVideo?.load();
+            document.body.classList.remove('messenger-image-viewer-open');
+            videoViewerReturnFocus?.focus({ preventScroll: true });
+        };
+
         imageViewer?.querySelectorAll('[data-image-viewer-close]').forEach((button) => {
             button.addEventListener('click', closeImageViewer);
         });
+        videoViewer?.querySelectorAll('[data-video-viewer-close]').forEach((button) => {
+            button.addEventListener('click', closeVideoViewer);
+        });
         imageViewerPrevious?.addEventListener('click', () => showImageViewerItem(imageViewerIndex - 1));
         imageViewerNext?.addEventListener('click', () => showImageViewerItem(imageViewerIndex + 1));
+        videoViewerPrevious?.addEventListener('click', () => showVideoViewerItem(videoViewerIndex - 1));
+        videoViewerNext?.addEventListener('click', () => showVideoViewerItem(videoViewerIndex + 1));
         imageViewer?.querySelector('[data-image-viewer-zoom-in]')?.addEventListener('click', () => setImageViewerScale(imageViewerScale + .5));
         imageViewer?.querySelector('[data-image-viewer-zoom-out]')?.addEventListener('click', () => setImageViewerScale(imageViewerScale - .5));
         imageViewer?.querySelector('[data-image-viewer-reset]')?.addEventListener('click', resetImageViewerTransform);
@@ -1019,6 +1097,13 @@ class="messenger-body"
         });
 
         document.addEventListener('keydown', (event) => {
+            if (!videoViewer?.hidden) {
+                if (event.key === 'Escape') closeVideoViewer();
+                if (event.key === 'ArrowLeft') showVideoViewerItem(videoViewerIndex - 1);
+                if (event.key === 'ArrowRight') showVideoViewerItem(videoViewerIndex + 1);
+                if (['Escape', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault();
+                return;
+            }
             if (!imageViewer?.hidden) {
                 if (event.key === 'Escape') closeImageViewer();
                 if (event.key === 'ArrowLeft') showImageViewerItem(imageViewerIndex - 1);
@@ -1037,6 +1122,13 @@ class="messenger-body"
         });
 
         conversation?.addEventListener('click', async (event) => {
+            const videoAttachment = event.target.closest('[data-video-lightbox]');
+            if (videoAttachment) {
+                event.preventDefault();
+                openVideoViewer(videoAttachment);
+                closeMessageMenus();
+                return;
+            }
             const imageAttachment = event.target.closest('[data-image-lightbox]');
             if (imageAttachment) {
                 event.preventDefault();

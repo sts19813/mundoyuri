@@ -11,6 +11,13 @@ class DirectMessage extends Model
 {
     use HasFactory;
 
+    public const VIDEO_EXTENSIONS = [
+        '3g2', '3gp', '3gpp', 'amv', 'asf', 'avi', 'divx', 'drc', 'f4v', 'flv',
+        'm2t', 'm2ts', 'm2v', 'm4v', 'mkv', 'mov', 'mp4', 'mpe', 'mpeg', 'mpg',
+        'mpv', 'mts', 'mxf', 'ogm', 'ogv', 'qt', 'rm', 'rmvb', 'ts', 'vob',
+        'webm', 'wmv', 'yuv',
+    ];
+
     protected $fillable = [
         'conversation_id',
         'sender_id',
@@ -62,6 +69,13 @@ class DirectMessage extends Model
     public function attachmentIsImage(): bool
     {
         return $this->hasAttachment() && str_starts_with((string) $this->attachment_mime, 'image/');
+    }
+
+    public function attachmentIsVideo(): bool
+    {
+        return $this->hasAttachment()
+            && (str_starts_with((string) $this->attachment_mime, 'video/')
+                || in_array(strtolower(pathinfo((string) $this->attachment_name, PATHINFO_EXTENSION)), self::VIDEO_EXTENSIONS, true));
     }
 
     public function attachmentSizeLabel(): string
