@@ -42,8 +42,9 @@
                     @foreach($duos as $duo)<option value="{{ $duo->name }}">Dupla</option>@endforeach
                 </datalist>
             </div>
-            <div class="catalog-advanced-filters">
-                <div class="catalog-filters-heading">Filtros</div>
+            <details class="catalog-advanced-filters" id="catalogFiltersPanel">
+                <summary class="catalog-filters-heading">Filtros <span aria-hidden="true">⌄</span></summary>
+                <button class="catalog-clear-filters" id="catalogClearFilters" type="button" disabled>Limpiar filtros</button>
                 <div class="catalog-advanced-grid">
                     <div class="catalog-filter">
                         <label class="visually-hidden" for="catalogType">Tipo de contenido</label>
@@ -113,7 +114,7 @@
                         </div>
                     @endif
                 </div>
-            </div>
+            </details>
         </div>
 
         <div class="row g-3" id="catalogGrid">
@@ -184,6 +185,8 @@
         const status = document.getElementById('catalogStatus');
         const artist = document.getElementById('catalogArtist');
         const duo = document.getElementById('catalogDuo');
+        const clear = document.getElementById('catalogClearFilters');
+        const panel = document.getElementById('catalogFiltersPanel');
         const items = [...document.querySelectorAll('[data-catalog-item]')];
         const results = document.getElementById('catalogResults');
         const empty = document.getElementById('catalogEmpty');
@@ -225,13 +228,26 @@
 
             results.textContent = `${matches} ${matches === 1 ? 'título' : 'títulos'}`;
             empty.hidden = matches !== 0;
+            clear.disabled = ![search, type, genre, tag, country, year, status, artist, duo]
+                .filter(Boolean)
+                .some((filter) => filter.value);
             updateUrl();
+        }
+
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            panel.open = true;
         }
 
         search.addEventListener('input', filterCatalogue);
         type.addEventListener('change', filterCatalogue);
         genre.addEventListener('change', filterCatalogue);
         [tag, country, year, status, artist, duo].filter(Boolean).forEach((filter) => filter.addEventListener('change', filterCatalogue));
+        clear.addEventListener('click', () => {
+            [search, type, genre, tag, country, year, status, artist, duo]
+                .filter(Boolean)
+                .forEach((filter) => { filter.value = ''; });
+            filterCatalogue();
+        });
         filterCatalogue();
     })();
 </script>

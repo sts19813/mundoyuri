@@ -1366,6 +1366,7 @@
     }
 
     .catalog-advanced-filters {
+        position: relative;
         grid-column: 1 / -1;
         border: 1px solid rgba(244, 63, 142, .18);
         border-radius: 10px;
@@ -1378,9 +1379,52 @@
         justify-content: space-between;
         min-height: 44px;
         padding: 0 15px;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: .84rem;
+        list-style: none;
+    }
+
+    .catalog-filters-heading::-webkit-details-marker {
+        display: none;
+    }
+
+    .catalog-filters-heading span {
+        color: var(--rose);
+        transition: transform .2s ease;
+    }
+
+    .catalog-advanced-filters[open] .catalog-filters-heading {
         border-bottom: 1px solid rgba(244, 63, 142, .13);
         color: var(--text);
-        font-size: .84rem;
+    }
+
+    .catalog-advanced-filters[open] .catalog-filters-heading span {
+        transform: rotate(180deg);
+    }
+
+    .catalog-clear-filters {
+        position: absolute;
+        z-index: 1;
+        top: 7px;
+        right: 42px;
+        min-height: 30px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 5px;
+        color: var(--rose);
+        background: transparent;
+        font: 600 .75rem 'DM Sans', sans-serif;
+    }
+
+    .catalog-clear-filters:not(:disabled):hover {
+        color: #fff;
+        background: rgba(244, 63, 142, .12);
+    }
+
+    .catalog-clear-filters:disabled {
+        cursor: default;
+        opacity: .45;
     }
 
     .catalog-advanced-grid {
@@ -4764,6 +4808,10 @@
 
         .catalog-advanced-filters {
             border-radius: 8px;
+        }
+
+        .catalog-clear-filters {
+            right: 40px;
         }
 
         .about-page {
