@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 
 class Episode extends Model
 {
@@ -153,6 +154,45 @@ class Episode extends Model
         }
 
         return $this->randomImageUrl($randomSize);
+    }
+
+    public function seoPageTitle(): string
+    {
+        $series = $this->resolvedSeries();
+
+        return $series
+            ? "{$series->title} episodio {$this->episode_number} gratis sub español"
+            : "Episodio {$this->episode_number} gratis sub español";
+    }
+
+    public function seoMetaDescription(): string
+    {
+        $series = $this->resolvedSeries();
+        $seriesTitle = $series?->title ?: 'esta serie GL';
+        $intro = "Mira {$seriesTitle} episodio {$this->episode_number} gratis y online, subtitulado en español.";
+        $summary = Str::squish(strip_tags((string) ($this->description ?: $series?->description)));
+
+        return Str::limit(trim($intro.' '.$summary), 160, '');
+    }
+
+    /** @return array<int, string> */
+    public function seoAlternateNames(): array
+    {
+        $series = $this->resolvedSeries();
+
+        if (! $series) {
+            return [];
+        }
+
+        return collect([$series->title, ...$series->seoAlternateTitles()])
+            ->flatMap(fn (string $title): array => [
+                "{$title} episodio {$this->episode_number}",
+                "{$title} capítulo {$this->episode_number}",
+                "{$title} capitulo {$this->episode_number}",
+            ])
+            ->unique(fn (string $title): string => Str::lower($title))
+            ->values()
+            ->all();
     }
 
     private function resolvedSeries(): ?Series

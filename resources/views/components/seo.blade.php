@@ -3,6 +3,7 @@
     'description',
     'canonical' => null,
     'image' => null,
+    'imageAlt' => null,
     'type' => 'website',
     'robots' => 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
     'schema' => null,
@@ -13,6 +14,7 @@
     $usesDefaultShareImage = blank($image);
     $shareImage = $image ?: asset('assets/img/social/mundo-yuri-og.jpg');
     $pageTitle = str_contains($title, $siteName) ? $title : $title.' | '.$siteName;
+    $shareImageAlt = $imageAlt ?: $pageTitle;
     $siteUrl = route('home');
     $defaultSchema = [
         '@context' => 'https://schema.org',
@@ -50,7 +52,7 @@
 <meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:image" content="{{ $shareImage }}">
 <meta property="og:image:secure_url" content="{{ $shareImage }}">
-<meta property="og:image:alt" content="{{ $pageTitle }}">
+<meta property="og:image:alt" content="{{ $shareImageAlt }}">
 @if($usesDefaultShareImage)
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
@@ -61,6 +63,6 @@
 <meta name="twitter:title" content="{{ $pageTitle }}">
 <meta name="twitter:description" content="{{ $description }}">
 <meta name="twitter:image" content="{{ $shareImage }}">
-<meta name="twitter:image:alt" content="{{ $pageTitle }}">
+<meta name="twitter:image:alt" content="{{ $shareImageAlt }}">
 
 <script type="application/ld+json">{!! json_encode($schema ?: $defaultSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>

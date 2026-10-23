@@ -46,6 +46,25 @@
             <label class="form-label">Descripcion</label>
             <textarea class="form-control" rows="4" name="description" required>{{ old('description', $series->description ?? '') }}</textarea>
         </div>
+        @php
+            $alternateTitleValue = old(
+                'alternate_titles',
+                isset($series) ? implode(PHP_EOL, $series->alternate_titles ?? []) : ''
+            );
+        @endphp
+        <div class="col-12">
+            <label class="form-label">Títulos alternativos y formas de búsqueda</label>
+            <textarea class="form-control" rows="3" name="alternate_titles" placeholder="Pls Love&#10;Please Love">{{ $alternateTitleValue }}</textarea>
+            <div class="form-text">Escribe uno por línea. Sirven para búsquedas, variantes del título y datos estructurados.</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Título SEO personalizado</label>
+            <input class="form-control" maxlength="120" name="seo_title" value="{{ old('seo_title', $series->seo_title ?? '') }}" placeholder="Se genera automáticamente si lo dejas vacío">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Descripción SEO personalizada</label>
+            <textarea class="form-control" maxlength="320" rows="3" name="seo_description" placeholder="Se genera a partir de la sinopsis si la dejas vacía">{{ old('seo_description', $series->seo_description ?? '') }}</textarea>
+        </div>
         <div class="col-md-4">
             <label class="form-label">Etiquetas</label>
             <select class="form-select" name="tag_ids[]" multiple size="7">

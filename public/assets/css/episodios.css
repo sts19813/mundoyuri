@@ -543,6 +543,47 @@
       margin: 0;
   }
 
+  .series-seo-kicker {
+      margin: 0 0 8px;
+      color: var(--rose);
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+  }
+
+  .series-alternate-titles {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 1.55;
+  }
+
+  .series-alternate-titles strong {
+      color: #d9c9df;
+      font-weight: 500;
+  }
+
+  .series-synopsis {
+      margin-top: 22px;
+  }
+
+  .series-synopsis h2,
+  .series-related-heading h2 {
+      margin: 0;
+      color: var(--text);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.3;
+  }
+
+  .series-synopsis p {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: .94rem;
+      line-height: 1.75;
+  }
+
   .ep-episode-label {
       margin: 7px 0 0;
       color: var(--rose);
@@ -553,6 +594,23 @@
   .ep-episode-label span {
       color: #c7b8ce;
       font-weight: 400;
+  }
+
+  .ep-seo-summary,
+  .ep-seo-description {
+      max-width: 780px;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.65;
+  }
+
+  .ep-seo-summary {
+      margin: 13px 0 0;
+      color: #d9c9df;
+  }
+
+  .ep-seo-description {
+      margin: 7px 0 0;
   }
 
   .ep-meta-row {
@@ -701,6 +759,94 @@
       font-family: 'Playfair Display', serif;
       font-size: 1.1rem;
       font-weight: 700;
+      margin: 0;
+  }
+
+  .series-episode-count {
+      color: var(--muted);
+      font-size: .78rem;
+      white-space: nowrap;
+  }
+
+  .series-related {
+      margin-top: 44px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, .06);
+  }
+
+  .series-related-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+  }
+
+  .series-related-heading a {
+      flex: 0 0 auto;
+      color: var(--rose);
+      font-size: .8rem;
+      font-weight: 600;
+      text-decoration: none;
+  }
+
+  .series-related-heading a:hover,
+  .series-related-heading a:focus-visible {
+      color: #fff;
+  }
+
+  .series-related-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+  }
+
+  .series-related-item {
+      min-width: 0;
+      color: var(--text);
+      text-decoration: none;
+  }
+
+  .series-related-poster {
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      border: 1px solid rgba(244, 63, 142, .12);
+      border-radius: 8px;
+      background: var(--dark-card);
+  }
+
+  .series-related-poster img,
+  .series-related-poster video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      transition: transform .22s ease;
+  }
+
+  .series-related-item:hover .series-related-poster img,
+  .series-related-item:hover .series-related-poster video {
+      transform: scale(1.035);
+  }
+
+  .series-related-item h3 {
+      margin: 9px 0 3px;
+      overflow: hidden;
+      color: var(--text);
+      font-size: .82rem;
+      font-weight: 600;
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }
+
+  .series-related-item p {
+      margin: 0;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: .7rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
   }
 
   .ep-list-filter {
@@ -1599,6 +1745,10 @@
       .cf-fields {
           grid-template-columns: 1fr;
       }
+
+      .series-related-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
   }
 
   @media (min-width: 1081px) {
@@ -1608,6 +1758,13 @@
   }
 
   @media (max-width: 767px) {
+      .series-related-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .series-synopsis p {
+          font-size: .9rem;
+      }
       .episode-page-body .miyu-assistant {
           display: none !important;
       }
@@ -1666,6 +1823,11 @@
           margin-top: 9px;
           font-size: .8rem;
           line-height: 1.5;
+      }
+
+      .episode-page-body .ep-seo-summary,
+      .episode-page-body .ep-seo-description {
+          font-size: .84rem;
       }
 
       .episode-page-body .favorite-series-control {
@@ -1807,6 +1969,14 @@
   }
 
   @media (max-width: 430px) {
+      .series-related-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .series-related-heading {
+          align-items: flex-start;
+      }
+
       .episode-page-body .ep-layout {
           padding-top: 55px;
       }

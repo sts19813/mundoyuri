@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 
 class Series extends Model
 {
@@ -19,11 +20,14 @@ class Series extends Model
         'created_by',
         'approved_by',
         'title',
+        'alternate_titles',
         'slug',
         'content_type',
         'catalog_section',
         'status',
         'description',
+        'seo_title',
+        'seo_description',
         'country_of_origin',
         'release_year',
         'total_seasons',
@@ -43,6 +47,7 @@ class Series extends Model
         return [
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
+            'alternate_titles' => 'array',
         ];
     }
 
@@ -124,5 +129,57 @@ class Series extends Model
     public function coverMediaType(): ?string
     {
         return SeriesMedia::detectType($this->coverMediaPath());
+    }
+
+    /** @return array<int, string> */
+    public function seoAlternateTitles(): array
+    {
+        $titles = collect($this->alternate_titles ?? []);
+        $spacedTitle = Str::squish((string) preg_replace('/[^\pL\pN]+/u', ' ', $this->title));
+        $compactTitle = (string) preg_replace('/[^\pL\pN]+/u', '', $this->title);
+
+        if ($spacedTitle !== '' && strcasecmp($spacedTitle, $this->title) !== 0) {
+            $titles->push($spacedTitle);
+        }
+
+        if ($compactTitle !== '' && strcasecmp($compactTitle, $this->title) !== 0 && strcasecmp($compactTitle, $spacedTitle) !== 0) {
+            $titles->push($compactTitle);
+        }
+
+        return $titles
+            ->map(fn (mixed $title): string => Str::squish(strip_tags((string) $title)))
+            ->filter(fn (string $title): bool => $title !== '' && strcasecmp($title, $this->title) !== 0)
+            ->unique(fn (string $title): string => Str::lower($title))
+            ->values()
+            ->all();
+    }
+
+    public function seoContentLabel(): string
+    {
+        if ($this->content_type === 'movie') {
+            return $this->catalog_section === 'anime' ? 'película yuri' : 'película GL';
+        }
+
+        return $this->catalog_section === 'anime' ? 'anime yuri' : 'serie GL';
+    }
+
+    public function seoPageTitle(): string
+    {
+        return filled($this->seo_title)
+            ? trim($this->seo_title)
+            : $this->title.': '.$this->seoContentLabel().' subtitulada en español';
+    }
+
+    public function seoMetaDescription(): string
+    {
+        if (filled($this->seo_description)) {
+            return Str::limit(Str::squish(strip_tags($this->seo_description)), 160, '');
+        }
+
+        $action = $this->content_type === 'movie' ? 'Mira' : 'Descubre y mira';
+        $intro = "{$action} {$this->title}, {$this->seoContentLabel()} subtitulada en español.";
+        $summary = Str::squish(strip_tags((string) $this->description));
+
+        return Str::limit(trim($intro.' '.$summary), 160, '');
     }
 }

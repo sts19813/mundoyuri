@@ -201,9 +201,24 @@ class CatalogController extends Controller
             ->take(8)
             ->get();
 
+        $relatedSeries = Series::query()
+            ->with(['genre', 'tags'])
+            ->whereKeyNot($series->getKey())
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            ->where('catalog_section', $series->catalog_section)
+            ->when(
+                $series->genre_id,
+                fn ($query, $genreId) => $query->orderByRaw('CASE WHEN genre_id = ? THEN 0 ELSE 1 END', [$genreId])
+            )
+            ->orderByDesc('is_featured')
+            ->latest('published_at')
+            ->limit(6)
+            ->get();
+
         $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user());
 
-        return view('catalog.series.show', compact('series', 'recentEpisodes', 'marathoners', 'rankResolver'));
+        return view('catalog.series.show', compact('series', 'relatedSeries', 'recentEpisodes', 'marathoners', 'rankResolver'));
     }
 
     public function showEpisode(Series $series, Episode $episode): RedirectResponse

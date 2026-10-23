@@ -5,39 +5,105 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $seoType = $series->catalog_section === 'anime' ? 'anime yuri' : 'serie GL';
-        $seoDescription = \Illuminate\Support\Str::limit(
-            $series->description ?: 'Mira '.$series->title.', una '.$seoType.' con episodios subtitulados en español en Mundo Yuri.',
-            155
-        );
-        $seriesSeoSchema = [
-            '@context' => 'https://schema.org',
-            '@type' => 'TVSeries',
+        $canonicalUrl = route('catalog.series.show', $series->slug);
+        $seoTitle = $series->seoPageTitle();
+        $seoDescription = $series->seoMetaDescription();
+        $alternateTitles = $series->seoAlternateTitles();
+        $seoImages = collect([
+            $series->bannerMediaType() === 'image' ? $series->bannerMediaUrl() : null,
+            $series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null,
+        ])->filter()->unique()->values();
+        $seoImage = $seoImages->first();
+        $contentSchemaId = $canonicalUrl.'#title';
+        $breadcrumbSchemaId = $canonicalUrl.'#breadcrumb';
+        $contentSchema = array_filter([
+            '@type' => $series->content_type === 'movie' ? 'Movie' : 'TVSeries',
+            '@id' => $contentSchemaId,
             'name' => $series->title,
-            'description' => $seoDescription,
-            'url' => route('catalog.series.show', $series->slug),
-            'image' => $series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null,
+            'alternateName' => $alternateTitles ?: null,
+            'description' => $series->description,
+            'url' => $canonicalUrl,
+            'mainEntityOfPage' => ['@id' => $canonicalUrl.'#webpage'],
+            'image' => $seoImages->all() ?: null,
             'genre' => array_values(array_unique(array_filter([
                 $series->genre?->name,
                 ...$series->tags->pluck('name')->all(),
                 $series->catalog_section === 'anime' ? 'Yuri' : 'Girls Love',
             ]))),
-            'numberOfEpisodes' => $series->episodes->count(),
-            'numberOfSeasons' => $series->total_seasons,
-            'datePublished' => $series->published_at?->toDateString(),
-            'inLanguage' => 'es-MX',
+            'keywords' => $series->tags->pluck('name')->join(', ') ?: null,
+            'actor' => $series->artists->map(fn ($artist) => [
+                '@type' => 'Person',
+                'name' => $artist->name,
+            ])->values()->all() ?: null,
             'countryOfOrigin' => $series->country_of_origin ? ['@type' => 'Country', 'name' => $series->country_of_origin] : null,
+            'datePublished' => $series->release_year ? $series->release_year.'-01-01' : $series->published_at?->toDateString(),
+            'duration' => $series->duration_minutes ? 'PT'.$series->duration_minutes.'M' : null,
+            'numberOfEpisodes' => $series->content_type === 'series' ? $series->episodes->count() : null,
+            'numberOfSeasons' => $series->content_type === 'series' ? $series->total_seasons : null,
+            'inLanguage' => 'es-MX',
+            'isAccessibleForFree' => true,
+            'potentialAction' => $series->episodes->isNotEmpty() ? [
+                '@type' => 'WatchAction',
+                'target' => route('public.episodes.show', $series->episodes->first()->slug),
+            ] : null,
+            'episode' => $series->content_type === 'series' ? $series->episodes->map(fn ($episode) => array_filter([
+                '@type' => 'TVEpisode',
+                '@id' => route('public.episodes.show', $episode->slug).'#episode',
+                'name' => $episode->title,
+                'url' => route('public.episodes.show', $episode->slug),
+                'episodeNumber' => $episode->episode_number,
+                'seasonNumber' => $episode->season_number,
+                'datePublished' => $episode->release_date?->toDateString() ?: $episode->published_at?->toDateString(),
+                'partOfSeries' => ['@id' => $contentSchemaId],
+            ], fn ($value) => $value !== null && $value !== ''))->values()->all() : null,
+        ], fn ($value) => $value !== null && $value !== [] && $value !== '');
+        $seriesSeoSchema = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'WebSite',
+                    '@id' => route('home').'#website',
+                    'url' => route('home'),
+                    'name' => 'Mundo Yuri',
+                    'inLanguage' => 'es-MX',
+                ],
+                array_filter([
+                    '@type' => 'WebPage',
+                    '@id' => $canonicalUrl.'#webpage',
+                    'url' => $canonicalUrl,
+                    'name' => $seoTitle,
+                    'description' => $seoDescription,
+                    'inLanguage' => 'es-MX',
+                    'isPartOf' => ['@id' => route('home').'#website'],
+                    'breadcrumb' => ['@id' => $breadcrumbSchemaId],
+                    'mainEntity' => ['@id' => $contentSchemaId],
+                    'primaryImageOfPage' => $seoImage ? ['@type' => 'ImageObject', 'url' => $seoImage] : null,
+                ], fn ($value) => $value !== null),
+                [
+                    '@type' => 'BreadcrumbList',
+                    '@id' => $breadcrumbSchemaId,
+                    'itemListElement' => [
+                        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Inicio', 'item' => route('home')],
+                        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Series GL, yuri y anime', 'item' => route('catalog.series.index')],
+                        ['@type' => 'ListItem', 'position' => 3, 'name' => $series->title, 'item' => $canonicalUrl],
+                    ],
+                ],
+                $contentSchema,
+            ],
         ];
-        $seriesSeoSchema = array_filter($seriesSeoSchema, fn ($value) => $value !== null && $value !== []);
     @endphp
     <x-seo
-        :title="$series->title.' - '.$seoType.' subtitulada en español'"
+        :title="$seoTitle"
         :description="$seoDescription"
-        :canonical="route('catalog.series.show', $series->slug)"
-        :image="$series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null"
-        type="video.tv_show"
+        :canonical="$canonicalUrl"
+        :image="$seoImage"
+        :image-alt="'Imagen oficial de '.$series->title"
+        :type="$series->content_type === 'movie' ? 'video.movie' : 'video.tv_show'"
         :schema="$seriesSeoSchema"
     />
+    @if($series->bannerMediaType() === 'image' && $series->bannerMediaUrl())
+        <link rel="preload" as="image" href="{{ $series->bannerMediaUrl() }}" fetchpriority="high">
+    @endif
     <x-portal-favicon />
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
@@ -63,19 +129,19 @@
 
     <div class="ep-layout">
         <main class="ep-main">
-            <div class="ep-breadcrumb">
+            <nav class="ep-breadcrumb" aria-label="Migas de pan">
                 <a href="{{ route('home') }}">Inicio</a>
                 <span>›</span>
-                <a href="{{ route('catalog.series.index') }}">Series GL</a>
+                <a href="{{ route('catalog.series.index') }}">Series GL, yuri y anime</a>
                 <span>›</span>
                 <span style="color:var(--text)">{{ $series->title }}</span>
-            </div>
+            </nav>
 
             <section class="player-wrap" style="margin-bottom:20px;">
                 <x-media-preview
                     :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/1200/675?series='.$series->id"
                     :type="$series->bannerMediaUrl() ? $series->bannerMediaType() : 'image'"
-                    :alt="$series->title"
+                    :alt="'Banner de '.$series->title.', '.$series->seoContentLabel().' subtitulada en español'"
                     class="player-poster"
                     :autoplay="true"
                 />
@@ -106,11 +172,18 @@
             </section>
 
             <div class="ep-title-section">
+                <p class="series-seo-kicker">{{ ucfirst($series->seoContentLabel()) }} subtitulada en español</p>
                 <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
                     <h1>{{ $series->title }}</h1>
                     <x-favorite-series-button :series="$series" />
                 </div>
-                <p style="color:var(--muted);margin-top:10px;line-height:1.7;">{{ $series->description ?: 'Sin descripción disponible.' }}</p>
+                @if($alternateTitles)
+                    <p class="series-alternate-titles"><strong>También conocida como:</strong> {{ implode(' · ', $alternateTitles) }}</p>
+                @endif
+                <section class="series-synopsis" aria-labelledby="series-synopsis-title">
+                    <h2 id="series-synopsis-title">Sinopsis de {{ $series->title }}</h2>
+                    <p>{{ $series->description ?: 'Sin descripción disponible.' }}</p>
+                </section>
                 @if($series->tags->isNotEmpty())
                     <div class="catalog-detail-tags" aria-label="Etiquetas de {{ $series->title }}">
                         @foreach($series->tags as $tag)
@@ -133,12 +206,10 @@
                 </div>
             </div>
 
-            <div class="ep-list-section">
+            <section class="ep-list-section" aria-labelledby="series-episodes-title">
                 <div class="ep-list-header">
-                    <span class="ep-list-title">Episodios disponibles</span>
-                    <div class="ep-list-filter">
-                        <button class="ep-filter-pill active">Publicados</button>
-                    </div>
+                    <h2 class="ep-list-title" id="series-episodes-title">Episodios de {{ $series->title }}</h2>
+                    <span class="series-episode-count">{{ $series->episodes->count() }} {{ $series->episodes->count() === 1 ? 'episodio' : 'episodios' }}</span>
                 </div>
                 <div class="ep-list">
                     @forelse($series->episodes as $episode)
@@ -147,7 +218,7 @@
                                 <x-media-preview
                                     :src="$episode->previewMediaUrl('140/90')"
                                     :type="$episode->previewMediaType()"
-                                    alt=""
+                                    :alt="'Imagen del episodio '.$episode->episode_number.' de '.$series->title"
                                     class="ep-thumb-media"
                                     :hover-play="$episode->previewMediaType() === 'video'"
                                 />
@@ -164,7 +235,35 @@
                         </div>
                     @endforelse
                 </div>
-            </div>
+            </section>
+
+            @if($relatedSeries->isNotEmpty())
+                <section class="series-related" aria-labelledby="related-series-title">
+                    <div class="series-related-heading">
+                        <div>
+                            <p class="series-seo-kicker">También te puede gustar</p>
+                            <h2 id="related-series-title">Más historias como {{ $series->title }}</h2>
+                        </div>
+                        <a href="{{ route('catalog.series.index') }}">Ver catálogo</a>
+                    </div>
+                    <div class="series-related-grid">
+                        @foreach($relatedSeries as $related)
+                            <a href="{{ route('catalog.series.show', $related->slug) }}" class="series-related-item">
+                                <div class="series-related-poster">
+                                    <x-media-preview
+                                        :src="$related->coverMediaUrl() ?: 'https://picsum.photos/300/420?series-'.$related->id"
+                                        :type="$related->coverMediaUrl() ? $related->coverMediaType() : 'image'"
+                                        :alt="'Portada de '.$related->title"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <h3>{{ $related->title }}</h3>
+                                <p>{{ $related->genre?->name ?: ucfirst($related->seoContentLabel()) }} · {{ $related->release_year ?: 'Estreno disponible' }}</p>
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
 
             @include('catalog.partials.threaded-comments', [
                 'comments' => $comments,

@@ -13,6 +13,7 @@ class SitemapTest extends TestCase
         $response->assertOk()
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
             ->assertSee('<?xml version="1.0" encoding="UTF-8"?>', false)
+            ->assertSee('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"', false)
             ->assertSee(route('home'), false)
             ->assertSee(route('catalog.series.index'), false)
             ->assertDontSee('/admin/', false);

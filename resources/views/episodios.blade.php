@@ -9,12 +9,113 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $episodeCanonical = $episode ? route('public.episodes.show', $episode->slug) : route('legacy.episodios');
+        $episodeSeoTitle = $episode ? $episode->seoPageTitle() : 'Últimos episodios GL';
+        $episodeSeoDescription = $episode
+            ? $episode->seoMetaDescription()
+            : 'Mira los episodios más recientes de series y doramas Girls Love en Mundo Yuri.';
+        $episodeSeoImage = $episode ? $episode->imageUrl('1200/630') : null;
+        $episodeSchema = null;
+
+        if ($episode) {
+            $episodeEntityId = $episodeCanonical.'#episode';
+            $videoEntityId = $episodeCanonical.'#video';
+            $breadcrumbEntityId = $episodeCanonical.'#breadcrumb';
+            $seoSource = $episode->sources
+                ->sortBy('sort_order')
+                ->sortByDesc('is_primary')
+                ->first();
+            $videoContentUrl = $seoSource?->player_type === 'video' ? $seoSource->direct_video_url : null;
+            $videoEmbedUrl = $seoSource?->player_type === 'iframe' ? $seoSource->playable_url : null;
+            $uploadDate = $episode->release_date?->copy()->startOfDay()->toAtomString()
+                ?: $episode->published_at?->toAtomString();
+            $videoObject = $seoSource ? array_filter([
+                '@type' => 'VideoObject',
+                '@id' => $videoEntityId,
+                'name' => $series->title.' episodio '.$episode->episode_number,
+                'description' => $episodeSeoDescription,
+                'thumbnailUrl' => [$episodeSeoImage],
+                'uploadDate' => $uploadDate,
+                'duration' => $episode->duration_minutes ? 'PT'.$episode->duration_minutes.'M' : null,
+                'contentUrl' => $videoContentUrl,
+                'embedUrl' => $videoEmbedUrl,
+                'url' => $episodeCanonical,
+                'inLanguage' => 'es-MX',
+                'isFamilyFriendly' => true,
+                'potentialAction' => [
+                    '@type' => 'WatchAction',
+                    'target' => $episodeCanonical,
+                ],
+            ], fn ($value) => $value !== null && $value !== '') : null;
+            $tvEpisode = array_filter([
+                '@type' => 'TVEpisode',
+                '@id' => $episodeEntityId,
+                'name' => $series->title.' episodio '.$episode->episode_number,
+                'alternateName' => $episode->seoAlternateNames(),
+                'description' => $episodeSeoDescription,
+                'url' => $episodeCanonical,
+                'episodeNumber' => $episode->episode_number,
+                'seasonNumber' => $episode->season_number,
+                'datePublished' => $episode->release_date?->toDateString() ?: $episode->published_at?->toDateString(),
+                'image' => $episodeSeoImage,
+                'inLanguage' => 'es-MX',
+                'isAccessibleForFree' => true,
+                'partOfSeries' => [
+                    '@type' => 'TVSeries',
+                    '@id' => route('catalog.series.show', $series->slug).'#title',
+                    'name' => $series->title,
+                    'url' => route('catalog.series.show', $series->slug),
+                ],
+                'associatedMedia' => $videoObject ? ['@id' => $videoEntityId] : null,
+            ], fn ($value) => $value !== null && $value !== [] && $value !== '');
+            $episodeGraph = [
+                [
+                    '@type' => 'WebSite',
+                    '@id' => route('home').'#website',
+                    'url' => route('home'),
+                    'name' => 'Mundo Yuri',
+                    'inLanguage' => 'es-MX',
+                ],
+                [
+                    '@type' => 'WebPage',
+                    '@id' => $episodeCanonical.'#webpage',
+                    'url' => $episodeCanonical,
+                    'name' => $episodeSeoTitle,
+                    'description' => $episodeSeoDescription,
+                    'inLanguage' => 'es-MX',
+                    'isPartOf' => ['@id' => route('home').'#website'],
+                    'breadcrumb' => ['@id' => $breadcrumbEntityId],
+                    'mainEntity' => ['@id' => $episodeEntityId],
+                    'primaryImageOfPage' => ['@type' => 'ImageObject', 'url' => $episodeSeoImage],
+                ],
+                [
+                    '@type' => 'BreadcrumbList',
+                    '@id' => $breadcrumbEntityId,
+                    'itemListElement' => [
+                        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Inicio', 'item' => route('home')],
+                        ['@type' => 'ListItem', 'position' => 2, 'name' => $series->title, 'item' => route('catalog.series.show', $series->slug)],
+                        ['@type' => 'ListItem', 'position' => 3, 'name' => 'Episodio '.$episode->episode_number, 'item' => $episodeCanonical],
+                    ],
+                ],
+                $tvEpisode,
+            ];
+
+            if ($videoObject) {
+                $episodeGraph[] = $videoObject;
+            }
+
+            $episodeSchema = ['@context' => 'https://schema.org', '@graph' => $episodeGraph];
+        }
+    @endphp
     <x-seo
-        :title="$episode ? $series->title.' T'.$episode->season_number.' E'.$episode->episode_number.': '.$episode->title : 'Últimos episodios GL'"
-        :description="$episode ? \Illuminate\Support\Str::limit($episode->description ?: 'Mira '.$episode->title.' de '.$series->title.' online en Mundo Yuri.', 155) : 'Mira los episodios más recientes de series y doramas Girls’ Love en Mundo Yuri.'"
-        :canonical="$episode ? route('public.episodes.show', $episode->slug) : route('legacy.episodios')"
-        :image="$episode ? $episode->imageUrl('1200/630') : null"
+        :title="$episodeSeoTitle"
+        :description="$episodeSeoDescription"
+        :canonical="$episodeCanonical"
+        :image="$episodeSeoImage"
+        :image-alt="$episode ? 'Imagen de '.$series->title.' episodio '.$episode->episode_number : null"
         :type="$episode ? 'video.episode' : 'website'"
+        :schema="$episodeSchema"
     />
     <x-portal-favicon />
     <link
@@ -128,15 +229,15 @@
 
         <div class="ep-layout">
             <main class="ep-main">
-                <div class="ep-breadcrumb">
+                <nav class="ep-breadcrumb" aria-label="Migas de pan">
                     <a href="{{ route('home') }}">Inicio</a>
                     <span>›</span>
-                    <a href="{{ route('catalog.series.index') }}">Series GL</a>
+                    <a href="{{ route('catalog.series.index') }}">Series GL, yuri y anime</a>
                     <span>›</span>
                     <a href="{{ route('catalog.series.show', $series->slug) }}">{{ $series->title }}</a>
                     <span>›</span>
                     <span style="color:var(--text)">Temporada {{ $episode->season_number }} · Episodio {{ $episode->episode_number }}</span>
-                </div>
+                </nav>
 
                 <div class="player-wrap">
                     @if($primarySource)
@@ -162,7 +263,7 @@
                         <x-media-preview
                             :src="$episode->previewMediaUrl('1200/675')"
                             :type="$episode->previewMediaType()"
-                            :alt="$series->title"
+                            :alt="'Imagen de '.$series->title.' episodio '.$episode->episode_number"
                             class="player-poster"
                             :autoplay="$episode->previewMediaType() === 'video'"
                         />
@@ -254,13 +355,17 @@
                 <div class="ep-title-section">
                     <div class="ep-heading-row">
                         <div class="ep-heading-copy">
-                            <h1>{{ $series->title }}</h1>
+                            <h1>{{ $series->title }} episodio {{ $episode->episode_number }}</h1>
                             <p class="ep-episode-label">
-                                Temporada {{ $episode->season_number }} · Episodio {{ $episode->episode_number }}
+                                Temporada {{ $episode->season_number }}
                                 @if($showEpisodeDisplayTitle)
                                     <span>{{ $episodeDisplayTitle }}</span>
                                 @endif
                             </p>
+                            <p class="ep-seo-summary">Mira {{ $series->title }} episodio {{ $episode->episode_number }} gratis y online, subtitulado en español.</p>
+                            @if(filled($episode->description))
+                                <p class="ep-seo-description">{{ $episode->description }}</p>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -319,9 +424,9 @@
                     @endif
                 </div>
 
-                <div class="ep-list-section">
+                <section class="ep-list-section" aria-labelledby="season-episodes-title">
                     <div class="ep-list-header">
-                        <span class="ep-list-title">Episodios · Temporada {{ $episode->season_number }}</span>
+                        <h2 class="ep-list-title" id="season-episodes-title">Más episodios de {{ $series->title }} · Temporada {{ $episode->season_number }}</h2>
                     </div>
                     <nav class="ep-number-grid" aria-label="Episodios de la temporada {{ $episode->season_number }}">
                         @foreach($seriesEpisodes as $item)
@@ -335,7 +440,7 @@
                             </a>
                         @endforeach
                     </nav>
-                </div>
+                </section>
 
                 @include('catalog.partials.threaded-comments', [
                     'comments' => $comments,

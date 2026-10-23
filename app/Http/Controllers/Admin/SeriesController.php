@@ -73,6 +73,7 @@ class SeriesController extends Controller
     {
         $validated = $this->validateSeries($request);
         $seriesData = Arr::except($validated, ['banner_image', 'cover_image', 'tag_ids', 'artist_ids', 'duo_ids']);
+        $seriesData['alternate_titles'] = $this->normalizeAlternateTitles($validated['alternate_titles'] ?? null);
 
         if (! $request->user()->can('moderate content')) {
             $seriesData['is_featured'] = false;
@@ -132,6 +133,7 @@ class SeriesController extends Controller
     {
         $validated = $this->validateSeries($request, $series->id);
         $seriesData = Arr::except($validated, ['banner_image', 'cover_image', 'tag_ids', 'artist_ids', 'duo_ids']);
+        $seriesData['alternate_titles'] = $this->normalizeAlternateTitles($validated['alternate_titles'] ?? null);
 
         $series->update([
             ...$seriesData,
@@ -165,6 +167,9 @@ class SeriesController extends Controller
             'catalog_section' => ['required', 'exists:catalog_sections,slug'],
             'status' => ['required', 'in:ongoing,completed,upcoming'],
             'description' => ['required', 'string'],
+            'alternate_titles' => ['nullable', 'string', 'max:2000'],
+            'seo_title' => ['nullable', 'string', 'max:120'],
+            'seo_description' => ['nullable', 'string', 'max:320'],
             'country_of_origin' => ['nullable', 'string', 'max:120'],
             'release_year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'total_seasons' => ['nullable', 'integer', 'min:1', 'max:100'],
@@ -183,6 +188,18 @@ class SeriesController extends Controller
             'moderation_status' => [Rule::requiredIf($request->user()->can('moderate content')), 'nullable', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
         ]);
+    }
+
+    /** @return array<int, string> */
+    private function normalizeAlternateTitles(?string $titles): array
+    {
+        return collect(preg_split('/[\r\n;]+/', (string) $titles) ?: [])
+            ->map(fn (string $title): string => Str::squish(strip_tags($title)))
+            ->filter()
+            ->unique(fn (string $title): string => Str::lower($title))
+            ->take(20)
+            ->values()
+            ->all();
     }
 
     private function resolveUniqueSlug(string $slug, ?int $exceptId = null): string
