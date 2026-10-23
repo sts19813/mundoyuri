@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\CatalogSection;
+use App\Models\Artist;
+use App\Models\Duo;
 use App\Models\Episode;
 use App\Models\Genre;
 use App\Models\Series;
+use App\Models\Tag;
 use App\Services\CommentConversationTree;
 use App\Services\CommunityRankResolver;
 use App\Services\PresenceLeaderboard;
@@ -64,6 +67,11 @@ class CatalogController extends Controller
                 'genres' => collect(),
                 'catalogSections' => collect(),
                 'activeSection' => null,
+                'tags' => collect(),
+                'countries' => collect(),
+                'years' => collect(),
+                'artists' => collect(),
+                'duos' => collect(),
             ]);
         }
 
@@ -71,19 +79,49 @@ class CatalogController extends Controller
         // Its filters run client-side, so changing a field is immediate and does
         // not leave the visitor on a partial paginator result set.
         $series = Series::query()
-            ->with('genre')
+            ->with(['genre', 'tags', 'artists', 'duos'])
             ->where('moderation_status', 'approved')
             ->when($request->filled('section'), fn ($query) => $query->where('catalog_section', $request->string('section')))
             ->when($request->filled('type'), fn ($query) => $query->where('content_type', $request->string('type')))
             ->latest('published_at')
             ->get();
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
+        $tags = Tag::query()
+            ->where('is_active', true)
+            ->whereHas('series', fn ($query) => $query->where('moderation_status', 'approved'))
+            ->withCount(['series' => fn ($query) => $query->where('moderation_status', 'approved')])
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get();
+        $countries = Series::query()
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('country_of_origin')
+            ->where('country_of_origin', '!=', '')
+            ->distinct()
+            ->orderBy('country_of_origin')
+            ->pluck('country_of_origin');
+        $years = Series::query()
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('release_year')
+            ->distinct()
+            ->orderByDesc('release_year')
+            ->pluck('release_year');
+        $artists = Artist::query()
+            ->where('is_active', true)
+            ->whereHas('series', fn ($query) => $query->where('moderation_status', 'approved'))
+            ->orderBy('name')
+            ->get();
+        $duos = Duo::query()
+            ->where('is_active', true)
+            ->whereHas('series', fn ($query) => $query->where('moderation_status', 'approved'))
+            ->orderBy('name')
+            ->get();
         $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
         $activeSection = $request->filled('section')
             ? CatalogSection::query()->where('slug', $request->string('section'))->first()
             : null;
 
-        return view('catalog.series.index', compact('series', 'genres', 'catalogSections', 'activeSection'));
+        return view('catalog.series.index', compact('series', 'genres', 'tags', 'countries', 'years', 'artists', 'duos', 'catalogSections', 'activeSection'));
     }
 
     public function genres(): View
@@ -137,6 +175,9 @@ class CatalogController extends Controller
 
         $series->load([
             'genre',
+            'tags',
+            'artists',
+            'duos',
             'episodes' => fn ($query) => $query
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at')

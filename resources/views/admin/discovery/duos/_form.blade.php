@@ -1,0 +1,7 @@
+@csrf @if(isset($duo)) @method('PUT') @endif
+<div class="card"><div class="card-body row g-4">
+<div class="col-md-6"><label class="form-label">Nombre</label><input class="form-control" name="name" value="{{ old('name', $duo->name ?? '') }}" required></div><div class="col-md-6"><label class="form-label">Slug (opcional)</label><input class="form-control" name="slug" value="{{ old('slug', $duo->slug ?? '') }}"></div>
+<div class="col-12"><label class="form-label">Descripción</label><textarea class="form-control" name="description" rows="3">{{ old('description', $duo->description ?? '') }}</textarea></div>
+<div class="col-md-8"><label class="form-label">Títulos relacionados</label>@php($selectedSeries = old('series_ids', isset($duo) ? $duo->series->pluck('id')->all() : []))<select class="form-select" name="series_ids[]" multiple size="8">@foreach($series as $item)<option value="{{ $item->id }}" @selected(in_array($item->id, $selectedSeries))>{{ $item->title }}{{ $item->release_year ? ' · '.$item->release_year : '' }}</option>@endforeach</select></div>
+<div class="col-md-4 d-flex align-items-end"><label class="form-check form-check-custom form-check-solid"><input class="form-check-input" type="checkbox" name="is_active" value="1" {{ old('is_active', $duo->is_active ?? true) ? 'checked' : '' }}><span class="form-check-label">Dupla activa</span></label></div>
+</div><div class="card-footer d-flex justify-content-end gap-2"><a href="{{ route('admin.duos.index') }}" class="btn btn-light">Cancelar</a><button class="btn btn-primary">Guardar</button></div></div>

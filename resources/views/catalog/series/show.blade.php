@@ -17,7 +17,11 @@
             'description' => $seoDescription,
             'url' => route('catalog.series.show', $series->slug),
             'image' => $series->coverMediaType() === 'image' ? $series->coverMediaUrl() : null,
-            'genre' => array_filter([$series->genre?->name, 'Girls Love', $series->catalog_section === 'anime' ? 'Yuri' : null]),
+            'genre' => array_values(array_unique(array_filter([
+                $series->genre?->name,
+                ...$series->tags->pluck('name')->all(),
+                $series->catalog_section === 'anime' ? 'Yuri' : 'Girls Love',
+            ]))),
             'numberOfEpisodes' => $series->episodes->count(),
             'numberOfSeasons' => $series->total_seasons,
             'datePublished' => $series->published_at?->toDateString(),
@@ -107,6 +111,19 @@
                     <x-favorite-series-button :series="$series" />
                 </div>
                 <p style="color:var(--muted);margin-top:10px;line-height:1.7;">{{ $series->description ?: 'Sin descripción disponible.' }}</p>
+                @if($series->tags->isNotEmpty())
+                    <div class="catalog-detail-tags" aria-label="Etiquetas de {{ $series->title }}">
+                        @foreach($series->tags as $tag)
+                            <a href="{{ route('catalog.series.index', ['tag' => $tag->slug]) }}">{{ $tag->name }}</a>
+                        @endforeach
+                    </div>
+                @endif
+                @if($series->artists->isNotEmpty() || $series->duos->isNotEmpty())
+                    <div class="catalog-detail-people">
+                        @if($series->artists->isNotEmpty())<span><strong>Reparto:</strong> {{ $series->artists->pluck('name')->join(', ') }}</span>@endif
+                        @if($series->duos->isNotEmpty())<span><strong>Duplas:</strong> {{ $series->duos->pluck('name')->join(', ') }}</span>@endif
+                    </div>
+                @endif
                 <div class="ep-meta-row mt-3">
                     <div class="ep-meta-item">Duración: {{ $series->duration_minutes ? $series->duration_minutes.' min' : 'N/D' }}</div>
                     <div class="ep-meta-dot"></div>

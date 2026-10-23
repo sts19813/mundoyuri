@@ -34,7 +34,13 @@
             <div class="catalog-filter catalog-filter-search">
                 <label class="visually-hidden" for="catalogSearch">Buscar en el catálogo</label>
                 <svg class="catalog-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                <input id="catalogSearch" type="search" value="{{ request('q') }}" placeholder="Buscar título o descripción" autocomplete="off">
+                <input id="catalogSearch" type="search" value="{{ request('q') }}" placeholder="Título, actriz, dupla o etiqueta" list="catalogSuggestions" autocomplete="off">
+                <datalist id="catalogSuggestions">
+                    @foreach($series as $item)<option value="{{ $item->title }}">Título</option>@endforeach
+                    @foreach($tags as $tag)<option value="{{ $tag->name }}">Etiqueta</option>@endforeach
+                    @foreach($artists as $artist)<option value="{{ $artist->name }}">Artista</option>@endforeach
+                    @foreach($duos as $duo)<option value="{{ $duo->name }}">Dupla</option>@endforeach
+                </datalist>
             </div>
             <div class="catalog-filter">
                 <label class="visually-hidden" for="catalogType">Tipo de contenido</label>
@@ -53,6 +59,62 @@
                     @endforeach
                 </select>
             </div>
+
+            <details class="catalog-advanced-filters" @if(request()->filled('tag') || request()->filled('country') || request()->filled('year') || request()->filled('status') || request()->filled('artist') || request()->filled('duo')) open @endif>
+                <summary>Filtros avanzados <span aria-hidden="true">⌄</span></summary>
+                <div class="catalog-advanced-grid">
+                    <div class="catalog-filter">
+                        <label class="visually-hidden" for="catalogTag">Etiqueta</label>
+                        <select id="catalogTag">
+                            <option value="">Todas las etiquetas</option>
+                            @foreach($tags as $tag)
+                                <option value="{{ $tag->slug }}" @selected(request('tag') === $tag->slug)>{{ $tag->name }} ({{ $tag->series_count }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="catalog-filter">
+                        <label class="visually-hidden" for="catalogCountry">País</label>
+                        <select id="catalogCountry">
+                            <option value="">Todos los países</option>
+                            @foreach($countries as $country)<option value="{{ $country }}" @selected(request('country') === $country)>{{ $country }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="catalog-filter">
+                        <label class="visually-hidden" for="catalogYear">Año</label>
+                        <select id="catalogYear">
+                            <option value="">Todos los años</option>
+                            @foreach($years as $year)<option value="{{ $year }}" @selected((string) request('year') === (string) $year)>{{ $year }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="catalog-filter">
+                        <label class="visually-hidden" for="catalogStatus">Estado</label>
+                        <select id="catalogStatus">
+                            <option value="">Todos los estados</option>
+                            <option value="ongoing" @selected(request('status') === 'ongoing')>En emisión</option>
+                            <option value="completed" @selected(request('status') === 'completed')>Completada</option>
+                            <option value="upcoming" @selected(request('status') === 'upcoming')>Próximamente</option>
+                        </select>
+                    </div>
+                    @if($artists->isNotEmpty())
+                        <div class="catalog-filter">
+                            <label class="visually-hidden" for="catalogArtist">Artista</label>
+                            <select id="catalogArtist">
+                                <option value="">Todas las artistas</option>
+                                @foreach($artists as $artist)<option value="{{ $artist->slug }}" @selected(request('artist') === $artist->slug)>{{ $artist->name }}</option>@endforeach
+                            </select>
+                        </div>
+                    @endif
+                    @if($duos->isNotEmpty())
+                        <div class="catalog-filter">
+                            <label class="visually-hidden" for="catalogDuo">Dupla</label>
+                            <select id="catalogDuo">
+                                <option value="">Todas las duplas</option>
+                                @foreach($duos as $duo)<option value="{{ $duo->slug }}" @selected(request('duo') === $duo->slug)>{{ $duo->name }}</option>@endforeach
+                            </select>
+                        </div>
+                    @endif
+                </div>
+            </details>
         </div>
 
         <div class="row g-3" id="catalogGrid">
@@ -62,7 +124,13 @@
                     data-catalog-item
                     data-type="{{ $item->content_type }}"
                     data-genre="{{ $item->genre?->slug }}"
-                    data-search="{{ $item->title }} {{ $item->description }} {{ $item->genre?->name }}"
+                    data-tags="{{ $item->tags->pluck('slug')->join('|') }}"
+                    data-country="{{ $item->country_of_origin }}"
+                    data-year="{{ $item->release_year }}"
+                    data-status="{{ $item->status }}"
+                    data-artists="{{ $item->artists->pluck('slug')->join('|') }}"
+                    data-duos="{{ $item->duos->pluck('slug')->join('|') }}"
+                    data-search="{{ $item->title }} {{ $item->description }} {{ $item->genre?->name }} {{ $item->tags->pluck('name')->join(' ') }} {{ $item->artists->pluck('name')->join(' ') }} {{ $item->artists->pluck('aliases')->filter()->join(' ') }} {{ $item->duos->pluck('name')->join(' ') }}"
                 >
                     <a href="{{ route('catalog.series.show', $item->slug) }}" class="catalog-card">
                         <div class="catalog-card h-100">
@@ -79,6 +147,11 @@
                                 <h6>{{ $item->title }}</h6>
                                 @php($itemSection = $catalogSections->firstWhere('slug', $item->catalog_section))
                                 <small>{{ $itemSection?->label ?: $itemSection?->name ?: $item->catalog_section }} · {{ $item->content_type === 'series' ? 'Serie' : 'Película' }}</small>
+                                @if($item->tags->isNotEmpty())
+                                    <div class="catalog-card-tags" aria-label="Etiquetas">
+                                        @foreach($item->tags->take(2) as $tag)<span>{{ $tag->name }}</span>@endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </a>
@@ -106,6 +179,12 @@
         const search = document.getElementById('catalogSearch');
         const type = document.getElementById('catalogType');
         const genre = document.getElementById('catalogGenre');
+        const tag = document.getElementById('catalogTag');
+        const country = document.getElementById('catalogCountry');
+        const year = document.getElementById('catalogYear');
+        const status = document.getElementById('catalogStatus');
+        const artist = document.getElementById('catalogArtist');
+        const duo = document.getElementById('catalogDuo');
         const items = [...document.querySelectorAll('[data-catalog-item]')];
         const results = document.getElementById('catalogResults');
         const empty = document.getElementById('catalogEmpty');
@@ -113,7 +192,11 @@
 
         function updateUrl() {
             const url = new URL(window.location.href);
-            const values = { q: search.value.trim(), type: type.value, genre: genre.value };
+            const values = {
+                q: search.value.trim(), type: type.value, genre: genre.value,
+                tag: tag?.value || '', country: country?.value || '', year: year?.value || '',
+                status: status?.value || '', artist: artist?.value || '', duo: duo?.value || '',
+            };
 
             Object.entries(values).forEach(([key, value]) => {
                 value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
@@ -129,7 +212,13 @@
             items.forEach((item) => {
                 const isMatch = (!query || normalise(item.dataset.search || '').includes(query))
                     && (!type.value || item.dataset.type === type.value)
-                    && (!genre.value || item.dataset.genre === genre.value);
+                    && (!genre.value || item.dataset.genre === genre.value)
+                    && (!tag?.value || item.dataset.tags.split('|').includes(tag.value))
+                    && (!country?.value || item.dataset.country === country.value)
+                    && (!year?.value || item.dataset.year === year.value)
+                    && (!status?.value || item.dataset.status === status.value)
+                    && (!artist?.value || item.dataset.artists.split('|').includes(artist.value))
+                    && (!duo?.value || item.dataset.duos.split('|').includes(duo.value));
 
                 item.hidden = !isMatch;
                 if (isMatch) matches++;
@@ -143,6 +232,7 @@
         search.addEventListener('input', filterCatalogue);
         type.addEventListener('change', filterCatalogue);
         genre.addEventListener('change', filterCatalogue);
+        [tag, country, year, status, artist, duo].filter(Boolean).forEach((filter) => filter.addEventListener('change', filterCatalogue));
         filterCatalogue();
     })();
 </script>

@@ -77,6 +77,25 @@ class Series extends Model
             ->withTimestamps();
     }
 
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('name');
+    }
+
+    public function artists(): BelongsToMany
+    {
+        return $this->belongsToMany(Artist::class)
+            ->withPivot(['role', 'character_name', 'sort_order'])
+            ->orderBy('artist_series.sort_order');
+    }
+
+    public function duos(): BelongsToMany
+    {
+        return $this->belongsToMany(Duo::class)
+            ->withPivot('sort_order')
+            ->orderBy('duo_series.sort_order');
+    }
+
     public function bannerMediaPath(): ?string
     {
         return $this->banner_image ?: $this->cover_image;

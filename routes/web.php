@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\ForumCategoryController as AdminForumCategoryCont
 use App\Http\Controllers\Admin\ForumController as AdminForumController;
 use App\Http\Controllers\Admin\ForumModerationController as AdminForumModerationController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
+use App\Http\Controllers\Admin\TagController as AdminTagController;
+use App\Http\Controllers\Admin\DiscoveryPeopleController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
 use App\Http\Controllers\Admin\UserBadgeController as AdminUserBadgeController;
@@ -418,6 +420,32 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
         'update' => 'admin.genres.update',
         'destroy' => 'admin.genres.destroy',
     ]);
+
+    Route::resource('etiquetas', AdminTagController::class)
+        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+        ->parameters(['etiquetas' => 'tag'])
+        ->names([
+            'index' => 'admin.tags.index',
+            'create' => 'admin.tags.create',
+            'store' => 'admin.tags.store',
+            'edit' => 'admin.tags.edit',
+            'update' => 'admin.tags.update',
+            'destroy' => 'admin.tags.destroy',
+        ]);
+
+    Route::get('artistas', [DiscoveryPeopleController::class, 'artistsIndex'])->name('admin.artists.index');
+    Route::get('artistas/crear', [DiscoveryPeopleController::class, 'artistsCreate'])->name('admin.artists.create');
+    Route::post('artistas', [DiscoveryPeopleController::class, 'artistsStore'])->name('admin.artists.store');
+    Route::get('artistas/{artist}/editar', [DiscoveryPeopleController::class, 'artistsEdit'])->name('admin.artists.edit');
+    Route::put('artistas/{artist}', [DiscoveryPeopleController::class, 'artistsUpdate'])->name('admin.artists.update');
+    Route::delete('artistas/{artist}', [DiscoveryPeopleController::class, 'artistsDestroy'])->name('admin.artists.destroy');
+
+    Route::get('duplas', [DiscoveryPeopleController::class, 'duosIndex'])->name('admin.duos.index');
+    Route::get('duplas/crear', [DiscoveryPeopleController::class, 'duosCreate'])->name('admin.duos.create');
+    Route::post('duplas', [DiscoveryPeopleController::class, 'duosStore'])->name('admin.duos.store');
+    Route::get('duplas/{duo}/editar', [DiscoveryPeopleController::class, 'duosEdit'])->name('admin.duos.edit');
+    Route::put('duplas/{duo}', [DiscoveryPeopleController::class, 'duosUpdate'])->name('admin.duos.update');
+    Route::delete('duplas/{duo}', [DiscoveryPeopleController::class, 'duosDestroy'])->name('admin.duos.destroy');
 
     Route::resource('series', AdminSeriesController::class)->parameters([
         'series' => 'series',

@@ -126,6 +126,27 @@
                         </div>
                     @endcan
 
+                    @can('edit series')
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.tags.*') ? 'active' : '' }}" href="{{ route('admin.tags.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-tag fs-2"></i></span>
+                                <span class="menu-title">Etiquetas</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.artists.*') ? 'active' : '' }}" href="{{ route('admin.artists.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-profile-user fs-2"></i></span>
+                                <span class="menu-title">Artistas</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.duos.*') ? 'active' : '' }}" href="{{ route('admin.duos.index') }}">
+                                <span class="menu-icon"><i class="ki-outline ki-people fs-2"></i></span>
+                                <span class="menu-title">Duplas</span>
+                            </a>
+                        </div>
+                    @endcan
+
                     @can('moderate content')
                         <div class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.moderation.*') ? 'active' : '' }}" href="{{ route('admin.moderation.index') }}">

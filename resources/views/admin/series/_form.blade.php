@@ -46,6 +46,32 @@
             <label class="form-label">Descripcion</label>
             <textarea class="form-control" rows="4" name="description" required>{{ old('description', $series->description ?? '') }}</textarea>
         </div>
+        <div class="col-md-4">
+            <label class="form-label">Etiquetas</label>
+            <select class="form-select" name="tag_ids[]" multiple size="7">
+                @php($selectedTagIds = old('tag_ids', isset($series) ? $series->tags->pluck('id')->all() : []))
+                @foreach($tags as $tag)
+                    <option value="{{ $tag->id }}" @selected(in_array($tag->id, $selectedTagIds))>{{ $tag->name }} · {{ ucfirst($tag->category) }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">Usa Cmd/Ctrl para seleccionar varias.</div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Artistas</label>
+            <select class="form-select" name="artist_ids[]" multiple size="7">
+                @php($selectedArtistIds = old('artist_ids', isset($series) ? $series->artists->pluck('id')->all() : []))
+                @foreach($artists as $artist)<option value="{{ $artist->id }}" @selected(in_array($artist->id, $selectedArtistIds))>{{ $artist->name }}</option>@endforeach
+            </select>
+            <div class="form-text">Aparecerán en el buscador al cargarlas.</div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Duplas</label>
+            <select class="form-select" name="duo_ids[]" multiple size="7">
+                @php($selectedDuoIds = old('duo_ids', isset($series) ? $series->duos->pluck('id')->all() : []))
+                @foreach($duos as $duo)<option value="{{ $duo->id }}" @selected(in_array($duo->id, $selectedDuoIds))>{{ $duo->name }}</option>@endforeach
+            </select>
+            <div class="form-text">Relaciona una dupla con esta ficha.</div>
+        </div>
         <div class="col-md-3"><label class="form-label">Pais</label><input class="form-control" name="country_of_origin" value="{{ old('country_of_origin', $series->country_of_origin ?? '') }}"></div>
         <div class="col-md-3"><label class="form-label">Ano</label><input class="form-control" type="number" name="release_year" value="{{ old('release_year', $series->release_year ?? '') }}"></div>
         <div class="col-md-2"><label class="form-label">Temporadas</label><input class="form-control" type="number" name="total_seasons" value="{{ old('total_seasons', $series->total_seasons ?? 1) }}"></div>

@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CatalogSection;
+use App\Models\Artist;
+use App\Models\Duo;
 use App\Models\Genre;
 use App\Models\Series;
+use App\Models\Tag;
 use App\Support\SeriesMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,16 +61,18 @@ class SeriesController extends Controller
     public function create(): View
     {
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
-
         $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+        $tags = Tag::query()->where('is_active', true)->orderBy('category')->orderBy('name')->get();
+        $artists = Artist::query()->where('is_active', true)->orderBy('name')->get();
+        $duos = Duo::query()->where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.series.create', compact('genres', 'catalogSections'));
+        return view('admin.series.create', compact('genres', 'catalogSections', 'tags', 'artists', 'duos'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateSeries($request);
-        $seriesData = Arr::except($validated, ['banner_image', 'cover_image']);
+        $seriesData = Arr::except($validated, ['banner_image', 'cover_image', 'tag_ids', 'artist_ids', 'duo_ids']);
 
         if (! $request->user()->can('moderate content')) {
             $seriesData['is_featured'] = false;
@@ -84,6 +89,7 @@ class SeriesController extends Controller
         ]);
 
         $this->syncModeration($series, $validated['moderation_status'] ?? 'pending', $validated['moderation_notes'] ?? null);
+        $this->syncDiscoveryRelations($series, $validated);
 
         return redirect()->route('admin.series.index')->with('success', 'Serie guardada.');
     }
@@ -113,16 +119,19 @@ class SeriesController extends Controller
     public function edit(Series $series): View
     {
         $genres = Genre::query()->where('is_active', true)->orderBy('name')->get();
-
         $catalogSections = CatalogSection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+        $tags = Tag::query()->where('is_active', true)->orderBy('category')->orderBy('name')->get();
+        $artists = Artist::query()->where('is_active', true)->orderBy('name')->get();
+        $duos = Duo::query()->where('is_active', true)->orderBy('name')->get();
+        $series->loadMissing(['tags', 'artists', 'duos']);
 
-        return view('admin.series.edit', compact('series', 'genres', 'catalogSections'));
+        return view('admin.series.edit', compact('series', 'genres', 'catalogSections', 'tags', 'artists', 'duos'));
     }
 
     public function update(Request $request, Series $series): RedirectResponse
     {
         $validated = $this->validateSeries($request, $series->id);
-        $seriesData = Arr::except($validated, ['banner_image', 'cover_image']);
+        $seriesData = Arr::except($validated, ['banner_image', 'cover_image', 'tag_ids', 'artist_ids', 'duo_ids']);
 
         $series->update([
             ...$seriesData,
@@ -132,6 +141,7 @@ class SeriesController extends Controller
         ]);
 
         $this->syncModeration($series, $validated['moderation_status'] ?? 'pending', $validated['moderation_notes'] ?? null);
+        $this->syncDiscoveryRelations($series, $validated);
 
         return redirect()->route('admin.series.index')->with('success', 'Serie actualizada.');
     }
@@ -163,6 +173,12 @@ class SeriesController extends Controller
             'banner_image' => SeriesMedia::validationRules(),
             'cover_image' => SeriesMedia::validationRules(),
             'trailer_url' => ['nullable', 'url'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
+            'artist_ids' => ['nullable', 'array'],
+            'artist_ids.*' => ['integer', 'exists:artists,id'],
+            'duo_ids' => ['nullable', 'array'],
+            'duo_ids.*' => ['integer', 'exists:duos,id'],
             'is_featured' => ['nullable', 'boolean'],
             'moderation_status' => [Rule::requiredIf($request->user()->can('moderate content')), 'nullable', 'in:pending,approved,rejected'],
             'moderation_notes' => ['nullable', 'string'],
@@ -223,6 +239,13 @@ class SeriesController extends Controller
             'approved_by' => null,
             'published_at' => null,
         ])->save();
+    }
+
+    private function syncDiscoveryRelations(Series $series, array $validated): void
+    {
+        $series->tags()->sync($validated['tag_ids'] ?? []);
+        $series->artists()->sync($validated['artist_ids'] ?? []);
+        $series->duos()->sync($validated['duo_ids'] ?? []);
     }
 
     private function authorizeVisible(Series $series): void

@@ -1,0 +1,1 @@
+@extends('layouts.admin') @section('title', 'Nueva dupla') @section('toolbar')<div class="page-title d-flex flex-column justify-content-center me-3"><h1 class="page-heading fw-bold fs-3 m-0">Nueva dupla</h1></div>@endsection @section('content')<form method="POST" action="{{ route('admin.duos.store') }}">@include('admin.discovery.duos._form')</form>@endsection
