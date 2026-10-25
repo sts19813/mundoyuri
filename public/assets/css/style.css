@@ -6272,11 +6272,8 @@ img.messenger-avatar,
 .messenger-chat-empty h2 { margin: 0; color: #fff; font: 700 1.25rem 'Playfair Display', serif; }
 .messenger-chat-empty p { margin: 5px 0 0; color: var(--muted); font-size: .7rem; }
 .messenger-composer-area { position: relative; z-index: 20; min-width: 0; flex: none; padding: 10px 14px 12px; border-top: 1px solid rgba(244, 63, 142, .12); background: rgba(22, 12, 24, .98); }
-.messenger-reply-composer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 46px 8px; padding: 8px 10px; border-left: 3px solid #ff8fbe; border-radius: 10px; color: #eaddea; background: rgba(255, 255, 255, .065); }
-@media (min-width: 768px) {
-    /* Match the reply preview with the message field, not the full composer row. */
-    .messenger-reply-composer { margin-right: 60px; margin-left: 106px; }
-}
+.messenger-compose-stack { min-width: 0; flex: 1; }
+.messenger-reply-composer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 8px; padding: 8px 10px; border-left: 3px solid #ff8fbe; border-radius: 10px; color: #eaddea; background: rgba(255, 255, 255, .065); }
 .messenger-reply-composer.is-hidden { display: none; }
 .messenger-reply-composer div { min-width: 0; }
 .messenger-reply-composer img { width: 34px; height: 34px; float: right; margin-left: 8px; border-radius: 6px; object-fit: cover; }
@@ -6291,7 +6288,7 @@ img.messenger-avatar,
 .messenger-attach-button:hover, .messenger-sticker-button:hover, .messenger-sticker-button.is-active, .messenger-send-button:hover { color: #fff; background: rgba(244, 63, 142, .12); }
 .messenger-sticker-heart { width: 24px; height: 24px; }
 .messenger-composer > input[type='file']:focus-visible + .messenger-attach-button, .messenger-sticker-button:focus-visible, .messenger-send-button:focus-visible { outline: 2px solid var(--rose); outline-offset: 2px; }
-.messenger-compose-input { min-width: 0; flex: 1; padding: 9px 13px 7px; border: 1px solid rgba(255, 255, 255, .055); border-radius: 18px; background: rgba(255, 255, 255, .07); }
+.messenger-compose-input { width: 100%; min-width: 0; box-sizing: border-box; padding: 9px 13px 7px; border: 1px solid rgba(255, 255, 255, .055); border-radius: 18px; background: rgba(255, 255, 255, .07); }
 .messenger-compose-input:focus-within { border-color: rgba(244, 63, 142, .3); }
 .messenger-compose-input textarea { width: 100%; min-height: 20px; max-height: 120px; display: block; resize: none; overflow-y: auto; border: 0; outline: 0; color: #fff; background: transparent; font: 400 .8rem/1.4 'DM Sans', sans-serif; }
 .messenger-compose-input textarea::placeholder { color: #a995ab; }

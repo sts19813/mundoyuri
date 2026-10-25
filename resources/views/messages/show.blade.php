@@ -110,14 +110,6 @@ class="messenger-body"
                         @elseif(!$otherUser->is_active)
                             <div class="messenger-disabled">Esta cuenta ya no está disponible.</div>
                         @else
-                            <div class="messenger-reply-composer is-hidden" data-reply-composer-preview>
-                                <div>
-                                    <img data-reply-image alt="" hidden>
-                                    <strong data-reply-author></strong>
-                                    <span data-reply-preview></span>
-                                </div>
-                                <button type="button" data-clear-reply aria-label="Cancelar respuesta">×</button>
-                            </div>
                             <form method="POST" action="{{ route('messages.store', $otherUser) }}" class="messenger-composer" enctype="multipart/form-data" data-message-composer>
                                 @csrf
                                 <input type="hidden" name="reply_to_message_id" value="" data-reply-input>
@@ -130,10 +122,20 @@ class="messenger-body"
                                 <button class="messenger-sticker-button" type="button" data-sticker-toggle aria-label="Abrir stickers" title="Stickers">
                                     <span class="brand-heart messenger-sticker-heart" aria-hidden="true"></span>
                                 </button>
-                                <div class="messenger-compose-input">
-                                    <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
-                                    <textarea id="message-body" name="body" rows="1" maxlength="2000" placeholder="Aa">{{ old('body') }}</textarea>
-                                    <small data-message-attachment-hint>Archivo · máximo 200 MB</small>
+                                <div class="messenger-compose-stack">
+                                    <div class="messenger-reply-composer is-hidden" data-reply-composer-preview>
+                                        <div>
+                                            <img data-reply-image alt="" hidden>
+                                            <strong data-reply-author></strong>
+                                            <span data-reply-preview></span>
+                                        </div>
+                                        <button type="button" data-clear-reply aria-label="Cancelar respuesta">×</button>
+                                    </div>
+                                    <div class="messenger-compose-input">
+                                        <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
+                                        <textarea id="message-body" name="body" rows="1" maxlength="2000" placeholder="Aa">{{ old('body') }}</textarea>
+                                        <small data-message-attachment-hint>Archivo · máximo 200 MB</small>
+                                    </div>
                                 </div>
                                 <button class="messenger-send-button" type="submit" aria-label="Enviar mensaje">
                                     <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.8 2.5a1 1 0 0 0-1.05-.18L2.9 10.15a1 1 0 0 0 .1 1.87l7.12 2.37 2.37 7.12a1 1 0 0 0 .9.68h.05a1 1 0 0 0 .91-.59l7.63-17.9a1 1 0 0 0-.18-1.2ZM12 13.06 6.12 11.1l11.9-5.22Z"/></svg>
