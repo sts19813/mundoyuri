@@ -919,6 +919,15 @@ class="messenger-body"
         const replyPreviewText = document.querySelector('[data-reply-preview]');
         const replyImage = document.querySelector('[data-reply-image]');
 
+        const scrollMessageInConversation = (message) => {
+            if (!conversation || !message) return;
+            const messageBounds = message.getBoundingClientRect();
+            const paneBounds = conversation.getBoundingClientRect();
+            const top = conversation.scrollTop + messageBounds.top - paneBounds.top
+                - (conversation.clientHeight - messageBounds.height) / 2;
+            conversation.scrollTo({ top, behavior: 'smooth' });
+        };
+
         const clearReplyTarget = () => {
             if (replyInput) replyInput.value = '';
             replyPreview?.classList.add('is-hidden');
@@ -943,7 +952,6 @@ class="messenger-body"
             }
             replyPreview.classList.remove('is-hidden');
             messageBody?.focus({ preventScroll: true });
-            message.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         };
 
         document.querySelector('[data-clear-reply]')?.addEventListener('click', clearReplyTarget);
@@ -1070,7 +1078,7 @@ class="messenger-body"
 
             event.preventDefault();
             closeMediaPanel();
-            message.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            scrollMessageInConversation(message);
             message.classList.add('is-highlighted');
             window.setTimeout(() => message.classList.remove('is-highlighted'), 1200);
         });
@@ -1230,7 +1238,7 @@ class="messenger-body"
                 const target = conversation.querySelector(`[data-message-id="${jump.dataset.jumpMessage}"]`);
                 if (target) {
                     event.preventDefault();
-                    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    scrollMessageInConversation(target);
                     target.classList.add('is-highlighted');
                     window.setTimeout(() => target.classList.remove('is-highlighted'), 1200);
                 }
