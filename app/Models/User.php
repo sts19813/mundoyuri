@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Support\YouTubeVideoUrl;
 use App\Notifications\PasswordResetNotification;
+use App\Support\YouTubeVideoUrl;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,6 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'miyu_enabled' => 'boolean',
             'last_login_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'last_heartbeat_at' => 'datetime',
             'show_last_seen' => 'boolean',
             'show_join_date' => 'boolean',
             'show_favorites' => 'boolean',
@@ -91,6 +92,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function claimedLegacyProfiles(): HasMany
     {
         return $this->hasMany(LegacyProfile::class, 'claimed_by_user_id');
+    }
+
+    /**
+     * Browser presence records created by the heartbeat endpoint.
+     */
+    public function presenceSessions(): HasMany
+    {
+        return $this->hasMany(UserPresenceSession::class);
     }
 
     public function legacyProfileClaims(): HasMany

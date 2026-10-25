@@ -3,31 +3,43 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\UserPresenceSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminUserActivityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_user_table_contains_login_and_email_notification_statuses(): void
+    public function test_admin_user_table_contains_heartbeat_and_email_notification_statuses(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        User::factory()->create([
+        $user = User::factory()->create([
             'episode_email_notifications_enabled' => false,
             'last_login_at' => now()->subHour(),
+        ]);
+
+        UserPresenceSession::query()->create([
+            'user_id' => $user->id,
+            'session_id' => (string) Str::uuid(),
+            'started_at' => now()->subHour(),
+            'last_seen_at' => now()->subMinutes(3),
+            'total_seconds' => 600,
+            'heartbeat_count' => 12,
+            'current_path' => '/',
         ]);
 
         $this->actingAs($admin)
             ->get(route('admin.users.index'))
             ->assertOk()
             ->assertSeeText('Correos')
-            ->assertSeeText('Última sesión')
+            ->assertSeeText('Último latido')
             ->assertSee('email_notifications_enabled', false)
-            ->assertSee('last_login_at', false)
+            ->assertSee('last_heartbeat_at', false)
             ->assertSee('Habilitados')
             ->assertSee('Desactivados')
-            ->assertSee('Sin acceso registrado');
+            ->assertSee('Sin latidos registrados');
     }
 
     public function test_admin_can_disable_and_enable_a_users_email_notifications(): void

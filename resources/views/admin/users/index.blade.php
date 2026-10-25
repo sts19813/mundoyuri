@@ -40,6 +40,119 @@
 @endsection
 
 @section('content')
+    @push('styles')
+        <style>
+            .admin-users-workspace {
+                background: var(--bs-gray-100);
+                border: 1px solid var(--bs-gray-200);
+                border-radius: 1rem;
+                padding: 1rem;
+            }
+
+            .admin-users-workspace .form-select,
+            .admin-users-workspace .form-control {
+                min-height: 44px;
+            }
+
+            .admin-users-table th {
+                letter-spacing: .035em;
+                white-space: nowrap;
+            }
+
+            .admin-users-table tbody tr {
+                transition: background-color .16s ease;
+            }
+
+            .admin-users-table tbody tr:hover {
+                background: rgba(var(--bs-primary-rgb), .035);
+            }
+
+            .admin-users-table .user-avatar {
+                object-fit: cover;
+            }
+
+            .admin-presence {
+                display: inline-flex;
+                align-items: flex-start;
+                gap: .55rem;
+                min-width: 150px;
+            }
+
+            .admin-presence-dot {
+                width: .55rem;
+                height: .55rem;
+                border-radius: 999px;
+                background: var(--bs-gray-400);
+                box-shadow: 0 0 0 4px rgba(var(--bs-gray-500-rgb), .1);
+                margin-top: .42rem;
+                flex: 0 0 auto;
+            }
+
+            .admin-presence-dot.is-live {
+                background: var(--bs-success);
+                box-shadow: 0 0 0 4px rgba(var(--bs-success-rgb), .15);
+            }
+
+            .admin-users-results {
+                font-size: .925rem;
+            }
+
+            @media (max-width: 991.98px) {
+                .admin-users-workspace {
+                    padding: .75rem;
+                }
+
+                .admin-users-table thead {
+                    display: none;
+                }
+
+                .admin-users-table,
+                .admin-users-table tbody,
+                .admin-users-table tr,
+                .admin-users-table td {
+                    display: block;
+                    width: 100%;
+                }
+
+                .admin-users-table tr {
+                    padding: 1rem 0;
+                    border-bottom: 1px dashed var(--bs-gray-300);
+                }
+
+                .admin-users-table td {
+                    border: 0;
+                    padding: .45rem 0;
+                    text-align: left !important;
+                }
+
+                .admin-users-table td[data-label] {
+                    display: grid;
+                    grid-template-columns: 8.75rem minmax(0, 1fr);
+                    gap: .75rem;
+                    align-items: center;
+                }
+
+                .admin-users-table td[data-label]::before {
+                    content: attr(data-label);
+                    color: var(--bs-gray-600);
+                    font-size: .75rem;
+                    font-weight: 700;
+                    letter-spacing: .035em;
+                    text-transform: uppercase;
+                }
+
+                .admin-users-table td[data-label="Usuario"]::before {
+                    display: none;
+                }
+
+                .admin-users-table td[data-label="Usuario"] {
+                    display: block;
+                    padding-bottom: .75rem;
+                }
+            }
+        </style>
+    @endpush
+
     <div class="row g-5 g-xl-8 mb-6">
         <div class="col-md-4">
             <div class="card h-100">
@@ -117,28 +230,49 @@
         <div class="card-body pt-4">
             <div class="tab-content">
                 <div class="tab-pane fade {{ $activeTab === 'users' ? 'show active' : '' }}" id="users-tab-pane" role="tabpanel">
-                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-5">
-                        <div class="d-flex align-items-center position-relative w-100 w-md-350px">
-                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-4"></i>
-                            <input type="text" class="form-control form-control-solid ps-12" data-search="users"
-                                placeholder="Buscar usuario, email o rol">
+                    <div class="admin-users-workspace mb-5">
+                        <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h2 class="fs-5 fw-bold text-gray-900 mb-0">Directorio de usuarios</h2>
+                                    <span class="badge badge-light-primary" data-users-count>0 usuarios</span>
+                                </div>
+                                <p class="text-muted mb-0 mt-1 admin-users-results">La actividad se toma del último latido enviado por el navegador.</p>
+                            </div>
+                            <button type="button" class="btn btn-primary text-nowrap" data-action="new-user">
+                                <i class="ki-outline ki-plus fs-2"></i>Nuevo usuario
+                            </button>
                         </div>
-                        <button type="button" class="btn btn-primary" data-action="new-user">
-                            <i class="ki-outline ki-plus fs-2"></i>Nuevo usuario
-                        </button>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-lg-7">
+                                <div class="position-relative">
+                                    <i class="ki-outline ki-magnifier fs-3 position-absolute top-50 translate-middle-y ms-4"></i>
+                                    <input type="text" class="form-control form-control-solid ps-12" data-search="users"
+                                        placeholder="Buscar por nombre, correo, rol o insignia">
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <select class="form-select form-select-solid" data-user-sort aria-label="Ordenar usuarios">
+                                    <option value="heartbeat_desc">Último latido: más reciente</option>
+                                    <option value="created_desc">Registro: más reciente</option>
+                                    <option value="created_asc">Registro: más antiguo</option>
+                                    <option value="name_asc">Nombre: A a Z</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed gy-5">
+                        <table class="table align-middle table-row-dashed gy-5 admin-users-table">
                             <thead>
                                 <tr class="text-start text-muted fw-bold fs-7 text-uppercase">
                                     <th>Usuario</th>
-                                    <th>Rol</th>
+                                    <th>Acceso</th>
                                     <th>Insignias</th>
-                                    <th>Estado</th>
                                     <th>Correos</th>
-                                    <th>Última sesión</th>
-                                    <th>Registro</th>
+                                    <th>Último latido</th>
+                                    <th>Se unió</th>
                                     <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
@@ -420,6 +554,7 @@
         };
 
         const filters = { users: '', roles: '', permissions: '' };
+        let userSort = 'heartbeat_desc';
         const userModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal'));
         const roleModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('roleModal'));
         const permissionModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('permissionModal'));
@@ -507,10 +642,53 @@
             const visibleUsers = users.filter((user) => {
                 const haystack = normalize(`${user.name} ${user.email} ${user.role} ${user.community_rank || ''} ${(user.community_badge_labels || []).join(' ')}`);
                 return !query || haystack.includes(query);
+            }).sort((first, second) => {
+                if (userSort === 'created_asc') {
+                    return (first.created_at_timestamp || 0) - (second.created_at_timestamp || 0);
+                }
+
+                if (userSort === 'created_desc') {
+                    return (second.created_at_timestamp || 0) - (first.created_at_timestamp || 0);
+                }
+
+                if (userSort === 'name_asc') {
+                    return String(first.name || '').localeCompare(String(second.name || ''), 'es');
+                }
+
+                const heartbeatDifference = (second.last_heartbeat_timestamp || 0) - (first.last_heartbeat_timestamp || 0);
+
+                return heartbeatDifference || ((second.created_at_timestamp || 0) - (first.created_at_timestamp || 0));
             });
+
+            const usersCount = document.querySelector('[data-users-count]');
+            if (usersCount) {
+                usersCount.textContent = `${visibleUsers.length} ${visibleUsers.length === 1 ? 'usuario' : 'usuarios'}`;
+            }
+
+            const formatDateTime = (value) => value
+                ? new Intl.DateTimeFormat('es-MX', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                }).format(new Date(value))
+                : '';
+
+            const relativeHeartbeat = (value) => {
+                if (!value) {
+                    return 'Sin latidos registrados';
+                }
+
+                const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+                if (seconds < 120) return 'Ahora mismo';
+                if (seconds < 3600) return `Hace ${Math.floor(seconds / 60)} min`;
+                if (seconds < 86400) return `Hace ${Math.floor(seconds / 3600)} h`;
+                if (seconds < 172800) return 'Ayer';
+                return `Hace ${Math.floor(seconds / 86400)} días`;
+            };
 
             tbody.innerHTML = visibleUsers.map((user) => {
                 const role = user.role || 'Sin rol';
+                const isPresent = Boolean(user.last_heartbeat_timestamp)
+                    && (Date.now() - new Date(user.last_heartbeat_at).getTime()) < 120000;
                 const deleteButton = user.id === authUserId
                     ? ''
                     : `<button type="button" class="btn btn-sm btn-light-danger" data-action="delete-user" data-id="${user.id}">
@@ -519,10 +697,10 @@
 
                 return `
                     <tr>
-                        <td>
+                        <td data-label="Usuario">
                             <div class="d-flex align-items-center">
                                 <div class="symbol symbol-45px me-4">
-                                    <img alt="${escapeHtml(user.name)}" src="${escapeHtml(user.avatar_url)}">
+                                    <img class="user-avatar" alt="${escapeHtml(user.name)}" src="${escapeHtml(user.avatar_url)}">
                                 </div>
                                 <div>
                                     <div class="fw-bold text-gray-900">${escapeHtml(user.name)}</div>
@@ -530,9 +708,8 @@
                                 </div>
                             </div>
                         </td>
-                        <td><span class="badge badge-light-primary">${escapeHtml(titleCase(role))}</span></td>
-                        <td>${badges(user.community_badge_labels || [], 'success', 'Sin insignias')}</td>
-                        <td>
+                        <td data-label="Acceso">
+                            <span class="badge badge-light-primary">${escapeHtml(titleCase(role))}</span>
                             <span class="badge ${user.is_active ? 'badge-light-success' : 'badge-light-danger'}">
                                 ${user.is_active ? 'Activo' : 'Inactivo'}
                             </span>
@@ -541,7 +718,8 @@
                                 ${user.is_legacy ? '<span class="badge badge-light-warning">Histórico</span>' : ''}
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Insignias">${badges(user.community_badge_labels || [], 'success', 'Sin insignias')}</td>
+                        <td data-label="Correos">
                             <label class="form-check form-switch form-check-custom form-check-solid mb-0">
                                 <input class="form-check-input h-20px w-30px" type="checkbox"
                                     data-action="toggle-email-notifications" data-id="${user.id}"
@@ -552,13 +730,21 @@
                                 </span>
                             </label>
                         </td>
-                        <td>
-                            ${user.last_login_at
-                                ? `<span class="fw-semibold text-gray-800 text-nowrap">${escapeHtml(user.last_login_at)}</span>`
-                                : '<span class="text-muted">Sin acceso registrado</span>'}
+                        <td data-label="Último latido">
+                            <div class="admin-presence">
+                                <span class="admin-presence-dot ${isPresent ? 'is-live' : ''}"></span>
+                                <div>
+                                    <div class="fw-semibold ${isPresent ? 'text-success' : 'text-gray-800'}">${escapeHtml(relativeHeartbeat(user.last_heartbeat_at))}</div>
+                                    ${user.last_heartbeat_at
+                                        ? `<div class="text-muted fs-8 text-nowrap">${escapeHtml(formatDateTime(user.last_heartbeat_at))}</div>`
+                                        : '<div class="text-muted fs-8">Aún no navega con presencia activa</div>'}
+                                </div>
+                            </div>
                         </td>
-                        <td>${escapeHtml(user.created_at || '-')}</td>
-                        <td class="text-end">
+                        <td data-label="Se unió">
+                            <span class="fw-semibold text-gray-800 text-nowrap">${escapeHtml(user.created_at ? formatDateTime(user.created_at) : '-')}</span>
+                        </td>
+                        <td data-label="Acciones" class="text-end">
                             <button type="button" class="btn btn-sm btn-light-primary me-1" data-action="edit-user" data-id="${user.id}">
                                 <i class="ki-outline ki-pencil fs-4"></i>Editar
                             </button>
@@ -566,7 +752,7 @@
                         </td>
                     </tr>
                 `;
-            }).join('') || '<tr><td colspan="8" class="text-center text-muted py-10">No hay usuarios</td></tr>';
+            }).join('') || '<tr><td colspan="7" class="text-center text-muted py-10">No hay usuarios que coincidan</td></tr>';
         };
 
         const renderRoles = () => {
@@ -1008,6 +1194,11 @@
                 filters[input.dataset.search] = input.value || '';
                 renderAll();
             });
+        });
+
+        document.querySelector('[data-user-sort]')?.addEventListener('change', (event) => {
+            userSort = event.target.value || 'heartbeat_desc';
+            renderUsers();
         });
 
         document.querySelectorAll('#accessTabs [data-bs-toggle="tab"]').forEach((tabButton) => {

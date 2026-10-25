@@ -6273,6 +6273,10 @@ img.messenger-avatar,
 .messenger-chat-empty p { margin: 5px 0 0; color: var(--muted); font-size: .7rem; }
 .messenger-composer-area { position: relative; z-index: 20; min-width: 0; flex: none; padding: 10px 14px 12px; border-top: 1px solid rgba(244, 63, 142, .12); background: rgba(22, 12, 24, .98); }
 .messenger-reply-composer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 46px 8px; padding: 8px 10px; border-left: 3px solid #ff8fbe; border-radius: 10px; color: #eaddea; background: rgba(255, 255, 255, .065); }
+@media (min-width: 768px) {
+    /* Match the reply preview with the message field, not the full composer row. */
+    .messenger-reply-composer { margin-right: 60px; margin-left: 106px; }
+}
 .messenger-reply-composer.is-hidden { display: none; }
 .messenger-reply-composer div { min-width: 0; }
 .messenger-reply-composer img { width: 34px; height: 34px; float: right; margin-left: 8px; border-radius: 6px; object-fit: cover; }

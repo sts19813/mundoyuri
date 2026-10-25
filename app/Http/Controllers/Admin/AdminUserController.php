@@ -27,6 +27,7 @@ class AdminUserController extends Controller
     public function index()
     {
         $users = User::query()
+            ->withMax('presenceSessions as last_heartbeat_at', 'last_seen_at')
             ->with(['roles', 'permissions', 'communityRank', 'badges'])
             ->latest()
             ->get();
@@ -312,8 +313,10 @@ class AdminUserController extends Controller
             'permissions' => $user->getDirectPermissions()->pluck('name')->values(),
             'is_active' => (bool) $user->is_active,
             'email_notifications_enabled' => (bool) $user->episode_email_notifications_enabled,
-            'last_login_at' => $user->last_login_at?->format('d/m/Y H:i'),
-            'created_at' => optional($user->created_at)->format('d/m/Y'),
+            'last_heartbeat_at' => $user->last_heartbeat_at?->toIso8601String(),
+            'last_heartbeat_timestamp' => $user->last_heartbeat_at?->getTimestamp(),
+            'created_at' => $user->created_at?->toIso8601String(),
+            'created_at_timestamp' => $user->created_at?->getTimestamp(),
             'avatar_url' => $user->avatarUrl(),
             'initials' => $user->initials(),
             'profile_visibility' => $user->profile_visibility,
