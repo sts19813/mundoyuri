@@ -5454,7 +5454,7 @@
 .legacy-claim-hint { color: #a998ac; }
 .legacy-claim-error { color: #ff9abd; }
 .legacy-claim-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.community-home-page { min-height: 0; padding-bottom: 82px; overflow: visible; }
+.community-home-page { min-height: 0; padding-bottom: 82px; overflow-x: clip; overflow-y: visible; }
 .community-home-hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 0 0 24px; padding: 14px 0 24px; overflow: visible; border-bottom: 1px solid rgba(244, 63, 142, .14); }
 .community-home-hero::after { position: absolute; right: 0; bottom: -1px; width: min(420px, 48vw); height: 1px; background: linear-gradient(90deg, transparent, rgba(244, 63, 142, .55)); content: ''; pointer-events: none; }
 .community-home-hero > * { position: relative; z-index: 1; }
@@ -5469,9 +5469,9 @@
 .community-home-action span { font-size: .65rem; line-height: 1.35; }
 .community-home-action.is-primary { border-color: #d72d7c; color: #fff; background: linear-gradient(135deg, #ed4d99, #c92772); box-shadow: 0 10px 22px rgba(201, 39, 114, .2); }
 .community-home-action.is-primary:hover { border-color: #b72265; color: #fff; background: linear-gradient(135deg, #e63b8b, #b72265); }
-.community-home-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .82fr); gap: 20px; align-items: start; }
-.community-home-side { display: grid; gap: 20px; }
-.community-home-section { overflow: hidden; border: 1px solid rgba(255, 255, 255, .075); border-radius: 18px; background: rgba(255, 255, 255, .025); box-shadow: 0 16px 36px rgba(0, 0, 0, .1); }
+.community-home-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .82fr); gap: 20px; align-items: start; min-width: 0; }
+.community-home-side { display: grid; min-width: 0; gap: 20px; }
+.community-home-section { min-width: 0; overflow: hidden; border: 1px solid rgba(255, 255, 255, .075); border-radius: 18px; background: rgba(255, 255, 255, .025); box-shadow: 0 16px 36px rgba(0, 0, 0, .1); }
 .community-home-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 21px 22px 17px; border-bottom: 1px solid rgba(255, 255, 255, .06); }
 .community-home-heading h2 { margin: 4px 0 0; color: #f5ebf5; font: 700 1.36rem 'Playfair Display', serif; }
 .community-home-heading p { max-width: 440px; margin: 7px 0 0; color: #a99aaa; font-size: .73rem; line-height: 1.55; }
@@ -5487,7 +5487,7 @@
 .community-home-members .community-member-stats { gap: 13px; margin-top: 11px; padding-top: 10px; }
 .community-home-members .community-member-badges { gap: 5px; margin-top: 7px; }
 .community-home-members .community-rank, .community-home-members .community-badge { padding: 4px 7px; font-size: .57rem; }
-.community-member-spotlight { display: grid; gap: 20px; padding: 16px; overflow: visible; }
+.community-member-spotlight { display: grid; min-width: 0; gap: 20px; padding: 16px; overflow: visible; }
 .community-member-rail { min-width: 0; padding: 1px; }
 .community-member-rail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .community-member-rail-heading h3 { margin: 0; color: #f5ebf5; font: 700 1.04rem 'Playfair Display', serif; }
@@ -5560,12 +5560,12 @@
     .community-home-hero p { font-size: .9rem; }
     .community-home-actions { justify-content: flex-start; width: 100%; }
     .community-home-action { min-height: 40px; }
-    .community-home-grid { grid-template-columns: 1fr; gap: 16px; }
+    .community-home-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
     .community-home-side { gap: 16px; }
     .community-home-heading { padding: 18px 17px 14px; }
     .community-home-member-link { width: 100%; justify-content: center; gap: 8px; }
     .community-home-members .community-member-grid { grid-template-columns: 1fr; padding: 12px; }
-    .community-member-spotlight { grid-template-columns: 1fr; padding: 12px; }
+    .community-member-spotlight { grid-template-columns: minmax(0, 1fr); padding: 12px; }
     .community-member-chip-grid,
     .community-member-chip-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .community-activity-list { padding: 6px 17px 13px; }
