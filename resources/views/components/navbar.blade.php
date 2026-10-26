@@ -23,8 +23,7 @@
             @endauth
             <li class="nav-mobile-search">
                 <form action="{{ route('catalog.series.index') }}" method="GET" role="search">
-                    <label class="visually-hidden" for="mobile-nav-search">Buscar series</label>
-                    <input id="mobile-nav-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar series…">
+                    <input id="mobile-nav-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar series, artistas…" aria-label="Buscar en el catálogo">
                     <button type="submit" aria-label="Buscar">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                     </button>
@@ -36,6 +35,35 @@
             <li class="nav-primary-link"><a href="{{ route('forums.index') }}" @if(request()->routeIs('forums.*', 'forum.*')) aria-current="page" @endif><span class="nav-link-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></span><span>Foros</span></a></li>
             <li class="nav-primary-link"><a href="{{ route('questions.index') }}" @if(request()->routeIs('questions.*')) aria-current="page" @endif><span class="nav-link-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 18h.01"/></svg></span><span>Preguntas</span></a></li>
             @auth
+                <li class="nav-mobile-section-label nav-mobile-preferences-label"><span>Preferencias</span></li>
+                <li class="nav-mobile-preference">
+                    <form method="POST" action="{{ route('miyu-preference.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="enabled" value="{{ $mobileNavUser->miyu_enabled ? 0 : 1 }}">
+                        <button type="submit" aria-pressed="{{ $mobileNavUser->miyu_enabled ? 'true' : 'false' }}">
+                            <span class="portal-email-preference-copy"><span>Asistente Miyu</span><small>{{ $mobileNavUser->miyu_enabled ? 'Activada' : 'Desactivada' }}</small></span>
+                            <span class="portal-preference-switch{{ $mobileNavUser->miyu_enabled ? ' is-active' : '' }}" aria-hidden="true"><span></span></span>
+                        </button>
+                    </form>
+                </li>
+                <li class="nav-mobile-preference">
+                    <button type="button" data-push-toggle aria-pressed="{{ $mobileNavUser->push_notifications_enabled ? 'true' : 'false' }}">
+                        <span class="portal-email-preference-copy"><span>Notificaciones del dispositivo</span><small data-push-status>{{ $mobileNavUser->push_notifications_enabled ? 'Activadas' : 'Activar' }}</small></span>
+                        <span class="portal-preference-switch{{ $mobileNavUser->push_notifications_enabled ? ' is-active' : '' }}" data-push-switch aria-hidden="true"><span></span></span>
+                    </button>
+                </li>
+                <li class="nav-mobile-preference">
+                    <form method="POST" action="{{ route('email-episode-notifications.update') }}" data-email-preference-form @if($mobileNavUser->episode_email_notifications_enabled) data-confirm-disable="¿Seguro que quieres pausar los avisos? Podrías perderte nuevos episodios cuando estén disponibles." @endif>
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="enabled" value="{{ $mobileNavUser->episode_email_notifications_enabled ? 0 : 1 }}">
+                        <button type="submit" aria-pressed="{{ $mobileNavUser->episode_email_notifications_enabled ? 'true' : 'false' }}">
+                            <span class="portal-email-preference-copy"><span>Correos de episodios</span><small>{{ $mobileNavUser->episode_email_notifications_enabled ? 'Activados' : 'Pausados' }}</small></span>
+                            <span class="portal-preference-switch{{ $mobileNavUser->episode_email_notifications_enabled ? ' is-active' : '' }}" aria-hidden="true"><span></span></span>
+                        </button>
+                    </form>
+                </li>
                 <li class="nav-mobile-section-label nav-mobile-account-label"><span>Tu cuenta</span></li>
                 <li class="nav-mobile-account-link"><a href="{{ route('profile.edit') }}">Configuración</a></li>
                 @if($mobileNavUser->isAdmin())

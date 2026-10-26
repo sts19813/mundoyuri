@@ -712,6 +712,7 @@
     .nav-mobile-account-summary,
     .nav-mobile-account-link,
     .nav-mobile-account-action,
+    .nav-mobile-preference,
     .nav-link-icon {
         display: none;
     }
@@ -4541,6 +4542,12 @@
             border-top: 1px solid rgba(255, 255, 255, .07);
         }
 
+        .nav-mobile-preferences-label {
+            margin-top: 3px;
+            padding-top: 11px !important;
+            border-top: 1px solid rgba(255, 255, 255, .07);
+        }
+
         .nav-mobile-search {
             grid-column: 1 / -1;
             display: block;
@@ -4568,6 +4575,7 @@
         }
 
         .nav-mobile-search input {
+            width: 100%;
             padding: 0 13px;
             outline: 0;
         }
@@ -4659,9 +4667,42 @@
 
         .gl-nav .nav-links .nav-mobile-account-summary,
         .gl-nav .nav-links .nav-mobile-account-link,
-        .gl-nav .nav-links .nav-mobile-account-action {
+        .gl-nav .nav-links .nav-mobile-account-action,
+        .gl-nav .nav-links .nav-mobile-preference {
             display: block;
         }
+
+        .gl-nav .nav-links .nav-mobile-preference {
+            grid-column: 1 / -1;
+        }
+
+        .nav-mobile-preference form { margin: 0; }
+
+        .nav-mobile-preference button {
+            display: flex;
+            width: 100%;
+            min-height: 54px;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, .07);
+            border-radius: 11px;
+            color: #f0e8f5;
+            background: rgba(255, 255, 255, .025);
+            font: 600 .76rem 'DM Sans', sans-serif;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .nav-mobile-preference button:hover,
+        .nav-mobile-preference button:focus-visible {
+            border-color: rgba(244, 63, 142, .38);
+            background: rgba(244, 63, 142, .08);
+            outline: 0;
+        }
+
+        .nav-mobile-preference button:disabled { cursor: not-allowed; opacity: .58; }
+        .nav-mobile-preference button .portal-preference-switch { margin-left: auto; }
 
         .gl-nav .nav-links .nav-mobile-account-summary {
             grid-column: 1 / -1;
