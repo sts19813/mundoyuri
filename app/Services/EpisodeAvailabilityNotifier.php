@@ -9,13 +9,14 @@ use App\Models\EpisodeUserNotification;
 use App\Models\User;
 use App\Notifications\EpisodeAvailableNotification;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Throwable;
 
 class EpisodeAvailabilityNotifier
 {
     public function sendFor(Episode $episode): int
     {
-        if (! $episode->notify_subscribers || $episode->moderation_status !== 'approved' || ! $episode->published_at) {
+        if (! $this->canSendFor($episode)) {
             return 0;
         }
 
@@ -23,37 +24,98 @@ class EpisodeAvailabilityNotifier
         $sent = 0;
 
         foreach ($this->recipients() as $recipient) {
-            $notification = EpisodeEmailNotification::query()->firstOrCreate([
-                'episode_id' => $episode->id,
-                'email' => $recipient['email'],
-            ], [
-                'user_id' => $recipient['user_id'],
-            ]);
-
-            if ($notification->sent_at) {
-                continue;
-            }
-
             try {
-                Mail::to($recipient['email'])->send(new EpisodeAvailableMail($episode));
-
-                $notification->update([
-                    'sent_at' => now(),
-                    'error_message' => null,
-                ]);
-                $sent++;
-            } catch (Throwable $exception) {
-                report($exception);
-
-                $notification->update([
-                    'error_message' => mb_strimwidth($exception->getMessage(), 0, 1000),
-                ]);
+                $sent += (int) $this->sendEmailTo($episode, $recipient['email'], $recipient['user_id']);
+            } catch (Throwable) {
+                // Keep delivering to the remaining recipients when invoked directly.
             }
         }
 
         $this->notifyUsers($episode);
 
         return $sent;
+    }
+
+    public function canSendFor(Episode $episode): bool
+    {
+        return $episode->notify_subscribers
+            && $episode->moderation_status === 'approved'
+            && $episode->published_at !== null;
+    }
+
+    public function sendEmailTo(Episode $episode, string $email, ?int $userId = null): bool
+    {
+        if (! $this->canSendFor($episode)) {
+            return false;
+        }
+
+        $delivery = EpisodeEmailNotification::query()->firstOrCreate([
+            'episode_id' => $episode->id,
+            'email' => $email,
+        ], ['user_id' => $userId]);
+
+        if ($delivery->sent_at) {
+            return false;
+        }
+
+        try {
+            $episode->loadMissing('series');
+            Mail::to($email)->send(new EpisodeAvailableMail($episode));
+            $delivery->update(['sent_at' => now(), 'error_message' => null]);
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+            $delivery->update(['error_message' => mb_strimwidth($exception->getMessage(), 0, 1000)]);
+
+            throw $exception;
+        }
+    }
+
+    public function notifyUser(Episode $episode, User $user): bool
+    {
+        if (! $this->canSendFor($episode)) {
+            return false;
+        }
+
+        $delivery = EpisodeUserNotification::query()->firstOrCreate([
+            'episode_id' => $episode->id,
+            'user_id' => $user->id,
+        ]);
+
+        if ($delivery->notified_at) {
+            return false;
+        }
+
+        try {
+            $notification = new EpisodeAvailableNotification($episode);
+            $alreadyInInbox = $user->notifications()
+                ->where('type', EpisodeAvailableNotification::class)
+                ->where('data->episode_id', $episode->id)
+                ->exists();
+
+            if ($alreadyInInbox) {
+                $pushChannels = array_values(array_filter(
+                    $notification->via($user),
+                    fn (string $channel): bool => $channel !== 'database'
+                ));
+
+                if ($pushChannels !== []) {
+                    Notification::sendNow($user, $notification, $pushChannels);
+                }
+            } else {
+                $user->notify($notification);
+            }
+
+            $delivery->update(['notified_at' => now(), 'error_message' => null]);
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+            $delivery->update(['error_message' => mb_strimwidth($exception->getMessage(), 0, 1000)]);
+
+            throw $exception;
+        }
     }
 
     /** @return iterable<array{email: string, user_id: int|null}> */
@@ -89,29 +151,10 @@ class EpisodeAvailabilityNotifier
         $sent = 0;
 
         foreach ($this->userRecipients() as $user) {
-            $delivery = EpisodeUserNotification::query()->firstOrCreate([
-                'episode_id' => $episode->id,
-                'user_id' => $user->id,
-            ]);
-
-            if ($delivery->notified_at) {
-                continue;
-            }
-
             try {
-                $user->notify(new EpisodeAvailableNotification($episode));
-
-                $delivery->update([
-                    'notified_at' => now(),
-                    'error_message' => null,
-                ]);
-                $sent++;
-            } catch (Throwable $exception) {
-                report($exception);
-
-                $delivery->update([
-                    'error_message' => mb_strimwidth($exception->getMessage(), 0, 1000),
-                ]);
+                $sent += (int) $this->notifyUser($episode, $user);
+            } catch (Throwable) {
+                // Keep delivering to the remaining recipients when invoked directly.
             }
         }
 

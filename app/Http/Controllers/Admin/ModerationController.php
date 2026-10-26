@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\QueueEpisodeNotifications;
 use App\Models\Episode;
 use App\Models\Series;
 use App\Services\EpisodeAvailabilityNotifier;
@@ -68,9 +69,15 @@ class ModerationController extends Controller
             'approved_by' => auth()->id(),
             'published_at' => now(),
         ]);
-        $notifier->sendFor($episode->load('series'));
+        $notificationsQueued = $notifier->canSendFor($episode);
 
-        return back()->with('success', 'Episodio aprobado.');
+        if ($notificationsQueued) {
+            QueueEpisodeNotifications::dispatch($episode->id);
+        }
+
+        return back()->with('success', $notificationsQueued
+            ? 'Episodio aprobado. Los avisos se enviarán en segundo plano.'
+            : 'Episodio aprobado.');
     }
 
     public function rejectEpisode(Request $request, Episode $episode): RedirectResponse

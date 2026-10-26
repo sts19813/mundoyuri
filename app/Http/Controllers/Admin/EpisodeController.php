@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\QueueEpisodeNotifications;
 use App\Models\Episode;
 use App\Models\Series;
 use App\Services\EpisodeAvailabilityNotifier;
@@ -155,16 +156,25 @@ class EpisodeController extends Controller
 
         $this->syncSources($episode, $request);
         $this->syncModeration($episode, $validated['moderation_status'] ?? 'pending', $validated['moderation_notes'] ?? null);
-        app(EpisodeAvailabilityNotifier::class)->sendFor($episode->load('series'));
+        $notificationsQueued = app(EpisodeAvailabilityNotifier::class)->canSendFor($episode);
+
+        if ($notificationsQueued) {
+            QueueEpisodeNotifications::dispatch($episode->id);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Episodio guardado.',
+                'message' => $notificationsQueued
+                    ? 'Episodio guardado. Los avisos se enviarán en segundo plano.'
+                    : 'Episodio guardado.',
                 'redirect' => route('admin.episodes.index', ['series_id' => $episode->series_id]),
             ]);
         }
 
-        return redirect()->route('admin.episodes.index')->with('success', 'Episodio guardado.');
+        return redirect()->route('admin.episodes.index')->with(
+            'success',
+            $notificationsQueued ? 'Episodio guardado. Los avisos se enviarán en segundo plano.' : 'Episodio guardado.'
+        );
     }
 
     public function show(Episode $episode): View
