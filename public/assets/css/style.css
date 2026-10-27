@@ -1965,6 +1965,26 @@
         flex: 0 0 auto;
     }
 
+    .profile-avatar-display {
+        display: block;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .profile-avatar-display:hover .profile-avatar-main,
+    .profile-avatar-display:focus-visible .profile-avatar-main {
+        filter: brightness(1.08);
+        transform: scale(1.025);
+    }
+
+    .profile-avatar-display:focus-visible {
+        outline: 2px solid #f9a8d4;
+        outline-offset: 4px;
+    }
+
     .profile-avatar-main {
         width: 104px;
         height: 104px;
@@ -1972,6 +1992,7 @@
         border-radius: 50%;
         object-fit: cover;
         box-shadow: 0 16px 35px rgba(0, 0, 0, .32);
+        transition: filter .2s, transform .2s;
     }
 
     .profile-avatar-wrap.is-online .profile-avatar-main {
@@ -2148,11 +2169,14 @@
         border-top: 1px solid rgba(255, 255, 255, .07);
     }
 
-    .profile-upload-state {
-        flex-basis: 100%;
-        margin-top: -5px;
-        color: #f9a8d4 !important;
-        font-size: .72rem !important;
+    .profile-media-change-notice {
+        margin: 0 0 21px;
+        padding: 11px 13px;
+        border: 1px solid rgba(244, 63, 142, .24);
+        border-radius: 10px;
+        color: #ffd1e3;
+        background: rgba(244, 63, 142, .08);
+        font-size: .78rem;
     }
 
     .profile-photo-actions {
@@ -2679,29 +2703,6 @@
         margin-top: 28px;
     }
 
-    .profile-cover-video-field {
-        width: 100%;
-        max-width: 620px;
-        margin-top: 12px;
-    }
-
-    .profile-cover-video-field[hidden] {
-        display: none;
-    }
-
-    .profile-cover-video-field > span {
-        display: block;
-        margin-top: 7px;
-        color: var(--muted);
-        font-size: .72rem;
-        line-height: 1.5;
-    }
-
-    .profile-cover-video-clear {
-        margin-top: 8px;
-        padding-left: 0;
-    }
-
     .profile-cover-source-dialog {
         width: min(100% - 32px, 550px);
         margin: auto;
@@ -2811,6 +2812,21 @@
         color: var(--muted);
         font-size: .72rem;
         line-height: 1.4;
+    }
+
+    .profile-cover-source-option-danger {
+        border-color: rgba(251, 113, 133, .22);
+    }
+
+    .profile-cover-source-option-danger .profile-cover-source-option-icon {
+        color: #fecdd3;
+        background: rgba(251, 113, 133, .12);
+    }
+
+    .profile-cover-source-option-danger:hover,
+    .profile-cover-source-option-danger:focus-visible {
+        border-color: rgba(251, 113, 133, .65);
+        background: rgba(251, 113, 133, .1);
     }
 
     .public-profile-hero .profile-avatar-main {
