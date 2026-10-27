@@ -25,7 +25,12 @@ class StickerController extends Controller
     public function store(Request $request, StickerService $stickers): JsonResponse
     {
         $validated = $request->validate([
-            'sticker' => ['required', 'file', 'max:10240', 'mimes:png,webp,gif,jpg,jpeg'],
+            'sticker' => [
+                'required',
+                'file',
+                'max:'.config('messenger.sticker_max_kilobytes'),
+                'mimes:png,webp,gif,jpg,jpeg',
+            ],
         ]);
 
         $sticker = $stickers->store($validated['sticker'], $request->user());
@@ -58,6 +63,8 @@ class StickerController extends Controller
             'id' => $sticker->id,
             'name' => $sticker->name,
             'url' => route('stickers.file', $sticker),
+            'mime' => $sticker->mime,
+            'is_animated' => $sticker->mime === 'image/gif',
             'is_general' => $sticker->is_general,
         ];
     }

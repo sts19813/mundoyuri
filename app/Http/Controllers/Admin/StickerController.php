@@ -26,7 +26,12 @@ class StickerController extends Controller
     public function store(Request $request, StickerService $stickers): RedirectResponse
     {
         $validated = $request->validate([
-            'sticker' => ['required', 'file', 'max:10240', 'mimes:png,webp,gif,jpg,jpeg'],
+            'sticker' => [
+                'required',
+                'file',
+                'max:'.config('messenger.sticker_max_kilobytes'),
+                'mimes:png,webp,gif,jpg,jpeg',
+            ],
         ]);
 
         $stickers->store($validated['sticker'], $request->user(), true);

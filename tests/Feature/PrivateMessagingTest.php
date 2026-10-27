@@ -890,6 +890,34 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHasErrors('sticker_id');
     }
 
+    public function test_user_can_create_and_send_an_animated_gif_sticker_from_their_library(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $recipient = User::factory()->create();
+
+        $response = $this->actingAs($sender)
+            ->post(route('stickers.store'), [
+                'sticker' => UploadedFile::fake()->create('brillo.gif', 12, 'image/gif'),
+            ])
+            ->assertCreated()
+            ->assertJsonPath('sticker.is_animated', true)
+            ->assertJsonPath('sticker.mime', 'image/gif');
+
+        $sticker = Sticker::query()->firstOrFail();
+        $this->assertSame('image/gif', $sticker->mime);
+        $this->assertStringEndsWith('.gif', $sticker->path);
+
+        $this->actingAs($sender)
+            ->post(route('messages.store', $recipient), ['sticker_id' => $sticker->id])
+            ->assertRedirect(route('messages.show', $recipient));
+
+        $message = DirectMessage::query()->latest('id')->firstOrFail();
+        $this->assertTrue($message->is_sticker);
+        $this->assertSame('image/gif', $message->attachment_mime);
+        $this->assertSame($sticker->path, $message->attachment_path);
+    }
+
     public function test_recipient_can_save_an_incoming_sticker_to_their_private_library(): void
     {
         Storage::fake('local');

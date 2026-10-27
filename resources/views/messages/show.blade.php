@@ -154,7 +154,8 @@ class="messenger-body"
                                 <div class="messenger-sticker-grid" data-sticker-grid aria-live="polite"></div>
                                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-sticker-create-file hidden>
                                 <div class="messenger-sticker-create" data-sticker-create-controls hidden>
-                                    <button type="button" class="messenger-sticker-create-button" data-sticker-create>Crear</button>
+                                    <span class="messenger-sticker-create-copy">PNG, WebP, JPG o GIF animado · máx. {{ number_format(config('messenger.sticker_max_kilobytes') / 1024) }} MB</span>
+                                    <button type="button" class="messenger-sticker-create-button" data-sticker-create>Crear sticker</button>
                                 </div>
                             </section>
                             @error('body')<p class="messenger-form-error">{{ $message }}</p>@enderror
@@ -680,7 +681,10 @@ class="messenger-body"
         const stickerGrid = document.querySelector('[data-sticker-grid]');
         const stickerCreateFile = document.querySelector('[data-sticker-create-file]');
         const stickerCreateControls = document.querySelector('[data-sticker-create-controls]');
+        const maximumStickerBytes = @js((int) config('messenger.sticker_max_kilobytes') * 1024);
+        const stickerBatchSize = 24;
         let stickerType = 'general';
+        let visibleStickerCount = stickerBatchSize;
         let stickerCatalog = { general: [], mine: [] };
         const clearStickerSelection = () => {
             if (stickerInput) stickerInput.value = '0';
@@ -710,7 +714,7 @@ class="messenger-body"
                 stickerGrid.append(empty);
                 return;
             }
-            stickers.forEach((sticker) => {
+            stickers.slice(0, visibleStickerCount).forEach((sticker) => {
                 const item = document.createElement('span');
                 item.className = 'messenger-sticker-item';
                 const button = document.createElement('button');
@@ -720,9 +724,16 @@ class="messenger-body"
                 const image = document.createElement('img');
                 image.src = sticker.url;
                 image.alt = sticker.name;
-                image.loading = 'eager';
+                image.loading = 'lazy';
                 image.decoding = 'async';
+                image.fetchPriority = 'low';
                 button.append(image);
+                if (sticker.is_animated) {
+                    const badge = document.createElement('small');
+                    badge.className = 'messenger-sticker-gif-badge';
+                    badge.textContent = 'GIF';
+                    button.append(badge);
+                }
                 item.append(button);
                 if (stickerType === 'mine') {
                     const remove = document.createElement('button');
@@ -735,15 +746,16 @@ class="messenger-body"
                 }
                 stickerGrid.append(item);
             });
+            if (stickers.length > visibleStickerCount) {
+                const more = document.createElement('button');
+                more.type = 'button';
+                more.className = 'messenger-sticker-load-more';
+                more.dataset.stickerLoadMore = 'true';
+                more.textContent = `Ver ${Math.min(stickerBatchSize, stickers.length - visibleStickerCount)} stickers más`;
+                stickerGrid.append(more);
+            }
         };
         let stickerCatalogLoaded = false;
-        const preloadStickerImages = () => {
-            Object.values(stickerCatalog).flat().forEach((sticker) => {
-                const image = new Image();
-                image.decoding = 'async';
-                image.src = sticker.url;
-            });
-        };
         const loadStickerCatalog = async ({ force = false, render = true } = {}) => {
             if (!stickerPanel) return;
             if (stickerCatalogLoaded && !force) {
@@ -758,20 +770,12 @@ class="messenger-body"
                 if (!response.ok) throw new Error();
                 stickerCatalog = await response.json();
                 stickerCatalogLoaded = true;
-                preloadStickerImages();
                 if (render) renderStickerCatalog();
             } catch (error) {
                 if (render && stickerGrid) stickerGrid.textContent = 'No se pudieron cargar los stickers.';
             }
         };
         const closeStickerPanel = () => { if (stickerPanel) stickerPanel.hidden = true; };
-
-        const preloadStickerCatalog = () => loadStickerCatalog({ render: false });
-        if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(preloadStickerCatalog, { timeout: 2500 });
-        } else {
-            window.setTimeout(preloadStickerCatalog, 900);
-        }
 
         stickerToggle?.addEventListener('click', async () => {
             stickerPanel.hidden = !stickerPanel.hidden;
@@ -784,10 +788,17 @@ class="messenger-body"
         document.querySelector('.messenger-attach-button')?.addEventListener('click', clearStickerSelection);
         stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.addEventListener('click', () => {
             stickerType = tab.dataset.stickerTab;
+            visibleStickerCount = stickerBatchSize;
             stickerPanel.querySelectorAll('[data-sticker-tab]').forEach((candidate) => candidate.classList.toggle('is-active', candidate === tab));
             renderStickerCatalog();
         }));
         stickerGrid?.addEventListener('click', async (event) => {
+            const loadMore = event.target.closest('[data-sticker-load-more]');
+            if (loadMore) {
+                visibleStickerCount += stickerBatchSize;
+                renderStickerCatalog();
+                return;
+            }
             const select = event.target.closest('[data-sticker-select]');
             if (select) {
                 const sticker = (stickerCatalog[stickerType] || []).find((item) => item.id === Number(select.dataset.stickerSelect));
@@ -821,6 +832,11 @@ class="messenger-body"
         stickerCreateFile?.addEventListener('change', async () => {
             const file = stickerCreateFile.files?.[0];
             if (!file) return;
+            if (file.size > maximumStickerBytes) {
+                stickerCreateFile.value = '';
+                showComposerError(`El sticker no puede superar ${Math.round(maximumStickerBytes / (1024 * 1024))} MB.`);
+                return;
+            }
             const data = new FormData();
             data.append('sticker', file);
             try {
@@ -833,11 +849,12 @@ class="messenger-body"
                 if (!response.ok) throw new Error();
                 const result = await response.json();
                 stickerType = 'mine';
+                visibleStickerCount = stickerBatchSize;
                 stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.stickerTab === 'mine'));
                 await loadStickerCatalog({ force: true });
                 sendSticker(result.sticker);
             } catch (error) {
-                showComposerError('No se pudo crear el sticker. Usa una imagen de hasta 10 MB e inténtalo de nuevo.');
+                showComposerError(`No se pudo crear el sticker. Usa PNG, WebP, JPG o GIF animado de hasta ${Math.round(maximumStickerBytes / (1024 * 1024))} MB e inténtalo de nuevo.`);
             } finally {
                 stickerCreateFile.value = '';
             }

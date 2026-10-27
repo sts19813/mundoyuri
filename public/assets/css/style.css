@@ -6359,11 +6359,14 @@ img.messenger-avatar,
 .messenger-sticker-grid button small { display: block; margin-top: -6px; font-size: .48rem; }
 .messenger-sticker-delete { position: absolute; top: -4px; right: -4px; width: 18px; min-height: 18px; height: 18px; padding: 0; border-radius: 50% !important; color: #fff !important; background: #d73570 !important; font-size: .9rem !important; line-height: 1; }
 .messenger-sticker-empty { grid-column: 1 / -1; padding: 15px 4px; color: #ad9aae; font-size: .62rem; text-align: center; }
-.messenger-sticker-create { display: flex; justify-content: flex-end; margin-top: 10px; }
+.messenger-sticker-create { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
 .messenger-sticker-create[hidden] { display: none; }
+.messenger-sticker-create-copy { color: #ad9aae; font: 500 .56rem 'DM Sans', sans-serif; line-height: 1.35; }
 .messenger-sticker-create-button { min-height: 32px; padding: 7px 14px; border: 0; border-radius: 8px; color: #fff; background: #e83482; font: 700 .66rem 'DM Sans', sans-serif; cursor: pointer; box-shadow: 0 5px 12px rgba(232, 52, 130, .24); }
 .messenger-sticker-create-button:hover { background: #f34894; }
 .messenger-sticker-create-button:focus-visible { outline: 2px solid #ffc1da; outline-offset: 2px; }
+.messenger-sticker-gif-badge { position: absolute; right: 4px; bottom: 4px; padding: 2px 4px; border-radius: 4px; color: #fff; background: rgba(30, 10, 31, .84); font: 700 .46rem 'DM Sans', sans-serif; letter-spacing: .04em; }
+.messenger-sticker-load-more { grid-column: 1 / -1; min-height: 34px; aspect-ratio: auto !important; color: #ffc0da !important; background: rgba(244, 63, 142, .1) !important; font-size: .62rem !important; }
 .community-reaction-heart { width: 22px; height: 22px; flex: 0 0 22px; }
 .notification-heart { width: 22px; height: 22px; }
 .messenger-media-panel[hidden] { display: none; }
