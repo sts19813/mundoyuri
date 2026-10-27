@@ -34,10 +34,6 @@ class SeasonThemeSetting extends Model
 
     public static function activeTheme(): ?string
     {
-        if (! app()->environment('local')) {
-            return null;
-        }
-
         $settings = Cache::store('file')->rememberForever(self::PUBLIC_CACHE_KEY, function (): array {
             $settings = static::current();
 

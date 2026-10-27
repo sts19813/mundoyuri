@@ -96,20 +96,16 @@ class SeasonThemeIsolationTest extends TestCase
         DB::disableQueryLog();
     }
 
-    public function test_production_does_not_load_seasonal_resources_even_if_enabled(): void
+    public function test_production_loads_the_enabled_seasonal_theme(): void
     {
         SeasonThemeSetting::query()->create(['id' => 1, 'enabled' => true, 'theme' => 'halloween']);
         $this->app['env'] = 'production';
 
-        DB::enableQueryLog();
-        DB::flushQueryLog();
-        $this->assertNull(SeasonThemeSetting::activeTheme());
-        $this->assertSame([], DB::getQueryLog());
-        DB::disableQueryLog();
+        $this->assertSame('halloween', SeasonThemeSetting::activeTheme());
 
         $this->get('/')->assertOk()
-            ->assertDontSee('halloween-', false)
-            ->assertDontSee('season-themes.css', false)
-            ->assertDontSee('data-season-theme', false);
+            ->assertSee('halloween-theme.css', false)
+            ->assertSee('halloween-theme.js', false)
+            ->assertSee('data-season-theme="halloween"', false);
     }
 }
