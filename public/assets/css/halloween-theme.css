@@ -1,0 +1,47 @@
+/* Local only. Small compositor transforms; no animated blur or full-screen filters. */
+.season-theme { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+.hero.hero--halloween { background: #100b16; }
+.hero.hero--halloween .hero-cover-image { object-position: center; }
+.hero.hero--halloween .hero-overlay { background: linear-gradient(to top, #0d0810, rgba(13, 8, 16, .12) 28%, transparent 56%), linear-gradient(90deg, rgba(13, 8, 16, .25), transparent 65%); }
+@media (max-width: 768px) {
+    .hero.hero--halloween { height: clamp(660px, 95svh, 820px); min-height: 660px; padding-bottom: 32px; }
+    .hero.hero--halloween .hero-cover-image { object-fit: contain; object-position: center top; }
+    .hero.hero--halloween .hero-overlay { background: linear-gradient(to top, #0d0810, rgba(13, 8, 16, .18) 34%, transparent 65%); }
+}
+
+/* A single image per creature, without animated masks, leg layers or shadows. */
+.halloween-creature { position: absolute; top: 0; left: 0; width: 29px; pointer-events: none; contain: layout style; }
+.halloween-creature__body { display: block; width: 100%; }
+.halloween-creature img { display: block; width: 100%; height: auto; user-select: none; }
+.halloween-creature--spider img { filter: grayscale(1) brightness(.17); }
+.halloween-creature--spider.halloween-creature--two { width: 24px; }
+.halloween-creature--ant { width: 10px; }
+.halloween-creature--ant.halloween-creature--two { width: 9px; }
+.halloween-creature--ant.halloween-creature--three { width: 11px; }
+
+/* A short signal interference overlay, not a filtered copy of the page. */
+.halloween-glitch[hidden] { display: none !important; }
+.halloween-glitch { position: fixed; inset: 0; z-index: 940; pointer-events: none; overflow: hidden; }
+.halloween-glitch i { position: absolute; left: 0; width: 100%; height: 3px; background: rgba(195, 211, 218, .14); box-shadow: 0 -1px rgba(128, 200, 208, .2), 0 1px rgba(170, 93, 108, .18); animation: halloween-signal-slip 400ms steps(2, end) 1; }
+.halloween-glitch i:nth-child(1) { top: 28%; }
+.halloween-glitch i:nth-child(2) { top: 54%; height: 13px; background: repeating-linear-gradient(0deg, rgba(12, 14, 19, .16) 0 1px, transparent 1px 3px); animation-direction: reverse; }
+.halloween-glitch i:nth-child(3) { top: 79%; height: 1px; }
+@keyframes halloween-signal-slip {
+    0% { transform: translate(0, 0); opacity: 0; }
+    22% { transform: translate(-7px, 4px); opacity: .65; }
+    48% { transform: translate(9px, -5px); opacity: .3; }
+    76% { transform: translate(-3px, 2px); opacity: .55; }
+    100% { transform: translate(0, 0); opacity: 0; }
+}
+
+.halloween-pumpkins { position: absolute; right: clamp(88px, 7vw, 140px); bottom: 8px; width: 190px; height: auto; user-select: none; }
+@media (max-width: 600px) {
+    .halloween-creature--spider { width: 24px; }
+    .halloween-creature--spider.halloween-creature--two,
+    .halloween-creature--ant.halloween-creature--three { display: none; }
+    .halloween-pumpkins { right: 82px; width: 136px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .season-theme *, .season-theme *::before, .season-theme *::after { animation: none !important; }
+    .halloween-creature, .halloween-glitch { display: none !important; }
+}

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 250" fill="none">
+  <defs>
+    <radialGradient id="silk" cx="0" cy="0" r="1" gradientTransform="translate(10 8) rotate(44) scale(310 265)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#eee8e1" stop-opacity=".85"/>
+      <stop offset=".68" stop-color="#e1dad1" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#d2cbc2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g stroke="url(#silk)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Uneven anchor threads, with the slight sag of real silk. -->
+    <g stroke-width=".65">
+      <path d="M-8 2Q102 17 280 9M1-8Q75 29 267 64M-3-4Q78 50 237 124M-2-4Q62 70 185 184M-2-2Q37 76 112 233M0-3Q17 102 47 250M-4 0Q3 122 5 250"/>
+      <path d="M32 6Q26 14 28 17Q20 17 23 24Q16 25 17 31Q9 32 10 36Q5 34 1 39"/>
+      <path d="M58 7Q49 23 50 24Q38 29 41 37Q29 39 29 52Q18 50 17 62Q9 57 2 63"/>
+      <path d="M87 8Q76 27 77 32Q56 39 59 54Q42 57 42 77Q26 75 24 91Q13 85 3 95"/>
+      <path d="M118 9Q107 31 108 40Q80 48 82 77Q58 79 57 105Q36 104 31 125Q17 118 3 131"/>
+      <path d="M153 10Q140 36 143 48Q110 62 108 101Q78 102 75 139Q48 135 39 165Q20 153 4 173"/>
+      <path d="M191 11Q171 37 183 55Q146 73 138 126Q103 130 95 180Q67 172 46 207Q24 194 4 218"/>
+      <path d="M233 10Q211 43 222 62Q179 89 173 151Q135 161 115 223Q92 213 76 247"/>
+    </g>
+    <g stroke-width=".4" opacity=".6">
+      <path d="M45 7Q39 18 40 21M65 29Q52 35 51 46M96 87Q80 92 69 120M129 117Q111 122 87 162M169 53Q143 59 121 113M215 178Q202 174 185 184L176 221M55 164Q51 187 46 207M225 62Q241 62 266 64"/>
+      <path d="M25 250Q39 224 46 207M237 124Q250 135 270 132M108 40Q113 48 124 53M57 105Q61 112 69 114"/>
+    </g>
+  </g>
+</svg>

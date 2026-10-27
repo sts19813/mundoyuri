@@ -1,0 +1,11 @@
+.season-theme { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+.season-theme--christmas { background: linear-gradient(180deg, rgba(11, 52, 39, .12), transparent 25%); }.season-garland { position: absolute; top: -15px; width: 100%; color: #e8bf50; font-size: 2rem; letter-spacing: 3.8vw; text-align: center; text-shadow: 0 0 15px rgba(255, 214, 109, .75); }.season-theme--christmas .season-particles { color: rgba(236, 248, 255, .8); }
+.season-particles { position: absolute; top: -20px; left: 0; width: 100%; color: rgba(255, 255, 255, .72); font-size: clamp(1.4rem, 3vw, 2.5rem); letter-spacing: 9vw; text-align: center; white-space: nowrap; animation: season-fall 14s linear infinite; }.season-theme--spring { background: radial-gradient(circle at 100% 0, rgba(255, 153, 203, .13), transparent 32%); }.season-theme--spring .season-particles { color: rgba(255, 157, 201, .76); }.season-vine { position: absolute; top: -28px; left: 7%; color: #a9d05e; font-size: 4rem; transform: rotate(25deg); }.season-theme--summer { background: radial-gradient(circle at 100% 0, rgba(255, 205, 77, .18), transparent 24%); }.season-sun { position: absolute; top: 82px; right: 7vw; color: #ffcf4a; font-size: 2.4rem; text-shadow: 0 0 27px rgba(255, 184, 38, .8); }.season-theme--summer .season-particles { top: 72%; color: rgba(255, 238, 116, .74); animation-duration: 9s; }.season-theme--autumn { background: linear-gradient(180deg, rgba(107, 46, 22, .14), transparent 32%); }.season-theme--autumn .season-particles { color: rgba(220, 112, 46, .8); }
+
+@keyframes season-fall { from { transform: translate(0, -8vh); } to { transform: translate(-5vw, 108vh); } }
+@media (max-width: 600px) {
+    .season-garland { font-size: 1.2rem; letter-spacing: 2.5vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .season-theme *, .season-theme *::before, .season-theme *::after { animation: none !important; }
+}

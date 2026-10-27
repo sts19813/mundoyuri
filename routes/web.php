@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\DiscoveryPeopleController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
+use App\Http\Controllers\Admin\SeasonThemeSettingController;
 use App\Http\Controllers\Admin\UserBadgeController as AdminUserBadgeController;
 use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
@@ -248,6 +249,13 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     Route::put('/configuracion/miyu', [AssistantSettingController::class, 'update'])
         ->middleware('admin')
         ->name('admin.settings.assistant.update');
+
+    Route::get('/configuracion/tema-estacional', [SeasonThemeSettingController::class, 'edit'])
+        ->middleware('admin')
+        ->name('admin.settings.season-theme.edit');
+    Route::put('/configuracion/tema-estacional', [SeasonThemeSettingController::class, 'update'])
+        ->middleware('admin')
+        ->name('admin.settings.season-theme.update');
 
     Route::get('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'edit'])->middleware('admin')->name('admin.settings.backblaze-b2.edit');
     Route::put('/configuracion/backblaze-b2', [BackblazeB2SettingController::class, 'update'])->middleware('admin')->name('admin.settings.backblaze-b2.update');

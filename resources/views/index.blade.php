@@ -43,6 +43,13 @@
         ] : null;
         $heroDesktopImageUrl = $section?->heroDesktopImageUrl() ?: '/assets/img/wallpaper-login.webp';
         $heroMobileImageUrl = $section?->heroMobileImageUrl() ?: $heroDesktopImageUrl;
+        $activeSeasonTheme = \App\Models\SeasonThemeSetting::activeTheme();
+        $seasonThemeResolved = true;
+        $isHalloweenHero = $activeSeasonTheme === 'halloween';
+        if ($isHalloweenHero) {
+            $heroDesktopImageUrl = asset('assets/img/seasonal/halloween-hero-desktop.webp');
+            $heroMobileImageUrl = asset('assets/img/seasonal/halloween-hero-mobile.webp');
+        }
         $heroPrimaryUrl = $section?->heroButtonUrl($section->hero_primary_url, $catalogUrl) ?? $catalogUrl;
         $heroSecondaryUrl = $section?->heroButtonUrl($section->hero_secondary_url, '#novedades') ?? '#novedades';
     @endphp
@@ -63,14 +70,14 @@
 
 <x-navbar :transparent="true" />
 
-    <section @class(['hero', 'hero-video-on-mobile' => $section?->hero_video_on_mobile])>
+    <section @class(['hero', 'hero--halloween' => $isHalloweenHero, 'hero-video-on-mobile' => !$isHalloweenHero && $section?->hero_video_on_mobile])>
         <picture class="hero-cover-media" aria-hidden="true">
             <source media="(max-width: 768px)" srcset="{{ $heroMobileImageUrl }}">
             <img class="hero-cover-image" src="{{ $heroDesktopImageUrl }}" alt="" loading="eager" fetchpriority="high" decoding="async">
         </picture>
-        @if($section?->heroVideoEmbedUrl())
+        @if(!$isHalloweenHero && $section?->heroVideoEmbedUrl())
             <iframe id="heroYoutubeVideo" class="hero-video" @if($section->hero_video_on_mobile) src="{{ $section->heroVideoEmbedUrl() }}" @else data-desktop-src="{{ $section->heroVideoEmbedUrl() }}" @endif title="Video de fondo de {{ $sectionName }}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" aria-hidden="true"></iframe>
-        @elseif($section?->hasDirectVideo())
+        @elseif(!$isHalloweenHero && $section?->hasDirectVideo())
             <video class="hero-video is-ready" autoplay muted loop playsinline aria-hidden="true"><source src="{{ $section->hero_video_url }}"></video>
         @endif
         <div class="hero-overlay"></div><div class="hero-grain"></div>
@@ -91,7 +98,7 @@
         </div>
     </section>
 
-    @if($section?->heroVideoEmbedUrl() && ! $section->hero_video_on_mobile)
+    @if(!$isHalloweenHero && $section?->heroVideoEmbedUrl() && ! $section->hero_video_on_mobile)
         <script>
             (() => {
                 if (window.matchMedia('(max-width: 768px)').matches) return;
