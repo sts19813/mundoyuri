@@ -30,7 +30,7 @@
                 @error('theme')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 <div class="form-text mt-3">El logo principal y el del pie de página cambian con el tema elegido. Al desactivar el tema vuelve automáticamente el logo original de Mundo Yuri.</div>
                 <div class="form-text mt-3">La paleta de botones, bordes, enlaces y degradados también cambia: Halloween en dorado y naranja, Navidad en verde, Primavera en menta y lavanda, Verano en dorado y turquesa, y Otoño en cobre.</div>
-                <div class="form-text mt-3">Halloween incluye dos arañas pequeñas y hormigas. La interferencia de pantalla aparece como máximo dos veces por sesión. Los demás temas usan animaciones suaves.</div>
+                <div class="form-text mt-3">Halloween incluye dos arañas pequeñas, ocho hormigas y una lluvia de calabacitas anime. Máximo doce calabacitas visibles en escritorio y seis en móvil. La interferencia de pantalla aparece como máximo cuatro veces por sesión. Los demás temas usan animaciones suaves.</div>
                 <div class="form-text mt-3">Al desactivarlo y guardar, las siguientes cargas del sitio no incluyen estilos, scripts ni imágenes estacionales. Las pestañas que ya estaban abiertas deben recargarse para aplicar el cambio.</div>
             </div>
             <div class="card-footer text-end"><button class="btn btn-primary" type="submit">Guardar tema</button></div>

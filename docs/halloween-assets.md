@@ -3,7 +3,7 @@
 Generados con la herramienta integrada de imágenes de Codex. Recortes con alpha real,
 optimizados a WebP con `cwebp -q 88`, conservando transparencia. Los originales permanecen
 en la biblioteca de imágenes generadas; los archivos usados por el sitio están en
-`public/assets/img/seasonal/` (aproximadamente 121 KB en total).
+`public/assets/img/seasonal/`.
 
 - `spider.webp`: araña marrón vista desde arriba, ocho patas articuladas, pelo fino y abdomen moteado.
 - `earthworm.webp`: lombriz marrón rojiza, segmentos húmedos y cuerpo completo en S suave.
@@ -41,9 +41,9 @@ the animal's precise silhouette, including gaps between ears, limbs and wings. C
 clean alpha cutout, no backplate, no shadow, no new background.”
 
 El componente `season-creature` usa una sola imagen por animal, sin máscaras animadas
-ni sombras. Dos arañas de 24–29 px (oscurecidas a negro) y tres hormigas SVG de 9–11 px
+ni sombras. Dos arañas de 24–29 px (oscurecidas a negro) y ocho hormigas SVG de 8–11 px
 recorren el viewport mediante Web Animations API, con pausas cortas entre tramos. En móvil
-solo se animan una araña y dos hormigas. El murciélago, la telaraña y la lombriz originales
+solo se animan una araña y cuatro hormigas. El murciélago, la telaraña y la lombriz originales
 se conservan como assets, pero ya no se cargan en la página.
 `jack-o-lanterns.svg` se conserva como recurso de diseño, pero no se muestra en el tema activo para no cubrir controles del sitio;
 es una ilustración vectorial estática, sin filtros ni animaciones.
@@ -56,3 +56,8 @@ al abandonar la página. Con movimiento reducido no se muestran animales ni inte
 La interferencia usa tres bandas de señal con bordes RGB, saltos y líneas de barrido durante 1100 ms, hasta cuatro veces por sesión
 de pestaña (sessionStorage). Se aplaza si hay un diálogo visible o un campo en edición.
 No filtra ni clona el contenido del sitio, ni reproduce audio.
+
+La lluvia de calabacitas anime usa dos WebP transparentes, con hasta doce partículas
+reutilizadas (seis en móvil), tamaños mayores y caídas frecuentes con giros y deriva
+aleatorios. Ver `halloween-pumpkin-rain.md` para assets,
+límites, comportamiento de carga y prompts.

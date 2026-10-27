@@ -20,6 +20,14 @@
 .halloween-creature--ant.halloween-creature--three { width: 11px; }
 .halloween-creature--ant.halloween-creature--four { width: 8px; }
 .halloween-creature--ant.halloween-creature--five { width: 10px; }
+.halloween-creature--ant.halloween-creature--six { width: 9px; }
+.halloween-creature--ant.halloween-creature--seven { width: 10px; }
+.halloween-creature--ant.halloween-creature--eight { width: 8px; }
+
+/* Bounded reusable particles; no blur, shadows, canvas or per-frame JavaScript. */
+.halloween-pumpkin-rain { position: absolute; inset: 0; overflow: hidden; pointer-events: none; contain: strict; }
+.halloween-pumpkin { position: absolute; top: 0; left: 0; width: 40px; height: auto; pointer-events: none; user-select: none; }
+.halloween-pumpkin[hidden] { display: none !important; }
 
 /* Stronger signal loss, painted only during the brief event; no page cloning or filters. */
 .halloween-glitch[hidden] { display: none !important; }
@@ -64,9 +72,11 @@
     .halloween-creature--spider { width: 24px; }
     .halloween-creature--spider.halloween-creature--two,
     .halloween-creature--ant.halloween-creature--three,
-    .halloween-creature--ant.halloween-creature--five { display: none; }
+    .halloween-creature--ant.halloween-creature--five,
+    .halloween-creature--ant.halloween-creature--seven,
+    .halloween-creature--ant.halloween-creature--eight { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     .season-theme *, .season-theme *::before, .season-theme *::after { animation: none !important; }
-    .halloween-creature, .halloween-glitch { display: none !important; }
+    .halloween-creature, .halloween-glitch, .halloween-pumpkin-rain { display: none !important; }
 }

@@ -35,6 +35,11 @@ class SeasonThemeIsolationTest extends TestCase
                 ->assertDontSee('data-season-palette', false)
                 ->assertDontSee('assets/img/seasonal/', false)
                 ->assertDontSee('data-season-theme', false)
+                ->assertDontSee('data-halloween-pumpkin', false)
+                ->assertDontSee('pumpkin-classic.webp', false)
+                ->assertDontSee('pumpkin-smile.webp', false)
+                ->assertDontSee('pumpkin-anime-grin.webp', false)
+                ->assertDontSee('pumpkin-anime-smile.webp', false)
                 ->assertSee('assets/img/logos/mundo-yuri-logo.svg', false);
 
             foreach (array_keys(SeasonThemeSetting::THEMES) as $theme) {
@@ -63,7 +68,11 @@ class SeasonThemeIsolationTest extends TestCase
             ->assertSee('assets/img/logos/mundo-yuri-halloween.svg', false)
             ->assertDontSee('<iframe id="heroYoutubeVideo"', false);
 
-        $this->assertSame(5, substr_count($response->getContent(), 'halloween-creature--ant'));
+        $this->assertSame(8, substr_count($response->getContent(), 'halloween-creature--ant'));
+        $response->assertSee('data-halloween-pumpkin-rain', false)
+            ->assertSee('pumpkin-anime-grin.webp', false)->assertSee('pumpkin-anime-smile.webp', false)
+            ->assertDontSee('pumpkin-classic.webp', false)->assertDontSee('pumpkin-smile.webp', false);
+        $this->assertSame(12, substr_count($response->getContent(), 'data-halloween-pumpkin width='));
 
         $this->actingAs($admin)->withSession(['_token' => 'season-theme-test'])->put(route('admin.settings.season-theme.update'), [
             '_token' => 'season-theme-test', 'enabled' => '0', 'theme' => 'halloween',
