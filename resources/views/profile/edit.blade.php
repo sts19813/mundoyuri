@@ -96,6 +96,15 @@
                         <p>Esta información identifica tus comentarios y aportes.</p>
                     </div>
 
+                    @php($defaultProfileTab = $errors->hasAny(['signature_text', 'signature_image']) ? 'signature' : 'personal')
+                    <div class="profile-tabs" data-profile-tabs data-profile-default-tab="{{ $defaultProfileTab }}">
+                        <div class="profile-tab-list" role="tablist" aria-label="Secciones de edición del perfil">
+                            <button type="button" class="profile-tab is-active" id="profile-tab-personal" role="tab" aria-selected="true" aria-controls="profile-panel-personal" data-profile-tab="personal">Información personal</button>
+                            <button type="button" class="profile-tab" id="profile-tab-notifications" role="tab" aria-selected="false" aria-controls="profile-panel-notifications" data-profile-tab="notifications">Notificaciones</button>
+                            <button type="button" class="profile-tab" id="profile-tab-signature" role="tab" aria-selected="false" aria-controls="profile-panel-signature" data-profile-tab="signature">Firma</button>
+                        </div>
+                    </div>
+
                     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="portal-profile-form">
                         @csrf
                         @method('PATCH')
@@ -112,28 +121,12 @@
                         @error('cover_image')<span class="profile-field-error">{{ $message }}</span>@enderror
                         @error('cover_video_url')<span class="profile-field-error">{{ $message }}</span>@enderror
 
-                        <div class="profile-form-grid">
-                            <div class="profile-field profile-field-wide">
-                                <label for="name">Nombre</label>
-                                <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" autocomplete="name" required class="@error('name') is-invalid @enderror">
-                                @error('name')<span class="profile-field-error">{{ $message }}</span>@enderror
+                        <section class="profile-tab-panel" id="profile-panel-personal" role="tabpanel" aria-labelledby="profile-tab-personal" data-profile-tab-panel="personal">
+                            <div class="profile-section-heading">
+                                <span class="profile-panel-kicker">Tu presentación</span>
+                                <h3>Biografía</h3>
+                                <p>Cuéntale a la comunidad un poco de ti, con enlaces, imágenes o videos si quieres.</p>
                             </div>
-
-                            <div class="profile-field">
-                                <label for="alias">Alias público <span>Opcional</span></label>
-                                <div class="profile-input-prefix">
-                                    <span>@</span>
-                                    <input id="alias" name="alias" type="text" value="{{ old('alias', $user->alias) }}" autocomplete="nickname" class="@error('alias') is-invalid @enderror">
-                                </div>
-                                @error('alias')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div class="profile-field">
-                                <label for="email">Correo electrónico</label>
-                                <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" autocomplete="email" required class="@error('email') is-invalid @enderror">
-                                @error('email')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-
                             <div class="profile-field profile-field-wide">
                                 <label for="biography">Biografía <span>Con enlaces, imágenes y videos</span></label>
                                 <x-rich-editor
@@ -146,138 +139,185 @@
                                 @error('biography')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>
 
-                            <div class="profile-field">
-                                <label for="location">Localización <span>Opcional</span></label>
-                                <input id="location" name="location" type="text" maxlength="120" value="{{ old('location', $user->location) }}" autocomplete="address-level2" class="@error('location') is-invalid @enderror">
-                                @error('location')<span class="profile-field-error">{{ $message }}</span>@enderror
+                            <div class="profile-section-heading profile-section-heading-compact">
+                                <span class="profile-panel-kicker">Tu cuenta</span>
+                                <h3>Nombre y alias</h3>
                             </div>
-
-                            <div class="profile-field">
-                                <label for="occupation">Ocupación <span>Opcional</span></label>
-                                <input id="occupation" name="occupation" type="text" maxlength="160" value="{{ old('occupation', $user->occupation) }}" class="@error('occupation') is-invalid @enderror">
-                                @error('occupation')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div class="profile-field profile-field-wide">
-                                <label for="website">Sitio web <span>Debe comenzar con http:// o https://</span></label>
-                                <input id="website" name="website" type="url" maxlength="2048" value="{{ old('website', $user->website) }}" placeholder="https://" autocomplete="url" class="@error('website') is-invalid @enderror">
-                                @error('website')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div class="profile-field profile-field-wide">
-                                <label for="interests">Intereses <span>Máximo 1000 caracteres</span></label>
-                                <textarea id="interests" name="interests" rows="4" maxlength="1000" placeholder="Anime, manga, arte, escritura…" class="@error('interests') is-invalid @enderror">{{ old('interests', $user->interests) }}</textarea>
-                                @error('interests')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-                        </div>
-
-                        <fieldset class="community-profile-settings">
-                            <legend>Privacidad del perfil</legend>
-                            <p>El directorio muestra únicamente perfiles públicos. Tu perfil seguirá disponible para ti y para el equipo de moderación.</p>
-                            <div class="profile-field">
-                                <label for="profile_visibility">Quién puede consultar tu perfil</label>
-                                <select id="profile_visibility" name="profile_visibility">
-                                    <option value="public" @selected(old('profile_visibility', $user->profile_visibility) === 'public')>Cualquier persona</option>
-                                    <option value="members" @selected(old('profile_visibility', $user->profile_visibility) === 'members')>Solo miembros con sesión iniciada</option>
-                                    <option value="private" @selected(old('profile_visibility', $user->profile_visibility) === 'private')>Solo yo y el equipo de moderación</option>
-                                </select>
-                                @error('profile_visibility')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div class="community-privacy-grid">
-                                @foreach([
-                                    'show_last_seen' => ['Mostrar última visita', 'Permite ver cuándo visitaste Mundo Yuri por última vez.'],
-                                    'show_join_date' => ['Mostrar fecha de ingreso', 'Incluye tu fecha de registro o fecha histórica.'],
-                                    'show_favorites' => ['Mostrar favoritas', 'Comparte tus series favoritas en el perfil.'],
-                                    'show_activity' => ['Mostrar actividad reciente', 'Muestra tus participaciones públicas más recientes.'],
-                                    'show_signatures' => ['Mostrar firmas', 'Oculta todas las firmas de las conversaciones para ti.'],
-                                ] as $field => [$label, $description])
-                                    <label class="community-privacy-option">
-                                        <input type="hidden" name="{{ $field }}" value="0">
-                                        <input type="checkbox" name="{{ $field }}" value="1" @checked((bool) old($field, $user->{$field}))>
-                                        <span><strong>{{ $label }}</strong><small>{{ $description }}</small></span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </fieldset>
-
-                        <fieldset class="community-profile-settings">
-                            <legend>Firma comunitaria</legend>
-                            <p>Se muestra debajo de tus participaciones cuando la persona que lee tenga activadas las firmas.</p>
-                            @if($user->signatureIsSuspended())
-                                <div class="portal-alert portal-alert-error" role="alert">
-                                    Tu firma está suspendida hasta {{ $user->signature_suspended_until->translatedFormat('d M Y, H:i') }}.
+                            <div class="profile-form-grid">
+                                <div class="profile-field profile-field-wide">
+                                    <label for="name">Nombre</label>
+                                    <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" autocomplete="name" required class="@error('name') is-invalid @enderror">
+                                    @error('name')<span class="profile-field-error">{{ $message }}</span>@enderror
                                 </div>
-                            @endif
-                            <label class="community-privacy-option mb-4">
-                                <input type="hidden" name="signature_enabled" value="0" @disabled($user->signatureIsSuspended())>
-                                <input type="checkbox" name="signature_enabled" value="1" @checked((bool) old('signature_enabled', $user->signature_enabled)) @disabled($user->signatureIsSuspended())>
-                                <span><strong>Activar mi firma</strong><small>Conserva el texto y la imagen cuando la desactives.</small></span>
-                            </label>
-                            <div class="profile-field">
-                                <label for="signature_text">Texto de firma <span>Máximo 500 caracteres</span></label>
-                                <textarea id="signature_text" name="signature_text" rows="4" maxlength="500" @disabled($user->signatureIsSuspended()) class="@error('signature_text') is-invalid @enderror">{{ old('signature_text', $user->signature_text) }}</textarea>
-                                @error('signature_text')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-                            <div class="community-signature-upload">
-                                <div>
-                                    <strong>Imagen de firma</strong>
-                                    <span>JPG, PNG, WebP o GIF · máximo 2 MB y 600 × 180 px</span>
+
+                                <div class="profile-field">
+                                    <label for="alias">Alias público <span>Opcional</span></label>
+                                    <div class="profile-input-prefix">
+                                        <span>@</span>
+                                        <input id="alias" name="alias" type="text" value="{{ old('alias', $user->alias) }}" autocomplete="nickname" class="@error('alias') is-invalid @enderror">
+                                    </div>
+                                    @error('alias')<span class="profile-field-error">{{ $message }}</span>@enderror
                                 </div>
-                                @if($user->signatureImageUrl())
-                                    <img src="{{ $user->signatureImageUrl() }}" alt="Tu firma actual" data-signature-preview>
-                                @else
-                                    <img src="" alt="Vista previa de la firma" class="d-none" data-signature-preview>
+
+                                <div class="profile-field">
+                                    <label for="email">Correo electrónico</label>
+                                    <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" autocomplete="email" required class="@error('email') is-invalid @enderror">
+                                    @error('email')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                </div>
+                            </div>
+
+                            <fieldset class="community-profile-settings">
+                                <legend>Información personal</legend>
+                                <p>Estos datos ayudan a que otras personas conozcan tus intereses y contexto.</p>
+                                <div class="profile-form-grid">
+                                    <div class="profile-field">
+                                        <label for="location">Localización <span>Opcional</span></label>
+                                        <input id="location" name="location" type="text" maxlength="120" value="{{ old('location', $user->location) }}" autocomplete="address-level2" class="@error('location') is-invalid @enderror">
+                                        @error('location')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                    </div>
+
+                                    <div class="profile-field">
+                                        <label for="occupation">Ocupación <span>Opcional</span></label>
+                                        <input id="occupation" name="occupation" type="text" maxlength="160" value="{{ old('occupation', $user->occupation) }}" class="@error('occupation') is-invalid @enderror">
+                                        @error('occupation')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                    </div>
+
+                                    <div class="profile-field profile-field-wide">
+                                        <label for="website">Sitio web <span>Debe comenzar con http:// o https://</span></label>
+                                        <input id="website" name="website" type="url" maxlength="2048" value="{{ old('website', $user->website) }}" placeholder="https://" autocomplete="url" class="@error('website') is-invalid @enderror">
+                                        @error('website')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                    </div>
+
+                                    <div class="profile-field profile-field-wide">
+                                        <label for="interests">Intereses <span>Máximo 1000 caracteres</span></label>
+                                        <textarea id="interests" name="interests" rows="4" maxlength="1000" placeholder="Anime, manga, arte, escritura…" class="@error('interests') is-invalid @enderror">{{ old('interests', $user->interests) }}</textarea>
+                                        @error('interests')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="community-profile-settings">
+                                <legend>Privacidad del perfil</legend>
+                                <p>El directorio muestra únicamente perfiles públicos. Tu perfil seguirá disponible para ti y para el equipo de moderación.</p>
+                                <div class="profile-field">
+                                    <label for="profile_visibility">Quién puede consultar tu perfil</label>
+                                    <select id="profile_visibility" name="profile_visibility">
+                                        <option value="public" @selected(old('profile_visibility', $user->profile_visibility) === 'public')>Cualquier persona</option>
+                                        <option value="members" @selected(old('profile_visibility', $user->profile_visibility) === 'members')>Solo miembros con sesión iniciada</option>
+                                        <option value="private" @selected(old('profile_visibility', $user->profile_visibility) === 'private')>Solo yo y el equipo de moderación</option>
+                                    </select>
+                                    @error('profile_visibility')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                </div>
+
+                                <div class="community-privacy-grid">
+                                    @foreach([
+                                        'show_last_seen' => ['Mostrar última visita', 'Permite ver cuándo visitaste Mundo Yuri por última vez.'],
+                                        'show_join_date' => ['Mostrar fecha de ingreso', 'Incluye tu fecha de registro o fecha histórica.'],
+                                        'show_favorites' => ['Mostrar favoritas', 'Comparte tus series favoritas en el perfil.'],
+                                        'show_activity' => ['Mostrar actividad reciente', 'Muestra tus participaciones públicas más recientes.'],
+                                        'show_signatures' => ['Mostrar firmas', 'Oculta todas las firmas de las conversaciones para ti.'],
+                                    ] as $field => [$label, $description])
+                                        <label class="community-privacy-option">
+                                            <input type="hidden" name="{{ $field }}" value="0">
+                                            <input type="checkbox" name="{{ $field }}" value="1" @checked((bool) old($field, $user->{$field}))>
+                                            <span><strong>{{ $label }}</strong><small>{{ $description }}</small></span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </fieldset>
+
+                            <div class="profile-form-footer">
+                                <span>Los cambios se aplican también al menú del portal.</span>
+                                <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
+                            </div>
+                        </section>
+
+                        <section class="profile-tab-panel" id="profile-panel-signature" role="tabpanel" aria-labelledby="profile-tab-signature" data-profile-tab-panel="signature" hidden>
+                            <fieldset class="community-profile-settings profile-tab-settings">
+                                <legend>Firma comunitaria</legend>
+                                <p>Se muestra debajo de tus participaciones cuando la persona que lee tenga activadas las firmas.</p>
+                                @if($user->signatureIsSuspended())
+                                    <div class="portal-alert portal-alert-error" role="alert">
+                                        Tu firma está suspendida hasta {{ $user->signature_suspended_until->translatedFormat('d M Y, H:i') }}.
+                                    </div>
                                 @endif
-                                <div class="profile-photo-actions">
-                                    <label for="signature_image" class="profile-btn profile-btn-soft @if($user->signatureIsSuspended()) disabled @endif">Elegir imagen</label>
-                                    <button type="button" class="profile-btn profile-btn-text" data-signature-clear @disabled($user->signatureIsSuspended())>Quitar imagen</button>
+                                <label class="community-privacy-option mb-4">
+                                    <input type="hidden" name="signature_enabled" value="0" @disabled($user->signatureIsSuspended())>
+                                    <input type="checkbox" name="signature_enabled" value="1" @checked((bool) old('signature_enabled', $user->signature_enabled)) @disabled($user->signatureIsSuspended())>
+                                    <span><strong>Activar mi firma</strong><small>Conserva el texto y la imagen cuando la desactives.</small></span>
+                                </label>
+                                <div class="profile-field">
+                                    <label for="signature_text">Texto de firma <span>Máximo 500 caracteres</span></label>
+                                    <textarea id="signature_text" name="signature_text" rows="4" maxlength="500" @disabled($user->signatureIsSuspended()) class="@error('signature_text') is-invalid @enderror">{{ old('signature_text', $user->signature_text) }}</textarea>
+                                    @error('signature_text')<span class="profile-field-error">{{ $message }}</span>@enderror
                                 </div>
-                                @error('signature_image')<span class="profile-field-error">{{ $message }}</span>@enderror
-                            </div>
-                        </fieldset>
+                                <div class="community-signature-upload">
+                                    <div>
+                                        <strong>Imagen de firma</strong>
+                                        <span>JPG, PNG, WebP o GIF · máximo 2 MB y 600 × 180 px</span>
+                                    </div>
+                                    @if($user->signatureImageUrl())
+                                        <img src="{{ $user->signatureImageUrl() }}" alt="Tu firma actual" data-signature-preview>
+                                    @else
+                                        <img src="" alt="Vista previa de la firma" class="d-none" data-signature-preview>
+                                    @endif
+                                    <div class="profile-photo-actions">
+                                        <label for="signature_image" class="profile-btn profile-btn-soft @if($user->signatureIsSuspended()) disabled @endif">Elegir imagen</label>
+                                        <button type="button" class="profile-btn profile-btn-text" data-signature-clear @disabled($user->signatureIsSuspended())>Quitar imagen</button>
+                                    </div>
+                                    @error('signature_image')<span class="profile-field-error">{{ $message }}</span>@enderror
+                                </div>
+                            </fieldset>
 
-                        <div class="profile-form-footer">
-                            <span>Los cambios se aplican también al menú del portal.</span>
-                            <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
-                        </div>
+                            <div class="profile-form-footer">
+                                <span>Guarda la firma junto con los demás cambios de tu perfil.</span>
+                                <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
+                            </div>
+                        </section>
                     </form>
 
-                    <section class="profile-email-settings" id="email-notifications" aria-labelledby="email-notifications-title">
-                        <div class="profile-email-settings-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                    <section class="profile-tab-panel profile-notifications-panel" id="profile-panel-notifications" role="tabpanel" aria-labelledby="profile-tab-notifications" data-profile-tab-panel="notifications" hidden>
+                        <div class="profile-section-heading">
+                            <span class="profile-panel-kicker">Tú decides</span>
+                            <h3>Preferencias de notificación</h3>
+                            <p>Activa solo los avisos que quieras recibir.</p>
                         </div>
-                        <div class="profile-email-settings-copy">
-                            <span class="profile-panel-kicker">Preferencias de correo</span>
-                            <h3 id="email-notifications-title">Avisos de nuevos episodios</h3>
-                            <p>{{ $user->episode_email_notifications_enabled
-                                ? 'Te avisaremos por correo en cuanto publiquemos un episodio nuevo.'
-                                : 'Estos avisos están pausados. Puedes reactivarlos cuando quieras.' }}</p>
-                        </div>
-                        <form method="POST" action="{{ route('email-episode-notifications.update') }}" data-email-preference-form @if($user->episode_email_notifications_enabled) data-confirm-disable="¿Seguro que quieres pausar los avisos? Podrías perderte nuevos episodios cuando estén disponibles." @endif>
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="enabled" value="{{ $user->episode_email_notifications_enabled ? 0 : 1 }}">
-                            <button type="submit" class="profile-email-toggle{{ $user->episode_email_notifications_enabled ? ' is-active' : '' }}" aria-pressed="{{ $user->episode_email_notifications_enabled ? 'true' : 'false' }}">
-                                <span class="profile-email-toggle-track" aria-hidden="true"><span></span></span>
-                                {{ $user->episode_email_notifications_enabled ? 'Activados' : 'Activar avisos' }}
-                            </button>
-                        </form>
-                    </section>
+                        <section class="profile-email-settings" id="email-notifications" aria-labelledby="email-notifications-title">
+                            <div class="profile-email-settings-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                            </div>
+                            <div class="profile-email-settings-copy">
+                                <span class="profile-panel-kicker">Preferencias de correo</span>
+                                <h3 id="email-notifications-title">Avisos de nuevos episodios</h3>
+                                <p>{{ $user->episode_email_notifications_enabled
+                                    ? 'Te avisaremos por correo en cuanto publiquemos un episodio nuevo.'
+                                    : 'Estos avisos están pausados. Puedes reactivarlos cuando quieras.' }}</p>
+                            </div>
+                            <form method="POST" action="{{ route('email-episode-notifications.update') }}" data-email-preference-form @if($user->episode_email_notifications_enabled) data-confirm-disable="¿Seguro que quieres pausar los avisos? Podrías perderte nuevos episodios cuando estén disponibles." @endif>
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="enabled" value="{{ $user->episode_email_notifications_enabled ? 0 : 1 }}">
+                                <button type="submit" class="profile-email-toggle{{ $user->episode_email_notifications_enabled ? ' is-active' : '' }}" aria-pressed="{{ $user->episode_email_notifications_enabled ? 'true' : 'false' }}">
+                                    <span class="profile-email-toggle-track" aria-hidden="true"><span></span></span>
+                                    {{ $user->episode_email_notifications_enabled ? 'Activados' : 'Activar avisos' }}
+                                </button>
+                            </form>
+                        </section>
 
-                    <section class="profile-email-settings" id="push-notifications" aria-labelledby="push-notifications-title">
-                        <div class="profile-email-settings-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-                        </div>
-                        <div class="profile-email-settings-copy">
-                            <span class="profile-panel-kicker">Preferencias de notificaciones</span>
-                            <h3 id="push-notifications-title">Avisos en este dispositivo</h3>
-                            <p>Recibe mensajes privados, menciones, respuestas y avisos importantes aunque Mundo Yuri no esté abierto.</p>
-                        </div>
-                        <button type="button" class="profile-email-toggle{{ $user->push_notifications_enabled ? ' is-active' : '' }}" data-push-toggle aria-pressed="{{ $user->push_notifications_enabled ? 'true' : 'false' }}">
-                            <span class="profile-email-toggle-track{{ $user->push_notifications_enabled ? ' is-active' : '' }}" data-push-switch aria-hidden="true"><span></span></span>
-                            <span data-push-status>{{ $user->push_notifications_enabled ? 'Activadas' : 'Activar avisos' }}</span>
-                        </button>
+                        <section class="profile-email-settings" id="push-notifications" aria-labelledby="push-notifications-title">
+                            <div class="profile-email-settings-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                            </div>
+                            <div class="profile-email-settings-copy">
+                                <span class="profile-panel-kicker">Preferencias de notificaciones</span>
+                                <h3 id="push-notifications-title">Avisos en este dispositivo</h3>
+                                <p>Recibe mensajes privados, menciones, respuestas y avisos importantes aunque Mundo Yuri no esté abierto.</p>
+                            </div>
+                            <button type="button" class="profile-email-toggle{{ $user->push_notifications_enabled ? ' is-active' : '' }}" data-push-toggle aria-pressed="{{ $user->push_notifications_enabled ? 'true' : 'false' }}">
+                                <span class="profile-email-toggle-track{{ $user->push_notifications_enabled ? ' is-active' : '' }}" data-push-switch aria-hidden="true"><span></span></span>
+                                <span data-push-status>{{ $user->push_notifications_enabled ? 'Activadas' : 'Activar avisos' }}</span>
+                            </button>
+                        </section>
                     </section>
                 </section>
 
@@ -393,6 +433,27 @@
         const signatureInput = document.querySelector('[data-signature-input]');
         const signaturePreview = document.querySelector('[data-signature-preview]');
         const signatureRemove = document.querySelector('[data-signature-remove]');
+        const profileTabs = document.querySelector('[data-profile-tabs]');
+
+        const activateProfileTab = (tabName) => {
+            document.querySelectorAll('[data-profile-tab]').forEach((tab) => {
+                const isActive = tab.dataset.profileTab === tabName;
+                tab.classList.toggle('is-active', isActive);
+                tab.setAttribute('aria-selected', String(isActive));
+            });
+
+            document.querySelectorAll('[data-profile-tab-panel]').forEach((panel) => {
+                panel.hidden = panel.dataset.profileTabPanel !== tabName;
+            });
+        };
+
+        if (profileTabs) {
+            document.querySelectorAll('[data-profile-tab]').forEach((tab) => {
+                tab.addEventListener('click', () => activateProfileTab(tab.dataset.profileTab));
+            });
+
+            activateProfileTab(profileTabs.dataset.profileDefaultTab || 'personal');
+        }
 
         avatarInput?.addEventListener('change', function () {
             const file = this.files?.[0];

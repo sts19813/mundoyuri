@@ -2025,10 +2025,11 @@
 
     .profile-avatar-edit {
         position: absolute;
-        right: 2px;
-        bottom: 3px;
-        width: 33px;
-        height: 33px;
+        z-index: 4;
+        top: -2px;
+        right: -2px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2038,6 +2039,7 @@
         background: var(--rose);
         cursor: pointer;
         padding: 0;
+        box-shadow: 0 7px 17px rgba(0, 0, 0, .36);
         transition: transform .2s, background .2s;
     }
 
@@ -2137,6 +2139,96 @@
         font-size: .78rem;
         line-height: 1.55;
         text-align: right;
+    }
+
+    .profile-tabs {
+        margin: 26px 0 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .profile-tab-list {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .profile-tab-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .profile-tab {
+        position: relative;
+        flex: 0 0 auto;
+        padding: 11px 14px 13px;
+        border: 0;
+        color: var(--muted);
+        background: transparent;
+        cursor: pointer;
+        font: 600 .76rem 'DM Sans', sans-serif;
+        transition: color .2s, background .2s;
+    }
+
+    .profile-tab::after {
+        content: '';
+        position: absolute;
+        right: 14px;
+        bottom: -1px;
+        left: 14px;
+        height: 2px;
+        border-radius: 3px 3px 0 0;
+        background: transparent;
+    }
+
+    .profile-tab:hover,
+    .profile-tab:focus-visible {
+        color: #ffd2e4;
+        outline: 0;
+    }
+
+    .profile-tab.is-active {
+        color: #fff;
+    }
+
+    .profile-tab.is-active::after {
+        background: var(--rose);
+        box-shadow: 0 0 12px var(--rose-glow);
+    }
+
+    .profile-tab-panel[hidden] {
+        display: none;
+    }
+
+    .profile-section-heading {
+        margin: 0 0 18px;
+    }
+
+    .profile-section-heading h3 {
+        margin: 5px 0 5px;
+        color: #fff;
+        font: 700 1.22rem 'Playfair Display', serif;
+    }
+
+    .profile-section-heading p {
+        max-width: 610px;
+        margin: 0;
+        color: var(--muted);
+        font-size: .78rem;
+        line-height: 1.55;
+    }
+
+    .profile-section-heading-compact {
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, .07);
+    }
+
+    .profile-tab-settings {
+        margin-top: 0;
+    }
+
+    .profile-notifications-panel .profile-email-settings:first-of-type {
+        margin-top: 0;
     }
 
     .profile-photo-controls {
