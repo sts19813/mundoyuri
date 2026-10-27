@@ -102,6 +102,29 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertExists($user->cover_image);
     }
 
+    public function test_profile_media_is_saved_without_submitting_the_rest_of_the_profile_form(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create([
+            'name' => 'Nombre original',
+            'cover_video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+        ]);
+
+        $this->actingAs($user)
+            ->patchJson(route('profile.media.update'), [
+                'cover_image' => UploadedFile::fake()->image('cover.jpg', 1600, 900),
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Cambios guardados.');
+
+        $user->refresh();
+
+        $this->assertSame('Nombre original', $user->name);
+        $this->assertStringEndsWith('.webp', (string) $user->cover_image);
+        $this->assertNull($user->cover_video_url);
+        Storage::disk('public')->assertExists($user->cover_image);
+    }
+
     public function test_profile_biography_supports_sanitized_rich_content(): void
     {
         $user = User::factory()->create(['alias' => 'luna']);

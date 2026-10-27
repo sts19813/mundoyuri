@@ -2271,6 +2271,12 @@
         font-size: .78rem;
     }
 
+    .profile-media-change-notice.is-error {
+        border-color: rgba(251, 113, 133, .34);
+        color: #fecdd3;
+        background: rgba(159, 18, 57, .14);
+    }
+
     .profile-photo-actions {
         display: flex;
         align-items: center;
@@ -2979,6 +2985,10 @@
 
     .profile-panel-heading-actions p {
         text-align: right;
+    }
+
+    .profile-panel-heading-actions .profile-btn {
+        min-width: 148px;
     }
 
     .profile-panel-heading-actions a {
@@ -5370,6 +5380,11 @@
 
         .profile-panel-heading p {
             text-align: left;
+        }
+
+        .profile-panel-heading-actions {
+            align-items: flex-start;
+            width: 100%;
         }
 
         .profile-form-grid {

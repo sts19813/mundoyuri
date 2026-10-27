@@ -93,7 +93,10 @@
                             <span class="profile-panel-kicker">Información personal</span>
                             <h2>Edita tu perfil</h2>
                         </div>
-                        <p>Esta información identifica tus comentarios y aportes.</p>
+                        <div class="profile-panel-heading-actions">
+                            <p>Esta información identifica tus comentarios y aportes.</p>
+                            <button type="submit" form="profile-update-form" class="profile-btn profile-btn-primary">Guardar cambios</button>
+                        </div>
                     </div>
 
                     @php($defaultProfileTab = $errors->hasAny(['signature_text', 'signature_image']) ? 'signature' : ($errors->has('profile_visibility') ? 'privacy' : 'personal'))
@@ -106,18 +109,18 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="portal-profile-form">
+                    <form id="profile-update-form" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="portal-profile-form">
                         @csrf
                         @method('PATCH')
-                        <input type="file" id="profile_image" name="profile_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-avatar-input>
-                        <input type="hidden" name="avatar_remove" value="0" data-avatar-remove>
-                        <input type="file" id="cover_image" name="cover_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-cover-input>
-                        <input type="hidden" name="cover_remove" value="0" data-cover-remove>
+                        <input type="file" id="profile_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-avatar-input>
+                        <input type="hidden" value="0" data-avatar-remove>
+                        <input type="file" id="cover_image" accept="image/png,image/jpeg,image/webp" class="visually-hidden" data-cover-input>
+                        <input type="hidden" value="0" data-cover-remove>
                         <input type="file" id="signature_image" name="signature_image" accept="image/png,image/jpeg,image/webp,image/gif" class="visually-hidden" data-signature-input @disabled($user->signatureIsSuspended())>
                         <input type="hidden" name="signature_remove" value="0" data-signature-remove>
 
-                        <input id="cover_video_url" name="cover_video_url" type="hidden" value="{{ old('cover_video_url', $user->cover_video_url) }}">
-                        <p class="profile-media-change-notice" data-profile-media-change-notice hidden aria-live="polite">Tus cambios de foto o portada estarán listos al guardar el perfil.</p>
+                        <input id="cover_video_url" type="hidden" value="{{ old('cover_video_url', $user->cover_video_url) }}">
+                        <p class="profile-media-change-notice" data-profile-media-change-notice hidden aria-live="polite"></p>
                         @error('profile_image')<span class="profile-field-error">{{ $message }}</span>@enderror
                         @error('cover_image')<span class="profile-field-error">{{ $message }}</span>@enderror
                         @error('cover_video_url')<span class="profile-field-error">{{ $message }}</span>@enderror
@@ -197,10 +200,6 @@
                                 </div>
                             </fieldset>
 
-                            <div class="profile-form-footer">
-                                <span>Los cambios se aplican también al menú del portal.</span>
-                                <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
-                            </div>
                         </section>
 
                         <section class="profile-tab-panel" id="profile-panel-privacy" role="tabpanel" aria-labelledby="profile-tab-privacy" data-profile-tab-panel="privacy" hidden>
@@ -234,10 +233,6 @@
                                 </div>
                             </fieldset>
 
-                            <div class="profile-form-footer">
-                                <span>Guarda estas preferencias cuando termines.</span>
-                                <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
-                            </div>
                         </section>
 
                         <section class="profile-tab-panel" id="profile-panel-signature" role="tabpanel" aria-labelledby="profile-tab-signature" data-profile-tab-panel="signature" hidden>
@@ -277,10 +272,6 @@
                                 </div>
                             </fieldset>
 
-                            <div class="profile-form-footer">
-                                <span>Guarda la firma junto con los demás cambios de tu perfil.</span>
-                                <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
-                            </div>
                         </section>
                     </form>
 
@@ -434,10 +425,12 @@
         const coverPreview = document.querySelector('[data-cover-preview]');
         const coverRemove = document.querySelector('[data-cover-remove]');
         const coverVideoInput = document.getElementById('cover_video_url');
-        const coverVideoPreview = document.querySelector('[data-cover-video-preview]');
         const coverSourceDialog = document.querySelector('[data-cover-source-dialog]');
         const avatarSourceDialog = document.querySelector('[data-avatar-source-dialog]');
         const profileMediaChangeNotice = document.querySelector('[data-profile-media-change-notice]');
+        const profileHeroCard = document.querySelector('.profile-hero-card');
+        const profileMediaEndpoint = @json(route('profile.media.update'));
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
         const signatureInput = document.querySelector('[data-signature-input]');
         const signaturePreview = document.querySelector('[data-signature-preview]');
         const signatureRemove = document.querySelector('[data-signature-remove]');
@@ -463,7 +456,59 @@
             activateProfileTab(profileTabs.dataset.profileDefaultTab || 'personal');
         }
 
-        avatarInput?.addEventListener('change', function () {
+        const setProfileMediaStatus = (message, isError = false) => {
+            if (!profileMediaChangeNotice) return;
+
+            profileMediaChangeNotice.textContent = message;
+            profileMediaChangeNotice.classList.toggle('is-error', isError);
+            profileMediaChangeNotice.hidden = false;
+        };
+
+        const setCoverVideoPreview = (embedUrl) => {
+            document.querySelector('[data-cover-video-preview]')?.remove();
+            if (!embedUrl || !profileHeroCard) return;
+
+            const iframe = document.createElement('iframe');
+            iframe.src = embedUrl;
+            iframe.className = 'profile-cover-video';
+            iframe.title = 'Vista previa de tu video de portada';
+            iframe.tabIndex = -1;
+            iframe.setAttribute('aria-hidden', 'true');
+            iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+            iframe.dataset.coverVideoPreview = '';
+            profileHeroCard.querySelector('.profile-cover-overlay')?.before(iframe);
+        };
+
+        const saveProfileMedia = async (data, loadingMessage, successMessage) => {
+            setProfileMediaStatus(loadingMessage);
+
+            try {
+                const response = await fetch(profileMediaEndpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: data,
+                });
+                const payload = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const firstError = payload.errors ? Object.values(payload.errors).flat()[0] : null;
+                    throw new Error(firstError || 'No se pudo guardar el cambio. Inténtalo de nuevo.');
+                }
+
+                setProfileMediaStatus(successMessage);
+
+                return payload;
+            } catch (error) {
+                setProfileMediaStatus(error.message || 'No se pudo guardar el cambio. Inténtalo de nuevo.', true);
+
+                return null;
+            }
+        };
+
+        avatarInput?.addEventListener('change', async function () {
             const file = this.files?.[0];
             if (!file) return;
 
@@ -471,7 +516,15 @@
             avatarPreview.classList.remove('d-none');
             avatarFallback.classList.add('d-none');
             avatarRemove.value = '0';
-            if (profileMediaChangeNotice) profileMediaChangeNotice.hidden = false;
+            avatarSourceDialog?.close();
+
+            const data = new FormData();
+            data.append('profile_image', file);
+            data.append('avatar_remove', '0');
+            const result = await saveProfileMedia(data, 'Subiendo foto de perfil…', 'Foto de perfil guardada.');
+
+            if (result?.avatar_url) avatarPreview.src = result.avatar_url;
+            avatarInput.value = '';
         });
 
         const openAvatarSourceDialog = () => {
@@ -487,37 +540,62 @@
             trigger.addEventListener('click', openAvatarSourceDialog);
         });
 
-        document.querySelector('[data-avatar-clear]')?.addEventListener('click', function () {
+        document.querySelector('[data-avatar-clear]')?.addEventListener('click', async function () {
             avatarInput.value = '';
             avatarPreview.removeAttribute('src');
             avatarPreview.classList.add('d-none');
             avatarFallback.classList.remove('d-none');
-            avatarRemove.value = '1';
             avatarSourceDialog?.close();
-            if (profileMediaChangeNotice) profileMediaChangeNotice.hidden = false;
+
+            const data = new FormData();
+            data.append('avatar_remove', '1');
+            const result = await saveProfileMedia(data, 'Quitando foto de perfil…', 'Avatar genérico activado.');
+            avatarRemove.value = '0';
+
+            if (result?.avatar_url) {
+                avatarPreview.src = result.avatar_url;
+                avatarPreview.classList.remove('d-none');
+                avatarFallback.classList.add('d-none');
+            }
         });
 
-        coverInput?.addEventListener('change', function () {
+        coverInput?.addEventListener('change', async function () {
             const file = this.files?.[0];
             if (!file) return;
 
             coverPreview.src = URL.createObjectURL(file);
             coverPreview.classList.remove('d-none');
+            coverSourceDialog?.close();
+
+            const data = new FormData();
+            data.append('cover_image', file);
+            data.append('cover_remove', '0');
+            const result = await saveProfileMedia(data, 'Optimizando y subiendo portada…', 'Portada guardada.');
             coverRemove.value = '0';
-            if (coverVideoInput) coverVideoInput.value = '';
-            coverVideoPreview?.remove();
-            if (profileMediaChangeNotice) profileMediaChangeNotice.hidden = false;
+
+            if (result) {
+                coverVideoInput.value = '';
+                setCoverVideoPreview(null);
+                if (result.cover_image_url) coverPreview.src = result.cover_image_url;
+            }
+            coverInput.value = '';
         });
 
-        document.querySelector('[data-cover-remove-all]')?.addEventListener('click', function () {
+        document.querySelector('[data-cover-remove-all]')?.addEventListener('click', async function () {
             coverInput.value = '';
             coverPreview.removeAttribute('src');
             coverPreview.classList.add('d-none');
-            coverRemove.value = '1';
-            if (coverVideoInput) coverVideoInput.value = '';
-            coverVideoPreview?.remove();
             coverSourceDialog?.close();
-            if (profileMediaChangeNotice) profileMediaChangeNotice.hidden = false;
+
+            const data = new FormData();
+            data.append('cover_remove', '1');
+            const result = await saveProfileMedia(data, 'Quitando portada…', 'Portada eliminada.');
+            coverRemove.value = '0';
+
+            if (result) {
+                coverVideoInput.value = '';
+                setCoverVideoPreview(null);
+            }
         });
 
         const openCoverSourceDialog = () => {
@@ -544,13 +622,17 @@
             coverInput?.click();
         });
 
-        document.querySelector('[data-cover-select-video]')?.addEventListener('click', () => {
+        document.querySelector('[data-cover-select-video]')?.addEventListener('click', async () => {
             coverSourceDialog?.close();
             const videoUrl = window.prompt('Pega el enlace de YouTube para tu portada:', coverVideoInput?.value || '');
 
             if (videoUrl !== null && coverVideoInput) {
                 coverVideoInput.value = videoUrl.trim();
-                if (profileMediaChangeNotice) profileMediaChangeNotice.hidden = false;
+                const data = new FormData();
+                data.append('cover_video_url', coverVideoInput.value);
+                const result = await saveProfileMedia(data, 'Guardando video de portada…', 'Video de portada guardado.');
+
+                if (result) setCoverVideoPreview(result.cover_video_embed_url);
             }
         });
 

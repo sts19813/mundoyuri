@@ -14,16 +14,16 @@ use App\Http\Controllers\Admin\CommentModerationController as AdminCommentModera
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\CommunityReportController as AdminCommunityReportController;
 use App\Http\Controllers\Admin\ConversationModerationController as AdminConversationModerationController;
+use App\Http\Controllers\Admin\DiscoveryPeopleController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
 use App\Http\Controllers\Admin\ForumCategoryController as AdminForumCategoryController;
 use App\Http\Controllers\Admin\ForumController as AdminForumController;
 use App\Http\Controllers\Admin\ForumModerationController as AdminForumModerationController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
-use App\Http\Controllers\Admin\TagController as AdminTagController;
-use App\Http\Controllers\Admin\DiscoveryPeopleController;
 use App\Http\Controllers\Admin\ModerationController;
-use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
 use App\Http\Controllers\Admin\SeasonThemeSettingController;
+use App\Http\Controllers\Admin\SeriesController as AdminSeriesController;
+use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\UserBadgeController as AdminUserBadgeController;
 use App\Http\Controllers\AssistantMessageController;
 use App\Http\Controllers\CatalogController;
@@ -105,6 +105,7 @@ Route::middleware(['auth', 'verified'])
         Route::get('/profile', [ProfileController::class, 'showCurrent'])->name('profile.show');
         Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/profile/media', [ProfileController::class, 'updateMedia'])->name('profile.media.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::redirect('/perfil', '/profile')->name('profile.spanish');
         Route::patch('/preferencias/correos-de-episodios', [EmailEpisodeNotificationPreferenceController::class, 'update'])

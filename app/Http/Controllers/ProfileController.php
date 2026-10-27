@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileMediaUpdateRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
 use App\Services\CatalogImageOptimizer;
 use App\Services\CommunityActivityService;
 use App\Services\CommunityRankResolver;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -217,6 +219,54 @@ class ProfileController extends Controller
         $user->save();
 
         return Redirect::route('profile.edit')->with('success', 'Tu perfil se actualizó correctamente.');
+    }
+
+    /**
+     * Save profile media independently so a selected photo never submits
+     * unrelated edits that the member has not chosen to save yet.
+     */
+    public function updateMedia(ProfileMediaUpdateRequest $request, CatalogImageOptimizer $imageOptimizer): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $validated = $request->validated();
+
+        if ($request->hasFile('profile_image')) {
+            $this->deleteProfileImage($user);
+            $user->profile_image = $imageOptimizer->store(
+                $request->file('profile_image'),
+                'profile-images',
+                'profile-avatar',
+            );
+        } elseif ($request->boolean('avatar_remove')) {
+            $this->deleteProfileImage($user);
+            $user->profile_image = null;
+        }
+
+        if ($request->hasFile('cover_image')) {
+            $this->deleteCoverImage($user);
+            $user->cover_image = $imageOptimizer->store(
+                $request->file('cover_image'),
+                'profile-covers',
+                'profile-cover',
+            );
+            $user->cover_video_url = null;
+        } elseif ($request->boolean('cover_remove')) {
+            $this->deleteCoverImage($user);
+            $user->cover_image = null;
+            $user->cover_video_url = null;
+        } elseif ($request->exists('cover_video_url')) {
+            $user->cover_video_url = $validated['cover_video_url'] ?? null;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Cambios guardados.',
+            'avatar_url' => $user->avatarUrl(),
+            'cover_image_url' => $user->coverImageUrl(),
+            'cover_video_embed_url' => $user->coverVideoEmbedUrl(),
+        ]);
     }
 
     /**
