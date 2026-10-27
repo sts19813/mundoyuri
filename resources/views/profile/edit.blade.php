@@ -96,10 +96,11 @@
                         <p>Esta información identifica tus comentarios y aportes.</p>
                     </div>
 
-                    @php($defaultProfileTab = $errors->hasAny(['signature_text', 'signature_image']) ? 'signature' : 'personal')
+                    @php($defaultProfileTab = $errors->hasAny(['signature_text', 'signature_image']) ? 'signature' : ($errors->has('profile_visibility') ? 'privacy' : 'personal'))
                     <div class="profile-tabs" data-profile-tabs data-profile-default-tab="{{ $defaultProfileTab }}">
                         <div class="profile-tab-list" role="tablist" aria-label="Secciones de edición del perfil">
                             <button type="button" class="profile-tab is-active" id="profile-tab-personal" role="tab" aria-selected="true" aria-controls="profile-panel-personal" data-profile-tab="personal">Información personal</button>
+                            <button type="button" class="profile-tab" id="profile-tab-privacy" role="tab" aria-selected="false" aria-controls="profile-panel-privacy" data-profile-tab="privacy">Privacidad</button>
                             <button type="button" class="profile-tab" id="profile-tab-notifications" role="tab" aria-selected="false" aria-controls="profile-panel-notifications" data-profile-tab="notifications">Notificaciones</button>
                             <button type="button" class="profile-tab" id="profile-tab-signature" role="tab" aria-selected="false" aria-controls="profile-panel-signature" data-profile-tab="signature">Firma</button>
                         </div>
@@ -196,7 +197,14 @@
                                 </div>
                             </fieldset>
 
-                            <fieldset class="community-profile-settings">
+                            <div class="profile-form-footer">
+                                <span>Los cambios se aplican también al menú del portal.</span>
+                                <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
+                            </div>
+                        </section>
+
+                        <section class="profile-tab-panel" id="profile-panel-privacy" role="tabpanel" aria-labelledby="profile-tab-privacy" data-profile-tab-panel="privacy" hidden>
+                            <fieldset class="community-profile-settings profile-tab-settings">
                                 <legend>Privacidad del perfil</legend>
                                 <p>El directorio muestra únicamente perfiles públicos. Tu perfil seguirá disponible para ti y para el equipo de moderación.</p>
                                 <div class="profile-field">
@@ -227,7 +235,7 @@
                             </fieldset>
 
                             <div class="profile-form-footer">
-                                <span>Los cambios se aplican también al menú del portal.</span>
+                                <span>Guarda estas preferencias cuando termines.</span>
                                 <button type="submit" class="profile-btn profile-btn-primary">Guardar cambios</button>
                             </div>
                         </section>
