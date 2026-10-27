@@ -73,7 +73,32 @@ class ProfileTest extends TestCase
         $this->assertSame('Me encantan las historias GL, el café y descubrir nuevas series.', $user->biography);
         $this->assertNotNull($user->profile_image);
         $this->assertNotNull($user->cover_image);
+        $this->assertStringEndsWith('.webp', $user->profile_image);
+        $this->assertStringEndsWith('.webp', $user->cover_image);
         Storage::disk('public')->assertExists($user->profile_image);
+        Storage::disk('public')->assertExists($user->cover_image);
+    }
+
+    public function test_profile_accepts_a_4k_cover_and_replaces_a_previous_cover_video(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create([
+            'cover_video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'email' => $user->email,
+                'cover_image' => UploadedFile::fake()->image('cover-4k.jpg', 3840, 2160),
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.edit'));
+
+        $user->refresh();
+
+        $this->assertStringEndsWith('.webp', (string) $user->cover_image);
+        $this->assertNull($user->cover_video_url);
         Storage::disk('public')->assertExists($user->cover_image);
     }
 

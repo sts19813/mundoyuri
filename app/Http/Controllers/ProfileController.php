@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
+use App\Services\CatalogImageOptimizer;
 use App\Services\CommunityActivityService;
 use App\Services\CommunityRankResolver;
 use Illuminate\Http\RedirectResponse;
@@ -135,7 +136,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, CatalogImageOptimizer $imageOptimizer): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -180,7 +181,11 @@ class ProfileController extends Controller
 
         if ($request->hasFile('profile_image')) {
             $this->deleteProfileImage($user);
-            $user->profile_image = $request->file('profile_image')->store('profile-images', 'public');
+            $user->profile_image = $imageOptimizer->store(
+                $request->file('profile_image'),
+                'profile-images',
+                'profile-avatar',
+            );
         }
 
         if ($request->boolean('cover_remove')) {
@@ -190,7 +195,13 @@ class ProfileController extends Controller
 
         if ($request->hasFile('cover_image')) {
             $this->deleteCoverImage($user);
-            $user->cover_image = $request->file('cover_image')->store('profile-covers', 'public');
+            $user->cover_image = $imageOptimizer->store(
+                $request->file('cover_image'),
+                'profile-covers',
+                'profile-cover',
+            );
+            // An uploaded cover is an explicit replacement for a previous video.
+            $user->cover_video_url = null;
         }
 
         if ($request->boolean('signature_remove')) {

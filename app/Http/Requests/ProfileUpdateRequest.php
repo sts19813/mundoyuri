@@ -39,7 +39,7 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'avatar_remove' => ['nullable', 'boolean'],
-            'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:max_width=3840,max_height=2160'],
             'cover_remove' => ['nullable', 'boolean'],
             'cover_video_url' => ['nullable', 'string', 'max:2048', function (string $attribute, mixed $value, Closure $fail): void {
                 if (filled($value) && ! YouTubeVideoUrl::isValid($value)) {

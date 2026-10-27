@@ -43,15 +43,18 @@
                 @else
                     <img src="" alt="" class="profile-cover-media d-none" data-cover-preview>
                 @endif
+                @if($user->coverVideoEmbedUrl())
+                    <iframe src="{{ $user->coverVideoEmbedUrl() }}" class="profile-cover-video" title="Vista previa de tu video de portada" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media; picture-in-picture" data-cover-video-preview></iframe>
+                @endif
                 <div class="profile-cover-overlay"></div>
                 <div class="profile-hero-pattern"></div>
-                <label class="profile-cover-edit" for="cover_image">
+                <button type="button" class="profile-cover-edit" data-cover-source-open>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14.5 4h-5L7.8 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2.8z"/>
                         <circle cx="12" cy="13" r="3"/>
                     </svg>
                     Cambiar portada
-                </label>
+                </button>
                 <div class="profile-identity">
                     <div @class(['profile-avatar-wrap', 'is-online' => $user->isOnline()])>
                         @if($user->hasProfileAvatar())
@@ -61,10 +64,10 @@
                             <img src="" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main d-none" data-avatar-preview>
                             <span class="profile-avatar-main profile-avatar-generic" data-avatar-fallback>{{ $user->initials() }}</span>
                         @endif
-                        <label class="profile-avatar-edit" for="profile_image" title="Cambiar foto">
+                        <button type="button" class="profile-avatar-edit" data-avatar-select title="Cambiar foto">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             <span class="visually-hidden">Cambiar foto</span>
-                        </label>
+                        </button>
                     </div>
                     <div class="profile-identity-copy">
                         <span class="profile-eyebrow">Tu espacio en Mundo Yuri</span>
@@ -101,26 +104,24 @@
                         <input type="file" id="signature_image" name="signature_image" accept="image/png,image/jpeg,image/webp,image/gif" class="visually-hidden" data-signature-input @disabled($user->signatureIsSuspended())>
                         <input type="hidden" name="signature_remove" value="0" data-signature-remove>
 
+                        @php($hasCoverVideo = filled(old('cover_video_url', $user->cover_video_url)))
+
                         <div class="profile-photo-controls">
                             <div>
-                                <strong>Foto de portada</strong>
-                                <span>JPG, PNG o WebP · máximo 5 MB · recomendado 1600 × 600 px</span>
+                                <strong>Portada</strong>
+                                <span>JPG, PNG o WebP · hasta 10 MB y resolución 4K. Se optimiza automáticamente a WebP.</span>
                             </div>
                             <div class="profile-photo-actions">
-                                <label for="cover_image" class="profile-btn profile-btn-soft">Elegir portada</label>
-                                <button type="button" class="profile-btn profile-btn-text" data-cover-clear>Quitar portada</button>
+                                <button type="button" class="profile-btn profile-btn-soft" data-cover-source-open>Editar portada</button>
+                                <button type="button" class="profile-btn profile-btn-text" data-cover-clear>Quitar imagen</button>
                             </div>
+                            <span class="profile-upload-state" data-cover-upload-state aria-live="polite"></span>
                             @error('cover_image')<span class="profile-field-error">{{ $message }}</span>@enderror
-                        </div>
-
-                        <div class="profile-photo-controls profile-photo-controls-bordered">
-                            <div>
-                                <strong>Video de portada de YouTube</strong>
-                                <span>Opcional. Se reproduce sin sonido en tu perfil público y tiene prioridad visual sobre la imagen.</span>
-                            </div>
-                            <div class="profile-field profile-cover-video-field">
+                            <div class="profile-field profile-cover-video-field" data-cover-video-field @if(! $hasCoverVideo && ! $errors->has('cover_video_url')) hidden @endif>
                                 <label for="cover_video_url">Enlace de YouTube</label>
                                 <input id="cover_video_url" name="cover_video_url" type="url" maxlength="2048" value="{{ old('cover_video_url', $user->cover_video_url) }}" placeholder="https://www.youtube.com/watch?v=…" class="@error('cover_video_url') is-invalid @enderror">
+                                <span>El video se reproduce sin sonido en tu perfil público y tiene prioridad sobre la imagen.</span>
+                                <button type="button" class="profile-btn profile-btn-text profile-cover-video-clear" data-cover-video-clear>Quitar video</button>
                                 @error('cover_video_url')<span class="profile-field-error">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -128,10 +129,10 @@
                         <div class="profile-photo-controls profile-photo-controls-bordered">
                             <div>
                                 <strong>Foto de perfil</strong>
-                                <span>JPG, PNG o WebP · máximo 2 MB</span>
+                                <span>JPG, PNG o WebP · máximo 2 MB. Se optimiza automáticamente a WebP.</span>
                             </div>
                             <div class="profile-photo-actions">
-                                <label for="profile_image" class="profile-btn profile-btn-soft">Elegir foto</label>
+                                <button type="button" class="profile-btn profile-btn-soft" data-avatar-select>Elegir foto</button>
                                 <button type="button" class="profile-btn profile-btn-text" data-avatar-clear>Usar avatar genérico</button>
                             </div>
                             @error('profile_image')<span class="profile-field-error">{{ $message }}</span>@enderror
@@ -345,6 +346,31 @@
         </div>
     </main>
 
+    <dialog class="profile-cover-source-dialog" data-cover-source-dialog aria-labelledby="cover-source-title">
+        <div class="profile-cover-source-dialog-inner">
+            <div class="profile-cover-source-dialog-heading">
+                <div>
+                    <span class="profile-panel-kicker">Personaliza tu perfil</span>
+                    <h2 id="cover-source-title">¿Cómo quieres tu portada?</h2>
+                </div>
+                <button type="button" class="profile-cover-source-close" data-cover-source-close aria-label="Cerrar">×</button>
+            </div>
+            <p>Elige una imagen o agrega un video de YouTube. Podrás revisar el cambio antes de guardar el perfil.</p>
+            <div class="profile-cover-source-options">
+                <button type="button" class="profile-cover-source-option" data-cover-select-image>
+                    <span class="profile-cover-source-option-icon" aria-hidden="true">▧</span>
+                    <span><strong>Subir una imagen</strong><small>Hasta 10 MB y 4K. La convertimos a WebP.</small></span>
+                    <span aria-hidden="true">→</span>
+                </button>
+                <button type="button" class="profile-cover-source-option" data-cover-select-video>
+                    <span class="profile-cover-source-option-icon" aria-hidden="true">▷</span>
+                    <span><strong>Usar un video de YouTube</strong><small>Pega el enlace de un video para tu perfil público.</small></span>
+                    <span aria-hidden="true">→</span>
+                </button>
+            </div>
+        </div>
+    </dialog>
+
     <x-footer />
 
     <script>
@@ -355,6 +381,11 @@
         const coverInput = document.querySelector('[data-cover-input]');
         const coverPreview = document.querySelector('[data-cover-preview]');
         const coverRemove = document.querySelector('[data-cover-remove]');
+        const coverVideoInput = document.getElementById('cover_video_url');
+        const coverVideoField = document.querySelector('[data-cover-video-field]');
+        const coverVideoPreview = document.querySelector('[data-cover-video-preview]');
+        const coverUploadState = document.querySelector('[data-cover-upload-state]');
+        const coverSourceDialog = document.querySelector('[data-cover-source-dialog]');
         const signatureInput = document.querySelector('[data-signature-input]');
         const signaturePreview = document.querySelector('[data-signature-preview]');
         const signatureRemove = document.querySelector('[data-signature-remove]');
@@ -367,6 +398,10 @@
             avatarPreview.classList.remove('d-none');
             avatarFallback.classList.add('d-none');
             avatarRemove.value = '0';
+        });
+
+        document.querySelectorAll('[data-avatar-select]').forEach((trigger) => {
+            trigger.addEventListener('click', () => avatarInput?.click());
         });
 
         document.querySelector('[data-avatar-clear]')?.addEventListener('click', function () {
@@ -384,6 +419,10 @@
             coverPreview.src = URL.createObjectURL(file);
             coverPreview.classList.remove('d-none');
             coverRemove.value = '0';
+            if (coverVideoInput) coverVideoInput.value = '';
+            if (coverVideoField) coverVideoField.hidden = true;
+            coverVideoPreview?.remove();
+            if (coverUploadState) coverUploadState.textContent = `Imagen lista: ${file.name}`;
         });
 
         document.querySelector('[data-cover-clear]')?.addEventListener('click', function () {
@@ -391,6 +430,43 @@
             coverPreview.removeAttribute('src');
             coverPreview.classList.add('d-none');
             coverRemove.value = '1';
+            if (coverUploadState) coverUploadState.textContent = '';
+        });
+
+        const openCoverSourceDialog = () => {
+            if (coverSourceDialog?.showModal) {
+                coverSourceDialog.showModal();
+                return;
+            }
+
+            coverInput?.click();
+        };
+
+        document.querySelectorAll('[data-cover-source-open]').forEach((trigger) => {
+            trigger.addEventListener('click', openCoverSourceDialog);
+        });
+
+        document.querySelector('[data-cover-source-close]')?.addEventListener('click', () => coverSourceDialog?.close());
+
+        coverSourceDialog?.addEventListener('click', (event) => {
+            if (event.target === coverSourceDialog) coverSourceDialog.close();
+        });
+
+        document.querySelector('[data-cover-select-image]')?.addEventListener('click', () => {
+            coverSourceDialog?.close();
+            coverInput?.click();
+        });
+
+        document.querySelector('[data-cover-select-video]')?.addEventListener('click', () => {
+            coverSourceDialog?.close();
+            if (coverVideoField) coverVideoField.hidden = false;
+            coverVideoInput?.focus();
+        });
+
+        document.querySelector('[data-cover-video-clear]')?.addEventListener('click', () => {
+            if (coverVideoInput) coverVideoInput.value = '';
+            if (coverVideoField) coverVideoField.hidden = true;
+            coverVideoPreview?.remove();
         });
 
         signatureInput?.addEventListener('change', function () {

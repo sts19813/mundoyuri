@@ -18,6 +18,11 @@ class CatalogImageOptimizer
         'hero-desktop' => ['width' => 1920, 'height' => 1080, 'bytes' => 650 * 1024],
         'hero-mobile' => ['width' => 1080, 'height' => 1440, 'bytes' => 420 * 1024],
         'thumbnail' => ['width' => 960, 'height' => 540, 'bytes' => 180 * 1024],
+        // Profile media is deliberately smaller than its accepted upload size. A
+        // member can use a 4K original, while every visitor receives a WebP
+        // sized for the place where it is actually rendered.
+        'profile-avatar' => ['width' => 512, 'height' => 512, 'bytes' => 160 * 1024],
+        'profile-cover' => ['width' => 1920, 'height' => 1080, 'bytes' => 520 * 1024],
     ];
 
     public function store(UploadedFile $file, string $directory, string $profile): string

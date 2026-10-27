@@ -1936,6 +1936,7 @@
         background: rgba(12, 7, 14, .65);
         backdrop-filter: blur(10px);
         cursor: pointer;
+        font: 500 .74rem 'DM Sans', sans-serif;
         font-size: .74rem;
         transition: background .2s, transform .2s;
     }
@@ -2015,6 +2016,7 @@
         color: #fff;
         background: var(--rose);
         cursor: pointer;
+        padding: 0;
         transition: transform .2s, background .2s;
     }
 
@@ -2144,6 +2146,13 @@
 
     .profile-photo-controls-bordered {
         border-top: 1px solid rgba(255, 255, 255, .07);
+    }
+
+    .profile-upload-state {
+        flex-basis: 100%;
+        margin-top: -5px;
+        color: #f9a8d4 !important;
+        font-size: .72rem !important;
     }
 
     .profile-photo-actions {
@@ -2674,6 +2683,134 @@
         width: 100%;
         max-width: 620px;
         margin-top: 12px;
+    }
+
+    .profile-cover-video-field[hidden] {
+        display: none;
+    }
+
+    .profile-cover-video-field > span {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: .72rem;
+        line-height: 1.5;
+    }
+
+    .profile-cover-video-clear {
+        margin-top: 8px;
+        padding-left: 0;
+    }
+
+    .profile-cover-source-dialog {
+        width: min(100% - 32px, 550px);
+        margin: auto;
+        padding: 0;
+        border: 1px solid rgba(244, 63, 142, .34);
+        border-radius: 20px;
+        color: var(--text);
+        background: #1b0e1d;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, .56);
+    }
+
+    .profile-cover-source-dialog::backdrop {
+        background: rgba(5, 3, 7, .72);
+        backdrop-filter: blur(4px);
+    }
+
+    .profile-cover-source-dialog-inner {
+        padding: 26px;
+    }
+
+    .profile-cover-source-dialog-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .profile-cover-source-dialog-heading h2 {
+        margin: 5px 0 0;
+        color: #fff;
+        font: 700 1.55rem 'Playfair Display', serif;
+    }
+
+    .profile-cover-source-close {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255, 255, 255, .13);
+        border-radius: 50%;
+        color: var(--muted);
+        background: rgba(255, 255, 255, .04);
+        cursor: pointer;
+        font-size: 1.35rem;
+        line-height: 1;
+    }
+
+    .profile-cover-source-dialog p {
+        margin: 14px 0 20px;
+        color: var(--muted);
+        font-size: .86rem;
+        line-height: 1.55;
+    }
+
+    .profile-cover-source-options {
+        display: grid;
+        gap: 10px;
+    }
+
+    .profile-cover-source-option {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 14px;
+        border: 1px solid rgba(244, 63, 142, .19);
+        border-radius: 13px;
+        color: var(--text);
+        background: rgba(255, 255, 255, .025);
+        text-align: left;
+        cursor: pointer;
+        transition: transform .2s, border-color .2s, background .2s;
+    }
+
+    .profile-cover-source-option:hover,
+    .profile-cover-source-option:focus-visible {
+        border-color: rgba(244, 63, 142, .62);
+        background: rgba(244, 63, 142, .1);
+        outline: 0;
+        transform: translateY(-1px);
+    }
+
+    .profile-cover-source-option-icon {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 11px;
+        color: #ffd5e5;
+        background: rgba(244, 63, 142, .14);
+        font-size: 1.25rem;
+    }
+
+    .profile-cover-source-option strong,
+    .profile-cover-source-option small {
+        display: block;
+    }
+
+    .profile-cover-source-option strong {
+        color: #fff;
+        font-size: .86rem;
+        font-weight: 600;
+    }
+
+    .profile-cover-source-option small {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: .72rem;
+        line-height: 1.4;
     }
 
     .public-profile-hero .profile-avatar-main {
