@@ -3,7 +3,7 @@
 <nav class="gl-nav{{ $transparent ? '' : ' scrolled' }}" id="navbar">
     <div class="nav-inner">
         <a href="{{ route('home') }}" class="brand" aria-label="Mundo Yuri">
-            <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri" class="brand-logo">
+            <x-season-logo class="brand-logo" />
         </a>
         <ul class="nav-links" id="navLinks">
             <li class="nav-mobile-heading"><span>Menú</span><small>Todo lo que necesitas, bien organizado</small></li>

@@ -28,13 +28,13 @@ class SeasonThemeSetting extends Model
     protected static function booted(): void
     {
         // Admin saves invalidate immediately; public requests need no settings query.
-        static::saved(fn () => Cache::store('file')->forget(self::PUBLIC_CACHE_KEY));
-        static::deleted(fn () => Cache::store('file')->forget(self::PUBLIC_CACHE_KEY));
+        static::saved(fn () => Cache::memo('file')->forget(self::PUBLIC_CACHE_KEY));
+        static::deleted(fn () => Cache::memo('file')->forget(self::PUBLIC_CACHE_KEY));
     }
 
     public static function activeTheme(): ?string
     {
-        $settings = Cache::store('file')->rememberForever(self::PUBLIC_CACHE_KEY, function (): array {
+        $settings = Cache::memo('file')->rememberForever(self::PUBLIC_CACHE_KEY, function (): array {
             $settings = static::current();
 
             return ['enabled' => $settings->enabled, 'theme' => $settings->theme];
@@ -43,6 +43,13 @@ class SeasonThemeSetting extends Model
         return ($settings['enabled'] ?? false) && isset(self::THEMES[$settings['theme'] ?? ''])
             ? $settings['theme']
             : null;
+    }
+
+    public static function logoAsset(): string
+    {
+        $theme = static::activeTheme();
+
+        return $theme ? 'assets/img/logos/mundo-yuri-'.$theme.'.svg' : 'assets/img/logos/mundo-yuri-logo.svg';
     }
 
     public static function current(): self

@@ -2,7 +2,7 @@
 <footer class="gl-footer">
     <div class="gl-footer__inner">
         <a href="{{ route('home') }}" class="gl-footer__brand" aria-label="Ir al inicio de Mundo Yuri">
-            <img src="{{ asset('assets/img/logos/mundo-yuri-logo.svg') }}" alt="Mundo Yuri">
+            <x-season-logo />
         </a>
 
         <nav class="gl-footer__nav" aria-label="Explorar el catálogo">

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CatalogSection;
+use App\Models\SeasonThemeSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -12,6 +13,15 @@ use Tests\TestCase;
 class CatalogSectionHeroTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // These tests exercise the normal configured hero, without a seasonal override.
+        config(['cache.stores.file' => ['driver' => 'array']]);
+        SeasonThemeSetting::query()->create(['id' => 1, 'enabled' => false, 'theme' => 'halloween']);
+    }
 
     public function test_gl_home_uses_the_configured_cover_image_and_message(): void
     {
