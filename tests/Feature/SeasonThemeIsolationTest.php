@@ -30,6 +30,8 @@ class SeasonThemeIsolationTest extends TestCase
             $response = $this->get($url)->assertOk()
                 ->assertDontSee('halloween-', false)
                 ->assertDontSee('season-themes.css', false)
+                ->assertDontSee('season-palette.css', false)
+                ->assertDontSee('data-season-palette', false)
                 ->assertDontSee('assets/img/seasonal/', false)
                 ->assertDontSee('data-season-theme', false)
                 ->assertSee('assets/img/logos/mundo-yuri-logo.svg', false);
@@ -53,6 +55,8 @@ class SeasonThemeIsolationTest extends TestCase
 
         $this->get('/')->assertOk()
             ->assertSee('halloween-theme.css', false)
+            ->assertSee('data-season-palette="halloween"', false)
+            ->assertSeeInOrder(['assets/css/style.css', 'assets/css/halloween-theme.css', 'assets/css/season-palette.css'], false)
             ->assertSee('halloween-theme.js', false)
             ->assertSee('halloween-hero-mobile.webp', false)
             ->assertSee('assets/img/logos/mundo-yuri-halloween.svg', false)
@@ -64,6 +68,8 @@ class SeasonThemeIsolationTest extends TestCase
 
         $this->get('/')->assertOk()
             ->assertDontSee('halloween-', false)
+            ->assertDontSee('season-palette.css', false)
+            ->assertDontSee('data-season-palette', false)
             ->assertSee('wallpaper-login.webp', false)
             ->assertSee('assets/img/logos/mundo-yuri-logo.svg', false)
             ->assertDontSee('assets/img/logos/mundo-yuri-halloween.svg', false)
@@ -87,6 +93,8 @@ class SeasonThemeIsolationTest extends TestCase
 
             $response = $this->get('/')->assertOk()
                 ->assertSee('season-themes.css', false)
+                ->assertSee('season-palette.css', false)
+                ->assertSee('data-season-palette="'.$theme.'"', false)
                 ->assertSee('data-season-theme="'.$theme.'"', false)
                 ->assertDontSee('halloween-', false)
                 ->assertDontSee('assets/img/seasonal/', false)

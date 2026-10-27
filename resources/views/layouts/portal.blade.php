@@ -1,23 +1,24 @@
+@php
+    if (!($seasonThemeResolved ?? false)) {
+        $activeSeasonTheme = \App\Models\SeasonThemeSetting::activeTheme();
+    }
+@endphp
 <!DOCTYPE html>
 @hasSection('html_attributes')
-<html @yield('html_attributes')>
+<html @yield('html_attributes') @if($activeSeasonTheme) data-season-palette="{{ $activeSeasonTheme }}" @endif>
 @else
-<html lang="es">
+<html lang="es" @if($activeSeasonTheme) data-season-palette="{{ $activeSeasonTheme }}" @endif>
 @endif
 <head>
     <x-google-tag-manager />
     <x-google-analytics />
     <link rel="stylesheet" href="{{ asset('assets/css/dialogs.css') }}?v={{ filemtime(public_path('assets/css/dialogs.css')) }}">
-    @php
-        if (!($seasonThemeResolved ?? false)) {
-            $activeSeasonTheme = \App\Models\SeasonThemeSetting::activeTheme();
-        }
-    @endphp
+    @yield('head')
     @if($activeSeasonTheme)
         @php($seasonThemeCss = $activeSeasonTheme === 'halloween' ? 'assets/css/halloween-theme.css' : 'assets/css/season-themes.css')
         <link rel="stylesheet" href="{{ asset($seasonThemeCss) }}?v={{ filemtime(public_path($seasonThemeCss)) }}">
+        <link rel="stylesheet" href="{{ asset('assets/css/season-palette.css') }}?v={{ filemtime(public_path('assets/css/season-palette.css')) }}">
     @endif
-    @yield('head')
 </head>
 @hasSection('body_attributes')
 <body @yield('body_attributes')>
