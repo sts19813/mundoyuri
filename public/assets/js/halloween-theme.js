@@ -87,7 +87,7 @@
             nextGlitchAt = Date.now() + 150000 + Math.random() * 45000;
             saveGlitch();
             glitch.hidden = false;
-            hideTimer = window.setTimeout(hideGlitch, 420);
+            hideTimer = window.setTimeout(hideGlitch, 1100);
             scheduleGlitch();
         }, delay);
     };

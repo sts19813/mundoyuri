@@ -53,6 +53,6 @@ JavaScript por fotograma: solo se calcula el siguiente destino al terminar un tr
 Las animaciones se pausan al ocultar la pestaña o entrar en pantalla completa y se cancelan
 al abandonar la página. Con movimiento reducido no se muestran animales ni interferencia.
 
-La interferencia usa tres bandas finas durante 420 ms, como máximo dos veces por sesión
+La interferencia usa tres bandas de señal con bordes RGB, saltos y líneas de barrido durante 1100 ms, como máximo dos veces por sesión
 de pestaña (sessionStorage). Se aplaza si hay un diálogo visible o un campo en edición.
 No filtra ni clona el contenido del sitio, ni reproduce audio.
