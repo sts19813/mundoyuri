@@ -28,7 +28,7 @@
                     @endforeach
                 </select>
                 @error('theme')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                <div class="form-text mt-3">Halloween incluye dos arañas pequeñas, hormigas y tres calabazas talladas. La interferencia de pantalla aparece como máximo dos veces por sesión. Los demás temas usan animaciones suaves.</div>
+                <div class="form-text mt-3">Halloween incluye dos arañas pequeñas y hormigas. La interferencia de pantalla aparece como máximo dos veces por sesión. Los demás temas usan animaciones suaves.</div>
                 <div class="form-text mt-3">Al desactivarlo y guardar, las siguientes cargas del sitio no incluyen estilos, scripts ni imágenes estacionales. Las pestañas que ya estaban abiertas deben recargarse para aplicar el cambio.</div>
             </div>
             <div class="card-footer text-end"><button class="btn btn-primary" type="submit">Guardar tema</button></div>

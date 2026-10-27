@@ -45,7 +45,7 @@ ni sombras. Dos arañas de 24–29 px (oscurecidas a negro) y tres hormigas SVG 
 recorren el viewport mediante Web Animations API, con pausas cortas entre tramos. En móvil
 solo se animan una araña y dos hormigas. El murciélago, la telaraña y la lombriz originales
 se conservan como assets, pero ya no se cargan en la página.
-`jack-o-lanterns.svg` contiene tres calabazas con tallos, gajos y caras talladas diferentes;
+`jack-o-lanterns.svg` se conserva como recurso de diseño, pero no se muestra en el tema activo para no cubrir controles del sitio;
 es una ilustración vectorial estática, sin filtros ni animaciones.
 
 Se retiraron las capas de niebla con blur y las animaciones de patas y alas. No hay bucles

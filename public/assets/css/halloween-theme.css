@@ -34,12 +34,10 @@
     100% { transform: translate(0, 0); opacity: 0; }
 }
 
-.halloween-pumpkins { position: absolute; right: clamp(88px, 7vw, 140px); bottom: 8px; width: 190px; height: auto; user-select: none; }
 @media (max-width: 600px) {
     .halloween-creature--spider { width: 24px; }
     .halloween-creature--spider.halloween-creature--two,
     .halloween-creature--ant.halloween-creature--three { display: none; }
-    .halloween-pumpkins { right: 82px; width: 136px; }
 }
 @media (prefers-reduced-motion: reduce) {
     .season-theme *, .season-theme *::before, .season-theme *::after { animation: none !important; }

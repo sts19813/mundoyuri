@@ -8,7 +8,6 @@
     @foreach(['one', 'two', 'three'] as $variant)
         <x-season-creature kind="ant" :variant="$variant" />
     @endforeach
-    <img class="halloween-pumpkins" src="{{ asset('assets/img/seasonal/jack-o-lanterns.svg') }}" width="280" height="116" alt="" decoding="async" draggable="false">
 @elseif($theme === 'christmas')
     <div class="season-garland">✦ &nbsp; ● &nbsp; ✦ &nbsp; ● &nbsp; ✦ &nbsp; ● &nbsp; ✦</div><div class="season-particles">❄ ❅ ❄ ❅ ❄ ❅ ❄ ❅ ❄</div>
 @elseif($theme === 'spring')
