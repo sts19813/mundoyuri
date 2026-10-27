@@ -7,12 +7,13 @@
     const walkers = [...layer.querySelectorAll('[data-halloween-walker]')];
     const glitch = document.querySelector('.halloween-glitch');
     const animations = new Map();
-    const sessionKey = 'mundo-yuri-halloween-glitch-v1';
+    const sessionKey = 'mundo-yuri-halloween-glitch-v2';
+    const maxGlitchesPerSession = 4;
     let disposed = false;
     let glitchTimer;
     let hideTimer;
     let glitchCount = 0;
-    let nextGlitchAt = Date.now() + 85000 + Math.random() * 35000;
+    let nextGlitchAt = Date.now() + 25000 + Math.random() * 15000;
 
     try {
         const saved = JSON.parse(sessionStorage.getItem(sessionKey) || 'null');
@@ -29,7 +30,7 @@
     };
     const paused = () => disposed || document.hidden || motion.matches || Boolean(document.fullscreenElement);
     const visibleWalker = (element) => !compact.matches
-        || !(element.matches('.halloween-creature--spider.halloween-creature--two, .halloween-creature--ant.halloween-creature--three'));
+        || !(element.matches('.halloween-creature--spider.halloween-creature--two, .halloween-creature--ant.halloween-creature--three, .halloween-creature--ant.halloween-creature--five'));
     const randomPoint = (element) => {
         const size = element.dataset.halloweenWalker === 'ant' ? 20 : 32;
         return {
@@ -72,7 +73,7 @@
     };
     const scheduleGlitch = () => {
         window.clearTimeout(glitchTimer);
-        if (paused() || !glitch || glitchCount >= 2) return;
+        if (paused() || !glitch || glitchCount >= maxGlitchesPerSession) return;
         // Avoid a surprise immediately on returning to a background tab.
         const delay = Math.max(20000, nextGlitchAt - Date.now());
         glitchTimer = window.setTimeout(() => {
@@ -84,7 +85,7 @@
                 return;
             }
             glitchCount += 1;
-            nextGlitchAt = Date.now() + 150000 + Math.random() * 45000;
+            nextGlitchAt = Date.now() + 50000 + Math.random() * 25000;
             saveGlitch();
             glitch.hidden = false;
             hideTimer = window.setTimeout(hideGlitch, 1100);

@@ -29,6 +29,7 @@ class SeasonThemeIsolationTest extends TestCase
         foreach (['/', '/series', '/comunidad'] as $url) {
             $response = $this->get($url)->assertOk()
                 ->assertDontSee('halloween-', false)
+                ->assertDontSee('halloween-theme.js', false)
                 ->assertDontSee('season-themes.css', false)
                 ->assertDontSee('season-palette.css', false)
                 ->assertDontSee('data-season-palette', false)
@@ -53,7 +54,7 @@ class SeasonThemeIsolationTest extends TestCase
         ]);
         SeasonThemeSetting::query()->create(['id' => 1, 'enabled' => true, 'theme' => 'halloween']);
 
-        $this->get('/')->assertOk()
+        $response = $this->get('/')->assertOk()
             ->assertSee('halloween-theme.css', false)
             ->assertSee('data-season-palette="halloween"', false)
             ->assertSeeInOrder(['assets/css/style.css', 'assets/css/halloween-theme.css', 'assets/css/season-palette.css'], false)
@@ -61,6 +62,8 @@ class SeasonThemeIsolationTest extends TestCase
             ->assertSee('halloween-hero-mobile.webp', false)
             ->assertSee('assets/img/logos/mundo-yuri-halloween.svg', false)
             ->assertDontSee('<iframe id="heroYoutubeVideo"', false);
+
+        $this->assertSame(5, substr_count($response->getContent(), 'halloween-creature--ant'));
 
         $this->actingAs($admin)->withSession(['_token' => 'season-theme-test'])->put(route('admin.settings.season-theme.update'), [
             '_token' => 'season-theme-test', 'enabled' => '0', 'theme' => 'halloween',

@@ -1,4 +1,4 @@
-/* Local only. Small compositor transforms; no animated blur or full-screen filters. */
+/* Loaded only while a seasonal theme is enabled. Small compositor transforms; no animated blur or full-screen filters. */
 .season-theme { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
 .hero.hero--halloween { background: #100b16; }
 .hero.hero--halloween .hero-cover-image { object-position: center; }
@@ -18,6 +18,8 @@
 .halloween-creature--ant { width: 10px; }
 .halloween-creature--ant.halloween-creature--two { width: 9px; }
 .halloween-creature--ant.halloween-creature--three { width: 11px; }
+.halloween-creature--ant.halloween-creature--four { width: 8px; }
+.halloween-creature--ant.halloween-creature--five { width: 10px; }
 
 /* Stronger signal loss, painted only during the brief event; no page cloning or filters. */
 .halloween-glitch[hidden] { display: none !important; }
@@ -61,7 +63,8 @@
 @media (max-width: 600px) {
     .halloween-creature--spider { width: 24px; }
     .halloween-creature--spider.halloween-creature--two,
-    .halloween-creature--ant.halloween-creature--three { display: none; }
+    .halloween-creature--ant.halloween-creature--three,
+    .halloween-creature--ant.halloween-creature--five { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     .season-theme *, .season-theme *::before, .season-theme *::after { animation: none !important; }

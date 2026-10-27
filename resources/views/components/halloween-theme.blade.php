@@ -5,7 +5,7 @@
     @foreach(['one', 'two'] as $variant)
         <x-season-creature kind="spider" :variant="$variant" />
     @endforeach
-    @foreach(['one', 'two', 'three'] as $variant)
+    @foreach(['one', 'two', 'three', 'four', 'five'] as $variant)
         <x-season-creature kind="ant" :variant="$variant" />
     @endforeach
 @elseif($theme === 'christmas')
