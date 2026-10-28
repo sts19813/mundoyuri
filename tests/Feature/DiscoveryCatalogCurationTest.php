@@ -44,6 +44,17 @@ class DiscoveryCatalogCurationTest extends TestCase
             'moderation_status' => 'approved',
             'published_at' => now(),
         ]);
+        $fire = Series::query()->create([
+            'genre_id' => $genre->id,
+            'title' => 'El Fuego: Los Cuatro Elementos',
+            'slug' => 'el-fuego-los-cuatro-elementos',
+            'catalog_section' => 'series-gl',
+            'content_type' => 'series',
+            'status' => 'ongoing',
+            'description' => 'Rivales que vuelven a encontrarse.',
+            'moderation_status' => 'approved',
+            'published_at' => now(),
+        ]);
 
         Artisan::call('catalog:curate-discovery');
 
@@ -56,6 +67,10 @@ class DiscoveryCatalogCurationTest extends TestCase
             'slug' => 'lmsy',
             'aliases' => 'LMSY, LookmheeSonya, Lookmhee & Sonya, Lookmhee Sonya',
         ]);
+        $fire->refresh();
+        $this->assertSame('completed', $fire->status);
+        $this->assertSame('Tailandia', $fire->country_of_origin);
+        $this->assertTrue($fire->duos()->where('slug', 'namnoey')->exists());
 
         $this->get(route('catalog.series.index'))
             ->assertOk()

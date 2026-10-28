@@ -365,6 +365,11 @@ class SyncDiscoveryTags extends Command
             ['slug' => 'praifah-penpat-kairapee', 'name' => 'Praifah Penpat', 'aliases' => 'Penpat Kairapee, Fah'],
             ['slug' => 'bebell-patthanarat-ketkaew', 'name' => 'Bebell Patthanarat', 'aliases' => 'Patthanarat Ketkaew, Bell'],
         ], ['FahBell', 'Fah Bell', 'Praifah Bebell']);
+
+        $this->syncDuo(['el-fuego-los-cuatro-elementos'], 'namnoey', 'NamNoey', 'Namneung & Noey', [
+            ['slug' => 'namneung-milin-watinthanakit', 'name' => 'Namneung Milin Watinthanakit', 'aliases' => 'Milin Watinthanakit, Namneung'],
+            ['slug' => 'noey-kanteera-wadcharathadsanakul', 'name' => 'Noey Kanteera Wadcharathadsanakul', 'aliases' => 'Kanteera Wadcharathadsanakul, Noey'],
+        ], ['NamNoey', 'NamneungNoey', 'Namneung Noey', 'Namneung & Noey']);
     }
 
     /** @param array<int, string> $seriesSlugs

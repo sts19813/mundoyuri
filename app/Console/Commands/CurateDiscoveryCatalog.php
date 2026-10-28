@@ -49,6 +49,11 @@ class CurateDiscoveryCatalog extends Command
         Series::query()->where('slug', 'candy')->update(['country_of_origin' => 'Singapur']);
         Series::query()->where('slug', 'fruit')->update(['country_of_origin' => 'Taiwán']);
         Series::query()->where('slug', 'how-do-we-relationship')->update(['country_of_origin' => 'Japón']);
+        Series::query()->where('slug', 'el-fuego-los-cuatro-elementos')->update([
+            'country_of_origin' => 'Tailandia',
+            'status' => 'completed',
+            'release_year' => 2026,
+        ]);
 
         foreach ([
             'moonshadow' => 2026,
@@ -94,6 +99,7 @@ class CurateDiscoveryCatalog extends Command
             'how-do-we-relationship' => ['universidad', 'amistad-a-romance', 'drama'],
             'shades' => ['escuela', 'misterio', 'drama'],
             'shadow-of-love' => ['amor-secreto', 'drama'],
+            'el-fuego-los-cuatro-elementos' => ['enemigas-a-amantes', 'drama'],
         ] as $seriesSlug => $slugs) {
             $ids = collect($slugs)->map(fn (string $slug) => $tagIds->get($slug))->filter()->all();
 
