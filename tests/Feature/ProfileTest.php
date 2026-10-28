@@ -241,6 +241,31 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertMissing('profile-covers/old-cover.jpg');
     }
 
+    public function test_profile_media_browser_submission_uses_post_method_spoofing_for_removal(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('profile-covers/old-cover.webp', 'cover');
+        $user = User::factory()->create([
+            'cover_image' => 'profile-covers/old-cover.webp',
+            'cover_video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('profile.media.update'), [
+                '_method' => 'PATCH',
+                'cover_remove' => '1',
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('cover_image_url', null)
+            ->assertJsonPath('cover_video_embed_url', null);
+
+        $user->refresh();
+
+        $this->assertNull($user->cover_image);
+        $this->assertNull($user->cover_video_url);
+        Storage::disk('public')->assertMissing('profile-covers/old-cover.webp');
+    }
+
     public function test_authenticated_comment_author_links_to_public_profile(): void
     {
         $author = User::factory()->create([

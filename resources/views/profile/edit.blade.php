@@ -482,9 +482,15 @@
         const saveProfileMedia = async (data, loadingMessage, successMessage) => {
             setProfileMediaStatus(loadingMessage);
 
+            // PHP only parses multipart form fields and uploaded files from POST
+            // requests. Sending FormData as a literal PATCH made uploads and the
+            // cover_remove flag arrive empty in production. Laravel still treats
+            // this as the PATCH route through method spoofing.
+            data.set('_method', 'PATCH');
+
             try {
                 const response = await fetch(profileMediaEndpoint, {
-                    method: 'PATCH',
+                    method: 'POST',
                     headers: {
                         Accept: 'application/json',
                         'X-CSRF-TOKEN': csrfToken,

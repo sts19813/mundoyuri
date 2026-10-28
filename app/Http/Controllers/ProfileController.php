@@ -193,6 +193,9 @@ class ProfileController extends Controller
         if ($request->boolean('cover_remove')) {
             $this->deleteCoverImage($user);
             $user->cover_image = null;
+            // "Quitar portada" means removing every cover source, not just the
+            // image underneath a YouTube video.
+            $user->cover_video_url = null;
         }
 
         if ($request->hasFile('cover_image')) {
