@@ -39,7 +39,12 @@
                     @foreach($series as $item)<option value="{{ $item->title }}">Título</option>@endforeach
                     @foreach($tags as $tag)<option value="{{ $tag->name }}">Etiqueta</option>@endforeach
                     @foreach($artists as $artist)<option value="{{ $artist->name }}">Artista</option>@endforeach
-                    @foreach($duos as $duo)<option value="{{ $duo->name }}">Dupla</option>@endforeach
+                    @foreach($duos as $duo)
+                        <option value="{{ $duo->name }}">Dupla</option>
+                        @foreach(collect(explode(',', (string) $duo->aliases))->map(fn ($alias) => trim($alias))->filter() as $alias)
+                            <option value="{{ $alias }}">Alias de dupla</option>
+                        @endforeach
+                    @endforeach
                 </datalist>
             </div>
             <div class="catalog-filter-shell">
@@ -78,8 +83,13 @@
                         <label class="visually-hidden" for="catalogTag">Etiqueta</label>
                         <select id="catalogTag">
                             <option value="">Todas las etiquetas</option>
-                            @foreach($tags as $tag)
-                                <option value="{{ $tag->slug }}" @selected(request('tag') === $tag->slug)>{{ $tag->name }} ({{ $tag->series_count }})</option>
+                            @php($tagCategoryLabels = ['format' => 'Formato', 'country' => 'País', 'status' => 'Estado', 'setting' => 'Ambiente', 'tone' => 'Tono', 'trope' => 'Tropos', 'identity' => 'Identidad', 'genre' => 'Género', 'availability' => 'Disponibilidad', 'theme' => 'Temas', 'duo' => 'Duplas'])
+                            @foreach($tags->groupBy('category') as $category => $categoryTags)
+                                <optgroup label="{{ $tagCategoryLabels[$category] ?? ucfirst($category) }}">
+                                    @foreach($categoryTags as $tag)
+                                        <option value="{{ $tag->slug }}" @selected(request('tag') === $tag->slug)>{{ $tag->name }} ({{ $tag->series_count }})</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -142,7 +152,7 @@
                     data-status="{{ $item->status }}"
                     data-artists="{{ $item->artists->pluck('slug')->join('|') }}"
                     data-duos="{{ $item->duos->pluck('slug')->join('|') }}"
-                    data-search="{{ $item->title }} {{ $item->description }} {{ $item->genre?->name }} {{ $item->tags->pluck('name')->join(' ') }} {{ $item->artists->pluck('name')->join(' ') }} {{ $item->artists->pluck('aliases')->filter()->join(' ') }} {{ $item->duos->pluck('name')->join(' ') }}"
+                    data-search="{{ $item->title }} {{ $item->description }} {{ $item->genre?->name }} {{ $item->tags->pluck('name')->join(' ') }} {{ $item->artists->pluck('name')->join(' ') }} {{ $item->artists->pluck('aliases')->filter()->join(' ') }} {{ $item->duos->pluck('name')->join(' ') }} {{ $item->duos->pluck('aliases')->filter()->join(' ') }}"
                 >
                     <a href="{{ route('catalog.series.show', $item->slug) }}" class="catalog-card">
                         <div class="catalog-card h-100">

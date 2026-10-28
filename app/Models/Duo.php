@@ -10,7 +10,7 @@ class Duo extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'description', 'image_path', 'is_active'];
+    protected $fillable = ['name', 'slug', 'aliases', 'description', 'image_path', 'is_active'];
 
     protected function casts(): array
     {
