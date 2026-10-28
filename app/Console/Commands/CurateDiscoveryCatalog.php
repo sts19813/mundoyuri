@@ -100,6 +100,7 @@ class CurateDiscoveryCatalog extends Command
             'shades' => ['escuela', 'misterio', 'drama'],
             'shadow-of-love' => ['amor-secreto', 'drama'],
             'el-fuego-los-cuatro-elementos' => ['enemigas-a-amantes', 'drama'],
+            'pluto' => ['misterio', 'drama', 'amor-secreto'],
         ] as $seriesSlug => $slugs) {
             $ids = collect($slugs)->map(fn (string $slug) => $tagIds->get($slug))->filter()->all();
 

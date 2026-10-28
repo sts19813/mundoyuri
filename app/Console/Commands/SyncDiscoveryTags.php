@@ -370,6 +370,11 @@ class SyncDiscoveryTags extends Command
             ['slug' => 'namneung-milin-watinthanakit', 'name' => 'Namneung Milin Watinthanakit', 'aliases' => 'Milin Watinthanakit, Namneung'],
             ['slug' => 'noey-kanteera-wadcharathadsanakul', 'name' => 'Noey Kanteera Wadcharathadsanakul', 'aliases' => 'Kanteera Wadcharathadsanakul, Noey'],
         ], ['NamNoey', 'NamneungNoey', 'Namneung Noey', 'Namneung & Noey']);
+
+        $this->syncDuo(['pluto'], 'namtanfilm', 'NamtanFilm', 'Namtan & Film', [
+            ['slug' => 'namtan-tipnaree-weerawatnodom', 'name' => 'Namtan Tipnaree Weerawatnodom', 'aliases' => 'Tipnaree Weerawatnodom, Namtan'],
+            ['slug' => 'film-rachanun-mahawan', 'name' => 'Film Rachanun Mahawan', 'aliases' => 'Rachanun Mahawan, Film'],
+        ], ['NamtanFilm', 'Namtan Film', 'Namtan & Film']);
     }
 
     /** @param array<int, string> $seriesSlugs
