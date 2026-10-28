@@ -44,6 +44,16 @@ class LocalizeMariaSamaGaMiteruImagesSeeder extends Seeder
                 'target' => 'series/banners/maria-sama-ga-miteru-3rd-season.webp',
             ],
         ],
+        'maria-sama-ga-miteru-4th-season' => [
+            'cover' => [
+                'source' => 'https://img.animeschedule.net/production/assets/public/img/anime/jpg/default/maria-sama-ga-miteru-4th-season-e5b2d6f7b5.jpg',
+                'target' => 'series/covers/maria-sama-ga-miteru-4th-season.webp',
+            ],
+            'banner' => [
+                'source' => 'https://image-cf.kddi-video.com/f64/f6459bb41d2b282c09f5b1a78a33c5d6/fit-background-transparent/1747267732/1080x608.png',
+                'target' => 'series/banners/maria-sama-ga-miteru-4th-season.webp',
+            ],
+        ],
     ];
 
     public function run(CatalogImageOptimizer $optimizer): void
@@ -103,6 +113,6 @@ class LocalizeMariaSamaGaMiteruImagesSeeder extends Seeder
             }
         }
 
-        $this->command?->info('Maria-sama ga Miteru: 6 imágenes optimizadas a WebP y alojadas localmente.');
+        $this->command?->info('Maria-sama ga Miteru: imágenes optimizadas a WebP y alojadas localmente.');
     }
 }
