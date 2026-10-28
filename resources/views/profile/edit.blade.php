@@ -39,7 +39,7 @@
 
             <section class="profile-hero-card">
                 @if($user->coverImageUrl())
-                    <img src="{{ $user->coverImageUrl() }}" alt="" class="profile-cover-media" data-cover-preview>
+                    <img src="{{ $user->coverImageUrl() }}" alt="" class="profile-cover-media" style="object-position: {{ $user->coverImagePosition() }}" data-cover-preview>
                 @else
                     <img src="" alt="" class="profile-cover-media d-none" data-cover-preview>
                 @endif
@@ -59,10 +59,10 @@
                     <div @class(['profile-avatar-wrap', 'is-online' => $user->isOnline()])>
                         <button type="button" class="profile-avatar-display" data-avatar-source-open aria-label="Cambiar foto de perfil">
                             @if($user->hasProfileAvatar())
-                                <img src="{{ $user->avatarUrl() }}" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main" data-avatar-preview>
+                                <img src="{{ $user->avatarUrl() }}" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main" style="object-position: {{ $user->profileImagePosition() }}" data-avatar-preview>
                                 <span class="profile-avatar-main profile-avatar-generic d-none" data-avatar-fallback>{{ $user->initials() }}</span>
                             @else
-                                <img src="" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main d-none" data-avatar-preview>
+                                <img src="" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main d-none" style="object-position: {{ $user->profileImagePosition() }}" data-avatar-preview>
                                 <span class="profile-avatar-main profile-avatar-generic" data-avatar-fallback>{{ $user->initials() }}</span>
                             @endif
                         </button>
@@ -414,6 +414,31 @@
         </div>
     </dialog>
 
+    <dialog class="profile-media-crop-dialog" data-media-crop-dialog aria-labelledby="media-crop-title">
+        <div class="profile-media-crop-dialog-inner">
+            <div class="profile-cover-source-dialog-heading">
+                <div>
+                    <span class="profile-panel-kicker">Ajusta tu imagen</span>
+                    <h2 id="media-crop-title" data-media-crop-title>Encuadra tu portada</h2>
+                </div>
+                <button type="button" class="profile-cover-source-close" data-media-crop-cancel aria-label="Cancelar">×</button>
+            </div>
+            <p data-media-crop-description>Arrastra dentro de la vista previa o usa los controles para decidir qué parte se verá. La imagen no se estira.</p>
+            <div class="profile-media-crop-preview" data-media-crop-preview-frame>
+                <img src="" alt="Vista previa del encuadre" data-media-crop-preview>
+                <span class="profile-media-crop-guides" aria-hidden="true"></span>
+            </div>
+            <div class="profile-media-crop-controls">
+                <label>Horizontal <output data-media-crop-x-output>50%</output><input type="range" min="0" max="100" value="50" data-media-crop-x></label>
+                <label>Vertical <output data-media-crop-y-output>50%</output><input type="range" min="0" max="100" value="50" data-media-crop-y></label>
+            </div>
+            <div class="profile-media-crop-actions">
+                <button type="button" class="profile-btn profile-btn-text" data-media-crop-cancel>Cancelar</button>
+                <button type="button" class="profile-btn profile-btn-primary" data-media-crop-save>Guardar imagen</button>
+            </div>
+        </div>
+    </dialog>
+
     <x-footer />
 
     <script>
@@ -435,6 +460,16 @@
         const signaturePreview = document.querySelector('[data-signature-preview]');
         const signatureRemove = document.querySelector('[data-signature-remove]');
         const profileTabs = document.querySelector('[data-profile-tabs]');
+        const mediaCropDialog = document.querySelector('[data-media-crop-dialog]');
+        const mediaCropTitle = document.querySelector('[data-media-crop-title]');
+        const mediaCropDescription = document.querySelector('[data-media-crop-description]');
+        const mediaCropFrame = document.querySelector('[data-media-crop-preview-frame]');
+        const mediaCropPreview = document.querySelector('[data-media-crop-preview]');
+        const mediaCropX = document.querySelector('[data-media-crop-x]');
+        const mediaCropY = document.querySelector('[data-media-crop-y]');
+        const mediaCropXOutput = document.querySelector('[data-media-crop-x-output]');
+        const mediaCropYOutput = document.querySelector('[data-media-crop-y-output]');
+        let mediaCropState = null;
 
         const activateProfileTab = (tabName) => {
             document.querySelectorAll('[data-profile-tab]').forEach((tab) => {
@@ -514,23 +549,140 @@
             }
         };
 
+        const profileMediaPosition = (element) => {
+            const values = (element?.style.objectPosition || '50% 50%').match(/\d+/g) || ['50', '50'];
+
+            return {
+                x: Math.min(100, Math.max(0, Number(values[0]) || 50)),
+                y: Math.min(100, Math.max(0, Number(values[1]) || 50)),
+            };
+        };
+
+        const updateMediaCropPreview = () => {
+            if (!mediaCropState || !mediaCropPreview) return;
+
+            const position = `${mediaCropState.x}% ${mediaCropState.y}%`;
+            mediaCropPreview.style.objectPosition = position;
+            if (mediaCropX) mediaCropX.value = mediaCropState.x;
+            if (mediaCropY) mediaCropY.value = mediaCropState.y;
+            if (mediaCropXOutput) mediaCropXOutput.textContent = `${mediaCropState.x}%`;
+            if (mediaCropYOutput) mediaCropYOutput.textContent = `${mediaCropState.y}%`;
+        };
+
+        const releaseMediaCrop = () => {
+            if (mediaCropState?.previewUrl) URL.revokeObjectURL(mediaCropState.previewUrl);
+            mediaCropState = null;
+            if (mediaCropPreview) mediaCropPreview.removeAttribute('src');
+            mediaCropFrame?.classList.remove('is-avatar');
+        };
+
+        const closeMediaCrop = () => {
+            if (mediaCropState?.type === 'avatar') avatarInput.value = '';
+            if (mediaCropState?.type === 'cover') coverInput.value = '';
+            mediaCropDialog?.close();
+            releaseMediaCrop();
+        };
+
+        const openMediaCrop = (type, file) => {
+            const target = type === 'avatar' ? avatarPreview : coverPreview;
+            const position = profileMediaPosition(target);
+            mediaCropState = {
+                type,
+                file,
+                x: position.x,
+                y: position.y,
+                previewUrl: URL.createObjectURL(file),
+            };
+
+            if (mediaCropTitle) mediaCropTitle.textContent = type === 'avatar' ? 'Encuadra tu foto de perfil' : 'Encuadra tu portada';
+            if (mediaCropDescription) mediaCropDescription.textContent = type === 'avatar'
+                ? 'Arrastra dentro del círculo o usa los controles para elegir qué parte se verá en tu perfil.'
+                : 'Arrastra dentro de la vista previa o usa los controles para decidir qué parte se verá. La imagen no se estira.';
+            if (mediaCropPreview) mediaCropPreview.src = mediaCropState.previewUrl;
+            mediaCropFrame?.classList.toggle('is-avatar', type === 'avatar');
+            updateMediaCropPreview();
+            avatarSourceDialog?.close();
+            coverSourceDialog?.close();
+
+            if (mediaCropDialog?.showModal) {
+                mediaCropDialog.showModal();
+            }
+        };
+
+        const saveMediaCrop = async () => {
+            if (!mediaCropState) return;
+
+            const { type, file, x, y } = mediaCropState;
+            const data = new FormData();
+            const isAvatar = type === 'avatar';
+            data.append(isAvatar ? 'profile_image' : 'cover_image', file);
+            data.append(`${isAvatar ? 'profile_image' : 'cover_image'}_position_x`, String(x));
+            data.append(`${isAvatar ? 'profile_image' : 'cover_image'}_position_y`, String(y));
+            data.append(isAvatar ? 'avatar_remove' : 'cover_remove', '0');
+
+            const result = await saveProfileMedia(
+                data,
+                isAvatar ? 'Optimizando y subiendo foto de perfil…' : 'Optimizando y subiendo portada…',
+                isAvatar ? 'Foto de perfil guardada.' : 'Portada guardada.'
+            );
+
+            if (!result) return;
+
+            const position = isAvatar ? result.avatar_position : result.cover_position;
+            const target = isAvatar ? avatarPreview : coverPreview;
+            target.src = isAvatar ? result.avatar_url : result.cover_image_url;
+            target.style.objectPosition = position || `${x}% ${y}%`;
+            target.classList.remove('d-none');
+
+            if (isAvatar) {
+                avatarFallback.classList.add('d-none');
+            } else {
+                coverVideoInput.value = '';
+                setCoverVideoPreview(null);
+            }
+
+            closeMediaCrop();
+        };
+
+        mediaCropX?.addEventListener('input', () => {
+            if (!mediaCropState) return;
+            mediaCropState.x = Number(mediaCropX.value);
+            updateMediaCropPreview();
+        });
+
+        mediaCropY?.addEventListener('input', () => {
+            if (!mediaCropState) return;
+            mediaCropState.y = Number(mediaCropY.value);
+            updateMediaCropPreview();
+        });
+
+        const moveMediaCropToPointer = (event) => {
+            if (!mediaCropState || !mediaCropFrame) return;
+            const bounds = mediaCropFrame.getBoundingClientRect();
+            mediaCropState.x = Math.round(Math.min(100, Math.max(0, ((event.clientX - bounds.left) / bounds.width) * 100)));
+            mediaCropState.y = Math.round(Math.min(100, Math.max(0, ((event.clientY - bounds.top) / bounds.height) * 100)));
+            updateMediaCropPreview();
+        };
+
+        mediaCropFrame?.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            mediaCropFrame.setPointerCapture?.(event.pointerId);
+            moveMediaCropToPointer(event);
+        });
+        mediaCropFrame?.addEventListener('pointermove', (event) => {
+            if (event.buttons || event.pointerType === 'touch') moveMediaCropToPointer(event);
+        });
+        document.querySelector('[data-media-crop-save]')?.addEventListener('click', saveMediaCrop);
+        document.querySelectorAll('[data-media-crop-cancel]').forEach((button) => button.addEventListener('click', closeMediaCrop));
+        mediaCropDialog?.addEventListener('click', (event) => {
+            if (event.target === mediaCropDialog) closeMediaCrop();
+        });
+
         avatarInput?.addEventListener('change', async function () {
             const file = this.files?.[0];
             if (!file) return;
 
-            avatarPreview.src = URL.createObjectURL(file);
-            avatarPreview.classList.remove('d-none');
-            avatarFallback.classList.add('d-none');
-            avatarRemove.value = '0';
-            avatarSourceDialog?.close();
-
-            const data = new FormData();
-            data.append('profile_image', file);
-            data.append('avatar_remove', '0');
-            const result = await saveProfileMedia(data, 'Subiendo foto de perfil…', 'Foto de perfil guardada.');
-
-            if (result?.avatar_url) avatarPreview.src = result.avatar_url;
-            avatarInput.value = '';
+            openMediaCrop('avatar', file);
         });
 
         const openAvatarSourceDialog = () => {
@@ -569,22 +721,7 @@
             const file = this.files?.[0];
             if (!file) return;
 
-            coverPreview.src = URL.createObjectURL(file);
-            coverPreview.classList.remove('d-none');
-            coverSourceDialog?.close();
-
-            const data = new FormData();
-            data.append('cover_image', file);
-            data.append('cover_remove', '0');
-            const result = await saveProfileMedia(data, 'Optimizando y subiendo portada…', 'Portada guardada.');
-            coverRemove.value = '0';
-
-            if (result) {
-                coverVideoInput.value = '';
-                setCoverVideoPreview(null);
-                if (result.cover_image_url) coverPreview.src = result.cover_image_url;
-            }
-            coverInput.value = '';
+            openMediaCrop('cover', file);
         });
 
         document.querySelector('[data-cover-remove-all]')?.addEventListener('click', async function () {

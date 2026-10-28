@@ -188,6 +188,7 @@ class ProfileController extends Controller
                 'profile-images',
                 'profile-avatar',
             );
+            $this->syncMediaPosition($user, $validated, 'profile_image');
         }
 
         if ($request->boolean('cover_remove')) {
@@ -207,6 +208,7 @@ class ProfileController extends Controller
             );
             // An uploaded cover is an explicit replacement for a previous video.
             $user->cover_video_url = null;
+            $this->syncMediaPosition($user, $validated, 'cover_image');
         }
 
         if ($request->boolean('signature_remove')) {
@@ -241,6 +243,7 @@ class ProfileController extends Controller
                 'profile-images',
                 'profile-avatar',
             );
+            $this->syncMediaPosition($user, $validated, 'profile_image');
         } elseif ($request->boolean('avatar_remove')) {
             $this->deleteProfileImage($user);
             $user->profile_image = null;
@@ -254,6 +257,7 @@ class ProfileController extends Controller
                 'profile-cover',
             );
             $user->cover_video_url = null;
+            $this->syncMediaPosition($user, $validated, 'cover_image');
         } elseif ($request->boolean('cover_remove')) {
             $this->deleteCoverImage($user);
             $user->cover_image = null;
@@ -267,7 +271,9 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Cambios guardados.',
             'avatar_url' => $user->avatarUrl(),
+            'avatar_position' => $user->profileImagePosition(),
             'cover_image_url' => $user->coverImageUrl(),
+            'cover_position' => $user->coverImagePosition(),
             'cover_video_embed_url' => $user->coverVideoEmbedUrl(),
         ]);
     }
@@ -315,6 +321,16 @@ class ProfileController extends Controller
         if ($user->signature_image) {
             Storage::disk('public')->delete($user->signature_image);
         }
+    }
+
+    /** @param array<string, mixed> $validated */
+    private function syncMediaPosition(User $user, array $validated, string $media): void
+    {
+        $x = "{$media}_position_x";
+        $y = "{$media}_position_y";
+
+        $user->{$x} = (int) ($validated[$x] ?? 50);
+        $user->{$y} = (int) ($validated[$y] ?? 50);
     }
 
     private function sanitizeSignatureText(?string $signature): ?string

@@ -266,6 +266,28 @@ class ProfileTest extends TestCase
         Storage::disk('public')->assertMissing('profile-covers/old-cover.webp');
     }
 
+    public function test_profile_media_saves_the_selected_cover_focal_point(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('profile.media.update'), [
+                '_method' => 'PATCH',
+                'cover_image' => UploadedFile::fake()->image('cover.jpg', 1600, 900),
+                'cover_image_position_x' => 18,
+                'cover_image_position_y' => 74,
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('cover_position', '18% 74%');
+
+        $user->refresh();
+
+        $this->assertSame(18, $user->cover_image_position_x);
+        $this->assertSame(74, $user->cover_image_position_y);
+        $this->assertSame('18% 74%', $user->coverImagePosition());
+    }
+
     public function test_authenticated_comment_author_links_to_public_profile(): void
     {
         $author = User::factory()->create([

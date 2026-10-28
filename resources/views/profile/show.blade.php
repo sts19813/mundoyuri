@@ -34,7 +34,7 @@
 
         <section class="profile-hero-card public-profile-hero public-profile-hero-full">
             @if($profileUser->coverImageUrl())
-                <img src="{{ $profileUser->coverImageUrl() }}" alt="Portada de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-cover-media">
+                <img src="{{ $profileUser->coverImageUrl() }}" alt="Portada de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-cover-media" style="object-position: {{ $profileUser->coverImagePosition() }}">
             @endif
             @if($profileUser->coverVideoEmbedUrl())
                 <iframe src="{{ $profileUser->coverVideoEmbedUrl() }}" class="profile-cover-video" title="Video de portada de {{ $profileUser->alias ?: $profileUser->name }}" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
@@ -45,7 +45,7 @@
                 <div class="profile-identity">
                     <div @class(['profile-avatar-wrap', 'is-online' => $profileUser->isOnline()])>
                         @if($profileUser->hasProfileAvatar())
-                            <img src="{{ $profileUser->avatarUrl() }}" alt="Foto de perfil de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-avatar-main">
+                            <img src="{{ $profileUser->avatarUrl() }}" alt="Foto de perfil de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-avatar-main" style="object-position: {{ $profileUser->profileImagePosition() }}">
                         @else
                             <span class="profile-avatar-main profile-avatar-generic">{{ $profileUser->initials() }}</span>
                         @endif

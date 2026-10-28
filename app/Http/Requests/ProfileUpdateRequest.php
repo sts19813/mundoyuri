@@ -41,6 +41,10 @@ class ProfileUpdateRequest extends FormRequest
             'avatar_remove' => ['nullable', 'boolean'],
             'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:max_width=3840,max_height=2160'],
             'cover_remove' => ['nullable', 'boolean'],
+            'profile_image_position_x' => ['nullable', 'integer', 'between:0,100'],
+            'profile_image_position_y' => ['nullable', 'integer', 'between:0,100'],
+            'cover_image_position_x' => ['nullable', 'integer', 'between:0,100'],
+            'cover_image_position_y' => ['nullable', 'integer', 'between:0,100'],
             'cover_video_url' => ['nullable', 'string', 'max:2048', function (string $attribute, mixed $value, Closure $fail): void {
                 if (filled($value) && ! YouTubeVideoUrl::isValid($value)) {
                     $fail('Ingresa un enlace válido de un video de YouTube.');
