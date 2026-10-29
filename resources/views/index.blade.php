@@ -16,11 +16,6 @@
         $sectionUrl = $isMixedHome ? route('home') : ($section?->slug ? route('catalog.sections.show', $section->slug) : route('home'));
         $catalogUrl = route('catalog.series.index', ['section' => $section?->slug]);
         $continueWatching = $continueWatching ?? collect();
-        $heroNextSection = $continueWatching->isNotEmpty() ? 'continuar-mirando' : 'novedades';
-        $heroNextTitle = $continueWatching->isNotEmpty() ? 'Continuar mirando' : 'Últimos episodios';
-        $heroNextDescription = $continueWatching->isNotEmpty()
-            ? 'Retoma donde te quedaste'
-            : 'Descubre lo nuevo en Mundo Yuri';
         $homeSeoDescription = $isMixedHome
             ? 'Mira series GL, yuri y anime gratis con subtítulos en español. Descubre episodios, estrenos y recomendaciones Girls Love en Mundo Yuri.'
             : ($section?->hero_description ?: 'Explora el catálogo de Mundo Yuri.');
@@ -100,12 +95,6 @@
                     @endif
                 </div>
             @endif
-        </div>
-        <div class="hero-next" aria-label="Siguiente sección">
-            <a href="#{{ $heroNextSection }}">
-                <span class="hero-next-copy"><small>{{ $heroNextDescription }}</small><strong>{{ $heroNextTitle }}</strong></span>
-                <span class="hero-next-arrow" aria-hidden="true">↓</span>
-            </a>
         </div>
     </section>
 
