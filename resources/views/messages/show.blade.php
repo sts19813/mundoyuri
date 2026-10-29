@@ -687,6 +687,18 @@ class="messenger-body"
         let stickerType = 'recent';
         let visibleStickerCount = stickerBatchSize;
         let stickerCatalog = { recent: [], general: [], mine: [] };
+        let stickerPages = { recent: 0, general: 0, mine: 0 };
+        let stickerHasMore = { recent: false, general: false, mine: false };
+        let loadingStickerCatalog = false;
+        const setStickerTab = (type) => {
+            stickerType = type;
+            visibleStickerCount = stickerBatchSize;
+            stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => {
+                const active = tab.dataset.stickerTab === type;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', String(active));
+            });
+        };
         const clearStickerSelection = () => {
             if (stickerInput) stickerInput.value = '0';
             if (stickerIdInput) stickerIdInput.value = '';
@@ -749,33 +761,44 @@ class="messenger-body"
                 }
                 stickerGrid.append(item);
             });
-            if (stickers.length > visibleStickerCount) {
+            if (stickerHasMore[stickerType]) {
                 const more = document.createElement('button');
                 more.type = 'button';
                 more.className = 'messenger-sticker-load-more';
                 more.dataset.stickerLoadMore = 'true';
-                more.textContent = `Ver ${Math.min(stickerBatchSize, stickers.length - visibleStickerCount)} stickers más`;
+                more.textContent = 'Ver más stickers';
                 stickerGrid.append(more);
             }
         };
-        let stickerCatalogLoaded = false;
-        const loadStickerCatalog = async ({ force = false, render = true } = {}) => {
+        const loadStickerCatalog = async ({ type = stickerType, force = false, append = false, render = true } = {}) => {
             if (!stickerPanel) return;
-            if (stickerCatalogLoaded && !force) {
+            if (loadingStickerCatalog) return;
+            if (!force && !append && stickerPages[type] > 0) {
                 if (render) renderStickerCatalog();
                 return;
             }
+            if (append && (!stickerHasMore[type] || stickerPages[type] === 0)) return;
+            const page = append ? stickerPages[type] + 1 : 1;
+            loadingStickerCatalog = true;
             try {
-                const response = await fetch(@js(route('stickers.index')), {
+                const url = new URL(@js(route('stickers.index')), window.location.origin);
+                url.searchParams.set('tab', type);
+                url.searchParams.set('page', String(page));
+                const response = await fetch(url, {
                     headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin',
                 });
                 if (!response.ok) throw new Error();
-                stickerCatalog = await response.json();
-                stickerCatalogLoaded = true;
+                const data = await response.json();
+                stickerCatalog[type] = append ? [...stickerCatalog[type], ...data.stickers] : data.stickers;
+                stickerPages[type] = page;
+                stickerHasMore[type] = Boolean(data.has_more);
+                if (type === stickerType) visibleStickerCount = stickerCatalog[type].length;
                 if (render) renderStickerCatalog();
             } catch (error) {
                 if (render && stickerGrid) stickerGrid.textContent = 'No se pudieron cargar los stickers.';
+            } finally {
+                loadingStickerCatalog = false;
             }
         };
         const closeStickerPanel = () => { if (stickerPanel) stickerPanel.hidden = true; };
@@ -790,19 +813,13 @@ class="messenger-body"
         document.querySelector('[data-sticker-close]')?.addEventListener('click', closeStickerPanel);
         document.querySelector('.messenger-attach-button')?.addEventListener('click', clearStickerSelection);
         stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.addEventListener('click', () => {
-            stickerType = tab.dataset.stickerTab;
-            visibleStickerCount = stickerBatchSize;
-            stickerPanel.querySelectorAll('[data-sticker-tab]').forEach((candidate) => {
-                candidate.classList.toggle('is-active', candidate === tab);
-                candidate.setAttribute('aria-selected', String(candidate === tab));
-            });
-            renderStickerCatalog();
+            setStickerTab(tab.dataset.stickerTab);
+            loadStickerCatalog();
         }));
         stickerGrid?.addEventListener('click', async (event) => {
             const loadMore = event.target.closest('[data-sticker-load-more]');
             if (loadMore) {
-                visibleStickerCount += stickerBatchSize;
-                renderStickerCatalog();
+                loadStickerCatalog({ append: true });
                 return;
             }
             const select = event.target.closest('[data-sticker-select]');
@@ -854,13 +871,7 @@ class="messenger-body"
                 });
                 if (!response.ok) throw new Error();
                 const result = await response.json();
-                stickerType = 'mine';
-                visibleStickerCount = stickerBatchSize;
-                stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => {
-                    const active = tab.dataset.stickerTab === 'mine';
-                    tab.classList.toggle('is-active', active);
-                    tab.setAttribute('aria-selected', String(active));
-                });
+                setStickerTab('mine');
                 await loadStickerCatalog({ force: true });
                 sendSticker(result.sticker);
             } catch (error) {
@@ -1200,8 +1211,10 @@ class="messenger-body"
 
                     const result = await response.json();
                     if (result.sticker) {
-                        stickerCatalog.mine = [result.sticker, ...(stickerCatalog.mine || []).filter((item) => item.id !== result.sticker.id)];
-                        stickerCatalogLoaded = true;
+                        // Mis stickers se consulta bajo demanda: invalida sólo esa pestaña.
+                        stickerCatalog.mine = [];
+                        stickerPages.mine = 0;
+                        stickerHasMore.mine = false;
                     }
                     saveStickerForm.classList.add('is-saved');
                     button?.querySelector('span')?.replaceChildren('Guardado');
@@ -1474,7 +1487,15 @@ class="messenger-body"
                 const data = attachment ? response.data : await response.json();
                 appendMessages(data.messages || [], { forceScroll: true });
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
-                if (stickerIdInput?.value) stickerCatalogLoaded = false;
+                const sentSticker = Boolean(stickerIdInput?.value);
+                if (sentSticker) {
+                    // Después de enviar desde Comunidad o Mis stickers, la próxima apertura
+                    // siempre empieza en el atajo personal de Recientes.
+                    setStickerTab('recent');
+                    stickerCatalog.recent = [];
+                    stickerPages.recent = 0;
+                    stickerHasMore.recent = false;
+                }
                 composer.reset();
                 clearStickerSelection();
                 closeStickerPanel();

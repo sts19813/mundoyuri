@@ -843,11 +843,17 @@ class PrivateMessagingTest extends TestCase
         Storage::disk('local')->put($private->path, 'privado');
 
         $this->actingAs($second)
-            ->getJson(route('stickers.index'))
+            ->getJson(route('stickers.index', ['tab' => 'general']))
             ->assertOk()
-            ->assertJsonPath('general.0.id', $general->id)
-            ->assertJsonPath('mine', [])
+            ->assertJsonPath('tab', 'general')
+            ->assertJsonPath('stickers.0.id', $general->id)
             ->assertJsonMissing(['id' => $private->id]);
+
+        $this->actingAs($second)
+            ->getJson(route('stickers.index', ['tab' => 'mine']))
+            ->assertOk()
+            ->assertJsonPath('tab', 'mine')
+            ->assertJsonPath('stickers', []);
 
         $this->actingAs($second)
             ->get(route('stickers.file', $general))
@@ -917,10 +923,17 @@ class PrivateMessagingTest extends TestCase
         $this->actingAs($sender)
             ->getJson(route('stickers.index'))
             ->assertOk()
-            ->assertJsonPath('recent', [])
-            ->assertJsonPath('general.0.id', $approved->id)
-            ->assertJsonPath('mine.0.id', $approved->id)
-            ->assertJsonPath('mine.1.id', $personal->id);
+            ->assertJsonPath('tab', 'recent')
+            ->assertJsonPath('stickers', []);
+
+        $this->getJson(route('stickers.index', ['tab' => 'general']))
+            ->assertOk()
+            ->assertJsonPath('stickers.0.id', $approved->id);
+
+        $this->getJson(route('stickers.index', ['tab' => 'mine']))
+            ->assertOk()
+            ->assertJsonPath('stickers.0.id', $approved->id)
+            ->assertJsonPath('stickers.1.id', $personal->id);
 
         $this->travelTo(now()->startOfSecond());
         $this->postJson(route('messages.store', $firstRecipient), ['sticker_id' => $personal->id])->assertCreated();
@@ -929,15 +942,21 @@ class PrivateMessagingTest extends TestCase
 
         $this->getJson(route('stickers.index'))
             ->assertOk()
-            ->assertJsonPath('recent.0.id', $approved->id)
-            ->assertJsonPath('recent.1.id', $personal->id);
+            ->assertJsonPath('stickers.0.id', $approved->id)
+            ->assertJsonPath('stickers.1.id', $personal->id);
 
         $this->actingAs($firstRecipient)
             ->getJson(route('stickers.index'))
             ->assertOk()
-            ->assertJsonPath('recent', [])
-            ->assertJsonPath('general.0.id', $approved->id)
-            ->assertJsonPath('mine', []);
+            ->assertJsonPath('stickers', []);
+
+        $this->getJson(route('stickers.index', ['tab' => 'general']))
+            ->assertOk()
+            ->assertJsonPath('stickers.0.id', $approved->id);
+
+        $this->getJson(route('stickers.index', ['tab' => 'mine']))
+            ->assertOk()
+            ->assertJsonPath('stickers', []);
     }
 
     public function test_user_can_create_and_send_an_animated_gif_sticker_from_their_library(): void
