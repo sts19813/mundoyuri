@@ -1,4 +1,4 @@
-<section class="episodes-section" id="{{ $sectionId }}">
+<section @class(['episodes-section', 'home-first-section' => $isFirstHomeSection ?? false]) id="{{ $sectionId }}">
     <div class="container-xl px-4">
         <div class="section-header">
             <h2 class="section-title">{{ $title }}</h2>

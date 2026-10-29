@@ -1,5 +1,5 @@
 @if(($continueWatching ?? collect())->isNotEmpty())
-    <section class="continue-section" id="continuar-mirando">
+    <section class="continue-section home-first-section" id="continuar-mirando">
         <div class="container-xl px-4">
             <div class="section-header">
                 <h2 class="section-title">Continuar mirando</h2>

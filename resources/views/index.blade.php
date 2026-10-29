@@ -117,6 +117,7 @@
             'label' => 'Anime y Series GL',
             'episodes' => $latestEpisodes,
             'catalogUrl' => route('catalog.series.index'),
+            'isFirstHomeSection' => $continueWatching->isEmpty(),
         ])
         @include('partials.home.featured-section', [
             'sectionId' => 'destacados',
@@ -131,7 +132,7 @@
             'series' => $mixedSeries,
         ])
     @else
-    <section class="episodes-section" id="novedades">
+    <section @class(['episodes-section', 'home-first-section' => $continueWatching->isEmpty()]) id="novedades">
         <div class="container-xl px-4">
             <div class="section-header"><h2 class="section-title">Últimos episodios</h2><a href="{{ route('legacy.episodios') }}" class="section-link">Ver todo →</a></div>
             <div class="row g-3">

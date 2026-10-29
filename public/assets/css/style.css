@@ -808,8 +808,6 @@
         min-height: 600px;
         display: flex;
         align-items: center;
-        /* Keep the hero size, but place its existing copy higher so the lower
-           edge reads as the beginning of more content instead of a dead end. */
         padding-bottom: 136px;
         overflow: hidden;
         background:
@@ -6484,7 +6482,16 @@
 .continue-info h3 { margin: 0 0 4px; overflow: hidden; color: #fff; font: 700 1rem/1.25 'DM Sans', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .continue-info small { display: -webkit-box; min-height: 34px; overflow: hidden; color: #baa8be; font-size: .72rem; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 
-@media (max-width: 760px) {
+/* Let the first real content section peek into the initial viewport. */
+.home-first-section {
+    position: relative;
+    z-index: 5;
+    margin-top: -150px;
+    background: linear-gradient(180deg, transparent, rgba(13, 8, 16, .96) 38px, #0d0810 110px);
+}
+
+@media (max-width: 768px) {
+    .home-first-section { margin-top: -100px; }
     .continue-section { padding-top: 28px; }
     .continue-rail { grid-auto-columns: minmax(205px, 76vw); gap: 12px; }
     .continue-info { min-height: 98px; padding: 12px; }
