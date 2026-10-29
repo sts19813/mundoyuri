@@ -6,6 +6,7 @@ use App\Models\Sticker;
 use App\Services\StickerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -15,10 +16,26 @@ class StickerController extends Controller
     {
         $viewer = $request->user();
         $stickers = Sticker::query()->visibleTo($viewer)->latest('id')->get();
+        $sentStickers = DB::table('direct_messages')
+            ->select('attachment_path')
+            ->selectRaw('MAX(created_at) as last_sent_at, COUNT(*) as times_sent')
+            ->where('sender_id', $viewer->id)
+            ->where('is_sticker', true)
+            ->whereNotNull('attachment_path')
+            ->groupBy('attachment_path');
+        $recent = Sticker::query()
+            ->joinSub($sentStickers, 'sent_stickers', fn ($join) => $join->on('stickers.path', '=', 'sent_stickers.attachment_path'))
+            ->visibleTo($viewer)
+            ->orderByDesc('sent_stickers.last_sent_at')
+            ->orderByDesc('sent_stickers.times_sent')
+            ->orderByDesc('stickers.id')
+            ->limit(48)
+            ->get(['stickers.*']);
 
         return response()->json([
+            'recent' => $recent->map(fn (Sticker $sticker) => $this->payload($sticker))->values(),
             'general' => $stickers->where('is_general', true)->map(fn (Sticker $sticker) => $this->payload($sticker))->values(),
-            'mine' => $stickers->where('owner_id', $viewer->id)->where('is_general', false)->map(fn (Sticker $sticker) => $this->payload($sticker))->values(),
+            'mine' => $stickers->where('owner_id', $viewer->id)->map(fn (Sticker $sticker) => $this->payload($sticker))->values(),
         ]);
     }
 

@@ -890,6 +890,56 @@ class PrivateMessagingTest extends TestCase
             ->assertSessionHasErrors('sticker_id');
     }
 
+    public function test_recent_stickers_follow_the_sender_across_chats_and_stay_private(): void
+    {
+        Storage::fake('local');
+        $sender = User::factory()->create();
+        $firstRecipient = User::factory()->create();
+        $secondRecipient = User::factory()->create();
+
+        $personal = Sticker::query()->create([
+            'owner_id' => $sender->id,
+            'name' => 'personal.webp',
+            'path' => 'stickers/personal.webp',
+            'mime' => 'image/webp',
+            'size' => 42,
+        ]);
+        $approved = Sticker::query()->create([
+            'owner_id' => $sender->id,
+            'name' => 'compartido.gif',
+            'path' => 'stickers/compartido.gif',
+            'mime' => 'image/gif',
+            'size' => 42,
+            'is_general' => true,
+            'approved_at' => now(),
+        ]);
+
+        $this->actingAs($sender)
+            ->getJson(route('stickers.index'))
+            ->assertOk()
+            ->assertJsonPath('recent', [])
+            ->assertJsonPath('general.0.id', $approved->id)
+            ->assertJsonPath('mine.0.id', $approved->id)
+            ->assertJsonPath('mine.1.id', $personal->id);
+
+        $this->travelTo(now()->startOfSecond());
+        $this->postJson(route('messages.store', $firstRecipient), ['sticker_id' => $personal->id])->assertCreated();
+        $this->travel(1)->seconds();
+        $this->postJson(route('messages.store', $secondRecipient), ['sticker_id' => $approved->id])->assertCreated();
+
+        $this->getJson(route('stickers.index'))
+            ->assertOk()
+            ->assertJsonPath('recent.0.id', $approved->id)
+            ->assertJsonPath('recent.1.id', $personal->id);
+
+        $this->actingAs($firstRecipient)
+            ->getJson(route('stickers.index'))
+            ->assertOk()
+            ->assertJsonPath('recent', [])
+            ->assertJsonPath('general.0.id', $approved->id)
+            ->assertJsonPath('mine', []);
+    }
+
     public function test_user_can_create_and_send_an_animated_gif_sticker_from_their_library(): void
     {
         Storage::fake('local');

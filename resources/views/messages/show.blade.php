@@ -148,8 +148,9 @@ class="messenger-body"
                             <section class="messenger-sticker-panel" data-sticker-panel hidden aria-label="Stickers">
                                 <header><strong>Stickers</strong><button type="button" data-sticker-close aria-label="Cerrar stickers">×</button></header>
                                 <div class="messenger-media-tabs" role="tablist" aria-label="Tipo de stickers">
-                                    <button type="button" class="is-active" data-sticker-tab="general">Generales</button>
-                                    <button type="button" data-sticker-tab="mine">Mis stickers</button>
+                                    <button type="button" class="is-active" role="tab" aria-selected="true" data-sticker-tab="recent">Recientes</button>
+                                    <button type="button" role="tab" aria-selected="false" data-sticker-tab="general">Comunidad</button>
+                                    <button type="button" role="tab" aria-selected="false" data-sticker-tab="mine">Mis stickers</button>
                                 </div>
                                 <div class="messenger-sticker-grid" data-sticker-grid aria-live="polite"></div>
                                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-sticker-create-file hidden>
@@ -683,9 +684,9 @@ class="messenger-body"
         const stickerCreateControls = document.querySelector('[data-sticker-create-controls]');
         const maximumStickerBytes = @js((int) config('messenger.sticker_max_kilobytes') * 1024);
         const stickerBatchSize = 24;
-        let stickerType = 'general';
+        let stickerType = 'recent';
         let visibleStickerCount = stickerBatchSize;
-        let stickerCatalog = { general: [], mine: [] };
+        let stickerCatalog = { recent: [], general: [], mine: [] };
         const clearStickerSelection = () => {
             if (stickerInput) stickerInput.value = '0';
             if (stickerIdInput) stickerIdInput.value = '';
@@ -710,7 +711,9 @@ class="messenger-body"
             if (!stickers.length) {
                 const empty = document.createElement('small');
                 empty.className = 'messenger-sticker-empty';
-                empty.textContent = stickerType === 'mine' ? 'Aún no tienes stickers personales.' : 'Todavía no hay stickers generales.';
+                empty.textContent = stickerType === 'recent'
+                    ? 'Aún no has enviado stickers. Elige uno de Comunidad o Mis stickers.'
+                    : stickerType === 'mine' ? 'Aún no tienes stickers propios.' : 'Todavía no hay stickers de la comunidad.';
                 stickerGrid.append(empty);
                 return;
             }
@@ -735,7 +738,7 @@ class="messenger-body"
                     button.append(badge);
                 }
                 item.append(button);
-                if (stickerType === 'mine') {
+                if (stickerType === 'mine' && !sticker.is_general) {
                     const remove = document.createElement('button');
                     remove.type = 'button';
                     remove.className = 'messenger-sticker-delete';
@@ -789,7 +792,10 @@ class="messenger-body"
         stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.addEventListener('click', () => {
             stickerType = tab.dataset.stickerTab;
             visibleStickerCount = stickerBatchSize;
-            stickerPanel.querySelectorAll('[data-sticker-tab]').forEach((candidate) => candidate.classList.toggle('is-active', candidate === tab));
+            stickerPanel.querySelectorAll('[data-sticker-tab]').forEach((candidate) => {
+                candidate.classList.toggle('is-active', candidate === tab);
+                candidate.setAttribute('aria-selected', String(candidate === tab));
+            });
             renderStickerCatalog();
         }));
         stickerGrid?.addEventListener('click', async (event) => {
@@ -850,7 +856,11 @@ class="messenger-body"
                 const result = await response.json();
                 stickerType = 'mine';
                 visibleStickerCount = stickerBatchSize;
-                stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.stickerTab === 'mine'));
+                stickerPanel?.querySelectorAll('[data-sticker-tab]').forEach((tab) => {
+                    const active = tab.dataset.stickerTab === 'mine';
+                    tab.classList.toggle('is-active', active);
+                    tab.setAttribute('aria-selected', String(active));
+                });
                 await loadStickerCatalog({ force: true });
                 sendSticker(result.sticker);
             } catch (error) {
@@ -1464,6 +1474,7 @@ class="messenger-body"
                 const data = attachment ? response.data : await response.json();
                 appendMessages(data.messages || [], { forceScroll: true });
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
+                if (stickerIdInput?.value) stickerCatalogLoaded = false;
                 composer.reset();
                 clearStickerSelection();
                 closeStickerPanel();
