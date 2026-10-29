@@ -808,7 +808,9 @@
         min-height: 600px;
         display: flex;
         align-items: center;
-        padding-bottom: 80px;
+        /* Keep the hero size, but place its existing copy higher so the lower
+           edge reads as the beginning of more content instead of a dead end. */
+        padding-bottom: 136px;
         overflow: hidden;
         background:
             radial-gradient(ellipse at 82% 35%, rgba(53, 104, 129, .34) 0, transparent 34%),
@@ -5268,7 +5270,7 @@
             height: min(540px, 78svh);
             min-height: 440px;
             align-items: flex-end;
-            padding-bottom: 34px;
+            padding-bottom: 118px;
         }
 
         .hero-video {
