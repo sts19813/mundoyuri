@@ -7,7 +7,7 @@ use App\Models\ForumThread;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 
 class CommunityActivityService
@@ -17,7 +17,7 @@ class CommunityActivityService
      * does not persist a second activity log, so private/admin activity cannot
      * leak into a profile feed.
      */
-    public function forUser(User $user, bool $includeFavorites, int $perPage = 12): LengthAwarePaginator
+    public function forUser(User $user, bool $includeFavorites, int $perPage = 12): Paginator
     {
         $queries = [
             $this->threadActivities($user),
@@ -40,7 +40,7 @@ class CommunityActivityService
             ->fromSub($union, 'community_activity')
             ->orderByDesc('activity_at')
             ->orderByDesc('target_id')
-            ->paginate($perPage, ['*'], 'activity_page')
+            ->simplePaginate($perPage, ['*'], 'activity_page')
             ->through(function (object $activity): object {
                 $activity->occurred_at = Carbon::parse($activity->activity_at);
                 $activity->url = $this->urlFor($activity);

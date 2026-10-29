@@ -1,11 +1,11 @@
-@props(['reportable'])
+@props(['reportable', 'variant' => 'default'])
 
 @php($target = match (true) { $reportable instanceof \App\Models\ForumThread => 'thread', $reportable instanceof \App\Models\ForumPost => 'post', $reportable instanceof \App\Models\User => 'user', default => null })
 
 @auth
     @if($target && ! auth()->user()->is($reportable))
-        <details class="community-report-form">
-            <summary>Reportar</summary>
+        <details @class(['community-report-form', 'community-report-form-profile' => $variant === 'profile'])>
+            <summary @class(['profile-btn profile-btn-soft profile-report-trigger' => $variant === 'profile'])>Reportar</summary>
             <form method="POST" action="{{ route('community.reports.store') }}">
                 @csrf
                 <input type="hidden" name="target" value="{{ $target }}">

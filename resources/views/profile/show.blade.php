@@ -56,14 +56,6 @@
                         <p>{{ $profileUser->alias ? '@'.$profileUser->alias : 'Miembro de Mundo Yuri' }}</p>
                         <div class="community-profile-labels">
                             <x-community.rank :rank="$communityRank" />
-                            @if($profileUser->is_legacy)
-                                <span class="community-badge community-badge-legacy"><span aria-hidden="true">✦</span> Miembro histórico de Mundo Yuri</span>
-                            @endif
-                            @foreach($profileUser->badges as $badge)
-                                @unless($profileUser->is_legacy && $badge->slug === 'miembro-historico')
-                                    <x-community.badge :badge="$badge" />
-                                @endunless
-                            @endforeach
                         </div>
                         <div class="public-profile-social-stats">
                             <a href="{{ route('profiles.followers', $profileUser) }}">
@@ -99,7 +91,7 @@
                                     </button>
                                 </form>
                                 <a class="profile-btn profile-btn-soft" href="{{ route('messages.show', $profileUser) }}">Mensaje</a>
-                                <x-community.report-form :reportable="$profileUser" />
+                                <x-community.report-form :reportable="$profileUser" variant="profile" />
                             @endunless
 
                             @if($viewerHasBlocked)
@@ -209,42 +201,6 @@
                         </section>
                     @endif
 
-                    @if($canViewActivity)
-                        <section class="profile-panel profile-panel-main community-profile-activity">
-                            <div class="profile-panel-heading">
-                                <div>
-                                    <span class="profile-panel-kicker">Actividad reciente</span>
-                                    <h2>Participación</h2>
-                                </div>
-                            </div>
-                            @forelse($communityActivity as $activity)
-                                <article class="community-activity-item">
-                                    <p>
-                                        @switch($activity->activity_type)
-                                            @case('created_thread') Creó un tema @break
-                                            @case('replied_thread') Respondió a un tema @break
-                                            @case('created_question') Hizo una pregunta @break
-                                            @case('answered_question') Respondió una pregunta @break
-                                            @case('accepted_answer') Su respuesta fue aceptada en @break
-                                            @case('favorite_series') Marcó como favorita @break
-                                            @case('badge_awarded') Obtuvo la insignia @break
-                                        @endswitch
-                                        @if($activity->url)<a href="{{ $activity->url }}">{{ $activity->title }}</a>@else<strong>{{ $activity->title }}</strong>@endif
-                                    </p>
-                                    <time datetime="{{ $activity->occurred_at->toAtomString() }}">{{ $activity->occurred_at->diffForHumans() }}</time>
-                                </article>
-                            @empty
-                                <div class="public-profile-empty">
-                                    <span aria-hidden="true">✦</span>
-                                    <p>Este perfil todavía no tiene actividad pública reciente.</p>
-                                </div>
-                            @endforelse
-                            @if($communityActivity->hasPages())
-                                <div class="community-activity-pagination">{{ $communityActivity->links() }}</div>
-                            @endif
-                        </section>
-                    @endif
-
                     @if($profileUser->canDisplaySignatureTo(auth()->user()))
                         <section class="profile-panel community-profile-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
                             <span class="profile-panel-kicker">Firma</span>
@@ -282,6 +238,41 @@
                             <p class="public-profile-badges-empty">{{ $isOwner ? 'Aún no tienes insignias.' : 'Sin insignias todavía.' }}</p>
                         @endif
                     </section>
+
+                    @if($canViewActivity)
+                        <section class="profile-panel public-profile-activity" aria-labelledby="profile-activity-title">
+                            <div class="public-profile-side-heading">
+                                <div>
+                                    <span class="profile-panel-kicker">Actividad reciente</span>
+                                    <h2 id="profile-activity-title">Participación</h2>
+                                </div>
+                            </div>
+                            <div class="public-profile-activity-list">
+                                @forelse($communityActivity as $activity)
+                                    <article class="community-activity-item">
+                                        <p>
+                                            @switch($activity->activity_type)
+                                                @case('created_thread') Creó un tema @break
+                                                @case('replied_thread') Respondió a un tema @break
+                                                @case('created_question') Hizo una pregunta @break
+                                                @case('answered_question') Respondió una pregunta @break
+                                                @case('accepted_answer') Su respuesta fue aceptada en @break
+                                                @case('favorite_series') Marcó como favorita @break
+                                                @case('badge_awarded') Obtuvo la insignia @break
+                                            @endswitch
+                                            @if($activity->url)<a href="{{ $activity->url }}">{{ $activity->title }}</a>@else<strong>{{ $activity->title }}</strong>@endif
+                                        </p>
+                                        <time datetime="{{ $activity->occurred_at->toAtomString() }}">{{ $activity->occurred_at->diffForHumans() }}</time>
+                                    </article>
+                                @empty
+                                    <p class="public-profile-activity-empty">Este perfil todavía no tiene actividad pública reciente.</p>
+                                @endforelse
+                            </div>
+                            @if($communityActivity->hasPages())
+                                <div class="community-activity-pagination">{{ $communityActivity->links() }}</div>
+                            @endif
+                        </section>
+                    @endif
 
                     <section class="profile-panel profile-account-card">
                         <span class="profile-panel-kicker">Información</span>
