@@ -6490,6 +6490,10 @@
     background: linear-gradient(180deg, transparent 0, rgba(13, 8, 16, .18) 38px, rgba(13, 8, 16, .58) 94px, #0d0810 150px);
 }
 
+html[data-season-palette] body .home-first-section {
+    background: linear-gradient(180deg, transparent 0, rgb(var(--season-bg-rgb) / .18) 38px, rgb(var(--season-bg-rgb) / .58) 94px, var(--season-bg) 150px);
+}
+
 @media (max-width: 768px) {
     .home-first-section { margin-top: -100px; }
     .continue-section { padding-top: 28px; }
