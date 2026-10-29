@@ -40,4 +40,11 @@ class CatalogIndexTest extends TestCase
             ->assertSee('data-catalog-filters', false)
             ->assertDontSee('pagination');
     }
+
+    public function test_catalogue_filters_start_collapsed(): void
+    {
+        $this->get(route('catalog.series.index'))
+            ->assertOk()
+            ->assertSee('setFiltersOpen(false);', false);
+    }
 }

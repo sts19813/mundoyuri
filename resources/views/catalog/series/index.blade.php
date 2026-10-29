@@ -266,7 +266,9 @@
             toggle.setAttribute('aria-expanded', String(isOpen));
         }
 
-        setFiltersOpen(window.matchMedia('(max-width: 768px)').matches);
+        // El catálogo debe ser visible de inmediato, especialmente en móvil.
+        // Los valores seleccionados siguen siendo visibles al abrir el panel.
+        setFiltersOpen(false);
 
         search.addEventListener('input', filterCatalogue);
         type.addEventListener('change', filterCatalogue);
