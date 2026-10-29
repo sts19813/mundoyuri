@@ -6171,7 +6171,7 @@
 .community-member-spotlight .forum-post-author-compact > summary { box-sizing: border-box; min-width: 0; width: 100%; height: 100% !important; max-height: 124px; display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; padding: 12px 8px 11px; border: 1px solid rgba(255, 255, 255, .06); border-radius: 14px; background: rgba(255, 255, 255, .03); text-align: center; transition: border-color .18s, background .18s, transform .18s; }
 .community-member-spotlight .forum-post-author-compact > summary:hover,
 .community-member-spotlight .forum-post-author-compact[open] > summary { border-color: rgba(244, 63, 142, .32); background: rgba(244, 63, 142, .09); transform: translateY(-1px); }
-.community-member-spotlight .forum-author-popover { z-index: 45; pointer-events: none; }
+.community-member-spotlight .forum-author-popover { z-index: 45; pointer-events: auto; }
 .community-member-top .forum-author-popover { top: auto; bottom: calc(100% + 9px); transform: translateY(3px); }
 .community-member-top .forum-post-author-compact[open] .forum-author-popover { transform: translateY(0); }
 .community-member-spotlight .forum-post-avatar { width: 52px; height: 52px; flex: 0 0 52px; margin: 0; }
