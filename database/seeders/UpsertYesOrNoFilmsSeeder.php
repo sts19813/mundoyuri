@@ -101,7 +101,9 @@ class UpsertYesOrNoFilmsSeeder extends Seeder
                         'title' => $film['title'],
                         'alternate_titles' => $film['alternate_titles'],
                         'content_type' => 'movie',
-                        'catalog_section' => 'peliculas-gl',
+                        // Inicio mezcla el catálogo principal `series-gl`, donde ya
+                        // viven las películas GL como Uranus y Girls Like Girls.
+                        'catalog_section' => 'series-gl',
                         'status' => 'completed',
                         'description' => $film['description'],
                         'seo_title' => $film['seo_title'],
