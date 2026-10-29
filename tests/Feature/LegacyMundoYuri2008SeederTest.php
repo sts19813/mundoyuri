@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\LegacyProfile;
 use Carbon\Carbon;
 use Database\Seeders\LegacyMundoYuri2008Seeder;
+use Database\Seeders\UpsertAngelAndMiragemLegacyProfilesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,7 +25,7 @@ class LegacyMundoYuri2008SeederTest extends TestCase
 
         $angel = LegacyProfile::query()->with('badges')->where('nickname', '~~Angel~~')->firstOrFail();
         $this->assertSame('2007-08-13', $angel->legacy_joined_at?->format('Y-m-d'));
-        $this->assertSame(100, $angel->legacy_message_count);
+        $this->assertSame(73, $angel->legacy_message_count);
         $this->assertSame('Brasília', $angel->legacy_location);
         $this->assertTrue($angel->is_legacy);
         $this->assertTrue($angel->legacy_verified);
@@ -57,7 +58,7 @@ class LegacyMundoYuri2008SeederTest extends TestCase
         $this->assertDatabaseCount('users', 0);
 
         $profile = LegacyProfile::query()->where('nickname', 'Miragem')->firstOrFail();
-        $this->assertSame(115, $profile->legacy_message_count);
+        $this->assertSame(61, $profile->legacy_message_count);
         $this->assertSame('unclaimed', $profile->claim_status);
     }
 
@@ -71,5 +72,26 @@ class LegacyMundoYuri2008SeederTest extends TestCase
             ->assertSee('Miembro Histórico')
             ->assertSee('Pionera 2007')
             ->assertSee('Himeko');
+    }
+
+    public function test_the_two_preserved_profiles_keep_their_historical_details_and_reciprocal_bond(): void
+    {
+        $this->seed(LegacyMundoYuri2008Seeder::class);
+        $this->seed(UpsertAngelAndMiragemLegacyProfilesSeeder::class);
+
+        $angel = LegacyProfile::query()->where('nickname', '~~Angel~~')->firstOrFail();
+        $miragem = LegacyProfile::query()->where('nickname', 'Miragem')->firstOrFail();
+
+        $this->assertSame($miragem->id, $angel->legacy_soulmate_profile_id);
+        $this->assertSame($angel->id, $miragem->legacy_soulmate_profile_id);
+        $this->assertSame('Professora', $angel->legacy_occupation);
+        $this->assertSame('Desocupada', $miragem->legacy_occupation);
+
+        $this->get(route('legacy-profiles.show', $angel))
+            ->assertOk()
+            ->assertSee('Almas gemelas')
+            ->assertSee('Miragem')
+            ->assertSee('Firma histórica')
+            ->assertSee('Una de las fundadoras');
     }
 }

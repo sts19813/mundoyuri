@@ -35,6 +35,9 @@ class LegacyProfile extends Model
         'legacy_occupation',
         'legacy_interests',
         'legacy_website',
+        'legacy_biography',
+        'legacy_signature_text',
+        'legacy_soulmate_profile_id',
         'legacy_avatar_path',
         'legacy_avatar_url',
         'source',
@@ -65,6 +68,11 @@ class LegacyProfile extends Model
     public function claimedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'claimed_by_user_id');
+    }
+
+    public function legacySoulmate(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'legacy_soulmate_profile_id');
     }
 
     public function claims(): HasMany

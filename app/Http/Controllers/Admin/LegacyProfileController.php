@@ -35,7 +35,10 @@ class LegacyProfileController extends Controller
     {
         $this->authorize('manage', LegacyProfile::class);
 
-        return view('admin.legacy-profiles.create', ['badges' => $this->availableBadges()]);
+        return view('admin.legacy-profiles.create', [
+            'badges' => $this->availableBadges(),
+            'potentialSoulmates' => $this->potentialSoulmates(),
+        ]);
     }
 
     public function store(StoreLegacyProfileRequest $request): RedirectResponse
@@ -62,7 +65,11 @@ class LegacyProfileController extends Controller
 
         $legacyProfile->load('badges');
 
-        return view('admin.legacy-profiles.edit', ['legacyProfile' => $legacyProfile, 'badges' => $this->availableBadges()]);
+        return view('admin.legacy-profiles.edit', [
+            'legacyProfile' => $legacyProfile,
+            'badges' => $this->availableBadges(),
+            'potentialSoulmates' => $this->potentialSoulmates($legacyProfile),
+        ]);
     }
 
     public function update(UpdateLegacyProfileRequest $request, LegacyProfile $legacyProfile): RedirectResponse
@@ -101,6 +108,14 @@ class LegacyProfileController extends Controller
     private function availableBadges()
     {
         return Badge::query()->active()->ordered()->get();
+    }
+
+    private function potentialSoulmates(?LegacyProfile $except = null)
+    {
+        return LegacyProfile::query()
+            ->when($except, fn ($query) => $query->whereKeyNot($except->getKey()))
+            ->orderBy('nickname')
+            ->get(['id', 'nickname']);
     }
 
     /** @param array<int, int|string> $badgeIds */

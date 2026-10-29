@@ -3157,6 +3157,86 @@
         padding: 20px;
     }
 
+    .legacy-profile-biography {
+        margin: 24px 0 4px;
+        color: #e7dce9;
+        font-size: .92rem;
+        line-height: 1.75;
+    }
+
+    .legacy-profile-signature {
+        margin-top: 22px;
+    }
+
+    .legacy-profile-signature p {
+        margin: 10px 0 0;
+        color: #f5d8e7;
+        font: italic 1.03rem/1.7 'Playfair Display', serif;
+    }
+
+    .legacy-soulmate-card {
+        overflow: hidden;
+        padding: 22px;
+        border-color: rgba(244, 63, 142, .34);
+        background: linear-gradient(135deg, rgba(90, 22, 67, .88), rgba(28, 15, 35, .94));
+    }
+
+    .legacy-soulmate-card h2 {
+        margin: 5px 0 6px;
+        color: #fff;
+        font: 700 1.35rem 'Playfair Display', serif;
+    }
+
+    .legacy-soulmate-card > p {
+        margin: 0;
+        color: #d9b9cd;
+        font-size: .78rem;
+        line-height: 1.55;
+    }
+
+    .legacy-soulmate-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 17px;
+        padding: 10px;
+        border: 1px solid rgba(255, 208, 228, .18);
+        border-radius: 14px;
+        color: #fff;
+        background: rgba(8, 4, 12, .23);
+        text-decoration: none;
+        transition: border-color .2s, transform .2s, background .2s;
+    }
+
+    .legacy-soulmate-link:hover {
+        border-color: rgba(255, 177, 211, .62);
+        color: #fff;
+        background: rgba(244, 63, 142, .12);
+        transform: translateY(-1px);
+    }
+
+    .legacy-soulmate-link > :last-child { margin-left: auto; color: #ffb1d5; font-size: 1.1rem; }
+    .legacy-soulmate-link small,
+    .legacy-soulmate-link strong { display: block; }
+    .legacy-soulmate-link small { color: #d7b5c7; font-size: .65rem; }
+    .legacy-soulmate-link strong { margin-top: 2px; font-size: .84rem; }
+
+    .legacy-soulmate-avatar {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        place-items: center;
+        overflow: hidden;
+        border: 2px solid #ff79b7;
+        border-radius: 50%;
+        color: #fff;
+        background: #6b214f;
+        font-weight: 700;
+    }
+
+    .legacy-soulmate-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
     .public-profile-badges-heading {
         display: flex;
         align-items: center;

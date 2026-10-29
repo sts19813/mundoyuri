@@ -48,9 +48,6 @@
                         @if($legacyProfile->legacy_rank)
                             <span class="community-rank">{{ $legacyProfile->legacy_rank }}</span>
                         @endif
-                        @foreach($legacyProfile->badges as $badge)
-                            <x-community.badge :badge="$badge" />
-                        @endforeach
                     </div>
                     <div class="public-profile-social-stats">
                         @if(! is_null($legacyProfile->legacy_message_count))
@@ -71,6 +68,10 @@
                                 <h2>Información personal</h2>
                             </div>
                         </div>
+
+                        @if(filled($legacyProfile->legacy_biography))
+                            <div class="legacy-profile-biography legacy-profile-prewrap">{{ $legacyProfile->legacy_biography }}</div>
+                        @endif
 
                         @if(filled($legacyProfile->legacy_location) || filled($legacyProfile->legacy_occupation) || filled($legacyProfile->legacy_interests) || filled($legacyProfile->legacy_website))
                             <dl class="community-profile-about-grid">
@@ -94,6 +95,13 @@
                             </div>
                         @endif
                     </section>
+
+                    @if(filled($legacyProfile->legacy_signature_text))
+                        <section class="profile-panel profile-panel-main legacy-profile-signature">
+                            <span class="profile-panel-kicker">Firma histórica</span>
+                            <p class="legacy-profile-prewrap">{{ $legacyProfile->legacy_signature_text }}</p>
+                        </section>
+                    @endif
                 </div>
 
                 <aside class="profile-sidebar">
@@ -120,6 +128,25 @@
                             <p class="public-profile-badges-empty">Sin insignias todavía.</p>
                         @endif
                     </section>
+
+                    @if($legacyProfile->legacySoulmate)
+                        <section class="profile-panel legacy-soulmate-card">
+                            <span class="profile-panel-kicker">Vínculo histórico</span>
+                            <h2>Almas gemelas</h2>
+                            <p>Un vínculo especial conservado del archivo de Mundo Yuri.</p>
+                            <a href="{{ route('legacy-profiles.show', $legacyProfile->legacySoulmate) }}" class="legacy-soulmate-link">
+                                <span class="legacy-soulmate-avatar" aria-hidden="true">
+                                    @if($legacyProfile->legacySoulmate->avatarUrl())
+                                        <img src="{{ $legacyProfile->legacySoulmate->avatarUrl() }}" alt="">
+                                    @else
+                                        {{ mb_strtoupper(mb_substr($legacyProfile->legacySoulmate->nickname, 0, 1)) }}
+                                    @endif
+                                </span>
+                                <span><small>Alma gemela de {{ $legacyProfile->nickname }}</small><strong>{{ $legacyProfile->legacySoulmate->nickname }}</strong></span>
+                                <span aria-hidden="true">↗</span>
+                            </a>
+                        </section>
+                    @endif
 
                     <section class="profile-panel profile-account-card">
                         <span class="profile-panel-kicker">Información</span>

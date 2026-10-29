@@ -23,7 +23,7 @@ class LegacyProfileController extends Controller
     {
         abort_unless($legacyProfile->is_published || auth()->user()?->isAdmin(), 404);
 
-        $legacyProfile->load('badges');
+        $legacyProfile->load(['badges', 'legacySoulmate.badges']);
 
         return view('legacy-profiles.show', compact('legacyProfile'));
     }

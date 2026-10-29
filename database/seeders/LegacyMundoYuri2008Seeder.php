@@ -90,10 +90,10 @@ class LegacyMundoYuri2008Seeder extends Seeder
     private function profiles(): array
     {
         return [
-            ['nickname' => '~~Angel~~', 'legacy_joined_at' => '2007-08-13', 'legacy_message_count' => 100, 'legacy_location' => 'Brasília'],
+            ['nickname' => '~~Angel~~', 'legacy_joined_at' => '2007-08-13', 'legacy_message_count' => 73, 'legacy_location' => 'Brasília'],
             ['nickname' => 'atis', 'legacy_joined_at' => '2007-08-14', 'legacy_message_count' => 65, 'legacy_location' => 'MATRIX'],
             ['nickname' => 'yukari.yuri', 'legacy_joined_at' => '2007-08-14', 'legacy_message_count' => 9, 'legacy_location' => null],
-            ['nickname' => 'Miragem', 'legacy_joined_at' => '2007-08-20', 'legacy_message_count' => 115, 'legacy_location' => 'Deserto Vermelho'],
+            ['nickname' => 'Miragem', 'legacy_joined_at' => '2007-08-20', 'legacy_message_count' => 61, 'legacy_location' => 'Deserto Vermelho'],
             ['nickname' => 'Splash', 'legacy_joined_at' => '2007-09-15', 'legacy_message_count' => 1, 'legacy_location' => null],
             ['nickname' => 'Hirzigoto', 'legacy_joined_at' => '2007-12-20', 'legacy_message_count' => 54, 'legacy_location' => 'Brasil'],
             ['nickname' => 'Fenix', 'legacy_joined_at' => '2007-12-31', 'legacy_message_count' => 0, 'legacy_location' => null],
