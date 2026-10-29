@@ -26,8 +26,8 @@ class UpsertAngelAndMiragemLegacyProfilesSeeder extends Seeder
                 'legacy_occupation' => 'Professora',
                 'legacy_interests' => 'Yuri, shoujo-ai, animes, literatura, Harry Potter',
                 'legacy_website' => 'https://www.fotolog.com/cyber_dust',
-                'legacy_biography' => 'Perfil histórico recuperado del archivo de Mundo Yuri. Una de las fundadoras de la comunidad original.',
-                'legacy_signature_text' => 'Yuri · shoujo-ai · animes · literatura · Harry Potter',
+                'legacy_biography' => 'Fundadora de Mundo Yuri. Profesora, amante del yuri, shoujo-ai, los animes, la literatura y Harry Potter.',
+                'legacy_signature_text' => 'Alma gemela de Miragem',
                 'legacy_soulmate_profile_id' => $miragem->id,
                 'legacy_verified' => true,
             ]);
@@ -40,8 +40,8 @@ class UpsertAngelAndMiragemLegacyProfilesSeeder extends Seeder
                 'legacy_occupation' => 'Desocupada',
                 'legacy_interests' => 'Desinteressada',
                 'legacy_website' => 'https://www.fotolog.com/cami_chan',
-                'legacy_biography' => 'Perfil histórico recuperado del archivo de Mundo Yuri, conservado tal como aparece en la comunidad original.',
-                'legacy_signature_text' => 'Deserto Vermelho · Desinteressada',
+                'legacy_biography' => 'Desde el Deserto Vermelho, compartiendo su lugar en Mundo Yuri.',
+                'legacy_signature_text' => 'Alma gemela de ~~Angel~~',
                 'legacy_soulmate_profile_id' => $angel->id,
                 'legacy_verified' => true,
             ]);

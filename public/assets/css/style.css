@@ -3174,6 +3174,57 @@
         font: italic 1.03rem/1.7 'Playfair Display', serif;
     }
 
+    .legacy-profile-admin-actions {
+        margin-left: auto;
+    }
+
+    .angel-profile-hero {
+        isolation: isolate;
+        border-color: rgba(255, 165, 210, .42);
+        background:
+            radial-gradient(circle at 78% 18%, rgba(255, 167, 207, .2), transparent 28%),
+            linear-gradient(105deg, rgba(13, 8, 16, .96) 5%, rgba(60, 20, 48, .9) 58%, rgba(123, 45, 81, .58)),
+            var(--dark-card);
+    }
+
+    .angel-profile-petals {
+        position: absolute;
+        z-index: 3;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .angel-profile-petals span {
+        position: absolute;
+        top: -20%;
+        color: #ffc0dd;
+        font-size: clamp(.72rem, 1.4vw, 1.05rem);
+        opacity: .82;
+        text-shadow: 0 0 9px rgba(255, 171, 210, .36);
+        animation: angel-petal-fall var(--petal-duration, 8s) linear infinite;
+    }
+
+    .angel-profile-petals span:nth-child(1) { left: 8%; --petal-duration: 8.6s; animation-delay: -1.5s; }
+    .angel-profile-petals span:nth-child(2) { left: 18%; --petal-duration: 10.1s; animation-delay: -5.2s; }
+    .angel-profile-petals span:nth-child(3) { left: 31%; --petal-duration: 7.8s; animation-delay: -3.4s; }
+    .angel-profile-petals span:nth-child(4) { left: 44%; --petal-duration: 9.4s; animation-delay: -7.7s; }
+    .angel-profile-petals span:nth-child(5) { left: 57%; --petal-duration: 8.1s; animation-delay: -4.4s; }
+    .angel-profile-petals span:nth-child(6) { left: 66%; --petal-duration: 10.8s; animation-delay: -8.8s; }
+    .angel-profile-petals span:nth-child(7) { left: 75%; --petal-duration: 8.9s; animation-delay: -2.8s; }
+    .angel-profile-petals span:nth-child(8) { left: 84%; --petal-duration: 9.8s; animation-delay: -6.1s; }
+    .angel-profile-petals span:nth-child(9) { left: 91%; --petal-duration: 7.6s; animation-delay: -4.9s; }
+    .angel-profile-petals span:nth-child(10) { left: 52%; --petal-duration: 11.3s; animation-delay: -9.7s; }
+
+    @keyframes angel-petal-fall {
+        from { transform: translate3d(0, -15%, 0) rotate(0deg); }
+        to { transform: translate3d(-56px, 135%, 0) rotate(320deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .angel-profile-petals span { animation: none; }
+    }
+
     .legacy-soulmate-card {
         overflow: hidden;
         padding: 22px;
@@ -3182,16 +3233,9 @@
     }
 
     .legacy-soulmate-card h2 {
-        margin: 5px 0 6px;
+        margin: 0 0 7px;
         color: #fff;
         font: 700 1.35rem 'Playfair Display', serif;
-    }
-
-    .legacy-soulmate-card > p {
-        margin: 0;
-        color: #d9b9cd;
-        font-size: .78rem;
-        line-height: 1.55;
     }
 
     .legacy-soulmate-link {

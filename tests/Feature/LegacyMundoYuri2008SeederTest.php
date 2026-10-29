@@ -91,7 +91,7 @@ class LegacyMundoYuri2008SeederTest extends TestCase
             ->assertOk()
             ->assertSee('Almas gemelas')
             ->assertSee('Miragem')
-            ->assertSee('Firma histórica')
-            ->assertSee('Una de las fundadoras');
+            ->assertSee('Firma')
+            ->assertSee('Fundadora de Mundo Yuri');
     }
 }

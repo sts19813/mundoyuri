@@ -28,9 +28,14 @@
             @endif
         </div>
 
-        <section class="profile-hero-card public-profile-hero public-profile-hero-full">
+        <section class="profile-hero-card public-profile-hero public-profile-hero-full @if($legacyProfile->slug === 'angel-695dff23806a') angel-profile-hero @endif">
             <div class="profile-cover-overlay"></div>
             <div class="profile-hero-pattern"></div>
+            @if($legacyProfile->slug === 'angel-695dff23806a')
+                <div class="angel-profile-petals" aria-hidden="true">
+                    @foreach(range(1, 10) as $petal)<span>❀</span>@endforeach
+                </div>
+            @endif
 
             <div class="profile-identity">
                 <div class="profile-avatar-wrap">
@@ -41,7 +46,7 @@
                     @endif
                 </div>
                 <div class="profile-identity-copy">
-                    <span class="profile-eyebrow">Perfil de la comunidad</span>
+                    <span class="profile-eyebrow">Comunidad Mundo Yuri</span>
                     <h1>{{ $legacyProfile->nickname }}</h1>
                     <p>Miembro de Mundo Yuri</p>
                     <div class="community-profile-labels">
@@ -56,6 +61,11 @@
                     </div>
                 </div>
             </div>
+            @can('manage', $legacyProfile)
+                <div class="profile-hero-actions legacy-profile-admin-actions">
+                    <a href="{{ route('admin.legacy-profiles.edit', $legacyProfile) }}" class="profile-btn profile-btn-primary">✎ Editar perfil</a>
+                </div>
+            @endcan
         </section>
 
         <div class="container-xl px-4 position-relative public-profile-content">
@@ -98,7 +108,7 @@
 
                     @if(filled($legacyProfile->legacy_signature_text))
                         <section class="profile-panel profile-panel-main legacy-profile-signature">
-                            <span class="profile-panel-kicker">Firma histórica</span>
+                            <span class="profile-panel-kicker">Firma</span>
                             <p class="legacy-profile-prewrap">{{ $legacyProfile->legacy_signature_text }}</p>
                         </section>
                     @endif
@@ -131,9 +141,7 @@
 
                     @if($legacyProfile->legacySoulmate)
                         <section class="profile-panel legacy-soulmate-card">
-                            <span class="profile-panel-kicker">Vínculo histórico</span>
                             <h2>Almas gemelas</h2>
-                            <p>Un vínculo especial conservado del archivo de Mundo Yuri.</p>
                             <a href="{{ route('legacy-profiles.show', $legacyProfile->legacySoulmate) }}" class="legacy-soulmate-link">
                                 <span class="legacy-soulmate-avatar" aria-hidden="true">
                                     @if($legacyProfile->legacySoulmate->avatarUrl())
