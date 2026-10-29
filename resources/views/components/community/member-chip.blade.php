@@ -7,6 +7,10 @@
     $hasAvatar = $isHistoricalProfile ? filled($member->avatarUrl()) : $member->hasProfileAvatar();
     $resolvedRank = $isHistoricalProfile ? null : app(\App\Services\CommunityRankResolver::class)->resolve($member);
     $soulmateLabel = $isHistoricalProfile && $member->legacySoulmate ? 'Alma gemela: '.str($member->legacySoulmate->nickname)->replace('~', '') : null;
+    $viewer = auth()->user();
+    $viewer?->loadMissing(['blockedUsers:id', 'blockedByUsers:id']);
+    $blocked = ! $isHistoricalProfile && $viewer && ($viewer->blockedUsers->contains('id', $member->id) || $viewer->blockedByUsers->contains('id', $member->id));
+    $canWrite = ! $isHistoricalProfile && $viewer && ! $blocked && ! $viewer->is($member) && $member->is_active;
 @endphp
 
 <details class="forum-post-author-compact community-member-chip" data-author-card data-member-chip data-profile-url="{{ $profileUrl }}">
@@ -57,5 +61,18 @@
                 <dd>{{ number_format($isHistoricalProfile ? $member->legacy_message_count : $member->community_message_count) }}</dd>
             </div>
         </dl>
+        @if(! $isHistoricalProfile)
+            <x-community.signature :user="$member" :previous-user-id="null" />
+        @elseif(filled($member->legacy_signature_text))
+            <footer class="community-post-signature" aria-label="Firma de {{ $memberName }}">
+                <p>{{ $member->legacy_signature_text }}</p>
+            </footer>
+        @endif
+        <div class="forum-author-popover-actions">
+            <a href="{{ $profileUrl }}">Ver perfil</a>
+            @if($canWrite)
+                <a class="is-primary" href="{{ route('messages.show', $member) }}">Escribir</a>
+            @endif
+        </div>
     </aside>
 </details>

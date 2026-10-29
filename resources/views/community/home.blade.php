@@ -109,7 +109,7 @@
     <script>
         document.addEventListener('click', (event) => {
             const card = event.target.closest('[data-member-chip]');
-            if (!card) return;
+            if (!card || event.target.closest('.forum-author-popover')) return;
 
             event.preventDefault();
             window.location.assign(card.dataset.profileUrl);
@@ -117,7 +117,7 @@
 
         document.addEventListener('keydown', (event) => {
             const card = event.target.closest('[data-member-chip]');
-            if (!card || !['Enter', ' '].includes(event.key)) return;
+            if (!card || event.target.closest('.forum-author-popover') || !['Enter', ' '].includes(event.key)) return;
 
             event.preventDefault();
             window.location.assign(card.dataset.profileUrl);

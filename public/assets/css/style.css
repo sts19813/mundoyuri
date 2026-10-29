@@ -6480,6 +6480,8 @@
 .forum-author-popover-actions { display: flex; gap: 8px; padding-top: 2px; }
 .forum-author-popover-actions a { border: 1px solid rgba(244, 63, 142, .22); border-radius: 999px; padding: 5px 9px; color: #ffc5dc; font-size: .64rem; font-weight: 600; text-decoration: none; }
 .forum-author-popover-actions a:hover { border-color: rgba(244, 63, 142, .55); color: #fff; background: rgba(244, 63, 142, .12); }
+.forum-author-popover-actions a.is-primary { border-color: var(--rose); background: var(--rose); color: #fff; }
+.forum-author-popover-actions a.is-primary:hover { border-color: #ff74b5; background: #ff74b5; color: #fff; }
 
 .forum-post-content { padding: 14px 17px 16px; }
 .forum-post-body { padding: 2px 0 15px; font-size: .86rem; line-height: 1.72; }

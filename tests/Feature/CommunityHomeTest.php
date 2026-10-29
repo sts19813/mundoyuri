@@ -69,6 +69,23 @@ class CommunityHomeTest extends TestCase
             ->assertDontSee('Miyu Privada');
     }
 
+    public function test_member_hover_card_includes_its_signature_and_a_direct_message_action(): void
+    {
+        $viewer = User::factory()->create(['name' => 'Lectora']);
+        $member = User::factory()->create([
+            'name' => 'Autora con firma',
+            'signature_text' => 'Nos leemos entre episodios.',
+            'signature_enabled' => true,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('community.index'))
+            ->assertOk()
+            ->assertSee('Nos leemos entre episodios.')
+            ->assertSee(route('messages.show', $member), false)
+            ->assertSee('Escribir');
+    }
+
     public function test_member_directory_remains_available_on_its_own_route(): void
     {
         User::factory()->create(['name' => 'Miembro del directorio']);
