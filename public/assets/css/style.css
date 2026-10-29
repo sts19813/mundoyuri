@@ -6487,7 +6487,7 @@
     position: relative;
     z-index: 5;
     margin-top: -150px;
-    background: linear-gradient(180deg, transparent, rgba(13, 8, 16, .96) 38px, #0d0810 110px);
+    background: linear-gradient(180deg, transparent 0, rgba(13, 8, 16, .18) 38px, rgba(13, 8, 16, .58) 94px, #0d0810 150px);
 }
 
 @media (max-width: 768px) {
