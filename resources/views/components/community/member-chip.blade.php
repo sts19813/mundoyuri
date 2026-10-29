@@ -6,10 +6,11 @@
     $memberName = $isHistoricalProfile ? $member->nickname : $member->name;
     $hasAvatar = $isHistoricalProfile ? filled($member->avatarUrl()) : $member->hasProfileAvatar();
     $resolvedRank = $isHistoricalProfile ? null : app(\App\Services\CommunityRankResolver::class)->resolve($member);
+    $soulmateLabel = $isHistoricalProfile && $member->legacySoulmate ? 'Alma gemela: '.str($member->legacySoulmate->nickname)->replace('~', '') : null;
 @endphp
 
 <details class="forum-post-author-compact community-member-chip" data-author-card data-member-chip data-profile-url="{{ $profileUrl }}">
-    <summary aria-label="Ver perfil de {{ $memberName }}">
+    <summary aria-label="Ver perfil de {{ $memberName }}@if($soulmateLabel), {{ $soulmateLabel }}@endif" @if($soulmateLabel) title="{{ $soulmateLabel }}" @endif>
         <span @class(['forum-post-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) aria-hidden="true">
         @if($hasAvatar)
             <img src="{{ $member->avatarUrl() }}" alt="">
@@ -42,6 +43,9 @@
             <div class="forum-author-badges">
                 @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" />@endforeach
             </div>
+        @endif
+        @if($soulmateLabel)
+            <p class="forum-author-soulmate">{{ $soulmateLabel }}</p>
         @endif
         <dl class="forum-author-popover-meta">
             <div>

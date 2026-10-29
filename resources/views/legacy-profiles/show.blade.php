@@ -141,7 +141,7 @@
 
                     @if($legacyProfile->legacySoulmate)
                         <section class="profile-panel legacy-soulmate-card">
-                            <h2>Almas gemelas</h2>
+                            <h2>Alma gemela</h2>
                             <a href="{{ route('legacy-profiles.show', $legacyProfile->legacySoulmate) }}" class="legacy-soulmate-link">
                                 <span class="legacy-soulmate-avatar" aria-hidden="true">
                                     @if($legacyProfile->legacySoulmate->avatarUrl())
@@ -150,7 +150,7 @@
                                         {{ mb_strtoupper(mb_substr($legacyProfile->legacySoulmate->nickname, 0, 1)) }}
                                     @endif
                                 </span>
-                                <span><small>Alma gemela de {{ $legacyProfile->nickname }}</small><strong>{{ $legacyProfile->legacySoulmate->nickname }}</strong></span>
+                                <span><small>Alma gemela: {{ str($legacyProfile->legacySoulmate->nickname)->replace('~', '') }}</small><strong>{{ $legacyProfile->legacySoulmate->nickname }}</strong></span>
                                 <span aria-hidden="true">↗</span>
                             </a>
                         </section>

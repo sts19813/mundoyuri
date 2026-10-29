@@ -48,7 +48,10 @@ class CommunityController extends Controller
         $topHistoricalMembers = LegacyProfile::query()
             ->published()
             ->whereHas('badges', fn (Builder $query) => $query->active())
-            ->with(['badges' => fn ($query) => $query->active()->ordered()])
+            ->with([
+                'badges' => fn ($query) => $query->active()->ordered(),
+                'legacySoulmate:id,nickname',
+            ])
             ->withCount(['badges as active_badges_count' => fn ($query) => $query->active()])
             ->withSum(['badges as badge_score' => fn ($query) => $query->active()], 'priority')
             ->orderByDesc('badge_score')
@@ -209,7 +212,10 @@ class CommunityController extends Controller
             ->get()
             ->keyBy('id');
         $historical = LegacyProfile::query()
-            ->with(['badges' => fn ($query) => $query->active()->ordered()])
+            ->with([
+                'badges' => fn ($query) => $query->active()->ordered(),
+                'legacySoulmate:id,nickname',
+            ])
             ->whereIn('id', $rows->where('member_type', 'legacy')->pluck('member_id'))
             ->get()
             ->keyBy('id');

@@ -89,9 +89,10 @@ class LegacyMundoYuri2008SeederTest extends TestCase
 
         $this->get(route('legacy-profiles.show', $angel))
             ->assertOk()
-            ->assertSee('Almas gemelas')
+            ->assertSee('Alma gemela')
             ->assertSee('Miragem')
             ->assertSee('Firma')
+            ->assertSee('Alma gemela: Miragem')
             ->assertSee('Fundadora de Mundo Yuri');
     }
 }
