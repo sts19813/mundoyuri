@@ -12,6 +12,14 @@ class HomeLatestEpisodesSectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_guest_home_hero_guides_visitors_to_latest_episodes(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Descubre lo nuevo en Mundo Yuri')
+            ->assertSee('href="#novedades"', false);
+    }
+
     public function test_home_latest_episodes_are_twelve_most_recent_across_anime_and_gl(): void
     {
         $genre = Genre::query()->create([
