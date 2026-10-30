@@ -62,7 +62,16 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        <x-community.author-card :author="$streaker" :show-reputation="true" />
+                        <a href="{{ $streaker->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $streaker->displayName() }}">
+                            <span @class(['sidebar-profile-avatar', 'is-online' => $streaker->isOnline()])>
+                                @if($streaker->hasProfileAvatar())
+                                    <img src="{{ $streaker->avatarUrl() }}" alt="">
+                                @else
+                                    <span>{{ $streaker->initials() }}</span>
+                                @endif
+                            </span>
+                            <span class="sidebar-profile-name">{{ $streaker->displayName() }}</span>
+                        </a>
                         <span class="sidebar-streak-days" title="Mejor racha: {{ $streaker->longest_streak_days }} días">🔥 {{ $streaker->activeStreakDays() }}d</span>
                     </div>
                 </li>
@@ -81,11 +90,7 @@
             @forelse($marathoners as $marathoner)
                 @php
                     $seconds = (int) ($marathoner->total_presence_seconds ?? 0);
-                    $hours = intdiv($seconds, 3600);
-                    $minutes = intdiv($seconds % 3600, 60);
-                    $elapsed = $hours > 0
-                        ? $hours.' h'.($minutes ? ' '.$minutes.' min' : '')
-                        : max(1, $minutes).' min';
+                    $elapsed = max(1, (int) round($seconds / 3600)).' h';
                 @endphp
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
                     <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">
@@ -100,7 +105,16 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        <x-community.author-card :author="$marathoner" :show-reputation="true" />
+                        <a href="{{ $marathoner->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $marathoner->displayName() }}">
+                            <span @class(['sidebar-profile-avatar', 'is-online' => $marathoner->isOnline()])>
+                                @if($marathoner->hasProfileAvatar())
+                                    <img src="{{ $marathoner->avatarUrl() }}" alt="">
+                                @else
+                                    <span>{{ $marathoner->initials() }}</span>
+                                @endif
+                            </span>
+                            <span class="sidebar-profile-name">{{ $marathoner->displayName() }}</span>
+                        </a>
                         <span class="sidebar-marathon-time" title="Tiempo acumulado en Mundo Yuri">⏱ {{ $elapsed }}</span>
                     </div>
                 </li>

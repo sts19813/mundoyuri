@@ -45,11 +45,10 @@ class CatalogMarathonerSidebarTest extends TestCase
             ->assertSee('aria-selected="true"', false)
             ->assertSeeInOrder(['Luna', 'Mio'])
             ->assertDontSee('Admin del ranking')
-            ->assertSee('forum-author-popover', false)
-            ->assertSee('forum-post-avatar is-online', false)
-            ->assertSee('Ver hasta el amanecer')
-            ->assertSee(route('messages.show', $leader), false)
-            ->assertSee('Escribir');
+            ->assertSee('sidebar-profile-link', false)
+            ->assertSee($leader->publicProfileUrl(), false)
+            ->assertSee('🥇')
+            ->assertSee('2 h');
     }
 
     public function test_series_detail_uses_the_same_discovery_sidebar(): void
