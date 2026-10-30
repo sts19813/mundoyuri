@@ -35,15 +35,29 @@ class CatalogMarathonerSidebarTest extends TestCase
         $this->presence($runnerUp, 3600, '22222222-2222-4222-8222-222222222222');
         $this->presence($admin, 14400, '33333333-3333-4333-8333-333333333333');
 
+        foreach (range(3, 11) as $position) {
+            $participant = User::factory()->create([
+                'name' => "Ranking {$position}",
+                'alias' => "Ranking {$position}",
+                'last_streak_date' => now(),
+                'current_streak_days' => 13 - $position,
+                'longest_streak_days' => 13 - $position,
+            ]);
+
+            $this->presence($participant, (12 - $position) * 300, sprintf('00000000-0000-4000-8000-%012d', $position));
+        }
+
         $this->actingAs($viewer)
             ->get(route('public.episodes.show', $episode->slug))
             ->assertOk()
             ->assertSee('🔥 Rachas')
             ->assertSee('Maratonistas')
-            ->assertSee('Estrenos')
+            ->assertDontSee('Estrenos')
             ->assertSee('data-sidebar-tab="streaks"', false)
             ->assertSee('aria-selected="true"', false)
             ->assertSeeInOrder(['Luna', 'Mio'])
+            ->assertSee('Ranking 10')
+            ->assertDontSee('Ranking 11')
             ->assertDontSee('Admin del ranking')
             ->assertSee('sidebar-profile-link', false)
             ->assertSee($leader->publicProfileUrl(), false)

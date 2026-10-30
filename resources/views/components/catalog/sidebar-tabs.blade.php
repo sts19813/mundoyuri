@@ -27,18 +27,6 @@
         >
             Maratonistas
         </button>
-        <button
-            type="button"
-            class="sidebar-tab"
-            id="sidebar-tab-latest"
-            role="tab"
-            aria-selected="false"
-            aria-controls="sidebar-panel-latest"
-            tabindex="-1"
-            data-sidebar-tab="latest"
-        >
-            Estrenos
-        </button>
     </div>
     @else
         <div class="sidebar-single-title">Estrenos</div>
@@ -71,7 +59,7 @@
                             <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $streaker->isOnline()])>
                                 <span class="sidebar-profile-avatar">
                                     @if($streaker->hasProfileAvatar())
-                                        <img src="{{ $streaker->avatarUrl() }}" alt="">
+                                        <img src="{{ $streaker->avatarUrl() }}" alt="" style="object-position: {{ $streaker->profileImagePosition() }}">
                                     @else
                                         <span>{{ $streaker->initials() }}</span>
                                     @endif
@@ -116,7 +104,7 @@
                             <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $marathoner->isOnline()])>
                                 <span class="sidebar-profile-avatar">
                                     @if($marathoner->hasProfileAvatar())
-                                        <img src="{{ $marathoner->avatarUrl() }}" alt="">
+                                        <img src="{{ $marathoner->avatarUrl() }}" alt="" style="object-position: {{ $marathoner->profileImagePosition() }}">
                                     @else
                                         <span>{{ $marathoner->initials() }}</span>
                                     @endif
@@ -134,14 +122,8 @@
     </div>
     @endif
 
-    <div
-        class="sidebar-panel"
-        id="sidebar-panel-latest"
-        role="tabpanel"
-        aria-labelledby="sidebar-tab-latest"
-        data-sidebar-panel="latest"
-        @if($showRankings) hidden @endif
-    >
+    @if(! $showRankings)
+    <div class="sidebar-panel" id="sidebar-panel-latest">
         <div class="sidebar-list sidebar-latest-list">
             @forelse($recentEpisodes as $item)
                 <a href="{{ route('public.episodes.show', $item->slug) }}" class="sidebar-item">
@@ -168,6 +150,7 @@
             @endforelse
         </div>
     </div>
+    @endif
 </section>
 
 @once

@@ -294,8 +294,8 @@ class PublicCatalogController extends Controller
             ->take(8)
             ->get();
 
-        $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user(), 8);
-        $streakers = $presenceLeaderboard->publicStreakers(auth()->user());
+        $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user(), 10);
+        $streakers = $presenceLeaderboard->publicStreakers(auth()->user(), 10);
 
         $watchProgressEnabled = $this->watchProgressEnabledForRequest(request()) && auth()->check();
         $episodeProgress = $watchProgressEnabled

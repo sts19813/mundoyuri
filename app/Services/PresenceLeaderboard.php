@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
 class PresenceLeaderboard
 {
     /** @return Collection<int, User> */
-    public function publicStreakers(?User $viewer = null, int $limit = 8): Collection
+    public function publicStreakers(?User $viewer = null, int $limit = 10): Collection
     {
         $today = now(config('app.timezone'))->startOfDay();
 
@@ -26,7 +26,7 @@ class PresenceLeaderboard
             ->orderByDesc('current_streak_days')
             ->orderByDesc('longest_streak_days')
             ->orderBy('id')
-            ->limit(max(1, min($limit, 8)))
+            ->limit(max(1, min($limit, 10)))
             ->get();
     }
 
