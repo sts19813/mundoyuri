@@ -1,0 +1,8 @@
+# Donaciones con Stripe
+
+1. Ejecuta `composer install` y `php artisan migrate` en el entorno correspondiente.
+2. Configura `STRIPE_KEY`, `STRIPE_SECRET` y `STRIPE_WEBHOOK_SECRET` en el `.env` del servidor. Utiliza las tres claves del mismo modo (prueba o producción); nunca compartas las claves secretas ni las subas al repositorio. Después ejecuta `php artisan config:clear` o regenera la caché de configuración.
+3. En Stripe, crea un endpoint de webhook para `https://TU-DOMINIO/stripe/webhook` y suscribe los eventos `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.processing`, `payment_intent.canceled`, `charge.refunded` y `charge.updated`. Copia el secreto de firma de ese endpoint a `STRIPE_WEBHOOK_SECRET`.
+4. Prueba primero con claves y tarjetas de prueba de Stripe, incluyendo un pago confirmado, un pago rechazado y un reembolso. Verifica la entrega del webhook, la estrella opcional y el panel de donaciones. Después configura las credenciales y el webhook de producción.
+
+La página cobra aportaciones únicas desde $30 MXN. El mensaje personal opcional se guarda con el intento y es visible en el panel de donaciones, también si el pago no se completa. La cuenta de Stripe debe admitir los métodos habilitados y la moneda. Los intentos se cuentan al crear el formulario de pago; las visitas a la página no son intentos. Las comisiones y el neto corresponden a la transacción de balance original de Stripe y pueden estar en otra moneda; los reembolsos se muestran por separado. Stripe puede tardar en proporcionar la comisión. Las donaciones sin sesión no se vinculan posteriormente a una cuenta. La estrella se muestra solo si se eligió y existe al menos una donación confirmada que no esté completamente reembolsada.

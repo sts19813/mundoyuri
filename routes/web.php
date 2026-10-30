@@ -61,6 +61,9 @@ use App\Http\Controllers\UserPresenceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
+Route::get('/apoyar', [\App\Http\Controllers\DonationController::class, 'index'])->name('donations.index');
+Route::post('/apoyar/intento', [\App\Http\Controllers\DonationController::class, 'store'])->middleware('throttle:10,1')->name('donations.store');
+Route::post('/stripe/webhook', [\App\Http\Controllers\DonationController::class, 'webhook'])->name('donations.webhook');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/index', [PublicCatalogController::class, 'home'])->name('legacy.index');
 Route::view('/quienes-somos', 'about')->name('about');
@@ -237,6 +240,8 @@ Route::middleware(['auth', 'admin.panel'])->prefix('admin')->group(function () {
 // El panel administrativo solo está disponible para administradores y moderadores.
 Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(function () {
     Route::redirect('/', '/admin/dashboard');
+
+    Route::get('/donaciones', [\App\Http\Controllers\Admin\DonationController::class, 'index'])->middleware('admin')->name('admin.donations.index');
 
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
