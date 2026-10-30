@@ -18,7 +18,7 @@ class DonationController extends Controller
     public function store(Request $request)
     {
         abort_unless(filled(config('services.stripe.key')) && filled(config('services.stripe.secret')) && filled(config('services.stripe.webhook_secret')), 503);
-        $data = $request->validate(['amount' => ['required', 'integer', 'min:3000', 'max:1000000'], 'show_star' => ['boolean'], 'message' => ['nullable', 'string', 'max:500']]);
+        $data = $request->validate(['amount' => ['required', 'integer', 'min:1500', 'max:1000000'], 'show_star' => ['boolean'], 'message' => ['nullable', 'string', 'max:500']]);
         $donation = Donation::create(['user_id' => $request->user()?->id, 'show_star' => $request->user() && ($data['show_star'] ?? false), 'amount' => $data['amount'], 'currency' => 'mxn', 'message' => $data['message'] ?? null]);
         try {
             $intent = (new StripeClient(config('services.stripe.secret')))->paymentIntents->create([

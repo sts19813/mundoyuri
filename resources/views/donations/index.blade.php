@@ -32,7 +32,7 @@
                     <div class="label" id="amount-label">Elige tu aportación <span>MXN</span></div>
                     <div class="amounts" role="group" aria-labelledby="amount-label"><button type="button" data-amount="30" aria-pressed="false">$30</button><button type="button" data-amount="50" class="active" aria-pressed="true">$50</button><button type="button" data-amount="100" aria-pressed="false">$100</button></div>
                     <label class="custom-label" for="amount">O elige otra cantidad</label>
-                    <div class="custom"><span aria-hidden="true">$</span><input id="amount" type="number" min="30" max="10000" step="0.01" value="50" required><span aria-hidden="true">MXN</span></div>
+                    <div class="custom"><span aria-hidden="true">$</span><input id="amount" type="number" min="15" max="10000" step="0.01" value="50" required><span aria-hidden="true">MXN</span></div>
                     <label class="check message-toggle"><input type="checkbox" id="include-message" aria-controls="message-field" aria-expanded="false"><span>Quiero dejarte un mensaje <small>Opcional</small></span></label>
                     <div id="message-field" class="message-field" hidden><label class="sr-only" for="message">Tu mensaje</label><textarea id="message" maxlength="500" rows="3" placeholder="Escribe algo bonito..."></textarea></div>
                     @auth
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             if (!elements) {
                 const cents = Math.round(Number(amount.value) * 100);
-                if (!Number.isFinite(cents) || cents < 3000 || cents > 1000000) throw new Error('Elige una cantidad entre $30 y $10,000 MXN.');
+                if (!Number.isFinite(cents) || cents < 1500 || cents > 1000000) throw new Error('Elige una cantidad entre $15 y $10,000 MXN.');
                 const response = await fetch(@json(route('donations.store')), {method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}, body:JSON.stringify({amount:cents, message:includeMessage.checked ? message.value : null, show_star:document.querySelector('#show-star')?.checked || false})});
                 const data = await response.json(); if (!response.ok) throw new Error(data.message || 'No pudimos preparar el pago.');
                 const theme = getComputedStyle(document.documentElement);

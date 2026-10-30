@@ -39,8 +39,8 @@ class DonationTest extends TestCase
     public function test_amount_is_validated_and_unsigned_webhooks_are_rejected(): void
     {
         config(['services.stripe.key' => 'pk_test_example', 'services.stripe.secret' => 'sk_test_example', 'services.stripe.webhook_secret' => 'whsec_example']);
-        $this->postJson(route('donations.store'), ['amount' => 2999])->assertUnprocessable()->assertJsonValidationErrors('amount');
-        $this->postJson(route('donations.store'), ['amount' => 3000, 'message' => str_repeat('a', 501)])->assertUnprocessable()->assertJsonValidationErrors('message');
+        $this->postJson(route('donations.store'), ['amount' => 1499])->assertUnprocessable()->assertJsonValidationErrors('amount');
+        $this->postJson(route('donations.store'), ['amount' => 1500, 'message' => str_repeat('a', 501)])->assertUnprocessable()->assertJsonValidationErrors('message')->assertJsonMissingValidationErrors('amount');
         $this->postJson(route('donations.webhook'), ['type' => 'payment_intent.succeeded'])->assertBadRequest();
         $this->assertDatabaseCount('donations', 0);
     }
