@@ -102,12 +102,17 @@ class RichContentService
                         continue;
                     }
 
+                    $this->sanitizeChildren($child);
                     $this->unwrap($child);
 
                     continue;
                 }
 
+                // Sanitize descendants first: attribute handling can unwrap an iframe.
+                $this->sanitizeChildren($child);
                 $this->sanitizeAttributes($child, $tag);
+
+                continue;
             }
 
             $this->sanitizeChildren($child);
