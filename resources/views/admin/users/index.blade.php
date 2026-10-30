@@ -4,7 +4,7 @@
 
 @php
     $activeTab = request('tab', 'users');
-    if (!in_array($activeTab, ['users', 'roles', 'permissions'], true)) {
+    if (!in_array($activeTab, ['users', 'streaks', 'roles', 'permissions'], true)) {
         $activeTab = 'users';
     }
 @endphp
@@ -212,6 +212,12 @@
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link {{ $activeTab === 'streaks' ? 'active' : '' }}" data-bs-toggle="tab"
+                            data-bs-target="#streaks-tab-pane" type="button" role="tab" data-tab-key="streaks">
+                            Rachas
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link {{ $activeTab === 'roles' ? 'active' : '' }}" data-bs-toggle="tab"
                             data-bs-target="#roles-tab-pane" type="button" role="tab" data-tab-key="roles">
                             Roles
@@ -277,6 +283,54 @@
                                 </tr>
                             </thead>
                             <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade {{ $activeTab === 'streaks' ? 'show active' : '' }}" id="streaks-tab-pane" role="tabpanel">
+                    <div class="admin-users-workspace mb-5">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                            <div>
+                                <h2 class="fs-5 fw-bold text-gray-900 mb-1">Rachas de actividad</h2>
+                                <p class="text-muted mb-0">Se cuenta una vez por día local. Una persona conserva su racha si vuelve antes de que termine el día siguiente.</p>
+                            </div>
+                            <span class="badge badge-light-warning fs-6 px-4 py-3">🔥 {{ $streakUsers->where('active_streak_days', '>', 0)->count() }} activas</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed gy-5 admin-users-table">
+                            <thead>
+                                <tr class="text-start text-muted fw-bold fs-7 text-uppercase">
+                                    <th>Usuario</th>
+                                    <th>Racha actual</th>
+                                    <th>Mejor racha</th>
+                                    <th>Último día activo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($streakUsers as $streakUser)
+                                    <tr>
+                                        <td data-label="Usuario">
+                                            <div class="d-flex align-items-center gap-3">
+                                                @if($streakUser->hasProfileAvatar())
+                                                    <img class="symbol symbol-40px symbol-circle user-avatar" src="{{ $streakUser->avatarUrl() }}" alt="">
+                                                @else
+                                                    <span class="symbol symbol-40px symbol-circle bg-light-primary text-primary fw-bold d-inline-flex align-items-center justify-content-center">{{ $streakUser->initials() }}</span>
+                                                @endif
+                                                <div>
+                                                    <a class="text-gray-900 fw-bold text-hover-primary" href="{{ $streakUser->publicProfileUrl() }}">{{ $streakUser->displayName() }}</a>
+                                                    <div class="text-muted fs-8">{{ $streakUser->email }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td data-label="Racha actual"><span class="badge badge-light-warning fs-7">🔥 {{ $streakUser->active_streak_days }} {{ $streakUser->active_streak_days === 1 ? 'día' : 'días' }}</span></td>
+                                        <td data-label="Mejor racha"><span class="fw-semibold">{{ $streakUser->longest_streak_days }} {{ $streakUser->longest_streak_days === 1 ? 'día' : 'días' }}</span></td>
+                                        <td data-label="Último día activo">{{ $streakUser->last_streak_date?->translatedFormat('d M Y') ?: 'Aún no inicia' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-center text-muted py-10">Aún no hay actividad registrada.</td></tr>
+                                @endforelse
+                            </tbody>
                         </table>
                     </div>
                 </div>

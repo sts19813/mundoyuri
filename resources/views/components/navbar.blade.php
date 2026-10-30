@@ -9,6 +9,7 @@
             <li class="nav-mobile-heading"><span>Menú</span><small>Todo lo que necesitas, bien organizado</small></li>
             @auth
                 @php($mobileNavUser = auth()->user())
+                @php($mobileStreakDays = $mobileNavUser->activeStreakDays())
                 <li class="nav-mobile-account-summary">
                     <a href="{{ route('profile.show') }}">
                         @if($mobileNavUser->hasProfileAvatar())
@@ -16,7 +17,7 @@
                         @else
                             <span class="portal-avatar portal-avatar-fallback" aria-hidden="true">{{ $mobileNavUser->initials() }}</span>
                         @endif
-                        <span><strong>{{ $mobileNavUser->alias ?: $mobileNavUser->name }}</strong><small>Ver mi perfil</small></span>
+                        <span><strong>{{ $mobileNavUser->alias ?: $mobileNavUser->name }}</strong><small>{{ $mobileStreakDays ? '🔥 '.$mobileStreakDays.' '.($mobileStreakDays === 1 ? 'día de racha' : 'días de racha') : 'Ver mi perfil' }}</small></span>
                         <svg class="nav-mobile-row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     </a>
                 </li>
@@ -93,6 +94,7 @@
                 </a>
             @else
                 @php($portalUser = auth()->user())
+                @php($portalStreakDays = $portalUser->activeStreakDays())
                 @php($portalUnreadMessages = $portalUser->receivedMessages()->whereNull('read_at')->count())
                 @php($portalUnreadNotifications = $portalUser->unreadNotifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->count())
                 @php($portalRecentNotifications = $portalUser->notifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->latest()->limit(6)->get())
@@ -201,6 +203,7 @@
                             <div>
                                 <strong>{{ $portalUser->name }}</strong>
                                 <span>{{ $portalUser->email }}</span>
+                                <small class="portal-streak-summary">🔥 {{ $portalStreakDays }} {{ $portalStreakDays === 1 ? 'día de racha' : 'días de racha' }}@if($portalUser->longest_streak_days > $portalStreakDays) <em>· mejor: {{ $portalUser->longest_streak_days }}</em>@endif</small>
                             </div>
                         </div>
                         <div class="portal-dropdown-divider"></div>

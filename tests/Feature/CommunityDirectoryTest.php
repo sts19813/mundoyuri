@@ -60,7 +60,7 @@ class CommunityDirectoryTest extends TestCase
             ->assertSee('Luna Antigua')
             ->assertSee('~~Angel~~')
             ->assertSee('Miembro histórico')
-            ->assertSee('13 Aug 2007')
+            ->assertSee('13 ago. 2007')
             ->assertSee('100')
             ->assertDontSee('Akari Moderna')
             ->assertSee(route('legacy-profiles.show', $historical), false);

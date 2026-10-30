@@ -533,6 +533,19 @@
         font-size: .73rem;
     }
 
+    .portal-user-summary .portal-streak-summary {
+        margin-top: 5px;
+        color: #f8c36f;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .portal-user-summary .portal-streak-summary em {
+        color: var(--muted);
+        font-style: normal;
+        font-weight: 500;
+    }
+
     .portal-dropdown-divider {
         height: 1px;
         margin: 5px 4px;
@@ -3063,6 +3076,10 @@
     .public-profile-social-stats strong {
         color: #fff;
         font-weight: 600;
+    }
+
+    .public-profile-social-stats .profile-streak-stat {
+        color: #f8c36f;
     }
 
     .public-profile-about .profile-panel-heading {

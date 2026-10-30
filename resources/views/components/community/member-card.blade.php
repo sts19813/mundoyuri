@@ -29,8 +29,8 @@
         </div>
 
         <div class="community-member-badges">
-            @foreach($member->badges as $badge)<x-community.badge :badge="$badge" />@endforeach
-            @if(! $isHistoricalProfile && $member->is_legacy && $member->badges->doesntContain('slug', 'miembro-historico'))<span class="community-badge community-badge-legacy"><span aria-hidden="true">🌸</span> Miembro histórico</span>@endif
+            @foreach($member->badges as $badge)<x-community.badge :badge="$badge" compact />@endforeach
+            @if(! $isHistoricalProfile && $member->is_legacy && $member->badges->doesntContain('slug', 'miembro-historico'))<span class="community-badge community-badge-legacy community-badge-compact" title="Miembro histórico" aria-label="Miembro histórico"><span aria-hidden="true">🌸</span></span>@endif
         </div>
 
         <dl class="community-member-stats">

@@ -68,6 +68,8 @@
                                 <span><strong>{{ $profileUser->favorite_series_count }}</strong> favoritas</span>
                             @endif
                             <span><strong>{{ $profileUser->community_message_count }}</strong> publicaciones</span>
+                            @php($profileStreakDays = $profileUser->activeStreakDays())
+                            <span class="profile-streak-stat" title="Mejor racha: {{ $profileUser->longest_streak_days }} {{ $profileUser->longest_streak_days === 1 ? 'día' : 'días' }}"><strong>🔥 {{ $profileStreakDays }}</strong> {{ $profileStreakDays === 1 ? 'día de racha' : 'días de racha' }}</span>
                         </div>
                     </div>
                 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Services\UserStreakService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,10 @@ class UpdateUserLastSeen
 
         if ($user instanceof User) {
             $seenAt = now();
+
+            if (! $user->last_streak_date?->isSameDay($seenAt)) {
+                app(UserStreakService::class)->record($user, $seenAt);
+            }
 
             DB::table('users')
                 ->where('id', $user->getKey())

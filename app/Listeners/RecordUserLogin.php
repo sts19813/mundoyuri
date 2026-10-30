@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\User;
+use App\Services\UserStreakService;
 use Illuminate\Auth\Events\Login;
 
 class RecordUserLogin
@@ -19,5 +20,7 @@ class RecordUserLogin
             'last_login_at' => $seenAt,
             'last_seen_at' => $seenAt,
         ])->saveQuietly();
+
+        app(UserStreakService::class)->record($event->user, $seenAt);
     }
 }

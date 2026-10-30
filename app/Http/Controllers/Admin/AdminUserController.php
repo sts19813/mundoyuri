@@ -35,6 +35,14 @@ class AdminUserController extends Controller
         $permissions = Permission::query()->orderBy('name')->get();
         $communityRanks = $this->assignableCommunityRanks();
         $communityBadges = $this->assignableCommunityBadges();
+        $streakUsers = User::query()
+            ->orderByDesc('longest_streak_days')
+            ->orderByDesc('last_streak_date')
+            ->orderBy('name')
+            ->get()
+            ->each(fn (User $user) => $user->setAttribute('active_streak_days', $user->activeStreakDays()))
+            ->sortByDesc('active_streak_days')
+            ->values();
 
         return view('admin.users.index', [
             'users' => $users,
@@ -45,6 +53,7 @@ class AdminUserController extends Controller
             'permissionsPayload' => $permissions->map(fn (Permission $permission) => $this->permissionPayload($permission))->values(),
             'communityRanks' => $communityRanks,
             'communityBadges' => $communityBadges,
+            'streakUsers' => $streakUsers,
         ]);
     }
 

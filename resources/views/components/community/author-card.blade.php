@@ -6,6 +6,7 @@
     $viewer?->loadMissing(['blockedUsers:id', 'blockedByUsers:id']);
     $blocked = $author && $viewer && ($viewer->blockedUsers->contains('id', $author->id) || $viewer->blockedByUsers->contains('id', $author->id));
     $canInspect = $author && !$blocked && \Illuminate\Support\Facades\Gate::allows('viewProfile', $author);
+    $streakDays = $author?->activeStreakDays() ?? 0;
 @endphp
 <details class="forum-post-author-compact" data-author-card>
     <summary aria-label="Información de {{ $author->displayName() }}">
@@ -47,6 +48,10 @@
                 <div>
                     <dt>Mensajes</dt>
                     <dd>{{ number_format($author->community_message_count) }}</dd>
+                </div>
+                <div title="Mejor racha: {{ $author->longest_streak_days }} {{ $author->longest_streak_days === 1 ? 'día' : 'días' }}">
+                    <dt>Racha</dt>
+                    <dd>🔥 {{ $streakDays }} {{ $streakDays === 1 ? 'día' : 'días' }}</dd>
                 </div>
                 @if($showReputation)
                     <div>

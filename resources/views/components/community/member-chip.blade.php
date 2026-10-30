@@ -11,6 +11,7 @@
     $viewer?->loadMissing(['blockedUsers:id', 'blockedByUsers:id']);
     $blocked = ! $isHistoricalProfile && $viewer && ($viewer->blockedUsers->contains('id', $member->id) || $viewer->blockedByUsers->contains('id', $member->id));
     $canWrite = ! $isHistoricalProfile && $viewer && ! $blocked && ! $viewer->is($member) && $member->is_active;
+    $streakDays = ! $isHistoricalProfile ? $member->activeStreakDays() : 0;
 @endphp
 
 <details class="forum-post-author-compact community-member-chip" data-author-card data-member-chip data-profile-url="{{ $profileUrl }}">
@@ -60,6 +61,12 @@
                 <dt>{{ $isHistoricalProfile ? 'Mensajes archivados' : 'Mensajes' }}</dt>
                 <dd>{{ number_format($isHistoricalProfile ? $member->legacy_message_count : $member->community_message_count) }}</dd>
             </div>
+            @unless($isHistoricalProfile)
+                <div title="Mejor racha: {{ $member->longest_streak_days }} {{ $member->longest_streak_days === 1 ? 'día' : 'días' }}">
+                    <dt>Racha</dt>
+                    <dd>🔥 {{ $streakDays }} {{ $streakDays === 1 ? 'día' : 'días' }}</dd>
+                </div>
+            @endunless
         </dl>
         @if(! $isHistoricalProfile)
             <x-community.signature :user="$member" :previous-user-id="null" />
