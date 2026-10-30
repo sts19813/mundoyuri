@@ -1533,6 +1533,18 @@
       transition: color .2s, border-color .2s, background .2s, box-shadow .2s;
   }
 
+  .sidebar-single-title {
+      display: grid;
+      height: 52px;
+      box-sizing: border-box;
+      place-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      color: #f7edf5;
+      font: 700 .72rem 'DM Sans', sans-serif;
+      letter-spacing: .01em;
+  }
+
   .sidebar-tab:hover {
       color: #f8eaf2;
       background: rgba(255, 255, 255, 0.045);
@@ -1721,7 +1733,7 @@
       border-radius: 8px;
   }
 
-  .sidebar-profile-avatar {
+  .sidebar-profile-avatar-wrap {
       position: relative;
       display: grid;
       width: 40px;
@@ -1729,6 +1741,14 @@
       flex: 0 0 40px;
       place-items: center;
       overflow: visible;
+  }
+
+  .sidebar-profile-avatar {
+      display: grid;
+      width: 40px;
+      height: 40px;
+      place-items: center;
+      overflow: hidden;
       border: 1px solid rgba(244, 63, 142, 0.2);
       border-radius: 50%;
       background: linear-gradient(135deg, rgba(244, 63, 142, 0.9), rgba(113, 55, 167, 0.9));
@@ -1739,18 +1759,19 @@
   }
 
   .sidebar-profile-avatar img {
+      display: block;
       width: 100%;
       height: 100%;
       border-radius: inherit;
       object-fit: cover;
   }
 
-  .sidebar-profile-avatar.is-online {
+  .sidebar-profile-avatar-wrap.is-online .sidebar-profile-avatar {
       border-color: #22c55e;
       box-shadow: 0 0 0 3px rgba(34, 197, 94, .18), 0 0 18px rgba(34, 197, 94, .28);
   }
 
-  .sidebar-profile-avatar.is-online::after {
+  .sidebar-profile-avatar-wrap.is-online::after {
       position: absolute;
       right: -3px;
       bottom: -3px;

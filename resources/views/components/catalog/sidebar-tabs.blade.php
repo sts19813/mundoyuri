@@ -1,6 +1,7 @@
-@props(['streakers', 'marathoners', 'recentEpisodes'])
+@props(['streakers', 'marathoners', 'recentEpisodes', 'showRankings' => true])
 
-<section class="sidebar-section sidebar-tabs-section" data-sidebar-tabs>
+<section @class(['sidebar-section', 'sidebar-tabs-section', 'sidebar-latest-only' => ! $showRankings]) @if($showRankings) data-sidebar-tabs @endif>
+    @if($showRankings)
     <div class="sidebar-tabs" role="tablist" aria-label="Descubrir en Mundo Yuri">
         <button
             type="button"
@@ -39,7 +40,11 @@
             Estrenos
         </button>
     </div>
+    @else
+        <div class="sidebar-single-title">Estrenos</div>
+    @endif
 
+    @if($showRankings)
     <div
         class="sidebar-panel sidebar-marathoners-panel"
         id="sidebar-panel-streaks"
@@ -63,12 +68,14 @@
                     </span>
                     <div class="marathoner-profile">
                         <a href="{{ $streaker->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $streaker->displayName() }}">
-                            <span @class(['sidebar-profile-avatar', 'is-online' => $streaker->isOnline()])>
-                                @if($streaker->hasProfileAvatar())
-                                    <img src="{{ $streaker->avatarUrl() }}" alt="">
-                                @else
-                                    <span>{{ $streaker->initials() }}</span>
-                                @endif
+                            <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $streaker->isOnline()])>
+                                <span class="sidebar-profile-avatar">
+                                    @if($streaker->hasProfileAvatar())
+                                        <img src="{{ $streaker->avatarUrl() }}" alt="">
+                                    @else
+                                        <span>{{ $streaker->initials() }}</span>
+                                    @endif
+                                </span>
                             </span>
                             <span class="sidebar-profile-name">{{ $streaker->displayName() }}</span>
                         </a>
@@ -106,12 +113,14 @@
                     </span>
                     <div class="marathoner-profile">
                         <a href="{{ $marathoner->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $marathoner->displayName() }}">
-                            <span @class(['sidebar-profile-avatar', 'is-online' => $marathoner->isOnline()])>
-                                @if($marathoner->hasProfileAvatar())
-                                    <img src="{{ $marathoner->avatarUrl() }}" alt="">
-                                @else
-                                    <span>{{ $marathoner->initials() }}</span>
-                                @endif
+                            <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $marathoner->isOnline()])>
+                                <span class="sidebar-profile-avatar">
+                                    @if($marathoner->hasProfileAvatar())
+                                        <img src="{{ $marathoner->avatarUrl() }}" alt="">
+                                    @else
+                                        <span>{{ $marathoner->initials() }}</span>
+                                    @endif
+                                </span>
                             </span>
                             <span class="sidebar-profile-name">{{ $marathoner->displayName() }}</span>
                         </a>
@@ -123,6 +132,7 @@
             @endforelse
         </ol>
     </div>
+    @endif
 
     <div
         class="sidebar-panel"
@@ -130,7 +140,7 @@
         role="tabpanel"
         aria-labelledby="sidebar-tab-latest"
         data-sidebar-panel="latest"
-        hidden
+        @if($showRankings) hidden @endif
     >
         <div class="sidebar-list sidebar-latest-list">
             @forelse($recentEpisodes as $item)
