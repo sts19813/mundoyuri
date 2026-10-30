@@ -6491,6 +6491,19 @@
     transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
 }
 
+.forum-author-popover.has-cover { isolation: isolate; overflow: hidden; background: #211324; }
+.forum-author-popover.has-cover::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background:
+        linear-gradient(105deg, rgba(33, 19, 36, .97) 0%, rgba(33, 19, 36, .9) 58%, rgba(18, 11, 21, .82) 100%),
+        var(--author-cover) var(--author-cover-position, center) / cover no-repeat;
+    content: '';
+    pointer-events: none;
+}
+.forum-author-popover.has-cover > * { position: relative; z-index: 1; }
+
 .forum-post-author-compact[open] .forum-author-popover { visibility: visible; opacity: 1; transform: translateY(0); }
 .forum-post-author-compact > summary { display: flex; align-items: center; gap: 9px; list-style: none; cursor: pointer; }
 .forum-post-author-compact > summary::-webkit-details-marker { display: none; }

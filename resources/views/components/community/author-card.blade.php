@@ -7,6 +7,7 @@
     $blocked = $author && $viewer && ($viewer->blockedUsers->contains('id', $author->id) || $viewer->blockedByUsers->contains('id', $author->id));
     $canInspect = $author && !$blocked && \Illuminate\Support\Facades\Gate::allows('viewProfile', $author);
     $streakDays = $author?->activeStreakDays() ?? 0;
+    $authorCover = $author?->coverImageUrl();
 @endphp
 <details class="forum-post-author-compact" data-author-card>
     <summary aria-label="Información de {{ $author->displayName() }}">
@@ -24,7 +25,11 @@
         @endif
     </summary>
 
-    <aside class="forum-author-popover" aria-label="Información de {{ $author->displayName() }}">
+    <aside
+        @class(['forum-author-popover', 'has-cover' => filled($authorCover)])
+        @if($authorCover) style="--author-cover: url('{{ $authorCover }}'); --author-cover-position: {{ $author->coverImagePosition() }}" @endif
+        aria-label="Información de {{ $author->displayName() }}"
+    >
         <div class="forum-author-popover-top">
             <a href="{{ $author->publicProfileUrl() }}" @class(['forum-author-popover-avatar', 'is-online' => $author->isOnline()]) tabindex="-1" aria-hidden="true">
                 @if($author->hasProfileAvatar())

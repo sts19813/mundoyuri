@@ -1504,6 +1504,7 @@
   .sidebar-tabs {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
       gap: 5px;
       padding: 7px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -1512,14 +1513,19 @@
   }
 
   .sidebar-tab {
+      display: grid;
+      width: 100%;
       min-width: 0;
-      min-height: 38px;
+      min-height: 42px;
+      place-items: center;
       padding: 8px 9px;
       border: 1px solid transparent;
       border-radius: 10px;
       color: #9f8fa8;
       background: transparent;
-      font: 600 .68rem/1.2 'DM Sans', sans-serif;
+      font: 600 clamp(.58rem, .72vw, .68rem)/1.15 'DM Sans', sans-serif;
+      text-align: center;
+      white-space: nowrap;
       cursor: pointer;
       transition: color .2s, border-color .2s, background .2s, box-shadow .2s;
   }
@@ -1565,7 +1571,7 @@
       grid-template-columns: 28px minmax(0, 1fr);
       align-items: center;
       gap: 8px;
-      min-height: 58px;
+      min-height: 52px;
       padding: 6px 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.045);
       border-radius: 11px;
@@ -1615,7 +1621,8 @@
       min-width: 0;
   }
 
-  .sidebar-streak-days {
+  .sidebar-streak-days,
+  .sidebar-marathon-time {
       position: absolute;
       right: 4px;
       top: 50%;
@@ -1632,6 +1639,10 @@
 
   .marathoner-profile:has(.sidebar-streak-days) .forum-post-author-compact > summary {
       padding-right: 48px;
+  }
+
+  .marathoner-profile:has(.sidebar-marathon-time) .forum-post-author-compact > summary {
+      padding-right: 62px;
   }
 
   .marathoner-profile .forum-post-author-compact,
@@ -1675,20 +1686,6 @@
       width: min(310px, calc(100vw - 48px));
   }
 
-  .marathoner-crown {
-      position: absolute;
-      top: -7px;
-      left: 19px;
-      z-index: 3;
-      font-size: 1rem;
-      line-height: 1;
-      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
-      pointer-events: none;
-      transform: translateX(-50%) rotate(-7deg);
-      transform-origin: 50% 100%;
-      animation: marathoner-crown-float 2.8s ease-in-out infinite;
-  }
-
   .sidebar-empty-state {
       display: grid;
       justify-items: center;
@@ -1715,17 +1712,6 @@
 
   .sidebar-latest-list {
       padding: 8px 0;
-  }
-
-  @keyframes marathoner-crown-float {
-      0%, 100% { transform: translateX(-50%) translateY(0) rotate(-7deg); }
-      50% { transform: translateX(-50%) translateY(-2px) rotate(3deg); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-      .marathoner-crown {
-          animation: none;
-      }
   }
 
   /* ── FOOTER DISCLAIMER ── */

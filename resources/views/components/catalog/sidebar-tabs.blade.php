@@ -47,7 +47,6 @@
         aria-labelledby="sidebar-tab-streaks"
         data-sidebar-panel="streaks"
     >
-        <p class="sidebar-panel-intro">Las 8 personas que no han roto su racha.</p>
         <ol class="marathoner-list">
             @forelse($streakers as $streaker)
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
@@ -61,9 +60,6 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        @if($loop->first)
-                            <span class="marathoner-crown" aria-label="Primer lugar">👑</span>
-                        @endif
                         <x-community.author-card :author="$streaker" :show-reputation="true" />
                         <span class="sidebar-streak-days" title="Mejor racha: {{ $streaker->longest_streak_days }} días">🔥 {{ $streaker->activeStreakDays() }}d</span>
                     </div>
@@ -79,12 +75,22 @@
     </div>
 
     <div class="sidebar-panel sidebar-marathoners-panel" id="sidebar-panel-marathoners" role="tabpanel" aria-labelledby="sidebar-tab-marathoners" data-sidebar-panel="marathoners" hidden>
-        <p class="sidebar-panel-intro">Las 8 personas que más tiempo han compartido viendo Mundo Yuri.</p>
         <ol class="marathoner-list">
             @forelse($marathoners as $marathoner)
+                @php
+                    $seconds = (int) ($marathoner->total_presence_seconds ?? 0);
+                    $hours = intdiv($seconds, 3600);
+                    $minutes = intdiv($seconds % 3600, 60);
+                    $elapsed = $hours > 0
+                        ? $hours.' h'.($minutes ? ' '.$minutes.' min' : '')
+                        : max(1, $minutes).' min';
+                @endphp
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
                     <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">{{ $loop->iteration }}</span>
-                    <div class="marathoner-profile"><x-community.author-card :author="$marathoner" :show-reputation="true" /></div>
+                    <div class="marathoner-profile">
+                        <x-community.author-card :author="$marathoner" :show-reputation="true" />
+                        <span class="sidebar-marathon-time" title="Tiempo acumulado en Mundo Yuri">⏱ {{ $elapsed }}</span>
+                    </div>
                 </li>
             @empty
                 <li class="sidebar-empty-state"><span aria-hidden="true">🎬</span><strong>El ranking está por comenzar</strong><small>La actividad de la comunidad aparecerá aquí.</small></li>
