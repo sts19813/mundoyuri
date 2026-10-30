@@ -11,6 +11,26 @@ use Illuminate\Support\Facades\Schema;
 class PresenceLeaderboard
 {
     /** @return Collection<int, User> */
+    public function publicStreakers(?User $viewer = null, int $limit = 8): Collection
+    {
+        $today = now(config('app.timezone'))->startOfDay();
+
+        return User::query()
+            ->visibleToProfileViewer($viewer)
+            ->where('last_streak_date', '>=', $today->copy()->subDay())
+            ->where('current_streak_days', '>', 0)
+            ->with([
+                'communityRank',
+                'badges' => fn ($badgeQuery) => $badgeQuery->active()->ordered(),
+            ])
+            ->orderByDesc('current_streak_days')
+            ->orderByDesc('longest_streak_days')
+            ->orderBy('id')
+            ->limit(max(1, min($limit, 8)))
+            ->get();
+    }
+
+    /** @return Collection<int, User> */
     public function publicMarathoners(?User $viewer = null, int $limit = 10): Collection
     {
         if (! Schema::hasTable('user_presence_sessions')) {

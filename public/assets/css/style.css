@@ -4088,6 +4088,23 @@
         box-shadow: 0 14px 35px rgba(0, 0, 0, .14);
     }
 
+    .community-member-card.has-cover::before {
+        position: absolute;
+        z-index: 0;
+        inset: 0;
+        border-radius: inherit;
+        background:
+            linear-gradient(100deg, rgba(28, 17, 31, .96) 0%, rgba(28, 17, 31, .82) 58%, rgba(18, 11, 21, .74) 100%),
+            var(--member-cover) var(--member-cover-position, center) / cover no-repeat;
+        content: '';
+        pointer-events: none;
+    }
+
+    .community-member-card.has-cover > * {
+        position: relative;
+        z-index: 1;
+    }
+
     .community-member-card.has-soulmate::after {
         position: absolute;
         z-index: 3;

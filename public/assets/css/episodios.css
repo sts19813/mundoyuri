@@ -1503,7 +1503,7 @@
 
   .sidebar-tabs {
       display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 5px;
       padding: 7px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -1613,6 +1613,25 @@
   .marathoner-profile {
       position: relative;
       min-width: 0;
+  }
+
+  .sidebar-streak-days {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      z-index: 2;
+      padding: 4px 6px;
+      border: 1px solid rgba(250, 204, 21, .22);
+      border-radius: 999px;
+      color: #ffe58a;
+      background: rgba(22, 13, 24, .86);
+      font-size: .6rem;
+      font-weight: 800;
+      transform: translateY(-50%);
+  }
+
+  .marathoner-profile:has(.sidebar-streak-days) .forum-post-author-compact > summary {
+      padding-right: 48px;
   }
 
   .marathoner-profile .forum-post-author-compact,

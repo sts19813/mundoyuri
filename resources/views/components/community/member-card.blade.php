@@ -4,8 +4,9 @@
 @php($profileUrl = $isHistoricalProfile ? route('legacy-profiles.show', $member) : $member->publicProfileUrl())
 @php($memberName = $isHistoricalProfile ? $member->nickname : $member->displayName())
 @php($soulmateLabel = $isHistoricalProfile && $member->legacySoulmate ? 'Alma gemela: '.str($member->legacySoulmate->nickname)->replace('~', '') : null)
+@php($memberCover = ! $isHistoricalProfile ? $member->coverImageUrl() : null)
 
-<article @class(['community-member-card', 'has-soulmate' => filled($soulmateLabel)]) @if($soulmateLabel) data-soulmate="{{ $soulmateLabel }}" title="{{ $soulmateLabel }}" @endif>
+<article @class(['community-member-card', 'has-soulmate' => filled($soulmateLabel), 'has-cover' => filled($memberCover)]) @if($memberCover) style="--member-cover: url('{{ $memberCover }}'); --member-cover-position: {{ $member->coverImagePosition() }}" @endif @if($soulmateLabel) data-soulmate="{{ $soulmateLabel }}" title="{{ $soulmateLabel }}" @endif>
     <a @class(['community-member-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) href="{{ $profileUrl }}" aria-label="Ver perfil de {{ $memberName }}">
         @if($isHistoricalProfile && $member->avatarUrl())
             <img src="{{ $member->avatarUrl() }}" alt="Avatar histórico de {{ $member->nickname }}">

@@ -274,7 +274,7 @@
         </main>
 
         <aside class="ep-sidebar">
-            <x-catalog.sidebar-tabs :marathoners="$marathoners" :recent-episodes="$recentEpisodes" />
+            <x-catalog.sidebar-tabs :streakers="$streakers" :marathoners="$marathoners" :recent-episodes="$recentEpisodes" />
 
             <div class="server-section mt-3">
                 <div class="server-header">

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CatalogSection;
 use App\Models\Artist;
+use App\Models\CatalogSection;
 use App\Models\Duo;
 use App\Models\Episode;
 use App\Models\Genre;
@@ -165,8 +165,7 @@ class CatalogController extends Controller
         CommunityRankResolver $rankResolver,
         CommentConversationTree $commentTree,
         PresenceLeaderboard $presenceLeaderboard
-    ): View
-    {
+    ): View {
         if (! $this->catalogTablesReady()) {
             abort(404);
         }
@@ -216,9 +215,10 @@ class CatalogController extends Controller
             ->limit(6)
             ->get();
 
-        $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user());
+        $marathoners = $presenceLeaderboard->publicMarathoners(auth()->user(), 8);
+        $streakers = $presenceLeaderboard->publicStreakers(auth()->user());
 
-        return view('catalog.series.show', compact('series', 'relatedSeries', 'recentEpisodes', 'marathoners', 'rankResolver'));
+        return view('catalog.series.show', compact('series', 'relatedSeries', 'recentEpisodes', 'marathoners', 'streakers', 'rankResolver'));
     }
 
     public function showEpisode(Series $series, Episode $episode): RedirectResponse

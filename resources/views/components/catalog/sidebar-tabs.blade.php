@@ -1,18 +1,30 @@
-@props(['marathoners', 'recentEpisodes'])
+@props(['streakers', 'marathoners', 'recentEpisodes'])
 
 <section class="sidebar-section sidebar-tabs-section" data-sidebar-tabs>
     <div class="sidebar-tabs" role="tablist" aria-label="Descubrir en Mundo Yuri">
         <button
             type="button"
             class="sidebar-tab is-active"
-            id="sidebar-tab-marathoners"
+            id="sidebar-tab-streaks"
             role="tab"
             aria-selected="true"
-            aria-controls="sidebar-panel-marathoners"
+            aria-controls="sidebar-panel-streaks"
             tabindex="0"
+            data-sidebar-tab="streaks"
+        >
+            🔥 Rachas
+        </button>
+        <button
+            type="button"
+            class="sidebar-tab"
+            id="sidebar-tab-marathoners"
+            role="tab"
+            aria-selected="false"
+            aria-controls="sidebar-panel-marathoners"
+            tabindex="-1"
             data-sidebar-tab="marathoners"
         >
-            Maratonistas del GL
+            Maratonistas
         </button>
         <button
             type="button"
@@ -24,19 +36,20 @@
             tabindex="-1"
             data-sidebar-tab="latest"
         >
-            Lo más nuevo
+            Estrenos
         </button>
     </div>
 
     <div
         class="sidebar-panel sidebar-marathoners-panel"
-        id="sidebar-panel-marathoners"
+        id="sidebar-panel-streaks"
         role="tabpanel"
-        aria-labelledby="sidebar-tab-marathoners"
-        data-sidebar-panel="marathoners"
+        aria-labelledby="sidebar-tab-streaks"
+        data-sidebar-panel="streaks"
     >
+        <p class="sidebar-panel-intro">Las 8 personas que no han roto su racha.</p>
         <ol class="marathoner-list">
-            @forelse($marathoners as $marathoner)
+            @forelse($streakers as $streaker)
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
                     <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">
                         @if($loop->iteration === 2)
@@ -51,7 +64,8 @@
                         @if($loop->first)
                             <span class="marathoner-crown" aria-label="Primer lugar">👑</span>
                         @endif
-                        <x-community.author-card :author="$marathoner" :show-reputation="true" />
+                        <x-community.author-card :author="$streaker" :show-reputation="true" />
+                        <span class="sidebar-streak-days" title="Mejor racha: {{ $streaker->longest_streak_days }} días">🔥 {{ $streaker->activeStreakDays() }}d</span>
                     </div>
                 </li>
             @empty
@@ -60,6 +74,20 @@
                     <strong>El ranking está por comenzar</strong>
                     <small>La actividad de la comunidad aparecerá aquí.</small>
                 </li>
+            @endforelse
+        </ol>
+    </div>
+
+    <div class="sidebar-panel sidebar-marathoners-panel" id="sidebar-panel-marathoners" role="tabpanel" aria-labelledby="sidebar-tab-marathoners" data-sidebar-panel="marathoners" hidden>
+        <p class="sidebar-panel-intro">Las 8 personas que más tiempo han compartido viendo Mundo Yuri.</p>
+        <ol class="marathoner-list">
+            @forelse($marathoners as $marathoner)
+                <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
+                    <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">{{ $loop->iteration }}</span>
+                    <div class="marathoner-profile"><x-community.author-card :author="$marathoner" :show-reputation="true" /></div>
+                </li>
+            @empty
+                <li class="sidebar-empty-state"><span aria-hidden="true">🎬</span><strong>El ranking está por comenzar</strong><small>La actividad de la comunidad aparecerá aquí.</small></li>
             @endforelse
         </ol>
     </div>

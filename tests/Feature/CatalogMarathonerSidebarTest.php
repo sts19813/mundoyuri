@@ -14,7 +14,7 @@ class CatalogMarathonerSidebarTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_episode_sidebar_defaults_to_marathoners_and_excludes_admins(): void
+    public function test_episode_sidebar_defaults_to_streaks_and_keeps_marathoners_separate(): void
     {
         [$series, $episode] = $this->catalogEntry();
 
@@ -23,9 +23,12 @@ class CatalogMarathonerSidebarTest extends TestCase
             'name' => 'Luna Maratonista',
             'alias' => 'Luna',
             'last_seen_at' => now(),
+            'last_streak_date' => now(),
+            'current_streak_days' => 12,
+            'longest_streak_days' => 12,
             'signature_text' => 'Ver hasta el amanecer',
         ]);
-        $runnerUp = User::factory()->create(['name' => 'Mio Constante', 'alias' => 'Mio']);
+        $runnerUp = User::factory()->create(['name' => 'Mio Constante', 'alias' => 'Mio', 'last_streak_date' => now(), 'current_streak_days' => 5, 'longest_streak_days' => 5]);
         $admin = User::factory()->create(['name' => 'Admin del ranking', 'role' => 'admin']);
 
         $this->presence($leader, 7200, '11111111-1111-4111-8111-111111111111');
@@ -35,9 +38,10 @@ class CatalogMarathonerSidebarTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('public.episodes.show', $episode->slug))
             ->assertOk()
-            ->assertSee('Maratonistas del GL')
-            ->assertSee('Lo más nuevo')
-            ->assertSee('data-sidebar-tab="marathoners"', false)
+            ->assertSee('🔥 Rachas')
+            ->assertSee('Maratonistas')
+            ->assertSee('Estrenos')
+            ->assertSee('data-sidebar-tab="streaks"', false)
             ->assertSee('aria-selected="true"', false)
             ->assertSeeInOrder(['Luna', 'Mio'])
             ->assertDontSee('Admin del ranking')
@@ -59,7 +63,7 @@ class CatalogMarathonerSidebarTest extends TestCase
             ->assertOk()
             ->assertSee('data-sidebar-tabs', false)
             ->assertSee('Yuri')
-            ->assertSee('Lo más nuevo');
+            ->assertSee('Estrenos');
     }
 
     /** @return array{Series, Episode} */
