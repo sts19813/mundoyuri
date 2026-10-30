@@ -51,7 +51,9 @@
             @forelse($streakers as $streaker)
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
                     <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">
-                        @if($loop->iteration === 2)
+                        @if($loop->iteration === 1)
+                            <span aria-hidden="true">🥇</span>
+                        @elseif($loop->iteration === 2)
                             <span aria-hidden="true">🥈</span>
                         @elseif($loop->iteration === 3)
                             <span aria-hidden="true">🥉</span>
@@ -86,7 +88,17 @@
                         : max(1, $minutes).' min';
                 @endphp
                 <li class="marathoner-row marathoner-rank-{{ $loop->iteration }}">
-                    <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">{{ $loop->iteration }}</span>
+                    <span class="marathoner-position" aria-label="Puesto {{ $loop->iteration }}">
+                        @if($loop->iteration === 1)
+                            <span aria-hidden="true">🥇</span>
+                        @elseif($loop->iteration === 2)
+                            <span aria-hidden="true">🥈</span>
+                        @elseif($loop->iteration === 3)
+                            <span aria-hidden="true">🥉</span>
+                        @else
+                            {{ $loop->iteration }}
+                        @endif
+                    </span>
                     <div class="marathoner-profile">
                         <x-community.author-card :author="$marathoner" :show-reputation="true" />
                         <span class="sidebar-marathon-time" title="Tiempo acumulado en Mundo Yuri">⏱ {{ $elapsed }}</span>
