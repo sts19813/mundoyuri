@@ -71,6 +71,54 @@
                 object-fit: cover;
             }
 
+            .admin-streak-table .admin-streak-position {
+                width: 2.5rem;
+                height: 2.5rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 999px;
+                color: var(--bs-gray-700);
+                background: var(--bs-gray-100);
+                font-size: .82rem;
+                font-weight: 800;
+            }
+
+            .admin-streak-table tbody tr:nth-child(-n+3) .admin-streak-position {
+                color: #9a6100;
+                background: #fff1d6;
+            }
+
+            .admin-streak-avatar {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                border: 2px solid var(--bs-gray-200);
+                border-radius: 50%;
+                object-fit: cover;
+                color: var(--bs-primary);
+                background: var(--bs-light-primary);
+                font-size: .85rem;
+                font-weight: 800;
+            }
+
+            .admin-streak-current {
+                display: inline-flex;
+                align-items: center;
+                gap: .4rem;
+                color: #9a6100;
+                font-size: 1rem;
+                font-weight: 800;
+            }
+
+            .admin-streak-current strong {
+                font-size: 1.25rem;
+            }
+
             .admin-presence {
                 display: inline-flex;
                 align-items: flex-start;
@@ -148,6 +196,54 @@
                 .admin-users-table td[data-label="Usuario"] {
                     display: block;
                     padding-bottom: .75rem;
+                }
+
+                .admin-streak-table tr {
+                    display: grid;
+                    grid-template-columns: auto minmax(0, 1fr) auto;
+                    column-gap: .8rem;
+                    align-items: center;
+                }
+
+                .admin-streak-table td,
+                .admin-streak-table td[data-label] {
+                    display: block;
+                    width: auto;
+                    padding: .2rem 0;
+                }
+
+                .admin-streak-table td[data-label]::before {
+                    display: none;
+                }
+
+                .admin-streak-table .streak-position-cell {
+                    grid-column: 1;
+                    grid-row: 1 / span 3;
+                }
+
+                .admin-streak-table .streak-user-cell {
+                    grid-column: 2;
+                    grid-row: 1;
+                }
+
+                .admin-streak-table .streak-current-cell {
+                    grid-column: 3;
+                    grid-row: 1;
+                    text-align: right;
+                }
+
+                .admin-streak-table .streak-best-cell {
+                    grid-column: 2;
+                    grid-row: 2;
+                    color: var(--bs-gray-600);
+                    font-size: .78rem;
+                }
+
+                .admin-streak-table .streak-date-cell {
+                    grid-column: 2 / 4;
+                    grid-row: 3;
+                    color: var(--bs-gray-600);
+                    font-size: .75rem;
                 }
             }
         </style>
@@ -298,9 +394,10 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed gy-5 admin-users-table">
+                        <table class="table align-middle table-row-dashed gy-5 admin-users-table admin-streak-table">
                             <thead>
                                 <tr class="text-start text-muted fw-bold fs-7 text-uppercase">
+                                    <th>#</th>
                                     <th>Usuario</th>
                                     <th>Racha actual</th>
                                     <th>Mejor racha</th>
@@ -310,12 +407,13 @@
                             <tbody>
                                 @forelse($streakUsers as $streakUser)
                                     <tr>
-                                        <td data-label="Usuario">
+                                        <td class="streak-position-cell" data-label="Posición"><span class="admin-streak-position">{{ $loop->iteration }}</span></td>
+                                        <td class="streak-user-cell" data-label="Usuario">
                                             <div class="d-flex align-items-center gap-3">
                                                 @if($streakUser->hasProfileAvatar())
-                                                    <img class="symbol symbol-40px symbol-circle user-avatar" src="{{ $streakUser->avatarUrl() }}" alt="">
+                                                    <img class="admin-streak-avatar" src="{{ $streakUser->avatarUrl() }}" alt="">
                                                 @else
-                                                    <span class="symbol symbol-40px symbol-circle bg-light-primary text-primary fw-bold d-inline-flex align-items-center justify-content-center">{{ $streakUser->initials() }}</span>
+                                                    <span class="admin-streak-avatar">{{ $streakUser->initials() }}</span>
                                                 @endif
                                                 <div>
                                                     <a class="text-gray-900 fw-bold text-hover-primary" href="{{ $streakUser->publicProfileUrl() }}">{{ $streakUser->displayName() }}</a>
@@ -323,12 +421,12 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td data-label="Racha actual"><span class="badge badge-light-warning fs-7">🔥 {{ $streakUser->active_streak_days }} {{ $streakUser->active_streak_days === 1 ? 'día' : 'días' }}</span></td>
-                                        <td data-label="Mejor racha"><span class="fw-semibold">{{ $streakUser->longest_streak_days }} {{ $streakUser->longest_streak_days === 1 ? 'día' : 'días' }}</span></td>
-                                        <td data-label="Último día activo">{{ $streakUser->last_streak_date?->translatedFormat('d M Y') ?: 'Aún no inicia' }}</td>
+                                        <td class="streak-current-cell" data-label="Racha actual"><span class="admin-streak-current">🔥 <strong>{{ $streakUser->active_streak_days }}</strong></span></td>
+                                        <td class="streak-best-cell" data-label="Mejor racha">Mejor: <strong>{{ $streakUser->longest_streak_days }} {{ $streakUser->longest_streak_days === 1 ? 'día' : 'días' }}</strong></td>
+                                        <td class="streak-date-cell" data-label="Último día activo">Último día: {{ $streakUser->last_streak_date?->translatedFormat('d M Y') ?: 'Aún no inicia' }}</td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="4" class="text-center text-muted py-10">Aún no hay actividad registrada.</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted py-10">Aún no hay actividad registrada.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

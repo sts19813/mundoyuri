@@ -49,6 +49,6 @@ class UserStreakTest extends TestCase
             ->assertOk()
             ->assertSeeText('Rachas de actividad')
             ->assertSeeText($member->displayName())
-            ->assertSeeText('6 días');
+            ->assertSee('>6<', false);
     }
 }
