@@ -336,7 +336,11 @@ class VideoSource
         $host = strtolower($parts['host']);
         $path = $parts['path'] ?? '';
 
-        if (! in_array($host, ['mundoyuri-video.sts19813.workers.dev', 'video.mundoyuri.com'], true)) {
+        if (! in_array($host, [
+            'mundoyuri-video.sts19813.workers.dev',
+            'video.mundoyuri.com',
+            'media.mundoyuri.com',
+        ], true)) {
             return null;
         }
 

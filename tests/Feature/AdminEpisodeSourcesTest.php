@@ -335,7 +335,7 @@ class AdminEpisodeSourcesTest extends TestCase
             'description' => 'Descripcion suficientemente larga para validar Cloudflare HLS con dominio propio.',
         ]);
 
-        $url = 'https://video.mundoyuri.com/Moonshadow/Moonshadow.S01e06.HLS/index.m3u8';
+        $url = 'https://media.mundoyuri.com/Moonshadow/Moonshadow.S01e06.HLS/index.m3u8';
 
         $response = $this
             ->actingAs($admin)
