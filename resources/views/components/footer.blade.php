@@ -1,9 +1,17 @@
 <!-- ══ FOOTER ══ -->
 <footer class="gl-footer">
     <div class="gl-footer__inner">
-        <a href="{{ route('home') }}" class="gl-footer__brand" aria-label="Ir al inicio de Mundo Yuri">
-            <x-season-logo />
-        </a>
+        <div class="gl-footer__identity">
+            <a href="{{ route('home') }}" class="gl-footer__brand" aria-label="Ir al inicio de Mundo Yuri">
+                <x-season-logo />
+            </a>
+            @if(filled(config('services.stripe.key')) && filled(config('services.stripe.secret')) && filled(config('services.stripe.webhook_secret')))
+            <a href="{{ route('donations.index') }}" class="gl-footer__support">
+                <span class="gl-footer__support-flower" aria-hidden="true">❀</span>
+                <span class="gl-footer__support-copy"><span class="gl-footer__support-title">Regálame unas flores</span><span class="gl-footer__support-note">Tu cariño ayuda a florecer este mundo.</span></span>
+            </a>
+            @endif
+        </div>
 
         <nav class="gl-footer__nav" aria-label="Explorar el catálogo">
             <h2>Explora</h2>

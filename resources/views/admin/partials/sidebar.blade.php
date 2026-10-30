@@ -30,6 +30,10 @@
                     </div>
                 @endcan
 
+                @if($panelUser?->isAdmin())
+                    <div class="menu-item"><a class="menu-link {{ request()->routeIs('admin.donations.*') ? 'active' : '' }}" href="{{ route('admin.donations.index') }}"><span class="menu-icon"><i class="ki-outline ki-heart fs-2"></i></span><span class="menu-title">Donaciones</span></a></div>
+                @endif
+
                 <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.assistant-messages.*') ? 'active' : '' }}"
                         href="{{ route('admin.assistant-messages.index') }}">

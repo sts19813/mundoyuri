@@ -52,7 +52,7 @@
                     </div>
                     <div class="profile-identity-copy">
                         <span class="profile-eyebrow">Perfil de la comunidad</span>
-                        <h1>{{ $profileUser->name }}</h1>
+                        <h1>{{ $profileUser->name }} @if(\App\Models\Donation::where('user_id', $profileUser->id)->where('show_star', true)->where('status', 'succeeded')->whereColumn('refunded_amount', '<', 'amount')->exists()) <span title="Apoya a Mundo Yuri" aria-label="Apoya a Mundo Yuri" style="color:#f0a4b8;font-size:.8em">❀</span> @endif</h1>
                         <p>{{ $profileUser->alias ? '@'.$profileUser->alias : 'Miembro de Mundo Yuri' }}</p>
                         <div class="community-profile-labels">
                             <x-community.rank :rank="$communityRank" />
