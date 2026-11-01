@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Services\HalloweenBadgeService;
 use App\Services\UserStreakService;
 use Closure;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ class UpdateUserLastSeen
 
         if ($user instanceof User) {
             $seenAt = now();
+
+            app(HalloweenBadgeService::class)->awardForPresence($user, $seenAt);
 
             if (! $user->last_streak_date?->isSameDay($seenAt)) {
                 app(UserStreakService::class)->record($user, $seenAt);
