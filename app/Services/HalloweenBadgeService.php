@@ -40,7 +40,7 @@ class HalloweenBadgeService
             ]);
 
             if ($inserted) {
-                BadgeAwardLog::query()->create([
+                $log = BadgeAwardLog::query()->create([
                     'user_id' => $user->id,
                     'badge_id' => $badge->id,
                     'badge_name' => $badge->name,
@@ -50,6 +50,7 @@ class HalloweenBadgeService
                     'automation_rule' => 'halloween-presencia-2026',
                     'condition' => $condition,
                 ]);
+                app(BadgeNotificationService::class)->notifyAward($log);
             }
         });
     }

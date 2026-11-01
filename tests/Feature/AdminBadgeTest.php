@@ -136,7 +136,7 @@ class AdminBadgeTest extends TestCase
             'awarded_by' => $admin->id,
             'note' => 'Concesión original.',
         ]);
-        $this->assertDatabaseCount('badge_user', 1);
+        $this->assertSame(1, $member->badges()->whereKey($badge->id)->count());
     }
 
     public function test_regular_users_cannot_manage_or_assign_badges(): void

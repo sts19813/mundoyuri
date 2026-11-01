@@ -31,6 +31,9 @@ class HalloweenBadgeTest extends TestCase
         $this->assertDatabaseHas('badge_user', ['user_id' => $user->id, 'badge_id' => $badge->id, 'automation_rule' => 'halloween-presencia-2026']);
         $this->assertSame(1, $user->badges()->whereKey($badge->id)->count());
         $this->assertSame(1, \App\Models\BadgeAwardLog::where('user_id', $user->id)->where('badge_id', $badge->id)->count());
+        $notification = $user->notifications()->firstOrFail();
+        $this->assertSame('badge_awarded', $notification->data['kind']);
+        $this->assertStringContainsString('Halloween Yuri 2026', $notification->data['message']);
 
         Carbon::setTestNow(Carbon::parse('2026-11-01 00:00:00', 'America/Merida'));
         app(BadgeAutomationService::class)->sync($user->fresh());
@@ -61,5 +64,29 @@ class HalloweenBadgeTest extends TestCase
         }
         $this->assertDatabaseMissing('badge_user', ['user_id' => $absent->id, 'badge_id' => $badge->id]);
         $this->assertDatabaseCount('badge_award_logs', 3);
+    }
+
+    public function test_notification_backfill_is_idempotent_and_respects_push_preferences(): void
+    {
+        $badge = Badge::where('slug', 'halloween-yuri-2026')->firstOrFail();
+        $user = User::factory()->create(['id' => 2, 'push_notifications_enabled' => false]);
+        $user->badges()->attach($badge->id, ['awarded_at' => now(), 'assignment_source' => 'automatic']);
+        $log = \App\Models\BadgeAwardLog::create([
+            'user_id' => $user->id, 'badge_id' => $badge->id, 'badge_name' => $badge->name,
+            'badge_slug' => $badge->slug, 'action' => 'assigned', 'source' => 'automatic',
+        ]);
+
+        $this->artisan('badges:notify-halloween-2026')->assertSuccessful();
+        $this->artisan('badges:notify-halloween-2026')->assertSuccessful();
+        $this->assertSame(1, $user->notifications()->count());
+        $this->assertNotNull($log->fresh()->notified_at);
+        $notification = new \App\Notifications\BadgeAwardedNotification($badge->id, $badge->name, $user->publicProfileUrl(), $log->id);
+        $this->assertSame(['database'], $notification->via($user));
+        config()->set('webpush.vapid.public_key', 'public-key');
+        config()->set('webpush.vapid.private_key', 'private-key');
+        $user->update(['push_notifications_enabled' => true]);
+        $user->updatePushSubscription('https://push.example.test/halloween', 'browser-public-key', 'browser-auth-token', 'aes128gcm');
+        $this->assertContains(\NotificationChannels\WebPush\WebPushChannel::class, $notification->via($user));
+        $this->assertNotContains('mail', $notification->via($user));
     }
 }

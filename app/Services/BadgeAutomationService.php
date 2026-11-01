@@ -229,7 +229,7 @@ class BadgeAutomationService
     /** @param array<string, mixed> $metadata */
     private function log(User $user, Badge $badge, string $action, string $source, ?string $rule, ?string $condition, array $metadata, ?User $actor = null, ?string $note = null): void
     {
-        BadgeAwardLog::query()->create([
+        $log = BadgeAwardLog::query()->create([
             'user_id' => $user->id,
             'badge_id' => $badge->id,
             'actor_id' => $actor?->id,
@@ -242,5 +242,9 @@ class BadgeAutomationService
             'note' => $note,
             'metadata' => $metadata ?: null,
         ]);
+
+        if ($action === 'assigned') {
+            app(BadgeNotificationService::class)->notifyAward($log);
+        }
     }
 }
