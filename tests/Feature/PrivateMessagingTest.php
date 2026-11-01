@@ -634,7 +634,7 @@ class PrivateMessagingTest extends TestCase
         $this->assertDatabaseCount('direct_messages', 1);
     }
 
-    public function test_large_private_message_attachments_are_purged_after_thirty_days_without_deleting_the_message(): void
+    public function test_large_private_message_attachments_expire_for_users_but_are_preserved_for_moderation(): void
     {
         Storage::fake('local');
         $sender = User::factory()->create();
@@ -663,8 +663,9 @@ class PrivateMessagingTest extends TestCase
 
         $this->artisan('messages:prune-large-attachments')->assertSuccessful();
 
-        Storage::disk('local')->assertMissing($path);
+        Storage::disk('local')->assertExists($path);
         $this->assertNull($message->fresh()->attachment_path);
+        $this->assertSame($path, $message->fresh()->moderation_attachment_path);
         $this->assertNotNull($message->fresh()->attachment_purged_at);
         $this->assertSame('Te comparto este archivo.', $message->fresh()->body);
     }

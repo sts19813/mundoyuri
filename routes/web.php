@@ -160,6 +160,9 @@ Route::middleware(['auth', 'verified'])
         Route::get('/mensajes/estado', [ConversationController::class, 'status'])
             ->middleware('throttle:240,1')
             ->name('messages.status');
+        Route::post('/mensajes/chat/{conversation}/archivar', [ConversationController::class, 'archive'])->name('messages.archive');
+        Route::delete('/mensajes/chat/{conversation}/archivar', [ConversationController::class, 'unarchive'])->name('messages.unarchive');
+        Route::delete('/mensajes/chat/{conversation}', [ConversationController::class, 'deleteConversation'])->name('messages.conversation.destroy');
         Route::get('/mensajes/adjuntos/{message}', [ConversationController::class, 'attachment'])
             ->name('messages.attachments.show');
         Route::post('/mensajes/mensaje/{message}/guardar-sticker', [ConversationController::class, 'saveSticker'])

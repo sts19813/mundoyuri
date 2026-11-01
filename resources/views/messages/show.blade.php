@@ -42,7 +42,7 @@ class="messenger-body"
 
                 <section class="messenger-chat" aria-label="Conversación con {{ $otherUser->alias ?: $otherUser->name }}">
                     <header class="messenger-chat-header">
-                        <a href="{{ route('messages.index') }}" class="messenger-mobile-back" aria-label="Volver a conversaciones">
+                        <a href="{{ route('messages.index', $archived ? ['archived' => 1] : []) }}" class="messenger-mobile-back" aria-label="Volver a conversaciones">
                             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
                         </a>
                         <a class="messenger-chat-person" href="{{ $otherUser->publicProfileUrl() }}">
@@ -64,6 +64,16 @@ class="messenger-body"
                             <div>
                                 <a href="{{ $otherUser->publicProfileUrl() }}">Ver perfil</a>
                                 <button type="button" data-media-panel-open>Multimedia, archivos y enlaces</button>
+                                @if($conversation)
+                                    <form method="POST" action="{{ $archived ? route('messages.unarchive', $conversation) : route('messages.archive', $conversation) }}">
+                                        @csrf @if($archived) @method('DELETE') @endif
+                                        <button type="submit">{{ $archived ? 'Desarchivar chat' : 'Archivar chat' }}</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('messages.conversation.destroy', $conversation) }}" data-dialog-confirm="El historial se retirará de tu vista. La otra persona y el equipo de moderación conservarán los mensajes. Si llega un mensaje nuevo, el chat volverá a aparecer." data-dialog-title="¿Eliminar este chat?" data-dialog-confirm-text="Eliminar">
+                                        @csrf @method('DELETE')
+                                        <button type="submit">Eliminar chat</button>
+                                    </form>
+                                @endif
                                 @if($viewerHasBlocked)
                                     <form method="POST" action="{{ route('users.block.destroy', $otherUser) }}">
                                         @csrf @method('DELETE')

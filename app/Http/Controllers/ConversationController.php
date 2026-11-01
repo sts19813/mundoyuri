@@ -49,7 +49,8 @@ class ConversationController extends Controller
     {
         $viewer = $request->user();
         $search = trim($request->string('q')->toString());
-        $conversations = $this->conversationList($viewer, $search)
+        $archived = $request->boolean('archived');
+        $conversations = $this->conversationList($viewer, $search, $archived)
             ->orderByDesc('last_message_at')
             ->paginate(30, ['*'], 'conversations_page')
             ->withQueryString();
@@ -59,7 +60,54 @@ class ConversationController extends Controller
             'viewer' => $viewer,
             'search' => $search,
             'activeUser' => null,
+            'archived' => $archived,
+            'archivedUnreadCount' => $this->unreadMessages($viewer, true)->count(),
         ]);
+    }
+
+    public function archive(Request $request, Conversation $conversation): RedirectResponse
+    {
+        return $this->changeConversationState($request, $conversation, 'archive');
+    }
+
+    public function unarchive(Request $request, Conversation $conversation): RedirectResponse
+    {
+        return $this->changeConversationState($request, $conversation, 'unarchive');
+    }
+
+    public function deleteConversation(Request $request, Conversation $conversation): RedirectResponse
+    {
+        return $this->changeConversationState($request, $conversation, 'delete');
+    }
+
+    private function changeConversationState(Request $request, Conversation $conversation, string $action): RedirectResponse
+    {
+        $viewer = $request->user();
+        abort_unless(in_array($viewer->id, [$conversation->user_one_id, $conversation->user_two_id], true), 404);
+
+        DB::transaction(function () use ($conversation, $viewer, $action): void {
+            $conversation = Conversation::query()->whereKey($conversation->id)->lockForUpdate()->firstOrFail();
+            $state = DB::table('conversation_user_states')->where('conversation_id', $conversation->id)->where('user_id', $viewer->id)->first();
+            $values = [
+                'archived_at' => $action === 'archive' ? now() : null,
+                'cleared_through_message_id' => $action === 'delete'
+                    ? max((int) ($state->cleared_through_message_id ?? 0), (int) $conversation->messages()->max('id'))
+                    : (int) ($state->cleared_through_message_id ?? 0),
+                'updated_at' => now(),
+            ];
+            if ($state) {
+                DB::table('conversation_user_states')->where('id', $state->id)->update($values);
+            } else {
+                DB::table('conversation_user_states')->insert($values + ['conversation_id' => $conversation->id, 'user_id' => $viewer->id, 'created_at' => now()]);
+            }
+        });
+
+        return redirect()->route('messages.index', $action === 'archive' ? ['archived' => 1] : [])
+            ->with('success', match ($action) {
+                'archive' => 'Chat archivado.',
+                'unarchive' => 'Chat desarchivado.',
+                default => 'Chat eliminado de tu lista.',
+            });
     }
 
     public function status(Request $request): JsonResponse
@@ -69,15 +117,14 @@ class ConversationController extends Controller
             ->orderByDesc('last_message_at')
             ->limit(8)
             ->get();
-        $latestUnread = DirectMessage::query()
-            ->where('recipient_id', $viewer->id)
-            ->whereNull('read_at')
+        $latestUnread = $this->unreadMessages($viewer, false)
             ->with('sender')
             ->latest('id')
             ->first();
 
         return response()->json([
-            'unread_count' => $viewer->receivedMessages()->whereNull('read_at')->count(),
+            'unread_count' => $this->unreadMessages($viewer, false)->count(),
+            'archived_unread_count' => $this->unreadMessages($viewer, true)->count(),
             'latest_unread_message_id' => $latestUnread?->id,
             'latest_unread' => $latestUnread ? $this->unreadNotificationPayload($latestUnread, $viewer) : null,
             'conversations' => $conversations
@@ -99,12 +146,14 @@ class ConversationController extends Controller
 
         if ($conversation) {
             $conversation->messages()
+                ->visibleFor($viewer)
                 ->where('recipient_id', $viewer->id)
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
 
             $messages = $conversation->messages()
-                ->with(['sender', 'recipient', 'replyTo.sender'])
+                ->visibleFor($viewer)
+                ->with(['sender', 'recipient', 'replyTo' => fn ($query) => $query->visibleFor($viewer), 'replyTo.sender'])
                 ->latest()
                 ->paginate(50, ['*'], 'messages_page')
                 ->withQueryString();
@@ -117,7 +166,8 @@ class ConversationController extends Controller
         }
 
         $search = trim($request->string('q')->toString());
-        $conversations = $this->conversationList($viewer, $search)
+        $archived = $conversation ? $conversation->isArchivedFor($viewer) : $request->boolean('archived');
+        $conversations = $this->conversationList($viewer, $search, $archived)
             ->orderByDesc('last_message_at')
             ->paginate(30, ['*'], 'conversations_page')
             ->withQueryString();
@@ -130,6 +180,8 @@ class ConversationController extends Controller
             'viewer' => $viewer,
             'search' => $search,
             'activeUser' => $user,
+            'archived' => $archived,
+            'archivedUnreadCount' => $this->unreadMessages($viewer, true)->count(),
             'interactionBlocked' => $viewer->cannotInteractWith($user),
             'viewerHasBlocked' => $viewer->hasBlocked($user),
         ]);
@@ -158,8 +210,9 @@ class ConversationController extends Controller
         ], true), 404);
 
         $messages = $conversation->messages()
+            ->visibleFor($viewer)
             ->where('id', '>', $afterId)
-            ->with(['sender', 'recipient', 'replyTo.sender'])
+            ->with(['sender', 'recipient', 'replyTo' => fn ($query) => $query->visibleFor($viewer), 'replyTo.sender'])
             ->orderBy('id')
             ->limit(50)
             ->get();
@@ -190,6 +243,7 @@ class ConversationController extends Controller
                 ->values(),
             'latest_message_id' => $latestMessageId,
             'read_outgoing_ids' => $conversation->messages()
+                ->visibleFor($viewer)
                 ->where('sender_id', $viewer->id)
                 ->whereNotNull('read_at')
                 ->pluck('id')
@@ -210,8 +264,9 @@ class ConversationController extends Controller
         }
 
         $messages = $conversation->messages()
+            ->visibleFor($viewer)
             ->where('id', '<', $beforeId)
-            ->with(['sender', 'recipient', 'replyTo.sender'])
+            ->with(['sender', 'recipient', 'replyTo' => fn ($query) => $query->visibleFor($viewer), 'replyTo.sender'])
             ->latest('id')
             ->limit(50)
             ->get()
@@ -226,7 +281,7 @@ class ConversationController extends Controller
                 ->map(fn (DirectMessage $message) => $this->messagePayload($message, $viewer, $user))
                 ->values(),
             'has_more' => $oldestId
-                ? $conversation->messages()->where('id', '<', $oldestId)->exists()
+                ? $conversation->messages()->visibleFor($viewer)->where('id', '<', $oldestId)->exists()
                 : false,
         ]);
     }
@@ -245,6 +300,7 @@ class ConversationController extends Controller
         }
 
         $messages = $conversation->messages()
+            ->visibleFor($viewer)
             ->whereNull('deleted_at')
             ->latest('id');
 
@@ -384,6 +440,8 @@ class ConversationController extends Controller
                     'user_two_id' => $userTwoId,
                 ]);
 
+                $conversation = Conversation::query()->whereKey($conversation->id)->lockForUpdate()->firstOrFail();
+
                 $message = $conversation->messages()->create([
                     'sender_id' => $viewer->id,
                     'recipient_id' => $user->id,
@@ -405,7 +463,9 @@ class ConversationController extends Controller
             throw $exception;
         }
 
-        $user->notify(new NewDirectMessageNotification($message, $viewer));
+        if (! $message->conversation->isArchivedFor($user)) {
+            $user->notify(new NewDirectMessageNotification($message, $viewer));
+        }
         $badges->sync($viewer);
         $badges->sync($user);
 
@@ -432,6 +492,7 @@ class ConversationController extends Controller
             $message->conversation->user_one_id,
             $message->conversation->user_two_id,
         ], true), 404);
+        abort_unless($message->isVisibleFor($viewer), 404);
 
         if (! $message->isDeleted()) {
             $message->update([
@@ -452,6 +513,7 @@ class ConversationController extends Controller
             $message->conversation->user_one_id,
             $message->conversation->user_two_id,
         ], true), 404);
+        abort_unless($message->isVisibleFor($viewer), 404);
         abort_unless($message->sender_id !== $viewer->id, 422);
         abort_unless($message->is_sticker && $message->attachmentIsImage(), 422);
         abort_unless(Storage::disk('local')->exists($message->attachment_path), 404);
@@ -481,6 +543,7 @@ class ConversationController extends Controller
             $message->conversation->user_one_id,
             $message->conversation->user_two_id,
         ], true), 404);
+        abort_unless($message->isVisibleFor($request->user()), 404);
         abort_unless(! $message->isDeleted() && $message->hasStoredAttachment() && Storage::disk('local')->exists($message->attachment_path), 404);
 
         if ($message->attachmentIsVideo()) {
@@ -555,7 +618,13 @@ class ConversationController extends Controller
         }, $status, $headers);
     }
 
-    private function conversationList(User $viewer, string $search): Builder
+    private function unreadMessages(User $viewer, bool $archived): Builder
+    {
+        return DirectMessage::query()->where('recipient_id', $viewer->id)->whereNull('read_at')
+            ->visibleFor($viewer)->archivedFor($viewer, $archived);
+    }
+
+    private function conversationList(User $viewer, string $search, bool $archived = false): Builder
     {
         return Conversation::query()
             ->where(function (Builder $query) use ($viewer): void {
@@ -563,6 +632,7 @@ class ConversationController extends Controller
                     ->where('user_one_id', $viewer->id)
                     ->orWhere('user_two_id', $viewer->id);
             })
+            ->whereHas('messages', fn (Builder $messages) => $messages->visibleFor($viewer)->archivedFor($viewer, $archived))
             ->when($search !== '', function (Builder $query) use ($viewer, $search): void {
                 $like = '%'.$search.'%';
                 $query->where(function (Builder $participants) use ($viewer, $like): void {
@@ -585,6 +655,7 @@ class ConversationController extends Controller
             ->withCount([
                 'messages as unread_messages_count' => fn (Builder $query) => $query
                     ->where('recipient_id', $viewer->id)
+                    ->visibleFor($viewer)
                     ->whereNull('read_at'),
             ]);
     }
@@ -751,6 +822,7 @@ class ConversationController extends Controller
         }
 
         $target = $conversation->messages()
+            ->visibleFor($viewer)
             ->whereKey((int) $replyToMessageId)
             ->whereNull('deleted_at')
             ->first();

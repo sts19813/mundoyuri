@@ -80,7 +80,7 @@
                     </a>
                 @endif
             @elseif($message->attachmentWasPurged())
-                <p class="messenger-expired-attachment">Archivo eliminado automáticamente después de 30 días.</p>
+                <p class="messenger-expired-attachment">Archivo no disponible en el chat después de 30 días. Se conserva para moderación.</p>
             @endif
         @endif
         <div class="messenger-message-meta">

@@ -38,7 +38,7 @@
                         @if(filled($message->body))
                             <div class="text-gray-800" style="white-space: pre-wrap;">{{ $message->body }}</div>
                         @endif
-                        @if($message->hasStoredAttachment())
+                        @if($message->moderationAttachmentPath())
                             <div class="mt-3">
                                 @if(str_starts_with((string) $message->attachment_mime, 'image/'))
                                     <a href="{{ route('admin.conversations.attachments.show', $message) }}" target="_blank" rel="noopener">

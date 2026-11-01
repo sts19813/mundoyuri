@@ -46,6 +46,13 @@ class Conversation extends Model
         return $this->hasOne(DirectMessage::class)->latestOfMany();
     }
 
+    public function isArchivedFor(User $user): bool
+    {
+        return \Illuminate\Support\Facades\DB::table('conversation_user_states')
+            ->where('conversation_id', $this->id)->where('user_id', $user->id)
+            ->whereNotNull('archived_at')->exists();
+    }
+
     public function otherParticipant(User $viewer): User
     {
         return $viewer->id === $this->user_one_id

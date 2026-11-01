@@ -6876,6 +6876,11 @@ html[data-season-palette] body .home-first-section {
 .messenger-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 20px 12px; }
 .messenger-sidebar-header span { display: block; margin-bottom: 2px; color: var(--rose); font-size: .62rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
 .messenger-sidebar-header h1 { margin: 0; color: #fff; font: 700 1.7rem 'Playfair Display', serif; }
+.messenger-folders { display: flex; gap: 6px; padding: 0 14px 12px; }
+.messenger-folders a { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 18px; color: #d8bfd2; font-size: .76rem; font-weight: 600; text-decoration: none; }
+.messenger-folders a[aria-current="page"] { color: #fff; background: rgba(244, 63, 142, .18); }
+.messenger-folders a:hover { color: #fff; background: rgba(255, 255, 255, .08); }
+.messenger-unread-count[hidden] { display: none; }
 .messenger-new-chat { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; border: 1px solid rgba(244, 63, 142, .25); border-radius: 50%; color: #ffc1da; background: rgba(244, 63, 142, .09); text-decoration: none; }
 .messenger-new-chat:hover, .messenger-new-chat:focus-visible { color: #fff; border-color: var(--rose); background: rgba(244, 63, 142, .18); outline: 0; }
 .messenger-search { min-height: 40px; display: flex; align-items: center; gap: 9px; margin: 0 14px 12px; padding: 0 12px; border: 1px solid transparent; border-radius: 20px; color: #a894ae; background: rgba(255, 255, 255, .065); }

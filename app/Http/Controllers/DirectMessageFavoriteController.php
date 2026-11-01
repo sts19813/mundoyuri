@@ -20,6 +20,7 @@ class DirectMessageFavoriteController extends Controller
             $message->conversation->user_one_id,
             $message->conversation->user_two_id,
         ], true), 404);
+        abort_unless($message->isVisibleFor($viewer), 404);
         abort_if($message->isDeleted(), 404);
 
         $favorited = DB::transaction(function () use ($message, $viewer): bool {

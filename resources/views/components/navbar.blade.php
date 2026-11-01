@@ -95,7 +95,8 @@
             @else
                 @php($portalUser = auth()->user())
                 @php($portalStreakDays = $portalUser->activeStreakDays())
-                @php($portalUnreadMessages = $portalUser->receivedMessages()->whereNull('read_at')->count())
+                @php($portalUnreadMessages = $portalUser->receivedMessages()->whereNull('read_at')->visibleFor($portalUser)->archivedFor($portalUser, false)->count())
+                @php($portalArchivedUnread = $portalUser->receivedMessages()->whereNull('read_at')->visibleFor($portalUser)->archivedFor($portalUser, true)->count())
                 @php($portalUnreadNotifications = $portalUser->unreadNotifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->count())
                 @php($portalRecentNotifications = $portalUser->notifications()->where('type', '!=', \App\Notifications\NewDirectMessageNotification::class)->latest()->limit(6)->get())
 
@@ -105,7 +106,7 @@
                     data-message-status-url="{{ route('messages.status') }}"
                     data-message-index-url="{{ route('messages.index') }}"
                     data-initial-unread-count="{{ $portalUnreadMessages }}"
-                    data-latest-unread-id="{{ optional($portalUser->receivedMessages()->whereNull('read_at')->latest('id')->first())->id ?: 0 }}"
+                    data-latest-unread-id="{{ optional($portalUser->receivedMessages()->whereNull('read_at')->visibleFor($portalUser)->archivedFor($portalUser, false)->latest('id')->first())->id ?: 0 }}"
                 >
                     <a href="{{ route('messages.index') }}" class="portal-nav-shortcut" data-message-menu-trigger aria-haspopup="true" aria-expanded="false" aria-controls="portal-message-dropdown" aria-label="Mensajes{{ $portalUnreadMessages ? ': '.$portalUnreadMessages.' sin leer' : '' }}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -126,6 +127,7 @@
                         </div>
                         <footer class="portal-notification-actions">
                             <a href="{{ route('messages.index') }}">Abrir mensajes</a>
+                            <a href="{{ route('messages.index', ['archived' => 1]) }}">Archivados <span data-archived-unread @if(!$portalArchivedUnread) hidden @endif>{{ $portalArchivedUnread }}</span></a>
                             <a href="{{ route('community.members') }}">Nuevo chat</a>
                         </footer>
                     </div>
@@ -594,6 +596,11 @@
 
                 const data = await response.json();
                 const nextUnreadCount = Number(data.unread_count || 0);
+                document.querySelectorAll('[data-archived-unread]').forEach((badge) => {
+                    const count = Number(data.archived_unread_count || 0);
+                    badge.textContent = badgeLabel(count);
+                    badge.hidden = count <= 0;
+                });
                 const nextLatestUnreadId = Number(data.latest_unread_message_id || 0);
                 const hasNewUnread = nextUnreadCount > unreadCount && nextLatestUnreadId !== latestUnreadId;
 

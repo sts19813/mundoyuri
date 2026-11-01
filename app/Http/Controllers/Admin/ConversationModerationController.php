@@ -51,10 +51,11 @@ class ConversationModerationController extends Controller
     public function attachment(Request $request, DirectMessage $message): StreamedResponse
     {
         abort_unless($request->user()->shouldEnterAdminPanel(), 403);
-        abort_unless($message->hasStoredAttachment() && Storage::disk('local')->exists($message->attachment_path), 404);
+        $path = $message->moderationAttachmentPath();
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
 
         return Storage::disk('local')->response(
-            $message->attachment_path,
+            $path,
             $message->attachment_name,
             ['Content-Type' => $message->attachment_mime ?: 'application/octet-stream'],
             str_starts_with((string) $message->attachment_mime, 'image/') ? 'inline' : 'attachment',

@@ -9,11 +9,17 @@
         </a>
     </header>
 
+    <nav class="messenger-folders" aria-label="Carpetas de chats">
+        <a href="{{ route('messages.index') }}" @if(!$archived) aria-current="page" @endif>Chats</a>
+        <a href="{{ route('messages.index', ['archived' => 1]) }}" @if($archived) aria-current="page" @endif>Archivados <span class="messenger-unread-count" data-archived-unread @if(!$archivedUnreadCount) hidden @endif>{{ $archivedUnreadCount > 99 ? '99+' : $archivedUnreadCount }}</span></a>
+    </nav>
+
     @php($conversationSearchUrl = $activeUser ? route('messages.show', $activeUser) : route('messages.index'))
     <form action="{{ $conversationSearchUrl }}" method="GET" class="messenger-search" role="search">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <label class="visually-hidden" for="messenger-search-input">Buscar conversaciones</label>
         <input id="messenger-search-input" type="search" name="q" value="{{ $search }}" placeholder="Buscar en Messenger">
+        @if($archived)<input type="hidden" name="archived" value="1">@endif
         @if($search !== '')
             <a href="{{ $conversationSearchUrl }}" aria-label="Limpiar búsqueda">×</a>
         @endif
@@ -24,7 +30,7 @@
             @php($conversationUser = $conversationItem->otherParticipant($viewer))
             @php($lastMessage = $conversationItem->lastMessage)
             <a
-                href="{{ route('messages.show', $conversationUser) }}"
+                href="{{ route('messages.show', $conversationUser) }}{{ $archived ? '?archived=1' : '' }}"
                 @class([
                     'messenger-conversation-item',
                     'is-active' => $activeUser?->is($conversationUser),
@@ -61,9 +67,8 @@
                     <strong>No encontramos ese chat</strong>
                     <p>Prueba con otro nombre o alias.</p>
                 @else
-                    <strong>Aún no tienes conversaciones</strong>
-                    <p>Visita la comunidad para enviar tu primer mensaje.</p>
-                    <a href="{{ route('community.members') }}">Ver personas</a>
+                    <strong>{{ $archived ? 'No tienes chats archivados' : 'Aún no tienes conversaciones' }}</strong>
+                    @if(!$archived)<p>Visita la comunidad para enviar tu primer mensaje.</p><a href="{{ route('community.members') }}">Ver personas</a>@endif
                 @endif
             </div>
         @endforelse

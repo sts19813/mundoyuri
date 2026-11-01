@@ -9,6 +9,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DirectMessage extends Model
 {
+    public function isVisibleFor(User $user): bool
+    {
+        return self::query()->whereKey($this->id)->visibleFor($user)->exists();
+    }
+
+    public function scopeVisibleFor(\Illuminate\Database\Eloquent\Builder $query, User $user): void
+    {
+        $query->whereNotExists(fn ($state) => $state->selectRaw('1')->from('conversation_user_states')
+            ->whereColumn('conversation_user_states.conversation_id', 'direct_messages.conversation_id')
+            ->where('conversation_user_states.user_id', $user->id)
+            ->whereColumn('direct_messages.id', '<=', 'conversation_user_states.cleared_through_message_id'));
+    }
+
+    public function scopeArchivedFor(\Illuminate\Database\Eloquent\Builder $query, User $user, bool $archived): void
+    {
+        $method = $archived ? 'whereExists' : 'whereNotExists';
+        $query->$method(fn ($state) => $state->selectRaw('1')->from('conversation_user_states')
+            ->whereColumn('conversation_user_states.conversation_id', 'direct_messages.conversation_id')
+            ->where('conversation_user_states.user_id', $user->id)->whereNotNull('conversation_user_states.archived_at'));
+    }
+
     use HasFactory;
 
     public const VIDEO_EXTENSIONS = [
@@ -59,6 +80,11 @@ class DirectMessage extends Model
     public function hasStoredAttachment(): bool
     {
         return filled($this->attachment_path);
+    }
+
+    public function moderationAttachmentPath(): ?string
+    {
+        return $this->attachment_path ?: $this->moderation_attachment_path;
     }
 
     public function attachmentWasPurged(): bool
