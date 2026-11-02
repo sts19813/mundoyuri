@@ -143,7 +143,9 @@ class UpsertPoisonousLoveSeeder extends Seeder
                         'provider' => 'cloudflare_hls',
                         'source_type' => 'full',
                         'label' => 'Principal',
-                        'video_url' => 'https://video.mundoyuri.com/Poisonous%20Love/Poisonous%20Love%20Ep'.$number.'.HLS/master.m3u8',
+                        'video_url' => $number === 11
+                            ? 'https://video.mundoyuri.com/Poisonous%20Love/Poisonous%20Love%20Special%20Ep%2011%20Hd%20sub%20esp.HLS/master.m3u8'
+                            : 'https://video.mundoyuri.com/Poisonous%20Love/Poisonous%20Love%20Ep'.$number.'.HLS/master.m3u8',
                         'is_primary' => true,
                     ]
                 );
