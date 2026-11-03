@@ -5,7 +5,10 @@
             @if(filled(config('services.stripe.key')) && filled(config('services.stripe.secret')) && filled(config('services.stripe.webhook_secret')))
             <a href="{{ route('donations.index') }}" class="gl-footer__support">
                 <span class="gl-footer__support-flower" aria-hidden="true">❀</span>
-                <span class="gl-footer__support-title">Regálame unas flores</span>
+                <span class="gl-footer__support-copy">
+                    <span class="gl-footer__support-title">Regálame unas flores</span>
+                    <span class="gl-footer__support-note">Tu apoyo ayuda a que Mundo Yuri siga floreciendo.</span>
+                </span>
             </a>
             @endif
         </div>

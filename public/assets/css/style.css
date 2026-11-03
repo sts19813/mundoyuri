@@ -1739,38 +1739,73 @@
         gap: 10px;
         color: var(--rose);
         text-decoration: none;
+        isolation: isolate;
     }
 
     .gl-footer__support-flower {
+        position: relative;
+        z-index: 0;
         color: #f0a4b8;
         font-size: 1.4rem;
         line-height: 1.15;
-        transition: transform .25s ease;
+        transition: color .45s ease, filter .45s ease, transform .55s cubic-bezier(.16, 1, .3, 1);
     }
 
-    .gl-footer__support-copy { display: grid; gap: 4px; }
+    .gl-footer__support-flower::after {
+        position: absolute;
+        z-index: -1;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(244, 63, 142, .55);
+        content: '';
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.35);
+        transition: opacity .45s ease, transform .55s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .gl-footer__support-copy { position: relative; display: block; }
     .gl-footer__support-title {
+        display: block;
         font-family: 'Playfair Display', Georgia, serif;
-        font-size: 1.05rem;
-        font-style: italic;
-        font-weight: 400;
+        font-size: 1rem;
+        font-style: normal;
+        font-weight: 700;
         line-height: 1.3;
+        letter-spacing: .01em;
+        transition: color .4s ease, transform .5s cubic-bezier(.16, 1, .3, 1);
     }
     .gl-footer__support-note {
+        position: absolute;
+        top: calc(100% + 7px);
+        left: 0;
+        width: 245px;
         color: var(--muted);
         font-size: .74rem;
         line-height: 1.4;
         opacity: 0;
-        transform: translateY(-3px);
-        transition: opacity .25s ease, transform .25s ease;
+        pointer-events: none;
+        transform: translateY(-6px);
+        transition: opacity .4s ease, transform .55s cubic-bezier(.16, 1, .3, 1);
     }
     .gl-footer__support:hover .gl-footer__support-note,
     .gl-footer__support:focus-visible .gl-footer__support-note { opacity: 1; transform: translateY(0); }
+    .gl-footer__support:hover .gl-footer__support-title,
+    .gl-footer__support:focus-visible .gl-footer__support-title { color: #ffc0dc; transform: translateX(2px); }
     .gl-footer__support:hover .gl-footer__support-flower,
-    .gl-footer__support:focus-visible .gl-footer__support-flower { transform: rotate(15deg); }
+    .gl-footer__support:focus-visible .gl-footer__support-flower { color: #ffc0dc; filter: drop-shadow(0 0 8px rgba(244, 63, 142, .44)); transform: rotate(18deg) scale(1.14); }
+    .gl-footer__support:hover .gl-footer__support-flower::after,
+    .gl-footer__support:focus-visible .gl-footer__support-flower::after { opacity: 1; transform: translate(-50%, -50%) scale(3.2); }
     .gl-footer__support:focus-visible { outline: 2px solid var(--rose); outline-offset: 5px; border-radius: 2px; }
     @media (hover: none) { .gl-footer__support-note { opacity: 1; transform: none; } }
-    @media (prefers-reduced-motion: reduce) { .gl-footer__support-flower, .gl-footer__support-note { transition: none; } }
+    @media (prefers-reduced-motion: reduce) {
+        .gl-footer__support-flower,
+        .gl-footer__support-flower::after,
+        .gl-footer__support-title,
+        .gl-footer__support-note { transition: none; }
+    }
 
     .gl-footer__brand {
         display: inline-flex;
