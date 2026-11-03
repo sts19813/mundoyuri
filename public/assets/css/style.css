@@ -5055,6 +5055,57 @@
         text-decoration: none;
     }
 
+    /* ── DERECHOS DE AUTOR / DMCA ── */
+    .legal-card section + section {
+        margin-top: 42px;
+        padding-top: 38px;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .legal-card h2 {
+        margin: 0 0 16px;
+        color: #fff;
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.45rem, 3vw, 2rem);
+    }
+
+    .legal-card p,
+    .legal-card li {
+        color: #c8bacd;
+        font-size: 1rem;
+        line-height: 1.85;
+    }
+
+    .legal-card p { margin-bottom: 18px; }
+
+    .legal-card ol {
+        margin: 0 0 22px;
+        padding-left: 1.35rem;
+    }
+
+    .legal-card li + li { margin-top: 9px; }
+
+    .legal-card a {
+        color: #f7a9cf;
+        text-decoration-color: rgba(247, 169, 207, .45);
+        text-underline-offset: 3px;
+    }
+
+    .legal-card a:hover,
+    .legal-card a:focus-visible { color: #fff; }
+
+    .legal-note {
+        margin-top: 42px;
+        padding: 18px 20px;
+        border: 1px solid rgba(247, 169, 207, .24);
+        border-radius: 14px;
+        color: #d9cfdd;
+        line-height: 1.75;
+        background: rgba(244, 63, 142, .06);
+    }
+
+    .legal-note strong { color: #fff; }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 960px) {
         .gl-nav {

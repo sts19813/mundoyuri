@@ -25,6 +25,12 @@
             <a href="{{ route('questions.index') }}">Preguntas</a>
             <a href="{{ route('catalog.series.index') }}">Catálogo completo</a>
         </nav>
+
+        <nav class="gl-footer__nav" aria-label="Información legal">
+            <h2>Información</h2>
+            <a href="{{ route('about') }}">Quiénes somos</a>
+            <a href="{{ route('dmca') }}">Derechos de autor</a>
+        </nav>
     </div>
 
     <div class="gl-footer__bottom">

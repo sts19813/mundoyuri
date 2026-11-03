@@ -67,6 +67,7 @@ Route::post('/stripe/webhook', [\App\Http\Controllers\DonationController::class,
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/index', [PublicCatalogController::class, 'home'])->name('legacy.index');
 Route::view('/quienes-somos', 'about')->name('about');
+Route::view('/dmca', 'dmca')->name('dmca');
 Route::get('/inicio-catalogo', [CatalogController::class, 'home'])->name('catalog.home');
 Route::get('/series', [CatalogController::class, 'series'])->name('catalog.series.index');
 Route::get('/generos', [CatalogController::class, 'genres'])->name('catalog.genres.index');
