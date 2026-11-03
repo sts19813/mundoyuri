@@ -4174,9 +4174,12 @@
         z-index: 0;
         inset: 0;
         border-radius: inherit;
-        background:
+        background-image:
             linear-gradient(100deg, rgba(28, 17, 31, .82) 0%, rgba(28, 17, 31, .62) 58%, rgba(18, 11, 21, .52) 100%),
-            var(--member-cover) var(--member-cover-position, center) / cover no-repeat;
+            var(--member-cover);
+        background-position: center, var(--member-cover-position, center);
+        background-repeat: no-repeat;
+        background-size: auto, cover;
         content: '';
         pointer-events: none;
     }
@@ -6685,9 +6688,12 @@
     z-index: 0;
     inset: 0;
     border-radius: inherit;
-    background:
+    background-image:
         linear-gradient(105deg, rgba(33, 19, 36, .78) 0%, rgba(33, 19, 36, .58) 58%, rgba(18, 11, 21, .45) 100%),
-        var(--author-cover) var(--author-cover-position, center) / cover no-repeat;
+        var(--author-cover);
+    background-position: center, var(--author-cover-position, center);
+    background-repeat: no-repeat;
+    background-size: auto, cover;
     content: '';
     pointer-events: none;
 }
@@ -7449,9 +7455,9 @@ img.messenger-avatar,
 }
 .community-avatar.is-online::after {
     position: absolute;
-    /* Deliberately identical to the Rachas avatar wrapper. */
-    right: -1px;
-    bottom: -1px;
+    /* Centre the marker on the circumference (45°), never the square corner. */
+    right: calc(14.6447% - 7px) !important;
+    bottom: calc(14.6447% - 7px) !important;
     z-index: 2;
     width: 10px;
     height: 10px;
