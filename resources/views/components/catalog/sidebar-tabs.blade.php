@@ -55,7 +55,18 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        <x-community.author-card :author="$streaker" />
+                        <a href="{{ $streaker->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $streaker->displayName() }}">
+                            <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $streaker->isOnline()])>
+                                <span class="sidebar-profile-avatar">
+                                    @if($streaker->hasProfileAvatar())
+                                        <img src="{{ $streaker->avatarUrl() }}" alt="" style="object-position: {{ $streaker->profileImagePosition() }}">
+                                    @else
+                                        <span>{{ $streaker->initials() }}</span>
+                                    @endif
+                                </span>
+                            </span>
+                            <span class="sidebar-profile-name">{{ $streaker->displayName() }}</span>
+                        </a>
                         <span class="sidebar-streak-days" title="Mejor racha: {{ $streaker->longest_streak_days }} días">🔥 {{ $streaker->activeStreakDays() }}d</span>
                     </div>
                 </li>
@@ -89,7 +100,18 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        <x-community.author-card :author="$marathoner" />
+                        <a href="{{ $marathoner->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $marathoner->displayName() }}">
+                            <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $marathoner->isOnline()])>
+                                <span class="sidebar-profile-avatar">
+                                    @if($marathoner->hasProfileAvatar())
+                                        <img src="{{ $marathoner->avatarUrl() }}" alt="" style="object-position: {{ $marathoner->profileImagePosition() }}">
+                                    @else
+                                        <span>{{ $marathoner->initials() }}</span>
+                                    @endif
+                                </span>
+                            </span>
+                            <span class="sidebar-profile-name">{{ $marathoner->displayName() }}</span>
+                        </a>
                         <span class="sidebar-marathon-time" title="Tiempo acumulado en Mundo Yuri">⏱ {{ $elapsed }}</span>
                     </div>
                 </li>
