@@ -6672,7 +6672,9 @@
 }
 .forum-author-popover.has-cover > * { position: relative; z-index: 1; }
 
-.forum-post-author-compact[open] .forum-author-popover { visibility: visible; opacity: 1; transform: translateY(0); }
+.forum-post-author-compact[open] .forum-author-popover,
+.forum-post-author-compact:hover .forum-author-popover,
+.forum-post-author-compact:focus-within .forum-author-popover { visibility: visible; opacity: 1; transform: translateY(0); }
 .forum-post-author-compact > summary { display: flex; align-items: center; gap: 9px; list-style: none; cursor: pointer; }
 .forum-post-author-compact > summary::-webkit-details-marker { display: none; }
 .forum-post-author-compact > summary:focus-visible { outline: 2px solid var(--rose); outline-offset: 4px; border-radius: 8px; }
