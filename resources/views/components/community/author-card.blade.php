@@ -30,19 +30,6 @@
         @if($authorCover) style="--author-cover: url('{{ $authorCover }}'); --author-cover-position: {{ $author->coverImagePosition() }}" @endif
         aria-label="Información de {{ $author->displayName() }}"
     >
-        <div class="forum-author-popover-top">
-            <a href="{{ $author->publicProfileUrl() }}" @class(['forum-author-popover-avatar', 'is-online' => $author->isOnline()]) tabindex="-1" aria-hidden="true">
-                @if($author->hasProfileAvatar())
-                    <img src="{{ $author->avatarUrl() }}" alt="">
-                @else
-                    <span>{{ $author->initials() }}</span>
-                @endif
-            </a>
-            <div>
-                <a href="{{ $author->publicProfileUrl() }}" class="forum-author-popover-name">{{ $author->displayName() }}</a>
-                <x-community.rank :rank="$resolvedRank" />
-            </div>
-        </div>
         @if($canInspect)
             @if($author->relationLoaded('badges') && $author->badges->isNotEmpty())
                 <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span><x-community.user-badges :user="$author" :limit="5" compact /></div>

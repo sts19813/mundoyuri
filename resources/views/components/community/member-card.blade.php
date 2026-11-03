@@ -59,25 +59,6 @@
         @if($memberCover) style="--author-cover: url('{{ $memberCover }}'); --author-cover-position: {{ $member->coverImagePosition() }}" @endif
         aria-label="Información de {{ $memberName }}"
     >
-        <div class="forum-author-popover-top">
-            <a href="{{ $profileUrl }}" @class(['forum-author-popover-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) tabindex="-1" aria-hidden="true">
-                @if($isHistoricalProfile && $member->avatarUrl())
-                    <img src="{{ $member->avatarUrl() }}" alt="">
-                @elseif(! $isHistoricalProfile && $member->hasProfileAvatar())
-                    <img src="{{ $member->avatarUrl() }}" alt="">
-                @else
-                    <span>{{ $isHistoricalProfile ? mb_strtoupper(mb_substr($memberName, 0, 1)) : $member->initials() }}</span>
-                @endif
-            </a>
-            <div>
-                <a href="{{ $profileUrl }}" class="forum-author-popover-name">{{ $memberName }}</a>
-                @if($isHistoricalProfile)
-                    @if($member->legacy_rank)<span class="community-rank">{{ $member->legacy_rank }}</span>@endif
-                @else
-                    <x-community.rank :rank="$resolvedRank" />
-                @endif
-            </div>
-        </div>
         @if($canInspect || $isHistoricalProfile)
             @if($member->badges->isNotEmpty())
                 <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span>

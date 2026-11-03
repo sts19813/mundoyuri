@@ -6621,8 +6621,8 @@
 .forum-author-popover-avatar.is-online::after {
     position: absolute;
     z-index: 2;
-    right: -2px;
-    bottom: -2px;
+    right: 1px;
+    bottom: 1px;
     width: 9px;
     height: 9px;
     border: 2px solid #211324;
@@ -6646,8 +6646,8 @@
     z-index: 18;
     display: grid;
     width: min(300px, calc(100vw - 44px));
-    gap: 10px;
-    padding: 14px;
+    gap: 12px;
+    padding: 15px;
     visibility: hidden;
     border: 1px solid rgba(244, 63, 142, .26);
     border-radius: 14px;
@@ -6905,7 +6905,20 @@
     .forum-feed-composer { grid-template-columns: 1fr; }
     .forum-feed-composer button { justify-self: end; }
     .forum-section-heading { align-items: flex-start; flex-direction: column; }
-    .forum-author-popover { position: fixed; top: auto; bottom: 12px; left: 12px; width: calc(100vw - 24px); max-height: min(430px, calc(100vh - 24px)); overflow: auto; }
+    .forum-author-popover {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        right: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        left: 12px;
+        width: auto;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+    }
     .community-conversation-heading { padding: 3px 0 17px 16px; gap: 16px; }
     .community-conversation-heading .forum-thread-header-actions { flex-shrink: 1; }
     .community-conversation-shell .forum-post-header { padding: 12px 14px; }
