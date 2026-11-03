@@ -7444,8 +7444,9 @@ img.messenger-avatar,
 }
 .community-avatar.is-online::after {
     position: absolute;
-    right: 0;
-    bottom: 0;
+    /* Anchor the centre of the marker to the circular perimeter, not the square box corner. */
+    right: calc(14.65% - 7px);
+    bottom: calc(14.65% - 7px);
     z-index: 2;
     width: 10px;
     height: 10px;
