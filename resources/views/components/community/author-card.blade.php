@@ -13,7 +13,7 @@
     <summary aria-label="Información de {{ $author->displayName() }}">
         <span @class(['forum-post-avatar', 'is-online' => $author->isOnline()])>
             @if($author->hasProfileAvatar())
-                <img src="{{ $author->avatarUrl() }}" alt="Avatar de {{ $author->displayName() }}">
+                <img src="{{ $author->avatarUrl() }}" alt="Avatar de {{ $author->displayName() }}" style="object-position: {{ $author->profileImagePosition() }}">
             @else
                 <span>{{ $author->initials() }}</span>
             @endif

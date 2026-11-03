@@ -18,7 +18,7 @@
         @if($isHistoricalProfile && $member->avatarUrl())
             <img src="{{ $member->avatarUrl() }}" alt="Avatar histórico de {{ $member->nickname }}">
         @elseif(! $isHistoricalProfile && $member->hasProfileAvatar())
-            <img src="{{ $member->avatarUrl() }}" alt="Foto de perfil de {{ $member->displayName() }}">
+            <img src="{{ $member->avatarUrl() }}" alt="Foto de perfil de {{ $member->displayName() }}" style="object-position: {{ $member->profileImagePosition() }}">
         @else
             <span>{{ $isHistoricalProfile ? mb_strtoupper(mb_substr($member->nickname, 0, 1)) : $member->initials() }}</span>
         @endif
