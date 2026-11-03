@@ -405,12 +405,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'En línea';
         }
 
-        $localSeen = $seen->copy()->setTimezone('America/Merida');
-        $today = now('America/Merida');
-        $date = $localSeen->isSameDay($today) ? 'hoy'
-            : ($localSeen->isSameDay($today->copy()->subDay()) ? 'ayer' : $localSeen->translatedFormat('d M Y'));
-
-        return 'Última vez '.$date.' a las '.$localSeen->format('g:ia');
+        return 'Última conexión';
     }
 
     public function coverImageUrl(): ?string

@@ -68,17 +68,17 @@ class UserPresenceTest extends TestCase
             ->get(route('messages.show', $offline))
             ->assertOk()
             ->assertDontSee('En línea')
-            ->assertSee('Última vez hoy a las 9:39pm');
+            ->assertSee('data-last-seen-at="2026-11-02T21:39:00-06:00"', false);
 
         $this->getJson(route('messages.poll', $offline))->assertOk()
             ->assertJsonPath('presence.is_online', false)
-            ->assertJsonPath('presence.label', 'Última vez hoy a las 9:39pm');
+            ->assertJsonPath('presence.last_seen_at', '2026-11-02T21:39:00-06:00');
         $offline->update(['show_last_seen' => false]);
-        $this->getJson(route('messages.poll', $offline))->assertJsonPath('presence.label', 'Ver perfil');
-        $this->get(route('messages.show', $offline))->assertDontSee('Última vez');
+        $this->getJson(route('messages.poll', $offline))->assertJsonPath('presence.label', 'Ver perfil')->assertJsonPath('presence.last_seen_at', null);
+        $this->get(route('messages.show', $offline))->assertDontSee('2026-11-02T21:39:00-06:00');
     }
 
-    public function test_messenger_last_heartbeat_displays_yesterday_and_older_dates_in_merida(): void
+    public function test_messenger_last_heartbeat_retains_its_timezone_offset(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-11-02 00:30:00', 'America/Merida'));
         $user = User::factory()->create();
@@ -87,9 +87,9 @@ class UserPresenceTest extends TestCase
             'started_at' => now()->subDay(), 'last_seen_at' => now()->subHour(),
             'total_seconds' => 0, 'heartbeat_count' => 1, 'current_path' => '/',
         ]);
-        $this->assertSame('Última vez ayer a las 11:30pm', $user->fresh()->messagePresenceLabel());
+        $this->assertSame('2026-11-01T23:30:00-06:00', $user->fresh()->lastHeartbeatForMessages()->toIso8601String());
         $session->update(['last_seen_at' => Carbon::parse('2026-10-29 21:40', 'America/Merida')]);
-        $this->assertStringContainsString('29 oct. 2026 a las 9:40pm', $user->fresh()->messagePresenceLabel());
+        $this->assertSame('2026-10-29T21:40:00-06:00', $user->fresh()->lastHeartbeatForMessages()->toIso8601String());
     }
 
     public function test_presence_heartbeat_accumulates_user_session_time(): void

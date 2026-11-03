@@ -732,7 +732,11 @@ class ConversationController extends Controller
 
     private function presencePayload(User $user): array
     {
-        return ['label' => $user->messagePresenceLabel(), 'is_online' => $user->isOnlineForMessages()];
+        return [
+            'label' => $user->messagePresenceLabel(),
+            'is_online' => $user->isOnlineForMessages(),
+            'last_seen_at' => $user->lastHeartbeatForMessages()?->toIso8601String(),
+        ];
     }
 
     private function unreadNotificationPayload(DirectMessage $message, User $viewer): array

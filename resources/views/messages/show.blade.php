@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+    <script src="{{ asset('assets/js/chat-presence.js') }}?v={{ filemtime(public_path('assets/js/chat-presence.js')) }}" defer></script>
     <script src="{{ asset('assets/js/sticker-images.js') }}?v={{ filemtime(public_path('assets/js/sticker-images.js')) }}" defer></script>
 
 
@@ -56,7 +57,7 @@ class="messenger-body"
                             </span>
                             <span>
                                 <strong>{{ $otherUser->alias ?: $otherUser->name }}</strong>
-                                <small data-chat-presence-label>{{ $otherUser->messagePresenceLabel() }}</small>
+                                <small data-chat-presence-label data-last-seen-at="{{ $otherUser->lastHeartbeatForMessages()?->toIso8601String() }}" data-is-online="{{ $otherUser->isOnlineForMessages() ? '1' : '0' }}">{{ $otherUser->messagePresenceLabel() }}</small>
                             </span>
                         </a>
 
@@ -1393,10 +1394,7 @@ class="messenger-body"
 
                 if (!response.ok) return;
                 const data = await response.json();
-                const presenceLabel = document.querySelector('[data-chat-presence-label]');
-                const presenceAvatar = document.querySelector('[data-chat-presence-avatar]');
-                if (data.presence && presenceLabel) presenceLabel.textContent = data.presence.label;
-                if (data.presence && presenceAvatar) presenceAvatar.classList.toggle('is-online', Boolean(data.presence.is_online));
+                if (data.presence) window.MundoYuriChatPresence?.render(data.presence);
                 appendMessages(data.messages || [], { playSound: true });
                 markOutgoingAsRead(data.read_outgoing_ids || []);
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
