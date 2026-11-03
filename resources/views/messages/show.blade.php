@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+    <script src="{{ asset('assets/js/sticker-images.js') }}?v={{ filemtime(public_path('assets/js/sticker-images.js')) }}" defer></script>
 
 
 @endsection
@@ -744,10 +745,12 @@ class="messenger-body"
             }
             stickers.slice(0, visibleStickerCount).forEach((sticker) => {
                 const item = document.createElement('span');
-                item.className = 'messenger-sticker-item';
+                item.className = 'messenger-sticker-item is-loading';
+                item.dataset.stickerImage = '';
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.dataset.stickerSelect = String(sticker.id);
+                button.disabled = true;
                 button.setAttribute('aria-label', `Enviar sticker ${sticker.name}`);
                 const image = document.createElement('img');
                 image.src = sticker.url;
@@ -763,6 +766,20 @@ class="messenger-body"
                     button.append(badge);
                 }
                 item.append(button);
+                const loading = document.createElement('span');
+                loading.className = 'messenger-sticker-loading';
+                loading.dataset.stickerLoading = '';
+                loading.setAttribute('role', 'status');
+                loading.textContent = 'Cargando…';
+                item.append(loading);
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.className = 'messenger-sticker-retry';
+                retry.dataset.stickerRetry = '';
+                retry.hidden = true;
+                retry.textContent = 'Intentar de nuevo';
+                retry.setAttribute('aria-label', `Volver a cargar sticker ${sticker.name}`);
+                item.append(retry);
                 if (stickerType === 'mine' && !sticker.is_general) {
                     const remove = document.createElement('button');
                     remove.type = 'button';

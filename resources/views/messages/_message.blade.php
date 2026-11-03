@@ -45,8 +45,10 @@
             @if(filled($message->body))<p>{!! \App\Support\DirectMessageLinkFormatter::html($message->body) !!}</p>@endif
             @if($message->hasAttachment())
                 @if($message->is_sticker)
-                    <div class="messenger-sticker-image" role="img" aria-label="Sticker enviado por {{ $outgoing ? 'ti' : $otherUser->displayName() }}">
-                        <img src="{{ route('messages.attachments.show', $message) }}" alt="Sticker" loading="lazy">
+                    <div class="messenger-sticker-image is-loading" data-sticker-image>
+                        <img src="{{ route('messages.attachments.show', $message) }}" alt="Sticker enviado por {{ $outgoing ? 'ti' : $otherUser->displayName() }}" loading="lazy">
+                        <span class="messenger-sticker-loading" data-sticker-loading role="status">Cargando sticker…</span>
+                        <button type="button" class="messenger-sticker-retry" data-sticker-retry hidden>Intentar de nuevo</button>
                     </div>
                 @elseif($message->attachmentIsImage())
                     <a
