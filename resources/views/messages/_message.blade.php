@@ -21,7 +21,8 @@
     @if($message->attachmentIsImage()) data-message-image-url="{{ route('messages.attachments.show', $message) }}" @endif
 >
     @if(!$outgoing)
-        <span @class(['messenger-avatar-wrap', 'messenger-message-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()])>
+        {{-- Presence belongs to the conversation list, not to each compact message avatar. --}}
+        <span class="messenger-avatar-wrap messenger-message-avatar-wrap">
             @if($otherUser->hasProfileAvatar())
                 <img class="messenger-message-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
             @else
