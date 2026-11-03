@@ -17,12 +17,14 @@
 
 <details class="forum-post-author-compact community-member-chip" data-author-card data-member-chip data-profile-url="{{ $profileUrl }}">
     <summary aria-label="Ver perfil de {{ $memberName }}@if($soulmateLabel), {{ $soulmateLabel }}@endif" @if($soulmateLabel) title="{{ $soulmateLabel }}" @endif>
-        <span @class(['forum-post-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) aria-hidden="true">
-        @if($hasAvatar)
-            <img src="{{ $member->avatarUrl() }}" alt="" @unless($isHistoricalProfile) style="object-position: {{ $member->profileImagePosition() }}" @endunless>
-        @else
-            <span>{{ $isHistoricalProfile ? mb_strtoupper(mb_substr($memberName, 0, 1)) : $member->initials() }}</span>
-        @endif
+        <span @class(['community-member-chip-avatar-wrap', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) aria-hidden="true">
+            <span class="community-member-chip-avatar">
+            @if($hasAvatar)
+                <img src="{{ $member->avatarUrl() }}" alt="" @unless($isHistoricalProfile) style="object-position: {{ $member->profileImagePosition() }}" @endunless>
+            @else
+                <span>{{ $isHistoricalProfile ? mb_strtoupper(mb_substr($memberName, 0, 1)) : $member->initials() }}</span>
+            @endif
+            </span>
         </span>
         <span class="forum-post-name">{{ $memberName }}</span>
     </summary>
