@@ -1768,7 +1768,7 @@
       object-position: center;
   }
 
-  .sidebar-profile-avatar-wrap.is-recently-active .sidebar-profile-avatar {
+  .sidebar-profile-avatar-wrap:is(.is-online, .is-recently-active) .sidebar-profile-avatar {
       border-color: #22c55e;
       box-shadow: 0 0 0 3px rgba(34, 197, 94, .18), 0 0 18px rgba(34, 197, 94, .28);
   }
