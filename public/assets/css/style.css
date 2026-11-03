@@ -1720,8 +1720,8 @@
 
     .gl-footer__inner {
         display: grid;
-        grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(135px, .42fr));
-        gap: 36px 64px;
+        grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(135px, .42fr));
+        gap: 36px 48px;
         align-items: start;
         padding: 38px 0 32px;
     }
