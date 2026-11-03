@@ -43,6 +43,7 @@ class DirectMessage extends Model
         'conversation_id',
         'sender_id',
         'recipient_id',
+        'client_id',
         'reply_to_message_id',
         'body',
         'attachment_path',

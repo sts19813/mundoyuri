@@ -50,6 +50,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
+        RateLimiter::for('messages-send', fn (Request $request) => Limit::perMinute(120)->by('messages-send:'.$request->user()->getAuthIdentifier()));
+        RateLimiter::for('messages-status', fn (Request $request) => Limit::perMinute(240)->by('messages-status:'.$request->user()->getAuthIdentifier()));
+
         RateLimiter::for('registration', function (Request $request): array {
             $cloudflareAddress = $request->header('CF-Connecting-IP');
             $visitorAddress = filter_var($cloudflareAddress, FILTER_VALIDATE_IP)

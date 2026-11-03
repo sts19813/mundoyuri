@@ -235,7 +235,7 @@ class ConversationController extends Controller
             });
         }
 
-        $latestMessageId = max($afterId, (int) ($conversation->messages()->max('id') ?? 0));
+        $latestMessageId = max($afterId, (int) ($messages->last()?->id ?? 0));
 
         return response()->json([
             'messages' => $messages
@@ -378,6 +378,7 @@ class ConversationController extends Controller
 
         $validated = $request->validate([
             'body' => ['nullable', 'string', 'max:2000', 'required_without_all:attachment,sticker_id'],
+            'client_id' => ['nullable', 'uuid'],
             'reply_to_message_id' => ['nullable', 'integer'],
             'is_sticker' => ['nullable', 'boolean'],
             'sticker_id' => ['nullable', 'integer'],
@@ -392,6 +393,16 @@ class ConversationController extends Controller
                 },
             ],
         ]);
+
+        $clientId = $validated['client_id'] ?? null;
+        if ($clientId) {
+            $existing = DirectMessage::query()->where('sender_id', $viewer->id)->where('client_id', $clientId)->first();
+            if ($existing) {
+                abort_unless($existing->recipient_id === $user->id, 409);
+
+                return $this->sentMessageResponse($request, $existing, $viewer, $user);
+            }
+        }
 
         $body = trim($validated['body'] ?? '');
         $sticker = null;
@@ -432,7 +443,7 @@ class ConversationController extends Controller
         }
 
         try {
-            $message = DB::transaction(function () use ($viewer, $user, $body, $attachment, $replyToMessageId, $isSticker): DirectMessage {
+            [$message, $created] = DB::transaction(function () use ($viewer, $user, $body, $attachment, $replyToMessageId, $isSticker, $clientId): array {
                 [$userOneId, $userTwoId] = Conversation::participantIds($viewer, $user);
 
                 $conversation = Conversation::query()->firstOrCreate([
@@ -442,9 +453,19 @@ class ConversationController extends Controller
 
                 $conversation = Conversation::query()->whereKey($conversation->id)->lockForUpdate()->firstOrFail();
 
+                if ($clientId) {
+                    $existing = DirectMessage::query()->where('sender_id', $viewer->id)->where('client_id', $clientId)->first();
+                    if ($existing) {
+                        abort_unless($existing->recipient_id === $user->id, 409);
+
+                        return [$existing, false];
+                    }
+                }
+
                 $message = $conversation->messages()->create([
                     'sender_id' => $viewer->id,
                     'recipient_id' => $user->id,
+                    'client_id' => $clientId,
                     'reply_to_message_id' => $replyToMessageId,
                     'body' => $body,
                     'is_sticker' => $isSticker,
@@ -453,21 +474,43 @@ class ConversationController extends Controller
 
                 $conversation->update(['last_message_at' => $message->created_at]);
 
-                return $message;
+                return [$message, true];
             });
         } catch (Throwable $exception) {
-            if ($attachment) {
+            if ($attachment && $request->hasFile('attachment')) {
                 Storage::disk('local')->delete($attachment['attachment_path']);
             }
 
             throw $exception;
         }
 
-        if (! $message->conversation->isArchivedFor($user)) {
-            $user->notify(new NewDirectMessageNotification($message, $viewer));
+        if (! $created && $attachment && $request->hasFile('attachment')) {
+            Storage::disk('local')->delete($attachment['attachment_path']);
         }
-        $badges->sync($viewer);
-        $badges->sync($user);
+
+        if ($created) {
+            try {
+                if (! $message->conversation->isArchivedFor($user)) {
+                    $user->notify(new NewDirectMessageNotification($message, $viewer));
+                }
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+
+            foreach ([$viewer, $user] as $participant) {
+                try {
+                    $badges->sync($participant);
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            }
+        }
+
+        return $this->sentMessageResponse($request, $message, $viewer, $user);
+    }
+
+    private function sentMessageResponse(Request $request, DirectMessage $message, User $viewer, User $user): JsonResponse|RedirectResponse
+    {
 
         if ($request->expectsJson()) {
             $message->load(['sender', 'recipient', 'replyTo.sender']);

@@ -158,7 +158,7 @@ Route::middleware(['auth', 'verified'])
         Route::delete('/stickers/{sticker}', [StickerController::class, 'destroy'])->name('stickers.destroy');
         Route::get('/stickers/{sticker}/archivo', [StickerController::class, 'file'])->name('stickers.file');
         Route::get('/mensajes/estado', [ConversationController::class, 'status'])
-            ->middleware('throttle:240,1')
+            ->middleware('throttle:messages-status')
             ->name('messages.status');
         Route::post('/mensajes/chat/{conversation}/archivar', [ConversationController::class, 'archive'])->name('messages.archive');
         Route::delete('/mensajes/chat/{conversation}/archivar', [ConversationController::class, 'unarchive'])->name('messages.unarchive');
@@ -185,7 +185,7 @@ Route::middleware(['auth', 'verified'])
         Route::get('/mensajes/{user}', [ConversationController::class, 'show'])
             ->name('messages.show');
         Route::post('/mensajes/{user}', [ConversationController::class, 'store'])
-            ->middleware('throttle:120,1')
+            ->middleware('throttle:messages-send')
             ->name('messages.store');
 
         Route::get('/notificaciones', [NotificationController::class, 'index'])

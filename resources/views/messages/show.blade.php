@@ -542,7 +542,7 @@ class="messenger-body"
             return conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 120;
         };
 
-        const appendMessages = (messages, { playSound = false, forceScroll = false } = {}) => {
+        const appendMessages = (messages, { playSound = false, forceScroll = false, advanceCursor = true } = {}) => {
             if (!conversation || !Array.isArray(messages) || messages.length === 0) return;
 
             const wasPinned = shouldStayPinnedToLatest();
@@ -550,8 +550,11 @@ class="messenger-body"
 
             messages.forEach((message) => {
                 if (!message?.id || conversation.querySelector(`[data-message-id="${message.id}"]`)) return;
-                conversation.insertAdjacentHTML('beforeend', message.html);
-                latestMessageId = Math.max(latestMessageId, Number(message.id) || 0);
+                const next = Array.from(conversation.querySelectorAll('[data-message-id]'))
+                    .find((item) => Number(item.dataset.messageId) > Number(message.id));
+                if (next) next.insertAdjacentHTML('beforebegin', message.html);
+                else conversation.insertAdjacentHTML('beforeend', message.html);
+                if (advanceCursor) latestMessageId = Math.max(latestMessageId, Number(message.id) || 0);
             });
 
             if (forceScroll || wasPinned) {
@@ -715,7 +718,7 @@ class="messenger-body"
             stickerToggle?.classList.remove('is-active');
         };
         const sendSticker = (sticker) => {
-            if (!composer || stickerGrid?.dataset.sending === 'true') return;
+            if (!composer || sendingMessage || stickerGrid?.dataset.sending === 'true') return;
             if (attachmentInput) attachmentInput.value = '';
             if (messageBody) messageBody.value = '';
             if (stickerInput) stickerInput.value = '1';
@@ -1376,6 +1379,8 @@ class="messenger-body"
                 appendMessages(data.messages || [], { playSound: true });
                 markOutgoingAsRead(data.read_outgoing_ids || []);
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
+            } catch (error) {
+                // La próxima consulta recuperará los mensajes pendientes.
             } finally {
                 polling = false;
             }
@@ -1388,6 +1393,23 @@ class="messenger-body"
         window.addEventListener('beforeunload', () => window.clearInterval(pollInterval));
 
         const composer = document.querySelector('[data-message-composer]');
+        let sendingMessage = false;
+        let pendingSend = null;
+        const composerFingerprint = () => {
+            const file = attachmentInput?.files?.[0];
+            return JSON.stringify([messageBody?.value || '', stickerIdInput?.value || '', stickerInput?.value || '',
+                composer?.querySelector('[data-reply-input]')?.value || '',
+                file ? [file.name, file.size, file.lastModified, file.type] : null]);
+        };
+        const newClientId = () => {
+            if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+            const bytes = new Uint8Array(16);
+            window.crypto.getRandomValues(bytes);
+            bytes[6] = (bytes[6] & 15) | 64;
+            bytes[8] = (bytes[8] & 63) | 128;
+            const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+            return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+        };
         const uploadProgress = document.querySelector('[data-message-upload-progress]');
         const uploadProgressLabel = document.querySelector('[data-message-upload-label]');
         const uploadProgressPercent = document.querySelector('[data-message-upload-percent]');
@@ -1440,7 +1462,7 @@ class="messenger-body"
                 } catch (error) {
                     // A non-JSON error response is handled by its HTTP status below.
                 }
-                resolve({ ok: request.status >= 200 && request.status < 300, status: request.status, data });
+                resolve({ ok: request.status >= 200 && request.status < 300, status: request.status, data, retryAfter: request.getResponseHeader('Retry-After') });
             });
             request.addEventListener('error', () => reject(new Error('network_error')));
             request.addEventListener('abort', () => reject(new Error('aborted')));
@@ -1449,6 +1471,7 @@ class="messenger-body"
 
         composer?.addEventListener('submit', async (event) => {
             event.preventDefault();
+            if (sendingMessage) return;
             unlockMessageAudio();
             clearComposerError();
 
@@ -1462,11 +1485,16 @@ class="messenger-body"
                 return;
             }
 
+            sendingMessage = true;
             try {
                 const formData = new FormData(composer);
-                const response = attachment
-                    ? await sendAttachmentWithProgress(formData)
-                    : await fetch(composer.action, {
+                const fingerprint = composerFingerprint();
+                if (!pendingSend || pendingSend.fingerprint !== fingerprint) pendingSend = { fingerprint, id: newClientId() };
+                formData.set('client_id', pendingSend.id);
+                let response;
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        response = attachment ? await sendAttachmentWithProgress(formData) : await fetch(composer.action, {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -1474,7 +1502,18 @@ class="messenger-body"
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': csrfToken,
                         },
-                    });
+                        });
+                        const retryAfter = Number(attachment ? response.retryAfter : response.headers.get('Retry-After')) || 0;
+                        if (attempt < 2 && ([500, 502, 503, 504].includes(response.status) || (response.status === 429 && retryAfter > 0 && retryAfter <= 5))) {
+                            await new Promise((resolve) => window.setTimeout(resolve, retryAfter ? retryAfter * 1000 : 800 * (attempt + 1)));
+                            continue;
+                        }
+                        break;
+                    } catch (error) {
+                        if (attempt === 2) throw error;
+                        await new Promise((resolve) => window.setTimeout(resolve, 800 * (attempt + 1)));
+                    }
+                }
 
                 if (!response.ok) {
                     if (response.status === 429) {
@@ -1495,8 +1534,8 @@ class="messenger-body"
 
                 if (attachment) setUploadProgress(100, 'Guardando mensaje...');
                 const data = attachment ? response.data : await response.json();
-                appendMessages(data.messages || [], { forceScroll: true });
-                latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
+                appendMessages(data.messages || [], { forceScroll: true, advanceCursor: false });
+                pendingSend = null;
                 const sentSticker = Boolean(stickerIdInput?.value);
                 if (sentSticker) {
                     // Después de enviar desde Comunidad o Mis stickers, la próxima apertura
@@ -1506,19 +1545,21 @@ class="messenger-body"
                     stickerPages.recent = 0;
                     stickerHasMore.recent = false;
                 }
-                composer.reset();
-                clearStickerSelection();
-                closeStickerPanel();
-                clearReplyTarget();
-                if (attachmentInput) {
-                    if (attachmentHint) attachmentHint.textContent = 'Archivo · máximo 200 MB';
+                if (composerFingerprint() === fingerprint) {
+                    composer.reset();
+                    clearStickerSelection();
+                    closeStickerPanel();
+                    clearReplyTarget();
+                    if (attachmentInput && attachmentHint) attachmentHint.textContent = 'Archivo · máximo 200 MB';
                 }
+                pollMessages();
                 resizeMessageBody();
                 syncMessengerViewport();
                 messageBody?.focus({ preventScroll: true });
             } catch (error) {
                 showComposerError('No se pudo enviar el mensaje. Revisa tu conexión e inténtalo de nuevo.');
             } finally {
+                sendingMessage = false;
                 hideUploadProgress();
                 submitButton?.removeAttribute('disabled');
                 stickerGrid?.removeAttribute('data-sending');
