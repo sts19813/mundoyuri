@@ -47,7 +47,10 @@
                     </div>
                     <p id="payment-error" class="error" role="alert" aria-live="polite"></p>
                     <button class="submit" id="submit" type="submit" @disabled(!$enabled)>Continuar con mi aportación <span aria-hidden="true">→</span></button>
-                    <p class="fine">Pago único y seguro con <strong>Stripe</strong></p>
+                    <div class="secure-payment" aria-label="Pago seguro con Stripe">
+                        <span class="secure-payment__lock" aria-hidden="true">⌑</span>
+                        <p><strong>Pago seguro con Stripe</strong><span>Tu pago se procesa de forma cifrada con Stripe. Mundo Yuri no ve ni almacena los datos de tu tarjeta.</span></p>
+                    </div>
                 </form>
             </div>
             <div class="thanks" id="result" role="status"></div>
