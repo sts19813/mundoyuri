@@ -55,9 +55,8 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        <a href="{{ $streaker->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $streaker->displayName() }}">
-                            <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $streaker->isOnline()])>
-                                <span class="sidebar-profile-avatar">
+                        <x-community.author-card :author="$streaker" :direct-profile="true" :show-signature="false" />
+                        <span class="sidebar-profile-avatar">
                                     @if($streaker->hasProfileAvatar())
                                         <img src="{{ $streaker->avatarUrl() }}" alt="" style="object-position: {{ $streaker->profileImagePosition() }}">
                                     @else
@@ -100,9 +99,8 @@
                         @endif
                     </span>
                     <div class="marathoner-profile">
-                        <a href="{{ $marathoner->publicProfileUrl() }}" class="sidebar-profile-link" aria-label="Ver perfil de {{ $marathoner->displayName() }}">
-                            <span @class(['sidebar-profile-avatar-wrap', 'is-online' => $marathoner->isOnline()])>
-                                <span class="sidebar-profile-avatar">
+                        <x-community.author-card :author="$marathoner" :direct-profile="true" :show-signature="false" />
+                        <span class="sidebar-profile-avatar">
                                     @if($marathoner->hasProfileAvatar())
                                         <img src="{{ $marathoner->avatarUrl() }}" alt="" style="object-position: {{ $marathoner->profileImagePosition() }}">
                                     @else

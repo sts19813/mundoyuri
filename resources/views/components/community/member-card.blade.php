@@ -14,14 +14,8 @@
 @php($streakDays = ! $isHistoricalProfile ? $member->activeStreakDays() : 0)
 
 <article @class(['community-member-card', 'has-soulmate' => filled($soulmateLabel), 'has-cover' => filled($memberCover)]) @if($memberCover) style="--member-cover: url('{{ $memberCover }}'); --member-cover-position: {{ $member->coverImagePosition() }}" @endif @if($soulmateLabel) data-soulmate="{{ $soulmateLabel }}" title="{{ $soulmateLabel }}" @endif>
-    <a @class(['community-member-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) href="{{ $profileUrl }}" aria-label="Ver perfil de {{ $memberName }}">
-        @if($isHistoricalProfile && $member->avatarUrl())
-            <img src="{{ $member->avatarUrl() }}" alt="Avatar histórico de {{ $member->nickname }}">
-        @elseif(! $isHistoricalProfile && $member->hasProfileAvatar())
-            <img src="{{ $member->avatarUrl() }}" alt="Foto de perfil de {{ $member->displayName() }}" style="object-position: {{ $member->profileImagePosition() }}">
-        @else
-            <span>{{ $isHistoricalProfile ? mb_strtoupper(mb_substr($member->nickname, 0, 1)) : $member->initials() }}</span>
-        @endif
+    <a class="community-member-avatar-link" href="{{ $profileUrl }}" aria-label="Ver perfil de {{ $memberName }}">
+        <x-community.avatar :member="$member" class="community-member-avatar" />
     </a>
     <div class="community-member-copy">
         <div class="community-member-title">

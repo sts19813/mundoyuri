@@ -2092,3 +2092,7 @@
           font-size: .74rem;
       }
   }
+
+/* The ranking uses the same profile card and avatar as comments and community. */
+.marathoner-profile .community-avatar { overflow: visible; border: 0; background: none; box-shadow: none; }
+.marathoner-profile .community-avatar.is-online::after { right: -1px; bottom: -1px; width: 10px; height: 10px; }

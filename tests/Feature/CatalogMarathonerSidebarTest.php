@@ -60,6 +60,8 @@ class CatalogMarathonerSidebarTest extends TestCase
             ->assertDontSee('Ranking 11')
             ->assertDontSee('Admin del ranking')
             ->assertSee('sidebar-profile-link', false)
+            ->assertSee('aria-label="Información de Luna"', false)
+            ->assertSee('community-avatar-image', false)
             ->assertSee($leader->publicProfileUrl(), false)
             ->assertSee('🥇')
             ->assertSee('2 h');

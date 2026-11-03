@@ -11,13 +11,7 @@
 @endphp
 <details class="forum-post-author-compact" data-author-card>
     <summary aria-label="Información de {{ $author->displayName() }}">
-        <span @class(['forum-post-avatar', 'is-online' => $author->isOnline()])>
-            @if($author->hasProfileAvatar())
-                <img src="{{ $author->avatarUrl() }}" alt="Avatar de {{ $author->displayName() }}" style="object-position: {{ $author->profileImagePosition() }}">
-            @else
-                <span>{{ $author->initials() }}</span>
-            @endif
-        </span>
+        <x-community.avatar :member="$author" class="forum-post-avatar" />
         <span class="forum-post-name">{{ $author->displayName() }}</span>
         @if($inlineBadges && $canInspect)
             <x-community.rank :rank="$resolvedRank" />

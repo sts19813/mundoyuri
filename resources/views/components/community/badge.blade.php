@@ -1,11 +1,13 @@
 @props(['badge', 'detailed' => false, 'compact' => false])
 
+@php($tooltipId = 'badge-description-'.\Illuminate\Support\Str::uuid())
+
 <span
     @class(['community-badge', 'community-badge-tooltip' => $detailed, 'community-badge-compact' => $compact])
     style="--community-accent: {{ $badge->color ?: '#f472b6' }}"
-    title="{{ $badge->description ?: $badge->name }}"
+    @unless($detailed) title="{{ $badge->description ?: $badge->name }}" @endunless
     @if($compact) aria-label="{{ $badge->name }}: {{ $badge->description ?: 'Reconocimiento de la comunidad Mundo Yuri.' }}" @endif
-    @if($detailed) tabindex="0" aria-describedby="badge-description-{{ $badge->id }}" @endif
+    @if($detailed) tabindex="0" aria-describedby="{{ $tooltipId }}" @endif
 >
     @if($badge->imageUrl())
         <img src="{{ $badge->imageUrl() }}" alt="" class="community-badge-image">
@@ -14,7 +16,7 @@
     @endif
     @unless($compact){{ $badge->name }}@endunless
     @if($detailed)
-        <span class="community-badge-tooltip-copy" id="badge-description-{{ $badge->id }}" role="tooltip">
+        <span class="community-badge-tooltip-copy" id="{{ $tooltipId }}" role="tooltip">
             <strong>{{ $badge->name }}</strong>
             <span>{{ $badge->description ?: 'Reconocimiento de la comunidad Mundo Yuri.' }}</span>
         </span>
