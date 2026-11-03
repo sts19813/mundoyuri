@@ -24,7 +24,7 @@
     <aside @class(['forum-author-popover', 'has-cover' => filled($memberCover)]) @if($memberCover) style="--author-cover: url('{{ $memberCover }}'); --author-cover-position: {{ $member->coverImagePosition() }}" @endif aria-label="Información de {{ $memberName }}">
         @if($member->badges->isNotEmpty())
             <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span>
-                @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" compact />@endforeach
+                @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" compact detailed />@endforeach
             </div>
         @endif
         @if($soulmateLabel)

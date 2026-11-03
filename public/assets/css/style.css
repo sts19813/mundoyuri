@@ -6686,7 +6686,7 @@
     inset: 0;
     border-radius: inherit;
     background:
-        linear-gradient(105deg, rgba(33, 19, 36, .97) 0%, rgba(33, 19, 36, .9) 58%, rgba(18, 11, 21, .82) 100%),
+        linear-gradient(105deg, rgba(33, 19, 36, .78) 0%, rgba(33, 19, 36, .58) 58%, rgba(18, 11, 21, .45) 100%),
         var(--author-cover) var(--author-cover-position, center) / cover no-repeat;
     content: '';
     pointer-events: none;
@@ -7444,8 +7444,8 @@ img.messenger-avatar,
 }
 .community-avatar.is-online::after {
     position: absolute;
-    right: -2px;
-    bottom: -2px;
+    right: 0;
+    bottom: 0;
     z-index: 2;
     width: 10px;
     height: 10px;

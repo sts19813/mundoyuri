@@ -26,7 +26,7 @@
     >
         @if($canInspect)
             @if($author->relationLoaded('badges') && $author->badges->isNotEmpty())
-                <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span><x-community.user-badges :user="$author" :limit="5" compact /></div>
+                <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span><x-community.user-badges :user="$author" :limit="5" compact detailed /></div>
             @endif
             <dl class="forum-author-popover-meta">
                 <div>
