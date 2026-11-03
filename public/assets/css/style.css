@@ -4175,7 +4175,7 @@
         inset: 0;
         border-radius: inherit;
         background:
-            linear-gradient(100deg, rgba(28, 17, 31, .96) 0%, rgba(28, 17, 31, .82) 58%, rgba(18, 11, 21, .74) 100%),
+            linear-gradient(100deg, rgba(28, 17, 31, .82) 0%, rgba(28, 17, 31, .62) 58%, rgba(18, 11, 21, .52) 100%),
             var(--member-cover) var(--member-cover-position, center) / cover no-repeat;
         content: '';
         pointer-events: none;
@@ -7413,6 +7413,7 @@ img.messenger-avatar,
     border-radius: 50%;
     background: none;
     box-shadow: none;
+    aspect-ratio: 1 / 1;
 }
 .community-avatar .community-avatar-image {
     display: grid;
@@ -7430,9 +7431,10 @@ img.messenger-avatar,
 .community-avatar .community-avatar-image img {
     display: block;
     width: 100%;
-    height: 100%;
+    height: 100% !important;
     max-width: 100%;
-    object-fit: cover;
+    max-height: 100%;
+    object-fit: cover !important;
     border-radius: 50%;
 }
 .community-avatar.is-online { border: 0; box-shadow: none; }
@@ -7442,8 +7444,8 @@ img.messenger-avatar,
 }
 .community-avatar.is-online::after {
     position: absolute;
-    right: -1px;
-    bottom: -1px;
+    right: -2px;
+    bottom: -2px;
     z-index: 2;
     width: 10px;
     height: 10px;
@@ -7459,6 +7461,17 @@ img.messenger-avatar,
 .community-member-card:has(.community-badge-tooltip:focus-visible) { z-index: 5; }
 .community-member-spotlight .forum-post-author-compact > summary { overflow: visible; }
 .community-home-members .community-member-avatar-link { width: 54px; height: 54px; }
+
+/* Directory cards stay equal-height even when a name or badge collection varies. */
+.community-member-grid { grid-auto-rows: 190px; }
+.community-member-card { min-height: 0; height: 100%; overflow: visible; }
+.community-member-spotlight .community-avatar.forum-post-avatar { width: 60px; height: 60px; flex-basis: 60px; }
+
+@media (max-width: 760px) {
+    .community-member-grid { grid-auto-rows: auto; }
+    .community-member-card { min-height: 164px; height: auto; }
+    .community-member-spotlight .community-avatar.forum-post-avatar { width: 58px; height: 58px; flex-basis: 58px; }
+}
 
 html[data-season-palette] .community-avatar.community-member-avatar { border: 0; }
 .community-badge-tooltip:hover, .community-badge-tooltip:focus-visible { z-index: 20; }

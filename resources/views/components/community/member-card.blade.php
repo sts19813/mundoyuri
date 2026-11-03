@@ -32,7 +32,7 @@
 
         <div class="community-member-badges">
             @if($member->badges->isNotEmpty())<span class="community-member-badges-label">Insignias</span>@endif
-            @foreach($member->badges as $badge)<x-community.badge :badge="$badge" compact />@endforeach
+            @foreach($member->badges as $badge)<x-community.badge :badge="$badge" compact detailed />@endforeach
             @if(! $isHistoricalProfile && $member->is_legacy && $member->badges->doesntContain('slug', 'miembro-historico'))<span class="community-badge community-badge-legacy community-badge-compact" title="Miembro histórico" aria-label="Miembro histórico"><span aria-hidden="true">🌸</span></span>@endif
         </div>
 
@@ -56,7 +56,7 @@
         @if($canInspect || $isHistoricalProfile)
             @if($member->badges->isNotEmpty())
                 <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span>
-                    @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" compact />@endforeach
+                    @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" compact detailed />@endforeach
                 </div>
             @endif
             <dl class="forum-author-popover-meta">
