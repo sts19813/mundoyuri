@@ -109,7 +109,7 @@ class UserSignatureTest extends TestCase
             ->assertDontSee('Firma de respuesta');
     }
 
-    public function test_signature_is_not_repeated_for_consecutive_comments_by_the_same_user(): void
+    public function test_signature_is_shown_in_the_comment_and_author_card(): void
     {
         $author = User::factory()->create([
             'signature_text' => 'Firma consecutiva',
@@ -127,7 +127,7 @@ class UserSignatureTest extends TestCase
 
         $response = $this->get(route('catalog.series.show', $series))->assertOk();
 
-        $this->assertSame(1, substr_count($response->getContent(), 'Firma consecutiva'));
+        $this->assertSame(3, substr_count($response->getContent(), 'Firma consecutiva'));
     }
 
     public function test_admin_can_remove_or_temporarily_suspend_a_signature(): void

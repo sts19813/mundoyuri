@@ -44,7 +44,9 @@
             </div>
         </div>
         @if($canInspect)
-            <div class="forum-author-badges"><x-community.user-badges :user="$author" :limit="5" /></div>
+            @if($author->relationLoaded('badges') && $author->badges->isNotEmpty())
+                <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span><x-community.user-badges :user="$author" :limit="5" compact /></div>
+            @endif
             <dl class="forum-author-popover-meta">
                 <div>
                     <dt>Miembro desde</dt>

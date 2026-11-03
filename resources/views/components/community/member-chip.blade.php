@@ -12,6 +12,7 @@
     $blocked = ! $isHistoricalProfile && $viewer && ($viewer->blockedUsers->contains('id', $member->id) || $viewer->blockedByUsers->contains('id', $member->id));
     $canWrite = ! $isHistoricalProfile && $viewer && ! $blocked && ! $viewer->is($member) && $member->is_active;
     $streakDays = ! $isHistoricalProfile ? $member->activeStreakDays() : 0;
+    $memberCover = ! $isHistoricalProfile ? $member->coverImageUrl() : null;
 @endphp
 
 <details class="forum-post-author-compact community-member-chip" data-author-card data-member-chip data-profile-url="{{ $profileUrl }}">
@@ -26,7 +27,7 @@
         <span class="forum-post-name">{{ $memberName }}</span>
     </summary>
 
-    <aside class="forum-author-popover" aria-label="Información de {{ $memberName }}">
+    <aside @class(['forum-author-popover', 'has-cover' => filled($memberCover)]) @if($memberCover) style="--author-cover: url('{{ $memberCover }}'); --author-cover-position: {{ $member->coverImagePosition() }}" @endif aria-label="Información de {{ $memberName }}">
         <div class="forum-author-popover-top">
             <span @class(['forum-author-popover-avatar', 'is-online' => ! $isHistoricalProfile && $member->isOnline()]) aria-hidden="true">
                 @if($hasAvatar)
@@ -45,8 +46,8 @@
             </div>
         </div>
         @if($member->badges->isNotEmpty())
-            <div class="forum-author-badges">
-                @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" />@endforeach
+            <div class="forum-author-badges"><span class="forum-author-badges-label">Insignias</span>
+                @foreach($member->badges->take(5) as $badge)<x-community.badge :badge="$badge" compact />@endforeach
             </div>
         @endif
         @if($soulmateLabel)

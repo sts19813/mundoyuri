@@ -3,7 +3,7 @@
 <article id="comment-{{ $comment->id }}" class="{{ $isReply ? 'comment-reply' : 'comment-item' }} catalog-social-comment">
     <header class="comment-meta">
         @if($comment->user)
-            <x-community.author-card :author="$comment->user" :inline-badges="true" :show-signature="false" />
+            <x-community.author-card :author="$comment->user" :inline-badges="true" />
         @else
             <span class="comment-avatar">{{ $comment->initials() }}</span>
             <span class="comment-user">{{ $comment->display_alias }}</span>

@@ -59,7 +59,7 @@ class CatalogMarathonerSidebarTest extends TestCase
             ->assertSee('Ranking 10')
             ->assertDontSee('Ranking 11')
             ->assertDontSee('Admin del ranking')
-            ->assertSee('sidebar-profile-link', false)
+            ->assertSee('forum-post-author-compact', false)
             ->assertSee($leader->publicProfileUrl(), false)
             ->assertSee('🥇')
             ->assertSee('2 h');
