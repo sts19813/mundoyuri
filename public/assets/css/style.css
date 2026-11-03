@@ -4246,7 +4246,7 @@
         align-self: center;
         display: grid;
         place-items: center;
-        overflow: hidden;
+    overflow: visible;
         border: 2px solid rgba(244, 63, 142, .18);
     }
 
@@ -6611,20 +6611,22 @@
     margin: 0;
     flex: 0 0 auto;
     place-items: center;
-    overflow: hidden;
+    overflow: visible;
     border-radius: 50%;
     color: #fff;
     font-size: .68rem;
 }
 
+.forum-post-avatar img,
+.forum-post-avatar > span { border-radius: inherit; }
 .forum-post-avatar.is-online::after,
-.forum-author-popover-avatar.is-online::after {
+.community-member-avatar.is-online::after {
     position: absolute;
     z-index: 2;
-    right: 1px;
-    bottom: 1px;
-    width: 9px;
-    height: 9px;
+    right: -2px;
+    bottom: -2px;
+    width: 10px;
+    height: 10px;
     border: 2px solid #211324;
     border-radius: 50%;
     background: #22c55e;
@@ -6645,6 +6647,8 @@
     left: 0;
     z-index: 18;
     display: grid;
+    align-content: start;
+    grid-auto-rows: max-content;
     width: min(300px, calc(100vw - 44px));
     gap: 12px;
     padding: 15px;
@@ -6907,18 +6911,24 @@
     .forum-section-heading { align-items: flex-start; flex-direction: column; }
     .forum-author-popover {
         position: fixed;
-        top: max(12px, env(safe-area-inset-top));
+        top: 50%;
         right: 12px;
-        bottom: max(12px, env(safe-area-inset-bottom));
+        bottom: auto;
         left: 12px;
         width: auto;
-        max-height: none;
+        max-height: min(76dvh, calc(100dvh - 24px));
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         touch-action: pan-y;
+        transform: translateY(calc(-50% + 8px));
     }
+    .forum-post-author-compact[open] .forum-author-popover,
+    .forum-post-author-compact:hover .forum-author-popover,
+    .forum-post-author-compact:focus-within .forum-author-popover,
+    .community-member-card:hover > .community-member-popover,
+    .community-member-card:focus-within > .community-member-popover { transform: translateY(-50%); }
     .community-conversation-heading { padding: 3px 0 17px 16px; gap: 16px; }
     .community-conversation-heading .forum-thread-header-actions { flex-shrink: 1; }
     .community-conversation-shell .forum-post-header { padding: 12px 14px; }
