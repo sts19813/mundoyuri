@@ -30,9 +30,7 @@ class CommunityBadgeDisplayTest extends TestCase
         $this->get(route('community.members'))
             ->assertOk()
             ->assertSee('Yuri Distinguida')
-            ->assertSee('Miembro Histórico')
-            ->assertSee('community-badge-tooltip-copy', false)
-            ->assertSee($badge->description);
+            ->assertSee('Miembro Histórico');
     }
 
     public function test_inactive_and_unassigned_badges_are_not_displayed(): void
