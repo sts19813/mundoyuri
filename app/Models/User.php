@@ -362,9 +362,17 @@ class User extends Authenticatable implements MustVerifyEmail
             && $this->lastSeenForDisplay()?->greaterThanOrEqualTo(now()->subMinutes($minutes));
     }
 
-    public function isOnline(): bool
+    /**
+     * A non-live presence state used for the green avatar ring.
+     */
+    public function isRecentlyActive(): bool
     {
         return $this->wasSeenWithin(120);
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->isRecentlyActive();
     }
 
     public function isOnlineForMessages(): bool

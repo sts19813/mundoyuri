@@ -2089,7 +2089,7 @@
         transition: filter .2s, transform .2s;
     }
 
-    .profile-avatar-wrap.is-online .profile-avatar-main {
+    .profile-avatar-wrap.is-recently-active .profile-avatar-main {
         border-color: #22c55e;
         box-shadow: 0 0 0 5px rgba(34, 197, 94, .18), 0 16px 35px rgba(0, 0, 0, .32), 0 0 26px rgba(34, 197, 94, .32);
     }
@@ -7449,7 +7449,7 @@ img.messenger-avatar,
     border-radius: 50%;
 }
 .community-avatar.is-online { border: 0; box-shadow: none; }
-.community-avatar.is-online .community-avatar-image {
+.community-avatar.is-recently-active .community-avatar-image {
     border-color: #22c55e;
     box-shadow: 0 0 0 3px rgba(34, 197, 94, .18), 0 0 18px rgba(34, 197, 94, .28);
 }

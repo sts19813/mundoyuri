@@ -17,6 +17,11 @@
 
 @section('body')
 
+@php
+    $profileIsOnline = $profileUser->isOnlineForMessages();
+    $profileIsRecentlyActive = ! $profileIsOnline && $profileUser->isRecentlyActive();
+@endphp
+
 <x-navbar />
 
     <main class="portal-profile-page public-profile-page">
@@ -43,7 +48,7 @@
                 <div class="profile-hero-pattern"></div>
 
                 <div class="profile-identity">
-                    <div @class(['profile-avatar-wrap', 'is-online' => $profileUser->isOnline()])>
+                    <div @class(['profile-avatar-wrap', 'is-online' => $profileIsOnline, 'is-recently-active' => $profileIsRecentlyActive])>
                         @if($profileUser->hasProfileAvatar())
                             <img src="{{ $profileUser->avatarUrl() }}" alt="Foto de perfil de {{ $profileUser->alias ?: $profileUser->name }}" class="profile-avatar-main" style="object-position: {{ $profileUser->profileImagePosition() }}">
                         @else
@@ -114,7 +119,7 @@
                     @endif
                     <div class="profile-status-chip">
                         <span></span>
-                        {{ $profileUser->isOnline() ? 'Conectada ahora' : ($profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad') }}
+                        {{ $profileIsOnline ? 'Conectada ahora' : ($profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad') }}
                     </div>
                 </div>
         </section>

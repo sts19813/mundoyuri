@@ -25,7 +25,7 @@ class UserPresenceTest extends TestCase
         $this->assertTrue($user->fresh()->last_seen_at->greaterThan(now()->subMinutes(5)));
     }
 
-    public function test_public_profile_marks_recently_seen_user_as_online_for_two_hours(): void
+    public function test_public_profile_marks_recently_seen_user_with_the_activity_ring(): void
     {
         $online = User::factory()->create([
             'last_seen_at' => now()->subMinutes(119),
@@ -36,12 +36,12 @@ class UserPresenceTest extends TestCase
 
         $this->get($online->publicProfileUrl())
             ->assertOk()
-            ->assertSee('profile-avatar-wrap is-online', false)
-            ->assertSee('Conectada ahora');
+            ->assertSee('profile-avatar-wrap is-recently-active', false)
+            ->assertDontSee('Conectada ahora');
 
         $this->get($offline->publicProfileUrl())
             ->assertOk()
-            ->assertDontSee('profile-avatar-wrap is-online', false)
+            ->assertDontSee('profile-avatar-wrap is-recently-active', false)
             ->assertDontSee('Conectada ahora');
     }
 

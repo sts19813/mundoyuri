@@ -17,6 +17,11 @@
 
 @section('body')
 
+@php
+    $profileIsOnline = $user->isOnlineForMessages();
+    $profileIsRecentlyActive = ! $profileIsOnline && $user->isRecentlyActive();
+@endphp
+
 <x-navbar />
 
     <main class="portal-profile-page">
@@ -56,7 +61,7 @@
                     Cambiar portada
                 </button>
                 <div class="profile-identity">
-                    <div @class(['profile-avatar-wrap', 'is-online' => $user->isOnline()])>
+                    <div @class(['profile-avatar-wrap', 'is-online' => $profileIsOnline, 'is-recently-active' => $profileIsRecentlyActive])>
                         <button type="button" class="profile-avatar-display" data-avatar-source-open aria-label="Cambiar foto de perfil">
                             @if($user->hasProfileAvatar())
                                 <img src="{{ $user->avatarUrl() }}" alt="Foto de perfil de {{ $user->name }}" class="profile-avatar-main" style="object-position: {{ $user->profileImagePosition() }}" data-avatar-preview>
