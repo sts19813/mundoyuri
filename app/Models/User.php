@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Notifications\PasswordResetNotification;
 use App\Support\YouTubeVideoUrl;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -368,7 +369,48 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isOnlineForMessages(): bool
     {
-        return $this->wasSeenWithin(60);
+        $lastHeartbeat = $this->lastHeartbeatForMessages();
+
+        return $this->is_active && $lastHeartbeat !== null && $lastHeartbeat->greaterThan(now()->subMinute());
+    }
+
+    public function lastHeartbeatForMessages(): ?CarbonInterface
+    {
+        if (! $this->show_last_seen || ! $this->is_active) {
+            return null;
+        }
+
+        if (! array_key_exists('last_heartbeat_at', $this->getAttributes())) {
+            $this->loadMax('presenceSessions as last_heartbeat_at', 'last_seen_at');
+        }
+
+        $value = $this->getAttribute('last_heartbeat_at');
+
+        return $value ? Carbon::parse($value, config('app.timezone')) : null;
+    }
+
+    public function messagePresenceLabel(): string
+    {
+        if (! $this->is_active) {
+            return 'Cuenta no disponible';
+        }
+        if (! $this->show_last_seen) {
+            return 'Ver perfil';
+        }
+        $seen = $this->lastHeartbeatForMessages();
+        if (! $seen) {
+            return 'Última conexión no disponible';
+        }
+        if ($this->isOnlineForMessages()) {
+            return 'En línea';
+        }
+
+        $localSeen = $seen->copy()->setTimezone('America/Merida');
+        $today = now('America/Merida');
+        $date = $localSeen->isSameDay($today) ? 'hoy'
+            : ($localSeen->isSameDay($today->copy()->subDay()) ? 'ayer' : $localSeen->translatedFormat('d M Y'));
+
+        return 'Última vez '.$date.' a las '.$localSeen->format('g:ia');
     }
 
     public function coverImageUrl(): ?string

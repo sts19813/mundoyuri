@@ -45,27 +45,51 @@ class UserPresenceTest extends TestCase
             ->assertDontSee('Conectada ahora');
     }
 
-    public function test_messenger_presence_uses_one_hour_window(): void
+    public function test_messenger_presence_uses_a_strict_one_minute_heartbeat_window(): void
     {
         $viewer = User::factory()->create();
-        $online = User::factory()->create([
-            'name' => 'Luna Activa',
-            'last_seen_at' => now()->subMinutes(59),
-        ]);
-        $offline = User::factory()->create([
-            'name' => 'Mio Ausente',
-            'last_seen_at' => now()->subMinutes(61),
-        ]);
+        Carbon::setTestNow(Carbon::parse('2026-11-02 21:40:00', 'America/Merida'));
+        $online = User::factory()->create(['name' => 'Luna Activa']);
+        $offline = User::factory()->create(['name' => 'Mio Ausente', 'last_seen_at' => now()]);
+        foreach ([[$online, 59], [$offline, 60]] as [$member, $seconds]) {
+            UserPresenceSession::create([
+                'user_id' => $member->id, 'session_id' => (string) \Illuminate\Support\Str::uuid(),
+                'started_at' => now()->subMinutes(5), 'last_seen_at' => now()->subSeconds($seconds),
+                'total_seconds' => 0, 'heartbeat_count' => 1, 'current_path' => '/',
+            ]);
+        }
 
         $this->actingAs($viewer)
             ->get(route('messages.show', $online))
             ->assertOk()
-            ->assertSee('Conectada ahora');
+            ->assertSee('En línea');
 
         $this->actingAs($viewer)
             ->get(route('messages.show', $offline))
             ->assertOk()
-            ->assertDontSee('Conectada ahora');
+            ->assertDontSee('En línea')
+            ->assertSee('Última vez hoy a las 9:39pm');
+
+        $this->getJson(route('messages.poll', $offline))->assertOk()
+            ->assertJsonPath('presence.is_online', false)
+            ->assertJsonPath('presence.label', 'Última vez hoy a las 9:39pm');
+        $offline->update(['show_last_seen' => false]);
+        $this->getJson(route('messages.poll', $offline))->assertJsonPath('presence.label', 'Ver perfil');
+        $this->get(route('messages.show', $offline))->assertDontSee('Última vez');
+    }
+
+    public function test_messenger_last_heartbeat_displays_yesterday_and_older_dates_in_merida(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-02 00:30:00', 'America/Merida'));
+        $user = User::factory()->create();
+        $session = UserPresenceSession::create([
+            'user_id' => $user->id, 'session_id' => (string) \Illuminate\Support\Str::uuid(),
+            'started_at' => now()->subDay(), 'last_seen_at' => now()->subHour(),
+            'total_seconds' => 0, 'heartbeat_count' => 1, 'current_path' => '/',
+        ]);
+        $this->assertSame('Última vez ayer a las 11:30pm', $user->fresh()->messagePresenceLabel());
+        $session->update(['last_seen_at' => Carbon::parse('2026-10-29 21:40', 'America/Merida')]);
+        $this->assertStringContainsString('29 oct. 2026 a las 9:40pm', $user->fresh()->messagePresenceLabel());
     }
 
     public function test_presence_heartbeat_accumulates_user_session_time(): void

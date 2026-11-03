@@ -201,6 +201,7 @@ class ConversationController extends Controller
                 'messages' => [],
                 'latest_message_id' => $afterId,
                 'read_outgoing_ids' => [],
+                'presence' => $this->presencePayload($user),
             ]);
         }
 
@@ -238,6 +239,7 @@ class ConversationController extends Controller
         $latestMessageId = max($afterId, (int) ($messages->last()?->id ?? 0));
 
         return response()->json([
+            'presence' => $this->presencePayload($user),
             'messages' => $messages
                 ->map(fn (DirectMessage $message) => $this->messagePayload($message, $viewer, $user))
                 ->values(),
@@ -694,7 +696,11 @@ class ConversationController extends Controller
                         });
                 });
             })
-            ->with(['userOne', 'userTwo', 'lastMessage.sender'])
+            ->with([
+                'userOne' => fn ($query) => $query->withMax('presenceSessions as last_heartbeat_at', 'last_seen_at'),
+                'userTwo' => fn ($query) => $query->withMax('presenceSessions as last_heartbeat_at', 'last_seen_at'),
+                'lastMessage.sender',
+            ])
             ->withCount([
                 'messages as unread_messages_count' => fn (Builder $query) => $query
                     ->where('recipient_id', $viewer->id)
@@ -722,6 +728,11 @@ class ConversationController extends Controller
             'datetime' => $conversation->last_message_at?->toIso8601String(),
             'unread_count' => (int) ($conversation->unread_messages_count ?? 0),
         ];
+    }
+
+    private function presencePayload(User $user): array
+    {
+        return ['label' => $user->messagePresenceLabel(), 'is_online' => $user->isOnlineForMessages()];
     }
 
     private function unreadNotificationPayload(DirectMessage $message, User $viewer): array

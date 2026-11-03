@@ -47,7 +47,7 @@ class="messenger-body"
                             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
                         </a>
                         <a class="messenger-chat-person" href="{{ $otherUser->publicProfileUrl() }}">
-                            <span @class(['messenger-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()])>
+                            <span @class(['messenger-avatar-wrap', 'is-online' => $otherUser->isOnlineForMessages()]) data-chat-presence-avatar>
                                 @if($otherUser->hasProfileAvatar())
                                     <img class="messenger-avatar" src="{{ $otherUser->avatarUrl() }}" alt="">
                                 @else
@@ -56,7 +56,7 @@ class="messenger-body"
                             </span>
                             <span>
                                 <strong>{{ $otherUser->alias ?: $otherUser->name }}</strong>
-                                <small>{{ $otherUser->isOnlineForMessages() ? 'Conectada ahora' : ($otherUser->is_active ? 'Ver perfil' : 'Cuenta no disponible') }}</small>
+                                <small data-chat-presence-label>{{ $otherUser->messagePresenceLabel() }}</small>
                             </span>
                         </a>
 
@@ -1393,6 +1393,10 @@ class="messenger-body"
 
                 if (!response.ok) return;
                 const data = await response.json();
+                const presenceLabel = document.querySelector('[data-chat-presence-label]');
+                const presenceAvatar = document.querySelector('[data-chat-presence-avatar]');
+                if (data.presence && presenceLabel) presenceLabel.textContent = data.presence.label;
+                if (data.presence && presenceAvatar) presenceAvatar.classList.toggle('is-online', Boolean(data.presence.is_online));
                 appendMessages(data.messages || [], { playSound: true });
                 markOutgoingAsRead(data.read_outgoing_ids || []);
                 latestMessageId = Math.max(latestMessageId, Number(data.latest_message_id) || 0);
