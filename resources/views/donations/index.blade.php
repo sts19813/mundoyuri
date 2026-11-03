@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="{{ asset('assets/css/portal-fonts.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/donations.css') }}?v={{ filemtime(public_path('assets/css/donations.css')) }}">
     @if($activeSeasonTheme)<link rel="stylesheet" href="{{ asset('assets/css/season-palette.css') }}?v={{ filemtime(public_path('assets/css/season-palette.css')) }}">@endif
-    @if($enabled)<script src="https://js.stripe.com/v3/" defer></script>@endif
 </head>
 <body>
 <main class="page">
@@ -41,13 +40,12 @@
                         <p class="guest-note">Puedes apoyar sin una cuenta. Si inicias sesión, podrás mostrar una flor en tu perfil como agradecimiento.</p>
                     @endauth
                     </div>
-                    <div id="payment-step" class="payment-step" hidden>
-                        <div class="payment-summary"><div><span>Tu aportación</span><strong id="payment-amount"></strong></div><button type="button" id="edit-donation">Editar</button></div>
-                        <div id="payment-element" class="payment"></div>
-                    </div>
                     <p id="payment-error" class="error" role="alert" aria-live="polite"></p>
-                    <button class="submit" id="submit" type="submit" @disabled(!$enabled)>Continuar con mi aportación <span aria-hidden="true">→</span></button>
-                    <p class="fine">Pago único y seguro con <strong>Stripe</strong></p>
+                    <button class="submit" id="submit" type="submit" @disabled(!$enabled)>Ir al pago seguro <span aria-hidden="true">→</span></button>
+                    <div class="secure-payment" aria-label="Pago seguro con Stripe">
+                        <span class="secure-payment__lock" aria-hidden="true">⌑</span>
+                        <p><strong>Pago seguro con Stripe</strong><span>Al continuar irás al checkout protegido de Stripe. Mundo Yuri no ve ni almacena los datos de tu tarjeta.</span></p>
+                    </div>
                 </form>
             </div>
             <div class="thanks" id="result" role="status"></div>
@@ -68,48 +66,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     amountButtons.forEach(button => button.addEventListener('click', () => { amount.value = button.dataset.amount; syncAmounts(); }));
     amount.addEventListener('input', syncAmounts);
     @if($enabled)
-    const stripe = Stripe(@json(config('services.stripe.key')));
-    let elements = null, paymentElement = null;
-    const options = document.querySelector('#donation-options'), paymentStep = document.querySelector('#payment-step');
-    document.querySelector('#edit-donation').addEventListener('click', () => {
-        paymentElement?.destroy();
-        paymentElement = null; elements = null;
-        options.hidden = false; paymentStep.hidden = true; error.textContent = '';
-        submit.innerHTML = 'Continuar con mi aportación <span aria-hidden="true">→</span>';
-        amount.focus();
-    });
-    const secret = new URLSearchParams(location.search).get('payment_intent_client_secret');
-    if (secret) {
+    const checkout = new URLSearchParams(location.search).get('checkout');
+    if (checkout === 'success' || checkout === 'cancelled') {
         history.replaceState({}, '', location.pathname);
-        const result = await stripe.retrievePaymentIntent(secret);
-        const status = result.paymentIntent?.status;
         const box = document.querySelector('#result');
         document.querySelector('#donation-form-area').style.display = 'none'; box.style.display = 'block';
-        if (status === 'succeeded') box.innerHTML = '<h2>Gracias de corazón ♥</h2><p>Tu apoyo me ayuda a seguir cuidando este espacio.</p><a href="{{ route('home') }}">Volver a Mundo Yuri →</a>';
-        else if (status === 'processing') box.innerHTML = '<h2>Tu apoyo está en proceso</h2><p>Stripe está confirmando tu pago. Gracias por acompañarnos.</p><a href="{{ route('home') }}">Volver a Mundo Yuri →</a>';
-        else box.innerHTML = '<h2>No se completó el pago</h2><p>Puedes volver a intentarlo cuando quieras.</p><a href="{{ route('donations.index') }}">Intentar de nuevo →</a>';
+        if (checkout === 'success') box.innerHTML = '<h2>Gracias de corazón ♥</h2><p>Stripe confirmó tu aportación. Tu apoyo me ayuda a seguir cuidando este espacio.</p><a href="{{ route('home') }}">Volver a Mundo Yuri →</a>';
+        else box.innerHTML = '<h2>Pago cancelado</h2><p>No se realizó ningún cargo. Puedes volver a intentarlo cuando quieras.</p><a href="{{ route('donations.index') }}">Intentar de nuevo →</a>';
         return;
     }
     form.addEventListener('submit', async event => {
         event.preventDefault(); error.textContent = ''; submit.disabled = true;
         try {
-            if (!elements) {
-                const cents = Math.round(Number(amount.value) * 100);
-                if (!Number.isFinite(cents) || cents < 1500 || cents > 1000000) throw new Error('Elige una cantidad entre $15 y $10,000 MXN.');
-                const response = await fetch(@json(route('donations.store')), {method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}, body:JSON.stringify({amount:cents, message:includeMessage.checked ? message.value : null, show_star:document.querySelector('#show-star')?.checked || false})});
-                const data = await response.json(); if (!response.ok) throw new Error(data.message || 'No pudimos preparar el pago.');
-                const theme = getComputedStyle(document.documentElement);
-                const themeColor = name => theme.getPropertyValue(name).trim();
-                elements = stripe.elements({clientSecret:data.clientSecret, appearance:{theme:'night',variables:{colorPrimary:themeColor('--rose'),colorBackground:themeColor('--dark-surface'),colorText:themeColor('--text'),borderRadius:'10px',fontFamily:'DM Sans, system-ui, sans-serif'}}});
-                paymentElement = elements.create('payment');
-                paymentElement.mount('#payment-element');
-                document.querySelector('#payment-amount').textContent = new Intl.NumberFormat('es-MX', {style:'currency', currency:'MXN'}).format(cents / 100) + ' MXN';
-                options.hidden = true; paymentStep.hidden = false;
-                submit.innerHTML = 'Confirmar aportación <span aria-hidden="true">→</span>';
-            } else {
-                const result = await stripe.confirmPayment({elements, confirmParams:{return_url:@json(route('donations.index'))}});
-                if (result.error) throw new Error(result.error.message);
-            }
+            const cents = Math.round(Number(amount.value) * 100);
+            if (!Number.isFinite(cents) || cents < 1500 || cents > 1000000) throw new Error('Elige una cantidad entre $15 y $10,000 MXN.');
+            const response = await fetch(@json(route('donations.store')), {method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}, body:JSON.stringify({amount:cents, message:includeMessage.checked ? message.value : null, show_star:document.querySelector('#show-star')?.checked || false})});
+            const data = await response.json(); if (!response.ok || !data.checkoutUrl) throw new Error(data.message || 'No pudimos preparar el pago.');
+            window.location.assign(data.checkoutUrl);
         } catch (e) { error.textContent = e.message || 'Ocurrió un error. Inténtalo de nuevo.'; }
         submit.disabled = false;
     });

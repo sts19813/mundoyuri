@@ -36,6 +36,22 @@ class DonationTest extends TestCase
         }
     }
 
+    public function test_landing_explains_that_payment_continues_on_stripe_checkout(): void
+    {
+        config([
+            'services.stripe.key' => 'pk_test_example',
+            'services.stripe.secret' => 'sk_test_example',
+            'services.stripe.webhook_secret' => 'whsec_example',
+        ]);
+
+        $this->get(route('donations.index'))
+            ->assertOk()
+            ->assertSee('Pago seguro con Stripe')
+            ->assertSee('checkout protegido de Stripe')
+            ->assertSee('Mundo Yuri no ve ni almacena los datos de tu tarjeta.')
+            ->assertSee('Ir al pago seguro');
+    }
+
     public function test_amount_is_validated_and_unsigned_webhooks_are_rejected(): void
     {
         config(['services.stripe.key' => 'pk_test_example', 'services.stripe.secret' => 'sk_test_example', 'services.stripe.webhook_secret' => 'whsec_example']);
