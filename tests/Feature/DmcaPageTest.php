@@ -10,7 +10,7 @@ class DmcaPageTest extends TestCase
     {
         $this->get(route('dmca'))
             ->assertOk()
-            ->assertSee('dmca@mundoyuri.com')
+            ->assertSee('admin@mundoyuri.com')
             ->assertSee('Cómo enviar un aviso de retiro')
             ->assertSee('Contra-aviso y restauración')
             ->assertSee('24 a 48 horas hábiles');

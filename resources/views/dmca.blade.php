@@ -34,7 +34,7 @@
             <article class="about-card legal-card">
                 <aside class="about-highlight">
                     <div>
-                        <p><strong>Canal de derechos de autor:</strong> <a href="mailto:dmca@mundoyuri.com">dmca@mundoyuri.com</a></p>
+                        <p><strong>Canal de derechos de autor:</strong> <a href="mailto:admin@mundoyuri.com">admin@mundoyuri.com</a></p>
                         <p>Confirmaremos la recepción de avisos completos en un plazo de <strong>24 a 48 horas hábiles</strong>. El plazo para resolver depende de la información recibida y de la complejidad del caso.</p>
                     </div>
                 </aside>
@@ -47,7 +47,7 @@
 
                 <section>
                     <h2>Cómo enviar un aviso de retiro</h2>
-                    <p>Envía un correo a <a href="mailto:dmca@mundoyuri.com">dmca@mundoyuri.com</a> con el asunto <strong>“Aviso de derechos de autor”</strong> e incluye, para cada obra reclamada:</p>
+                    <p>Envía un correo a <a href="mailto:admin@mundoyuri.com">admin@mundoyuri.com</a> con el asunto <strong>“Aviso de derechos de autor”</strong> e incluye, para cada obra reclamada:</p>
                     <ol>
                         <li>Tu nombre completo, empresa u organización (si aplica), cargo o relación con la persona titular, correo y un medio de contacto.</li>
                         <li>Identificación clara de la obra protegida y, si es posible, una URL oficial o documentación que ayude a identificarla.</li>
@@ -69,7 +69,7 @@
 
                 <section>
                     <h2>Contra-aviso y restauración</h2>
-                    <p>Si consideras que una retirada fue un error, tienes autorización o el uso está permitido por una limitación o excepción legal, responde al aviso que recibiste o escribe a <a href="mailto:dmca@mundoyuri.com">dmca@mundoyuri.com</a> con el asunto <strong>“Contra-aviso”</strong>.</p>
+                    <p>Si consideras que una retirada fue un error, tienes autorización o el uso está permitido por una limitación o excepción legal, responde al aviso que recibiste o escribe a <a href="mailto:admin@mundoyuri.com">admin@mundoyuri.com</a> con el asunto <strong>“Contra-aviso”</strong>.</p>
                     <p>Incluye tu nombre y contacto, las URL retiradas, una explicación y evidencia de tu titularidad, autorización o fundamento legal, y una declaración de que la información es correcta. Revisaremos el caso y, cuando proceda, restauraremos el acceso. No restauraremos material si recibimos una orden de autoridad competente o información suficiente de que existe un procedimiento aplicable que impida hacerlo.</p>
                 </section>
 
@@ -84,7 +84,7 @@
 
                 <footer class="about-signature legal-signature">
                     <span>Última actualización: 3 de noviembre de 2026</span>
-                    <a href="mailto:dmca@mundoyuri.com">dmca@mundoyuri.com</a>
+                    <a href="mailto:admin@mundoyuri.com">admin@mundoyuri.com</a>
                 </footer>
             </article>
         </div>
