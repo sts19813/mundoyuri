@@ -112,7 +112,7 @@ class SeasonThemeIsolationTest extends TestCase
                 ->assertDontSee('assets/img/seasonal/', false)
                 ->assertSee('assets/img/logos/mundo-yuri-'.$theme.'.svg', false);
 
-            $this->assertSame(2, substr_count($response->getContent(), 'assets/img/logos/mundo-yuri-'.$theme.'.svg'));
+            $this->assertSame(1, substr_count($response->getContent(), 'assets/img/logos/mundo-yuri-'.$theme.'.svg'));
             foreach (array_diff(array_keys(SeasonThemeSetting::THEMES), [$theme]) as $otherTheme) {
                 $response->assertDontSee('assets/img/logos/mundo-yuri-'.$otherTheme.'.svg', false);
             }

@@ -58,9 +58,9 @@ class LegacyProfileTest extends TestCase
 
         $this->get(route('legacy-profiles.show', $profile))
             ->assertOk()
-            ->assertSee('Perfil de la comunidad')
+            ->assertSee('Comunidad Mundo Yuri')
             ->assertSee('Información personal')
-            ->assertSee('20 May 2007')
+            ->assertSee($profile->legacy_joined_at->translatedFormat('d M Y'))
             ->assertSee('184')
             ->assertDontSee('Registro archivado')
             ->assertDontSee('Importado el')

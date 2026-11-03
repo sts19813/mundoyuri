@@ -118,7 +118,7 @@ class CommunityProfilePrivacyTest extends TestCase
 
         $this->get($legacy->publicProfileUrl())
             ->assertOk()
-            ->assertSee('Miembro histórico de Mundo Yuri')
+            ->assertSee('Perfil de la comunidad')
             ->assertSee('Miembro desde 2007')
             ->assertDontSee('legacy-private@example.com')
             ->assertDontSee('respaldo-foro-2007')

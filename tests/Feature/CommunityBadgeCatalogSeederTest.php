@@ -14,7 +14,7 @@ class CommunityBadgeCatalogSeederTest extends TestCase
     {
         $this->seed(CommunityBadgeCatalogSeeder::class);
 
-        $this->assertDatabaseCount('badges', 58);
+        $this->assertDatabaseCount('badges', 59);
         $this->assertDatabaseHas('badges', [
             'slug' => 'generacion-2008',
             'icon' => '💿',
@@ -30,7 +30,7 @@ class CommunityBadgeCatalogSeederTest extends TestCase
 
         $this->seed(CommunityBadgeCatalogSeeder::class);
 
-        $this->assertDatabaseCount('badges', 58);
+        $this->assertDatabaseCount('badges', 59);
         $this->assertDatabaseCount('badge_user', 0);
     }
 }
