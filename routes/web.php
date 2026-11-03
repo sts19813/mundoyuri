@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CatalogSectionController as AdminCatalogSectionCo
 use App\Http\Controllers\Admin\CommentModerationController as AdminCommentModerationController;
 use App\Http\Controllers\Admin\CommunityRankController as AdminCommunityRankController;
 use App\Http\Controllers\Admin\CommunityReportController as AdminCommunityReportController;
+use App\Http\Controllers\Admin\CopyrightTakedownController as AdminCopyrightTakedownController;
 use App\Http\Controllers\Admin\ConversationModerationController as AdminConversationModerationController;
 use App\Http\Controllers\Admin\DiscoveryPeopleController;
 use App\Http\Controllers\Admin\EpisodeController as AdminEpisodeController;
@@ -403,6 +404,15 @@ Route::middleware(['auth', 'verified', 'admin.panel'])->prefix('admin')->group(f
     Route::get('/validacion/comunidad', [AdminCommunityReportController::class, 'index'])->name('admin.community-reports.index');
     Route::patch('/validacion/comunidad/{communityReport}', [AdminCommunityReportController::class, 'update'])->name('admin.community-reports.update');
     Route::post('/validacion/comunidad/{communityReport}/acciones', [AdminCommunityReportController::class, 'action'])->name('admin.community-reports.action');
+    Route::get('/derechos-de-autor', [AdminCopyrightTakedownController::class, 'index'])
+        ->middleware('admin')
+        ->name('admin.copyright-takedowns.index');
+    Route::post('/derechos-de-autor', [AdminCopyrightTakedownController::class, 'store'])
+        ->middleware('admin')
+        ->name('admin.copyright-takedowns.store');
+    Route::patch('/derechos-de-autor/{copyrightTakedown}', [AdminCopyrightTakedownController::class, 'update'])
+        ->middleware('admin')
+        ->name('admin.copyright-takedowns.update');
 
     Route::resource('roles', AdminRoleController::class)->parameters([
         'roles' => 'role',
