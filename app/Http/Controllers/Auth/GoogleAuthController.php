@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use League\OAuth2\Client\Provider\GoogleUser;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Throwable;
 
 class GoogleAuthController extends Controller
@@ -121,7 +122,13 @@ class GoogleAuthController extends Controller
             $user->assignRole('user');
         }
 
-        event(new Registered($user));
+        // Google has already verified this address. A non-essential welcome
+        // email must not stop a successful Google registration either.
+        try {
+            event(new Registered($user));
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+        }
 
         return $user;
     }

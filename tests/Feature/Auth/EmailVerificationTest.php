@@ -7,6 +7,8 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Notification;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
@@ -54,5 +56,19 @@ class EmailVerificationTest extends TestCase
         $this->actingAs($user)->get($verificationUrl);
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_resending_a_verification_link_does_not_fail_when_mail_is_unavailable(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        Notification::shouldReceive('send')
+            ->once()
+            ->andThrow(new TransportException('SMTP unavailable'));
+
+        $this->actingAs($user)
+            ->post('/email/verification-notification')
+            ->assertRedirect()
+            ->assertSessionHas('status', 'verification-link-unavailable');
     }
 }

@@ -9,7 +9,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
+use Symfony\Component\Mailer\Exception\TransportException;
 
 class RegistrationTest extends TestCase
 {
@@ -60,6 +62,26 @@ class RegistrationTest extends TestCase
 
         $response->assertOk()->assertJsonPath('redirect', url('/series/una-serie'));
         $this->assertAuthenticated();
+    }
+
+    public function test_registration_succeeds_when_the_verification_email_provider_is_unavailable(): void
+    {
+        Notification::fake();
+        Event::listen(\Illuminate\Auth\Events\Registered::class, function (): void {
+            throw new TransportException('SMTP unavailable');
+        });
+
+        $response = $this->withSession(['registration_started_at' => now()->subSeconds(3)->timestamp])->post('/register', [
+            'name' => 'Correo temporalmente no disponible',
+            'email' => 'delivery-unavailable@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', ['email' => 'delivery-unavailable@example.com']);
+        $response->assertRedirect(route('verification.notice', absolute: false));
+        $response->assertSessionHas('verification-email-unavailable', true);
     }
 
     public function test_registration_rejects_the_honeypot_field(): void

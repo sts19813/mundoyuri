@@ -21,13 +21,23 @@
                 <!--end::Heading-->
 
                 <!--begin::Alert principal-->
-                <div class="alert alert-info d-flex align-items-center mb-6">
-                    <i class="ki-outline ki-information-5 fs-2 me-3"></i>
-                    <div>
-                        Te hemos enviado un enlace de verificación a tu correo electrónico.
-                        Si no lo encuentras, revisa la carpeta de spam.
+                @if (session('verification-email-unavailable') || session('status') === 'verification-link-unavailable')
+                    <div class="alert alert-warning d-flex align-items-center mb-6">
+                        <i class="ki-outline ki-information-5 fs-2 me-3"></i>
+                        <div>
+                            Tu cuenta ya fue creada, pero no pudimos enviar el correo de verificación en este momento.
+                            Intenta reenviarlo más tarde.
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="alert alert-info d-flex align-items-center mb-6">
+                        <i class="ki-outline ki-information-5 fs-2 me-3"></i>
+                        <div>
+                            Te hemos enviado un enlace de verificación a tu correo electrónico.
+                            Si no lo encuentras, revisa la carpeta de spam.
+                        </div>
+                    </div>
+                @endif
                 <!--end::Alert principal-->
 
                 <!--begin::Status-->

@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class RegisteredUserController extends Controller
 {
@@ -65,7 +66,10 @@ class RegisteredUserController extends Controller
             $user->assignRole('user');
         }
 
-        event(new Registered($user));
+        // A temporary mail-provider issue must never prevent someone from
+        // creating their account. The member can request a new verification
+        // link once delivery is available again.
+        $verificationEmailSent = $this->dispatchRegisteredEvent($user);
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -73,9 +77,26 @@ class RegisteredUserController extends Controller
 
         $redirect = redirect()->intended(route('verification.notice', absolute: false));
 
+        if (! $verificationEmailSent) {
+            $redirect->with('verification-email-unavailable', true);
+        }
+
         return $request->expectsJson()
             ? response()->json(['redirect' => $redirect->getTargetUrl()])
             : $redirect;
+    }
+
+    private function dispatchRegisteredEvent(User $user): bool
+    {
+        try {
+            event(new Registered($user));
+
+            return true;
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+
+            return false;
+        }
     }
 
     private function ensureHumanRegistration(Request $request): void
