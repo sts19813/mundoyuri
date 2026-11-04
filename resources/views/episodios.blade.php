@@ -509,6 +509,28 @@
         let castDeviceAvailable = false;
         let airplayAvailable = false;
         let remotePlaybackAvailable = false;
+        const selectHlsQuality = (quality) => {
+            if (!hlsPlayer) {
+                return;
+            }
+
+            const requestedHeight = Number(quality);
+            if (!Number.isFinite(requestedHeight)) {
+                return;
+            }
+
+            // Plyr uses 0 for its "Auto" entry. Hls.js uses -1 for the
+            // same behavior, allowing it to adapt to the connection again.
+            if (requestedHeight === 0) {
+                hlsPlayer.currentLevel = -1;
+                return;
+            }
+
+            const levelIndex = hlsPlayer.levels.findIndex((level) => Number(level.height) === requestedHeight);
+            if (levelIndex !== -1) {
+                hlsPlayer.currentLevel = levelIndex;
+            }
+        };
         const subtitleTracks = @json($episodeSubtitleTracks ?? []);
         const castMetadata = {
             title: @json($series->title),
@@ -727,7 +749,17 @@
                 captions: { active: true, language: 'es', update: true },
                 seekTime: 10,
                 speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
-                quality: { default: 1080, options: [2160, 1440, 1080, 720, 480, 360] },
+                quality: @json($primarySource?->provider === 'cloudflare_hls')
+                    // HLS exposes renditions through hls.js, not as <source>
+                    // elements. Translate a Plyr selection to the matching
+                    // hls.js level. 960p supports 1920×960 uncut encodes.
+                    ? {
+                        default: 0,
+                        options: [0, 2160, 1440, 1080, 960, 720, 540, 480, 360],
+                        forced: true,
+                        onChange: selectHlsQuality,
+                    }
+                    : { default: 1080, options: [2160, 1440, 1080, 720, 480, 360] },
                 i18n: {
                     restart: 'Reiniciar', rewind: 'Retroceder {seektime}s', play: 'Reproducir', pause: 'Pausar',
                     fastForward: 'Adelantar {seektime}s', seek: 'Buscar', played: 'Reproducido', buffered: 'Cargado',
@@ -849,6 +881,18 @@
                         hlsPlayer.recoverMediaError();
                     } else {
                         recoverHlsPlayback(data.details || 'hls-error');
+                    }
+                });
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
+                    const availableQualities = [...new Set(hlsPlayer.levels
+                        .map((level) => Number(level.height))
+                        .filter(Number.isFinite))]
+                        .sort((first, second) => second - first);
+
+                    // Keep the exposed quality list aligned with the master
+                    // playlist for integrations that read Plyr's options.
+                    if (directPlayer) {
+                        directPlayer.options.quality = [0, ...availableQualities];
                     }
                 });
                 hlsPlayer.loadSource(url);
