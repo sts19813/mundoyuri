@@ -701,6 +701,25 @@ class PrivateMessagingTest extends TestCase
             ->assertSee('Mensaje de Luna');
     }
 
+    public function test_messenger_defaults_to_the_community_tab_without_chats_and_lists_recent_members(): void
+    {
+        $viewer = User::factory()->create();
+        $activeMember = User::factory()->create(['name' => 'Miembro Activo', 'alias' => 'activa', 'last_seen_at' => now()->subMinutes(10)]);
+        $inactiveMember = User::factory()->create(['name' => 'Miembro Ausente', 'alias' => 'ausente', 'last_seen_at' => now()->subMinutes(16)]);
+        $blockedMember = User::factory()->create(['name' => 'Miembro Bloqueado', 'last_seen_at' => now()]);
+        $viewer->blockedUsers()->attach($blockedMember->id);
+
+        $this->actingAs($viewer)
+            ->get(route('messages.index'))
+            ->assertOk()
+            ->assertSee('Comunidad</a>', false)
+            ->assertSee('aria-current="page"', false)
+            ->assertSee('activa')
+            ->assertSee('Actividad reciente')
+            ->assertDontSee('ausente')
+            ->assertDontSee('Miembro Bloqueado');
+    }
+
     public function test_follow_notification_is_created_only_for_a_new_follow(): void
     {
         $follower = User::factory()->create(['name' => 'Nueva Seguidora']);

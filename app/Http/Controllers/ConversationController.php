@@ -50,10 +50,15 @@ class ConversationController extends Controller
         $viewer = $request->user();
         $search = trim($request->string('q')->toString());
         $archived = $request->boolean('archived');
+        $hasChats = $this->conversationList($viewer, '', false)->exists();
+        $community = ! $archived && ($request->string('folder')->toString() === 'community' || ($search === '' && ! $hasChats));
         $conversations = $this->conversationList($viewer, $search, $archived)
             ->orderByDesc('last_message_at')
             ->paginate(30, ['*'], 'conversations_page')
             ->withQueryString();
+        $communityMembers = $community
+            ? $this->communityMembers($viewer, $search)->paginate(30, ['*'], 'community_page')->withQueryString()
+            : null;
 
         return view('messages.index', [
             'conversations' => $conversations,
@@ -61,6 +66,8 @@ class ConversationController extends Controller
             'search' => $search,
             'activeUser' => null,
             'archived' => $archived,
+            'community' => $community,
+            'communityMembers' => $communityMembers,
             'archivedUnreadCount' => $this->unreadMessages($viewer, true)->count(),
         ]);
     }
@@ -167,10 +174,14 @@ class ConversationController extends Controller
 
         $search = trim($request->string('q')->toString());
         $archived = $conversation ? $conversation->isArchivedFor($viewer) : $request->boolean('archived');
+        $community = ! $archived && $request->string('folder')->toString() === 'community';
         $conversations = $this->conversationList($viewer, $search, $archived)
             ->orderByDesc('last_message_at')
             ->paginate(30, ['*'], 'conversations_page')
             ->withQueryString();
+        $communityMembers = $community
+            ? $this->communityMembers($viewer, $search)->paginate(30, ['*'], 'community_page')->withQueryString()
+            : null;
 
         return view('messages.show', [
             'conversation' => $conversation,
@@ -181,6 +192,8 @@ class ConversationController extends Controller
             'search' => $search,
             'activeUser' => $user,
             'archived' => $archived,
+            'community' => $community,
+            'communityMembers' => $communityMembers,
             'archivedUnreadCount' => $this->unreadMessages($viewer, true)->count(),
             'interactionBlocked' => $viewer->cannotInteractWith($user),
             'viewerHasBlocked' => $viewer->hasBlocked($user),
@@ -707,6 +720,29 @@ class ConversationController extends Controller
                     ->visibleFor($viewer)
                     ->whereNull('read_at'),
             ]);
+    }
+
+    private function communityMembers(User $viewer, string $search): Builder
+    {
+        $activeSince = now()->subMinutes(15);
+
+        return User::query()
+            ->visibleInCommunityDirectory()
+            ->whereKeyNot($viewer->id)
+            ->where('show_last_seen', true)
+            ->where(function (Builder $query) use ($activeSince): void {
+                $query->where('last_seen_at', '>=', $activeSince)
+                    ->orWhereHas('presenceSessions', fn (Builder $sessions) => $sessions->where('last_seen_at', '>=', $activeSince));
+            })
+            ->whereDoesntHave('blockedUsers', fn (Builder $blocked) => $blocked->whereKey($viewer->id))
+            ->whereDoesntHave('blockedByUsers', fn (Builder $blockedBy) => $blockedBy->whereKey($viewer->id))
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $like = '%'.$search.'%';
+                $query->where(fn (Builder $members) => $members->where('name', 'like', $like)->orWhere('alias', 'like', $like));
+            })
+            ->withMax('presenceSessions as last_heartbeat_at', 'last_seen_at')
+            ->orderByDesc('last_seen_at')
+            ->orderBy('name');
     }
 
     private function conversationPayload(Conversation $conversation, User $viewer): array

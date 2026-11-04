@@ -1,3 +1,4 @@
+@php($communityMode = $community ?? false)
 <aside class="messenger-sidebar" aria-label="Conversaciones">
     <header class="messenger-sidebar-header">
         <div>
@@ -10,22 +11,56 @@
     </header>
 
     <nav class="messenger-folders" aria-label="Carpetas de chats">
-        <a href="{{ route('messages.index') }}" @if(!$archived) aria-current="page" @endif>Chats</a>
+        <a href="{{ route('messages.index') }}" @if(!$archived && !$communityMode) aria-current="page" @endif>Chats</a>
         <a href="{{ route('messages.index', ['archived' => 1]) }}" @if($archived) aria-current="page" @endif>Archivados <span class="messenger-unread-count" data-archived-unread @if(!$archivedUnreadCount) hidden @endif>{{ $archivedUnreadCount > 99 ? '99+' : $archivedUnreadCount }}</span></a>
+        <a href="{{ route('messages.index', ['folder' => 'community']) }}" @if($communityMode) aria-current="page" @endif>Comunidad</a>
     </nav>
 
-    @php($conversationSearchUrl = $activeUser ? route('messages.show', $activeUser) : route('messages.index'))
+    @php($conversationSearchUrl = $activeUser ? route('messages.show', ['user' => $activeUser, 'folder' => $communityMode ? 'community' : null]) : route('messages.index'))
     <form action="{{ $conversationSearchUrl }}" method="GET" class="messenger-search" role="search">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <label class="visually-hidden" for="messenger-search-input">Buscar conversaciones</label>
-        <input id="messenger-search-input" type="search" name="q" value="{{ $search }}" placeholder="Buscar en Messenger">
+        <input id="messenger-search-input" type="search" name="q" value="{{ $search }}" placeholder="{{ $communityMode ? 'Buscar en Comunidad' : 'Buscar en Messenger' }}">
         @if($archived)<input type="hidden" name="archived" value="1">@endif
+        @if($communityMode)<input type="hidden" name="folder" value="community">@endif
         @if($search !== '')
             <a href="{{ $conversationSearchUrl }}" aria-label="Limpiar búsqueda">×</a>
         @endif
     </form>
 
     <div class="messenger-conversation-list">
+        @if($communityMode)
+            @forelse($communityMembers as $communityMember)
+                @php($memberOnline = $communityMember->isOnlineForMessages())
+                <a href="{{ route('messages.show', ['user' => $communityMember, 'folder' => 'community']) }}" @class(['messenger-conversation-item', 'is-active' => $activeUser?->is($communityMember)]) @if($activeUser?->is($communityMember)) aria-current="page" @endif>
+                    <span @class(['messenger-avatar-wrap', 'is-online' => $memberOnline, 'is-recently-active' => ! $memberOnline])>
+                        @if($communityMember->hasProfileAvatar())
+                            <img class="messenger-avatar" src="{{ $communityMember->avatarUrl() }}" alt="">
+                        @else
+                            <span class="messenger-avatar messenger-avatar-fallback" aria-hidden="true">{{ $communityMember->initials() }}</span>
+                        @endif
+                    </span>
+                    <span class="messenger-conversation-copy">
+                        <span class="messenger-conversation-line">
+                            <strong>{{ $communityMember->alias ?: $communityMember->name }}</strong>
+                            <time>{{ $memberOnline ? 'En línea' : 'Activa' }}</time>
+                        </span>
+                        <span class="messenger-conversation-preview">{{ $memberOnline ? 'Conectada ahora' : 'Actividad reciente' }}</span>
+                    </span>
+                </a>
+            @empty
+                <div class="messenger-list-empty">
+                    <span class="brand-heart messenger-empty-heart" aria-hidden="true"></span>
+                    @if($search !== '')
+                        <strong>No encontramos a esa persona</strong>
+                        <p>Prueba con otro nombre o alias.</p>
+                    @else
+                        <strong>No hay personas activas ahora</strong>
+                        <p>Mostraremos aquí a quienes estén en línea o hayan tenido actividad en los últimos 15 minutos.</p>
+                    @endif
+                </div>
+            @endforelse
+        @else
         @forelse($conversations as $conversationItem)
             @php($conversationUser = $conversationItem->otherParticipant($viewer))
             @php($lastMessage = $conversationItem->lastMessage)
@@ -72,12 +107,14 @@
                 @endif
             </div>
         @endforelse
+        @endif
     </div>
 
-    @if($conversations->hasPages())
+    @php($sidebarPagination = $communityMode ? $communityMembers : $conversations)
+    @if($sidebarPagination->hasPages())
         <nav class="messenger-sidebar-pagination" aria-label="Más conversaciones">
-            @if($conversations->previousPageUrl())<a href="{{ $conversations->previousPageUrl() }}">← Anteriores</a>@else<span></span>@endif
-            @if($conversations->nextPageUrl())<a href="{{ $conversations->nextPageUrl() }}">Siguientes →</a>@endif
+            @if($sidebarPagination->previousPageUrl())<a href="{{ $sidebarPagination->previousPageUrl() }}">← Anteriores</a>@else<span></span>@endif
+            @if($sidebarPagination->nextPageUrl())<a href="{{ $sidebarPagination->nextPageUrl() }}">Siguientes →</a>@endif
         </nav>
     @endif
 </aside>
