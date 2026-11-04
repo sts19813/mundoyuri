@@ -478,7 +478,7 @@
         });
 
         const playerFrame = document.getElementById('episodePlayer');
-        const playerVideo = document.getElementById('episodeVideoPlayer');
+        let playerVideo = document.getElementById('episodeVideoPlayer');
         const remotePlaybackButton = document.getElementById('episodeRemotePlaybackButton');
         const airplayButton = document.getElementById('episodeAirplayButton');
         const sourceButtons = document.querySelectorAll('.source-switcher');
@@ -742,24 +742,18 @@
             }, 2500);
         }
 
-        if (playerVideo && window.Plyr) {
+        function createDirectPlayer(qualityConfig = null) {
+            if (!playerVideo || !window.Plyr || directPlayer) {
+                return;
+            }
+
             directPlayer = new Plyr(playerVideo, {
                 controls: ['play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time', 'duration', 'mute', 'volume', 'captions', 'settings', 'pip', 'fullscreen'],
                 settings: ['captions', 'quality', 'speed'],
                 captions: { active: true, language: 'es', update: true },
                 seekTime: 10,
                 speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
-                quality: @json($primarySource?->provider === 'cloudflare_hls')
-                    // HLS exposes renditions through hls.js, not as <source>
-                    // elements. Translate a Plyr selection to the matching
-                    // hls.js level. 960p supports 1920×960 uncut encodes.
-                    ? {
-                        default: 0,
-                        options: [0, 2160, 1440, 1080, 960, 720, 540, 480, 360],
-                        forced: true,
-                        onChange: selectHlsQuality,
-                    }
-                    : { default: 1080, options: [2160, 1440, 1080, 720, 480, 360] },
+                quality: qualityConfig ?? { default: 1080, options: [2160, 1440, 1080, 720, 480, 360] },
                 i18n: {
                     restart: 'Reiniciar', rewind: 'Retroceder {seektime}s', play: 'Reproducir', pause: 'Pausar',
                     fastForward: 'Adelantar {seektime}s', seek: 'Buscar', played: 'Reproducido', buffered: 'Cargado',
@@ -767,12 +761,19 @@
                     unmute: 'Activar sonido', enableCaptions: 'Activar subtítulos', disableCaptions: 'Desactivar subtítulos',
                     enterFullscreen: 'Pantalla completa', exitFullscreen: 'Salir de pantalla completa', frameTitle: 'Reproductor de {title}',
                     captions: 'Subtítulos', settings: 'Ajustes', pip: 'Imagen en imagen', menuBack: 'Volver al menú anterior',
-                    speed: 'Velocidad', normal: 'Normal', quality: 'Calidad', loop: 'Repetir'
+                    speed: 'Velocidad', normal: 'Normal', quality: 'Calidad', loop: 'Repetir',
+                    qualityLabel: { 0: 'Automático' }
                 }
             });
             directPlayer.elements.container.style.display = @json($primarySource?->player_type === 'video' ? '' : 'none');
             directPlayer.on('enterfullscreen', lockEpisodeLandscape);
             directPlayer.on('exitfullscreen', unlockEpisodeOrientation);
+        }
+
+        // Plyr must be created after Hls.js has parsed the master playlist;
+        // otherwise it cannot know which quality entries really exist.
+        if (@json($primarySource?->provider !== 'cloudflare_hls')) {
+            createDirectPlayer();
         }
 
         window.addEventListener('mundo-yuri-cast-ready', (event) => {
@@ -889,9 +890,16 @@
                         .filter(Number.isFinite))]
                         .sort((first, second) => second - first);
 
-                    // Keep the exposed quality list aligned with the master
-                    // playlist for integrations that read Plyr's options.
-                    if (directPlayer) {
+                    if (!directPlayer) {
+                        createDirectPlayer({
+                            default: 0,
+                            options: [0, ...availableQualities],
+                            forced: true,
+                            onChange: selectHlsQuality,
+                        });
+                    } else {
+                        // A source changed during the same visit. Preserve
+                        // only qualities that the new HLS master offers.
                         directPlayer.options.quality = [0, ...availableQualities];
                     }
                 });
