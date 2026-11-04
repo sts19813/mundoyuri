@@ -684,6 +684,21 @@
             }
         }
 
+        function resetDirectPlayerForHls() {
+            if (!directPlayer) {
+                return;
+            }
+
+            // Plyr creates its quality menu only once. Recreate it before a
+            // new HLS master is loaded so the menu cannot retain qualities
+            // from the previously selected source.
+            const playerDataset = { ...playerVideo.dataset };
+            directPlayer.destroy();
+            directPlayer = null;
+            playerVideo = document.getElementById('episodeVideoPlayer');
+            Object.assign(playerVideo.dataset, playerDataset);
+        }
+
         function stopHlsStallMonitor() {
             if (hlsStallMonitor) {
                 window.clearInterval(hlsStallMonitor);
@@ -855,6 +870,7 @@
             }
 
             destroyHlsPlayer();
+            resetDirectPlayerForHls();
             directPlayer ? directPlayer.pause() : playerVideo.pause();
             playerVideo.removeAttribute('src');
             playerVideo.querySelectorAll('source').forEach((source) => source.remove());
@@ -897,10 +913,6 @@
                             forced: true,
                             onChange: selectHlsQuality,
                         });
-                    } else {
-                        // A source changed during the same visit. Preserve
-                        // only qualities that the new HLS master offers.
-                        directPlayer.options.quality = [0, ...availableQualities];
                     }
                 });
                 hlsPlayer.loadSource(url);
