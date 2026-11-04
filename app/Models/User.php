@@ -379,7 +379,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $lastHeartbeat = $this->lastHeartbeatForMessages();
 
-        return $this->is_active && $lastHeartbeat !== null && $lastHeartbeat->greaterThan(now()->subMinute());
+        return $this->is_active && $lastHeartbeat !== null && $lastHeartbeat->greaterThan(now()->subMinutes(15));
     }
 
     public function lastHeartbeatForMessages(): ?CarbonInterface

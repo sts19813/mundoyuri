@@ -45,13 +45,13 @@ class UserPresenceTest extends TestCase
             ->assertDontSee('Conectada ahora');
     }
 
-    public function test_messenger_presence_uses_a_strict_one_minute_heartbeat_window(): void
+    public function test_messenger_presence_uses_a_strict_fifteen_minute_heartbeat_window(): void
     {
         $viewer = User::factory()->create();
         Carbon::setTestNow(Carbon::parse('2026-11-02 21:40:00', 'America/Merida'));
         $online = User::factory()->create(['name' => 'Luna Activa']);
         $offline = User::factory()->create(['name' => 'Mio Ausente', 'last_seen_at' => now()]);
-        foreach ([[$online, 59], [$offline, 60]] as [$member, $seconds]) {
+        foreach ([[$online, (14 * 60) + 59], [$offline, 15 * 60]] as [$member, $seconds]) {
             UserPresenceSession::create([
                 'user_id' => $member->id, 'session_id' => (string) \Illuminate\Support\Str::uuid(),
                 'started_at' => now()->subMinutes(5), 'last_seen_at' => now()->subSeconds($seconds),
@@ -68,11 +68,11 @@ class UserPresenceTest extends TestCase
             ->get(route('messages.show', $offline))
             ->assertOk()
             ->assertDontSee('En línea')
-            ->assertSee('data-last-seen-at="2026-11-02T21:39:00-06:00"', false);
+            ->assertSee('data-last-seen-at="2026-11-02T21:25:00-06:00"', false);
 
         $this->getJson(route('messages.poll', $offline))->assertOk()
             ->assertJsonPath('presence.is_online', false)
-            ->assertJsonPath('presence.last_seen_at', '2026-11-02T21:39:00-06:00');
+            ->assertJsonPath('presence.last_seen_at', '2026-11-02T21:25:00-06:00');
         $offline->update(['show_last_seen' => false]);
         $this->getJson(route('messages.poll', $offline))->assertJsonPath('presence.label', 'Ver perfil')->assertJsonPath('presence.last_seen_at', null);
         $this->get(route('messages.show', $offline))->assertDontSee('2026-11-02T21:39:00-06:00');
