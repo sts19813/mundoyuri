@@ -229,16 +229,6 @@
 
         <div class="ep-layout">
             <main class="ep-main">
-                <nav class="ep-breadcrumb" aria-label="Migas de pan">
-                    <a href="{{ route('home') }}">Inicio</a>
-                    <span>›</span>
-                    <a href="{{ route('catalog.series.index') }}">Series GL, yuri y anime</a>
-                    <span>›</span>
-                    <a href="{{ route('catalog.series.show', $series->slug) }}">{{ $series->title }}</a>
-                    <span>›</span>
-                    <span style="color:var(--text)">Temporada {{ $episode->season_number }} · Episodio {{ $episode->episode_number }}</span>
-                </nav>
-
                 <div class="player-wrap">
                     @if($primarySource)
                         <iframe id="episodePlayer" class="player-embed" src="{{ $primarySource->player_type === 'iframe' ? $primarySource->playable_url : '' }}"
