@@ -922,6 +922,17 @@ class="messenger-body"
             if (attachmentHint) attachmentHint.textContent = file?.name || 'Archivo · máximo 200 MB';
             if (file) clearStickerSelection();
             closeStickerPanel();
+
+            // Un archivo seleccionado ya es un mensaje listo para enviar. Esperamos
+            // al siguiente ciclo para que el input termine de actualizarse antes de
+            // construir el FormData del envío.
+            if (file) {
+                window.setTimeout(() => {
+                    if (!sendingMessage && attachmentInput.files?.[0] === file) {
+                        composer?.requestSubmit();
+                    }
+                });
+            }
         });
 
         const messageBody = document.getElementById('message-body');
