@@ -129,14 +129,6 @@
 
     <div class="ep-layout">
         <main class="ep-main">
-            <nav class="ep-breadcrumb" aria-label="Migas de pan">
-                <a href="{{ route('home') }}">Inicio</a>
-                <span>›</span>
-                <a href="{{ route('catalog.series.index') }}">Series GL, yuri y anime</a>
-                <span>›</span>
-                <span style="color:var(--text)">{{ $series->title }}</span>
-            </nav>
-
             <section class="player-wrap" style="margin-bottom:20px;">
                 <x-media-preview
                     :src="$series->bannerMediaUrl() ?: 'https://picsum.photos/1200/675?series='.$series->id"
