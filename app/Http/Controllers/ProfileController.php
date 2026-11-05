@@ -83,7 +83,7 @@ class ProfileController extends Controller
                 ->where('moderation_status', 'approved')
                 ->whereNotNull('published_at')
                 ->orderByPivot('created_at', 'desc')
-                ->take(12)
+                ->take(10)
                 ->get()
             : collect();
         $communityActivity = $canViewActivity

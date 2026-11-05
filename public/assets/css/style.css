@@ -7491,3 +7491,85 @@ img.messenger-avatar,
 
 html[data-season-palette] .community-avatar.community-member-avatar { border: 0; }
 .community-badge-tooltip:hover, .community-badge-tooltip:focus-visible { z-index: 20; }
+
+/* Public profile: a quieter, consistent desktop presentation. */
+.public-profile-page .public-profile-hero-signature {
+    max-width: 520px;
+    margin-top: 18px;
+    padding-left: 14px;
+    border-left: 2px solid rgba(255, 164, 202, .65);
+}
+.public-profile-page .public-profile-hero-signature p {
+    margin: 0;
+    color: rgba(255, 241, 248, .88);
+    font-size: .8rem;
+    font-style: italic;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.public-profile-page .public-profile-hero-signature img {
+    display: block;
+    max-width: min(100%, 320px);
+    max-height: 90px;
+    margin-top: 8px;
+    object-fit: contain;
+    object-position: left center;
+}
+.public-profile-page .public-profile-hero-signature img:first-child { margin-top: 0; }
+.public-profile-page .public-profile-favorites .public-favorites-grid { gap: 16px; }
+.public-profile-page .public-profile-favorites .public-favorite-card {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    border-color: rgba(255, 255, 255, .07);
+    background: rgba(255, 255, 255, .035);
+}
+.public-profile-page .public-favorite-cover {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: #211523;
+}
+.public-profile-page .public-favorite-cover .public-favorite-media {
+    transition: transform .3s ease;
+}
+.public-profile-page .public-favorite-card:hover .public-favorite-media { transform: scale(1.04); }
+.public-profile-page .public-profile-favorites .public-favorite-copy {
+    position: static;
+    padding: 13px 14px 15px;
+    gap: 5px;
+}
+.public-profile-page .public-profile-favorites .public-favorite-copy strong {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    line-height: 1.4;
+}
+.public-profile-page .public-profile-activity-empty { padding: 20px 0; }
+@media (min-width: 769px) {
+    .public-profile-page .public-profile-grid,
+    .public-profile-page .public-profile-main,
+    .public-profile-page .profile-sidebar { gap: 24px; }
+    .public-profile-page .profile-panel-main,
+    .public-profile-page .public-profile-badges-card,
+    .public-profile-page .profile-account-card { padding: 28px; }
+    .public-profile-page .public-profile-side-heading { padding: 28px 28px 18px; }
+    .public-profile-page .public-profile-activity-list { padding: 0 28px; }
+    .public-profile-page .public-profile-activity .community-activity-pagination { margin: 2px 28px 24px; }
+    .public-profile-page .public-profile-badges-heading h2,
+    .public-profile-page .public-profile-side-heading h2,
+    .public-profile-page .profile-account-card h2 { font-size: 1.35rem; }
+}
+@media (max-width: 768px) {
+    .public-profile-page .public-profile-hero-signature { margin-top: 14px; }
+}
+@media (min-width: 769px) {
+    .public-profile-page .public-profile-favorites .public-favorites-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}

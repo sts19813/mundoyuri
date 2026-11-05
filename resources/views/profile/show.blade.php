@@ -76,6 +76,16 @@
                             @php($profileStreakDays = $profileUser->activeStreakDays())
                             <span class="profile-streak-stat" title="Mejor racha: {{ $profileUser->longest_streak_days }} {{ $profileUser->longest_streak_days === 1 ? 'día' : 'días' }}"><strong>🔥 {{ $profileStreakDays }}</strong> {{ $profileStreakDays === 1 ? 'día de racha' : 'días de racha' }}</span>
                         </div>
+                        @if($profileUser->canDisplaySignatureTo(auth()->user()))
+                            <div class="public-profile-hero-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
+                                @if(filled($profileUser->signature_text))
+                                    <p>{{ $profileUser->signature_text }}</p>
+                                @endif
+                                @if($profileUser->signatureImageUrl())
+                                    <img src="{{ $profileUser->signatureImageUrl() }}" alt="Firma gráfica de {{ $profileUser->displayName() }}">
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -182,13 +192,14 @@
                             <div class="public-favorites-grid">
                                 @foreach($favoriteSeries as $favorite)
                                     <a class="public-favorite-card" href="{{ route('catalog.series.show', $favorite) }}">
+                                        <span class="public-favorite-cover">
                                         <x-media-preview
                                             :src="$favorite->coverMediaUrl() ?: 'https://picsum.photos/360/500?favorite='.$favorite->id"
                                             :type="$favorite->coverMediaUrl() ? $favorite->coverMediaType() : 'image'"
                                             :alt="$favorite->title"
                                             class="public-favorite-media"
                                         />
-                                        <span class="public-favorite-overlay"></span>
+                                        </span>
                                         <span class="public-favorite-copy">
                                             <strong>{{ $favorite->title }}</strong>
                                             <small>{{ $favorite->genre?->name ?: 'Girls’ Love' }}</small>
@@ -208,17 +219,6 @@
                         </section>
                     @endif
 
-                    @if($profileUser->canDisplaySignatureTo(auth()->user()))
-                        <section class="profile-panel community-profile-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
-                            <span class="profile-panel-kicker">Firma</span>
-                            @if(filled($profileUser->signature_text))
-                                <p>{{ $profileUser->signature_text }}</p>
-                            @endif
-                            @if($profileUser->signatureImageUrl())
-                                <img src="{{ $profileUser->signatureImageUrl() }}" alt="Firma gráfica de {{ $profileUser->displayName() }}">
-                            @endif
-                        </section>
-                    @endif
                 </div>
 
                 <aside class="profile-sidebar">
@@ -250,8 +250,7 @@
                         <section class="profile-panel public-profile-activity" aria-labelledby="profile-activity-title">
                             <div class="public-profile-side-heading">
                                 <div>
-                                    <span class="profile-panel-kicker">Actividad reciente</span>
-                                    <h2 id="profile-activity-title">Participación</h2>
+                                    <h2 id="profile-activity-title">Actividad reciente</h2>
                                 </div>
                             </div>
                             <div class="public-profile-activity-list">
@@ -275,9 +274,6 @@
                                     <p class="public-profile-activity-empty">Este perfil todavía no tiene actividad pública reciente.</p>
                                 @endforelse
                             </div>
-                            @if($communityActivity->hasPages())
-                                <div class="community-activity-pagination">{{ $communityActivity->links() }}</div>
-                            @endif
                         </section>
                     @endif
 
@@ -290,39 +286,13 @@
                                     <dt>Miembro desde</dt>
                                     <dd>
                                         @if($profileUser->is_legacy && $profileUser->legacy_joined_at)
-                                            Miembro desde {{ $profileUser->legacy_joined_at->format('Y') }}
+                                            {{ $profileUser->legacy_joined_at->translatedFormat('d M Y') }}
                                         @else
-                                            {{ optional($profileUser->created_at)->translatedFormat('M Y') }}
+                                            {{ optional($profileUser->created_at)->translatedFormat('d M Y') }}
                                         @endif
                                     </dd>
                                 </div>
                             @endif
-                            <div>
-                                <dt>Publicaciones</dt>
-                                <dd>{{ number_format($profileUser->community_message_count) }}</dd>
-                            </div>
-                            @if($canViewFavorites)
-                                <div>
-                                    <dt>Favoritas</dt>
-                                    <dd>{{ $profileUser->favorite_series_count }}</dd>
-                                </div>
-                            @endif
-                            <div>
-                                <dt>Reputación</dt>
-                                <dd>{{ number_format($profileUser->community_reputation) }}</dd>
-                            </div>
-                            <div>
-                                <dt>Preguntas</dt>
-                                <dd>{{ number_format($profileUser->forum_questions_count) }}</dd>
-                            </div>
-                            <div>
-                                <dt>Respuestas</dt>
-                                <dd>{{ number_format($profileUser->forum_answers_count) }}</dd>
-                            </div>
-                            <div>
-                                <dt>Respuestas aceptadas</dt>
-                                <dd>{{ number_format($profileUser->accepted_forum_answers_count) }}</dd>
-                            </div>
                             @if($profileUser->show_last_seen && $profileUser->lastSeenForDisplay())
                                 <div>
                                     <dt>Última visita</dt>
@@ -332,20 +302,6 @@
                         </dl>
                     </section>
 
-                    @if($isOwner)
-                        <section class="profile-panel profile-security-card public-profile-social-card">
-                            <div class="profile-security-icon" aria-hidden="true">✉</div>
-                            <div>
-                                <h3>Tu comunidad</h3>
-                                <p>Revisa tus conversaciones y la actividad reciente de tu perfil.</p>
-                                <div class="public-profile-social-links">
-                                    <a href="{{ route('messages.index') }}">Mensajes</a>
-                                    <a href="{{ route('notifications.index') }}">Notificaciones</a>
-                                    <a href="{{ route('blocks.index') }}">Cuentas bloqueadas</a>
-                                </div>
-                            </div>
-                        </section>
-                    @endif
                 </aside>
             </div>
         </div>

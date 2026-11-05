@@ -8,6 +8,7 @@ use App\Models\ForumCategory;
 use App\Models\Genre;
 use App\Models\Series;
 use App\Models\User;
+use App\Services\CommunityActivityService;
 use App\Services\ForumPostService;
 use App\Services\ForumThreadService;
 use App\Services\QuestionService;
@@ -42,24 +43,15 @@ class CommunityActivityTest extends TestCase
         ]);
         $member->badges()->attach($badge->id, ['awarded_at' => now()]);
 
-        $this->get($member->publicProfileUrl())
-            ->assertOk()
-            ->assertSee('Creó un tema')
-            ->assertSee('Respondió a un tema')
-            ->assertSee('Hizo una pregunta')
-            ->assertSee('Respondió una pregunta')
-            ->assertSee('Su respuesta fue aceptada')
-            ->assertSee('Marcó como favorita')
-            ->assertSee('Obtuvo la insignia')
-            ->assertSee('Tema propio')
-            ->assertSee('Pregunta propia')
-            ->assertSee('Serie favorita')
-            ->assertSee('Colaboradora');
+        $activities = app(CommunityActivityService::class)->forUser($member, true, 12);
+        $this->assertEqualsCanonicalizing([
+            'created_thread', 'replied_thread', 'created_question', 'answered_question',
+            'accepted_answer', 'favorite_series', 'badge_awarded',
+        ], $activities->pluck('activity_type')->all());
 
         $member->update(['show_favorites' => false]);
         $this->get($member->publicProfileUrl())
             ->assertOk()
-            ->assertSee('Tema propio')
             ->assertDontSee('Serie favorita')
             ->assertDontSee('Marcó como favorita');
     }
@@ -73,12 +65,12 @@ class CommunityActivityTest extends TestCase
 
         $this->get($member->publicProfileUrl())
             ->assertOk()
-            ->assertDontSee('Participación')
+            ->assertDontSee('Actividad reciente')
             ->assertDontSee('Actividad privada');
 
         $this->actingAs($member)->get($member->publicProfileUrl())
             ->assertOk()
-            ->assertSee('Participación')
+            ->assertSee('Actividad reciente')
             ->assertSee('Actividad privada');
 
         $member->update(['show_activity' => true]);
@@ -86,11 +78,11 @@ class CommunityActivityTest extends TestCase
 
         $this->actingAs($viewer)->get($member->publicProfileUrl())
             ->assertOk()
-            ->assertDontSee('Participación')
+            ->assertDontSee('Actividad reciente')
             ->assertDontSee('Actividad privada');
     }
 
-    public function test_hidden_or_deleted_forum_content_is_never_in_the_activity_feed_and_results_paginate(): void
+    public function test_activity_shows_only_the_five_most_recent_visible_events(): void
     {
         [, $forum] = $this->forum();
         $member = User::factory()->create(['show_activity' => true]);
@@ -105,15 +97,18 @@ class CommunityActivityTest extends TestCase
             $threads->create($forum, $member, 'Tema paginado '.$number, 'Contenido.');
         }
 
-        $this->get($member->publicProfileUrl())
-            ->assertOk()
-            ->assertDontSee('Tema oculto')
-            ->assertDontSee('Tema eliminado')
-            ->assertSee('activity_page=2', false);
+        foreach (['', '?activity_page=2'] as $query) {
+            $response = $this->get($member->publicProfileUrl().$query)
+                ->assertOk()
+                ->assertDontSee('Tema oculto')
+                ->assertDontSee('Tema eliminado')
+                ->assertDontSee('community-activity-pagination', false)
+                ->assertDontSee('Tema paginado 8');
 
-        $this->get($member->publicProfileUrl().'?activity_page=2')
-            ->assertOk()
-            ->assertSee('Tema paginado 1');
+            foreach (range(9, 13) as $number) {
+                $response->assertSee('Tema paginado '.$number);
+            }
+        }
     }
 
     /** @return array{ForumCategory, Forum} */
