@@ -127,10 +127,6 @@
                             <a class="profile-btn profile-btn-primary" href="{{ route('login') }}">Inicia sesión para seguir</a>
                         @endauth
                     @endif
-                    <div @class(['profile-status-chip', 'is-online' => $profileIsOnline])>
-                        <span></span>
-                        {{ $profileIsOnline ? 'Conectada ahora' : ($profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad') }}
-                    </div>
                 </div>
         </section>
 
@@ -228,24 +224,13 @@
                                 <span class="profile-panel-kicker">Reconocimientos</span>
                                 <h2 id="profile-badges-title">Insignias</h2>
                             </div>
-                            @if($profileUser->badges->isNotEmpty() || $communityRank)
-                                <span class="public-profile-badges-count">{{ $profileUser->badges->count() + ($communityRank ? 1 : 0) }}</span>
+                            @if($profileUser->badges->isNotEmpty())
+                                <span class="public-profile-badges-count">{{ $profileUser->badges->count() }}</span>
                             @endif
                         </div>
 
-                        @if($profileUser->badges->isNotEmpty() || $communityRank)
-                            <div class="public-profile-badge-grid" role="list" aria-label="Insignias y rango de {{ $profileUser->displayName() }}">
-                                @if($communityRank)
-                                    <div role="listitem">
-                                        <span class="community-badge community-badge-tooltip community-badge-compact" style="--community-accent: {{ $communityRank->color ?: '#f472b6' }}" tabindex="0" aria-label="Rango: {{ $communityRank->name }}" aria-describedby="profile-rank-description">
-                                            <span aria-hidden="true">{{ $communityRank->icon ?: '✦' }}</span>
-                                            <span class="community-badge-tooltip-copy" id="profile-rank-description" role="tooltip">
-                                                <strong>{{ $communityRank->name }}</strong>
-                                                <span>{{ $communityRank->description ?: 'Rango de la comunidad Mundo Yuri.' }}</span>
-                                            </span>
-                                        </span>
-                                    </div>
-                                @endif
+                        @if($profileUser->badges->isNotEmpty())
+                            <div class="public-profile-badge-grid" role="list" aria-label="Insignias de {{ $profileUser->displayName() }}">
                                 @foreach($profileUser->badges as $badge)
                                     <div role="listitem">
                                         <x-community.badge :badge="$badge" detailed compact />
@@ -308,6 +293,12 @@
                                 <div>
                                     <dt>Última visita</dt>
                                     <dd>{{ $profileUser->lastSeenForDisplay()->diffForHumans() }}</dd>
+                                </div>
+                            @endif
+                            @if($communityRank)
+                                <div>
+                                    <dt>Rango</dt>
+                                    <dd>{{ $communityRank->icon ?: '✦' }} {{ $communityRank->name }}</dd>
                                 </div>
                             @endif
                         </dl>
