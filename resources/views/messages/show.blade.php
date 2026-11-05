@@ -146,7 +146,6 @@ class="messenger-body"
                                     <div class="messenger-compose-input">
                                         <label class="visually-hidden" for="message-body">Escribe un mensaje</label>
                                         <textarea id="message-body" name="body" rows="1" maxlength="2000" placeholder="Aa">{{ old('body') }}</textarea>
-                                        <small data-message-attachment-hint>Archivo · máximo 200 MB</small>
                                     </div>
                                 </div>
                                 <button class="messenger-send-button" type="submit" aria-label="Enviar mensaje">
