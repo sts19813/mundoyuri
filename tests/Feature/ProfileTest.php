@@ -147,6 +147,19 @@ class ProfileTest extends TestCase
             ->assertDontSee('alert(1)');
     }
 
+    public function test_biography_preserves_community_images_across_site_hosts(): void
+    {
+        config(['app.url' => 'https://mundoyuri.com']);
+        $user = User::factory()->create([
+            'biography' => '<p>Mi imagen</p><img src="https://mundoyuri.com/storage/community-post-images/demo.webp"><img src="https://evil.example/storage/community-post-images/demo.webp">',
+        ]);
+
+        $response = $this->get($user->publicProfileUrl());
+        $response->assertOk()
+            ->assertSee('src="/storage/community-post-images/demo.webp"', false)
+            ->assertDontSee('evil.example');
+    }
+
     public function test_profile_can_use_a_safe_youtube_cover_video(): void
     {
         $user = User::factory()->create(['alias' => 'luna-yuri']);

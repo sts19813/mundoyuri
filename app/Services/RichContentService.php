@@ -133,6 +133,11 @@ class RichContentService
                 continue;
             }
 
+            if ($tag === 'img' && $name === 'src') {
+                $value = $this->normalizeCommunityImageUrl($value);
+                $element->setAttribute('src', $value);
+            }
+
             if (($name === 'href' || $name === 'src') && ! $this->allowedUrl($value, $tag)) {
                 $element->removeAttribute($attribute->name);
             }
@@ -253,6 +258,29 @@ class RichContentService
             $iframe->setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
             $anchor->parentNode?->replaceChild($iframe, $anchor);
         }
+    }
+
+    private function normalizeCommunityImageUrl(string $url): string
+    {
+        $parts = parse_url($url);
+        if (! is_array($parts) || ! isset($parts['host'], $parts['scheme'], $parts['path'])) {
+            return $url;
+        }
+
+        $trustedHosts = array_filter([
+            'mundoyuri.com',
+            'www.mundoyuri.com',
+            parse_url((string) config('app.url'), PHP_URL_HOST),
+            request()->getHost(),
+        ]);
+
+        if (in_array(strtolower($parts['scheme']), ['http', 'https'], true)
+            && in_array(strtolower($parts['host']), array_map('strtolower', $trustedHosts), true)
+            && preg_match('~^/storage/community-post-images/[a-zA-Z0-9_-]+\.(?:webp|png|jpe?g|gif)$~i', $parts['path']) === 1) {
+            return $parts['path'];
+        }
+
+        return $url;
     }
 
     private function allowedUrl(string $url, string $tag): bool

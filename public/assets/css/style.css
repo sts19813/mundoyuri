@@ -7496,8 +7496,6 @@ html[data-season-palette] .community-avatar.community-member-avatar { border: 0;
 .public-profile-page .public-profile-hero-signature {
     max-width: 520px;
     margin-top: 18px;
-    padding-left: 14px;
-    border-left: 2px solid rgba(255, 164, 202, .65);
 }
 .public-profile-page .public-profile-hero-signature p {
     margin: 0;
@@ -7572,4 +7570,103 @@ html[data-season-palette] .community-avatar.community-member-avatar { border: 0;
     .public-profile-page .public-profile-favorites .public-favorites-grid {
         grid-template-columns: repeat(5, minmax(0, 1fr));
     }
+}
+
+/* Profile cover */
+.public-profile-page .public-profile-hero .profile-hero-pattern {
+    opacity: 1;
+    background: linear-gradient(180deg, transparent 45%, rgba(11, 7, 14, .25));
+}
+.public-profile-page .public-profile-hero .profile-cover-overlay {
+    background: linear-gradient(90deg, rgba(12, 8, 15, .88), rgba(12, 8, 15, .42) 65%, rgba(12, 8, 15, .3)),
+        linear-gradient(0deg, rgba(12, 8, 15, .92), transparent 80%);
+}
+.public-profile-page .public-profile-hero .profile-identity-copy { min-width: 0; }
+.public-profile-page .public-profile-hero .profile-identity-copy h1 {
+    margin: 8px 0 4px;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+}
+.public-profile-page .public-profile-hero .profile-eyebrow { color: #f5a5c8; }
+.public-profile-page .public-profile-hero-signature {
+    margin-top: 18px;
+}
+.public-profile-page .public-profile-social-stats {
+    gap: 8px 0;
+    margin-top: 22px;
+}
+.public-profile-page .public-profile-social-stats > * {
+    padding: 0 15px;
+    border-left: 1px solid rgba(255, 255, 255, .18);
+    line-height: 1.3;
+}
+.public-profile-page .public-profile-social-stats > :first-child { padding-left: 0; border-left: 0; }
+.public-profile-page .public-profile-hero .profile-status-chip {
+    border-color: rgba(255, 255, 255, .14);
+    background: rgba(16, 10, 18, .52);
+}
+.public-profile-page .public-profile-hero .profile-status-chip span {
+    background: #d69bb5;
+    box-shadow: none;
+}
+.public-profile-page .public-profile-hero .profile-status-chip.is-online span {
+    background: #4ade80;
+    box-shadow: 0 0 0 4px rgba(74, 222, 128, .1);
+}
+@media (min-width: 769px) {
+    .public-profile-page .public-profile-hero-full {
+        min-height: 460px;
+        align-items: flex-end;
+        gap: 32px;
+        padding-bottom: 48px;
+    }
+    .public-profile-page .public-profile-hero .profile-identity {
+        align-items: flex-start;
+        gap: 28px;
+        flex: 1 1 auto;
+    }
+    .public-profile-page .public-profile-hero .profile-avatar-main {
+        width: 142px;
+        height: 142px;
+        border-width: 3px;
+    }
+    .public-profile-page .public-profile-hero .profile-avatar-wrap:is(.is-online, .is-recently-active) .profile-avatar-main {
+        border-color: #67d794;
+        box-shadow: 0 0 0 5px rgba(34, 197, 94, .13), 0 14px 32px rgba(0, 0, 0, .3);
+    }
+    .public-profile-page .public-profile-hero .profile-hero-actions {
+        flex: 0 1 320px;
+        gap: 10px;
+    }
+    .public-profile-page .public-profile-hero .profile-status-chip {
+        order: -1;
+        margin-left: auto;
+        margin-bottom: 6px;
+    }
+    .public-profile-page .public-profile-hero .profile-status-chip::after { content: none; }
+    .public-profile-page .public-profile-hero .profile-hero-actions::before {
+        content: '';
+        order: 0;
+        flex-basis: 100%;
+        height: 0;
+    }
+    .public-profile-page .public-profile-hero .profile-hero-actions > :not(.profile-status-chip) { order: 1; }
+}
+@media (max-width: 768px) {
+    .public-profile-page .public-profile-hero-full { min-height: 450px; }
+    .public-profile-page .public-profile-social-stats > * { padding: 0 10px; }
+    .public-profile-page .public-profile-social-stats > :first-child { padding-left: 0; }
+}
+
+.public-profile-page .public-profile-name-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+.public-profile-page .public-profile-handle {
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }

@@ -56,12 +56,22 @@
                         @endif
                     </div>
                     <div class="profile-identity-copy">
-                        <span class="profile-eyebrow">Perfil de la comunidad</span>
-                        <h1>{{ $profileUser->name }} @if(\App\Models\Donation::where('user_id', $profileUser->id)->where('show_star', true)->where('status', 'succeeded')->whereColumn('refunded_amount', '<', 'amount')->exists()) <span title="Apoya a Mundo Yuri" aria-label="Apoya a Mundo Yuri" style="color:#f0a4b8;font-size:.8em">❀</span> @endif</h1>
-                        <p>{{ $profileUser->alias ? '@'.$profileUser->alias : 'Miembro de Mundo Yuri' }}</p>
-                        <div class="community-profile-labels">
-                            <x-community.rank :rank="$communityRank" />
+                        <div class="public-profile-name-line">
+                            <h1>{{ $profileUser->name }} @if(\App\Models\Donation::where('user_id', $profileUser->id)->where('show_star', true)->where('status', 'succeeded')->whereColumn('refunded_amount', '<', 'amount')->exists()) <span title="Apoya a Mundo Yuri" aria-label="Apoya a Mundo Yuri" style="color:#f0a4b8;font-size:.8em">❀</span> @endif</h1>
+                            @if($profileUser->alias)
+                                <span class="public-profile-handle">{{ '@'.$profileUser->alias }}</span>
+                            @endif
                         </div>
+                        @if($profileUser->canDisplaySignatureTo(auth()->user()))
+                            <div class="public-profile-hero-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
+                                @if(filled($profileUser->signature_text))
+                                    <p>{{ $profileUser->signature_text }}</p>
+                                @endif
+                                @if($profileUser->signatureImageUrl())
+                                    <img src="{{ $profileUser->signatureImageUrl() }}" alt="Firma gráfica de {{ $profileUser->displayName() }}">
+                                @endif
+                            </div>
+                        @endif
                         <div class="public-profile-social-stats">
                             <a href="{{ route('profiles.followers', $profileUser) }}">
                                 <strong>{{ $profileUser->followers_count }}</strong> seguidores
@@ -76,16 +86,6 @@
                             @php($profileStreakDays = $profileUser->activeStreakDays())
                             <span class="profile-streak-stat" title="Mejor racha: {{ $profileUser->longest_streak_days }} {{ $profileUser->longest_streak_days === 1 ? 'día' : 'días' }}"><strong>🔥 {{ $profileStreakDays }}</strong> {{ $profileStreakDays === 1 ? 'día de racha' : 'días de racha' }}</span>
                         </div>
-                        @if($profileUser->canDisplaySignatureTo(auth()->user()))
-                            <div class="public-profile-hero-signature" aria-label="Firma de {{ $profileUser->displayName() }}">
-                                @if(filled($profileUser->signature_text))
-                                    <p>{{ $profileUser->signature_text }}</p>
-                                @endif
-                                @if($profileUser->signatureImageUrl())
-                                    <img src="{{ $profileUser->signatureImageUrl() }}" alt="Firma gráfica de {{ $profileUser->displayName() }}">
-                                @endif
-                            </div>
-                        @endif
                     </div>
                 </div>
 
@@ -127,7 +127,7 @@
                             <a class="profile-btn profile-btn-primary" href="{{ route('login') }}">Inicia sesión para seguir</a>
                         @endauth
                     @endif
-                    <div class="profile-status-chip">
+                    <div @class(['profile-status-chip', 'is-online' => $profileIsOnline])>
                         <span></span>
                         {{ $profileIsOnline ? 'Conectada ahora' : ($profileUser->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad') }}
                     </div>
@@ -228,13 +228,24 @@
                                 <span class="profile-panel-kicker">Reconocimientos</span>
                                 <h2 id="profile-badges-title">Insignias</h2>
                             </div>
-                            @if($profileUser->badges->isNotEmpty())
-                                <span class="public-profile-badges-count">{{ $profileUser->badges->count() }}</span>
+                            @if($profileUser->badges->isNotEmpty() || $communityRank)
+                                <span class="public-profile-badges-count">{{ $profileUser->badges->count() + ($communityRank ? 1 : 0) }}</span>
                             @endif
                         </div>
 
-                        @if($profileUser->badges->isNotEmpty())
-                            <div class="public-profile-badge-grid" role="list" aria-label="Insignias de {{ $profileUser->displayName() }}">
+                        @if($profileUser->badges->isNotEmpty() || $communityRank)
+                            <div class="public-profile-badge-grid" role="list" aria-label="Insignias y rango de {{ $profileUser->displayName() }}">
+                                @if($communityRank)
+                                    <div role="listitem">
+                                        <span class="community-badge community-badge-tooltip community-badge-compact" style="--community-accent: {{ $communityRank->color ?: '#f472b6' }}" tabindex="0" aria-label="Rango: {{ $communityRank->name }}" aria-describedby="profile-rank-description">
+                                            <span aria-hidden="true">{{ $communityRank->icon ?: '✦' }}</span>
+                                            <span class="community-badge-tooltip-copy" id="profile-rank-description" role="tooltip">
+                                                <strong>{{ $communityRank->name }}</strong>
+                                                <span>{{ $communityRank->description ?: 'Rango de la comunidad Mundo Yuri.' }}</span>
+                                            </span>
+                                        </span>
+                                    </div>
+                                @endif
                                 @foreach($profileUser->badges as $badge)
                                     <div role="listitem">
                                         <x-community.badge :badge="$badge" detailed compact />
