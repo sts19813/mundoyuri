@@ -35,8 +35,15 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+        $user->loadCount([
+            'followers' => fn ($query) => $query->where('users.is_active', true),
+            'following' => fn ($query) => $query->where('users.is_active', true),
+            'favoriteSeries' => fn ($query) => $query->where('moderation_status', 'approved')->whereNotNull('published_at'),
+        ]);
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 

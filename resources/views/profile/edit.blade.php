@@ -24,17 +24,11 @@
 
 <x-navbar />
 
-    <main class="portal-profile-page">
+    <main class="portal-profile-page profile-edit-page">
         <div class="profile-ambient profile-ambient-one"></div>
         <div class="profile-ambient profile-ambient-two"></div>
 
         <div class="container-xl px-4 position-relative">
-            <nav class="profile-breadcrumb" aria-label="Migas de pan">
-                <a href="{{ route('home') }}">Inicio</a>
-                <span>›</span>
-                <span>Mi perfil</span>
-            </nav>
-
             @if(session('success'))
                 <div class="portal-alert portal-alert-success" role="status">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -42,7 +36,10 @@
                 </div>
             @endif
 
-            <section class="profile-hero-card">
+        </div>
+
+        <div class="public-profile-page public-profile-edit-preview">
+            <section class="profile-hero-card public-profile-hero public-profile-hero-full">
                 @if($user->coverImageUrl())
                     <img src="{{ $user->coverImageUrl() }}" alt="" class="profile-cover-media" style="object-position: {{ $user->coverImagePosition() }}" data-cover-preview>
                 @else
@@ -77,20 +74,38 @@
                         </button>
                     </div>
                     <div class="profile-identity-copy">
-                        <span class="profile-eyebrow">Tu espacio en Mundo Yuri</span>
-                        <h1>{{ $user->name }}</h1>
-                        <p>{{ $user->alias ? '@'.$user->alias : $user->email }}</p>
+                        <div class="public-profile-name-line">
+                            <h1>{{ $user->name }} @if(\App\Models\Donation::where('user_id', $user->id)->where('show_star', true)->where('status', 'succeeded')->whereColumn('refunded_amount', '<', 'amount')->exists()) <span title="Apoya a Mundo Yuri" aria-label="Apoya a Mundo Yuri" style="color:#f0a4b8;font-size:.8em">❀</span> @endif</h1>
+                            @if($user->alias)<span class="public-profile-handle">{{ '@'.$user->alias }}</span>@endif
+                        </div>
+                        @if($user->canDisplaySignatureTo($user))
+                            <div class="public-profile-hero-signature" aria-label="Tu firma">
+                                @if(filled($user->signature_text))<p>{{ $user->signature_text }}</p>@endif
+                                @if($user->signatureImageUrl())<img src="{{ $user->signatureImageUrl() }}" alt="Tu firma gráfica">@endif
+                            </div>
+                        @endif
+                        <div class="public-profile-social-stats">
+                            <a href="{{ route('profiles.followers', $user) }}"><strong>{{ $user->followers_count }}</strong> seguidores</a>
+                            <a href="{{ route('profiles.following', $user) }}"><strong>{{ $user->following_count }}</strong> siguiendo</a>
+                            <span><strong>{{ $user->favorite_series_count }}</strong> favoritas</span>
+                            <span><strong>{{ $user->community_message_count }}</strong> publicaciones</span>
+                            @php($profileStreakDays = $user->activeStreakDays())
+                            <span class="profile-streak-stat" title="Mejor racha: {{ $user->longest_streak_days }} {{ $user->longest_streak_days === 1 ? 'día' : 'días' }}"><strong>🔥 {{ $profileStreakDays }}</strong> {{ $profileStreakDays === 1 ? 'día de racha' : 'días de racha' }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="profile-hero-actions">
-                    <a class="profile-btn profile-btn-soft" href="{{ $user->publicProfileUrl() }}">Ver perfil público</a>
-                    <div class="profile-status-chip">
+                    <a class="profile-btn profile-btn-primary" href="{{ $user->publicProfileUrl() }}">Ver perfil público</a>
+                    <a class="profile-btn profile-btn-soft" href="{{ route('messages.index') }}">Mensajes</a>
+                    <div @class(['profile-status-chip', 'is-online' => $profileIsOnline])>
                         <span></span>
-                        {{ $user->email_verified_at ? 'Cuenta verificada' : 'Verificación pendiente' }}
+                        {{ $profileIsOnline ? 'Conectada ahora' : ($user->is_legacy ? 'Comunidad desde sus orígenes' : 'Miembro de la comunidad') }}
                     </div>
                 </div>
             </section>
+        </div>
 
+        <div class="container-xl px-4 position-relative">
             <div class="profile-grid">
                 <section class="profile-panel profile-panel-main">
                     <div class="profile-panel-heading">
