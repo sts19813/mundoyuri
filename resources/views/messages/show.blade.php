@@ -1506,6 +1506,7 @@ class="messenger-body"
             sendingMessage = true;
             try {
                 const formData = new FormData(composer);
+                const submittedBody = messageBody?.value || '';
                 const fingerprint = composerFingerprint();
                 if (!pendingSend || pendingSend.fingerprint !== fingerprint) pendingSend = { fingerprint, id: newClientId() };
                 formData.set('client_id', pendingSend.id);
@@ -1563,7 +1564,18 @@ class="messenger-body"
                     stickerPages.recent = 0;
                     stickerHasMore.recent = false;
                 }
-                if (composerFingerprint() === fingerprint) {
+                // El texto es independiente de los campos auxiliares (respuesta,
+                // sticker o adjunto). Si alguno de estos cambia mientras espera la
+                // respuesta, el mensaje ya enviado no debe quedarse en el textarea.
+                // Si la persona escribió algo más durante el envío, conservamos solo
+                // ese texto nuevo en lugar de duplicar el mensaje que ya salió.
+                const composerUnchanged = composerFingerprint() === fingerprint;
+                const currentBody = messageBody?.value || '';
+                if (submittedBody && currentBody.startsWith(submittedBody) && messageBody) {
+                    messageBody.value = currentBody.slice(submittedBody.length);
+                }
+
+                if (composerUnchanged) {
                     composer.reset();
                     clearStickerSelection();
                     closeStickerPanel();
