@@ -119,13 +119,6 @@
             'catalogUrl' => route('catalog.series.index'),
             'isFirstHomeSection' => $continueWatching->isEmpty(),
         ])
-        @include('partials.home.featured-section', [
-            'sectionId' => 'destacados',
-            'title' => 'Destacados',
-            'label' => 'Anime y Series GL',
-            'series' => $featuredSeries,
-            'catalogUrl' => route('catalog.series.index'),
-        ])
         @include('partials.home.catalog-section', [
             'title' => 'Títulos',
             'label' => 'Anime y Series GL',
