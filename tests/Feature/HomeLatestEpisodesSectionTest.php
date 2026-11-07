@@ -12,6 +12,30 @@ class HomeLatestEpisodesSectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_undated_extra_from_an_older_completed_series_is_not_shown_as_a_new_release(): void
+    {
+        $genre = Genre::query()->create(['name' => 'Romance', 'slug' => 'romance', 'is_active' => true]);
+        $old = $this->createSeries($genre->id, 'Serie clásica', 'serie-clasica', 'series-gl');
+        $old->update(['status' => 'completed', 'release_year' => now()->year - 1, 'total_episodes' => 8]);
+        Episode::query()->create([
+            'series_id' => $old->id, 'title' => 'Especial', 'slug' => 'serie-clasica-especial',
+            'season_number' => 1, 'episode_number' => 9, 'release_date' => null,
+            'moderation_status' => 'approved', 'published_at' => now(),
+        ]);
+        $recent = $this->createSeries($genre->id, 'Serie reciente', 'serie-reciente', 'series-gl');
+        Episode::query()->create([
+            'series_id' => $recent->id, 'title' => 'Episodio 1', 'slug' => 'serie-reciente-1',
+            'season_number' => 1, 'episode_number' => 1, 'release_date' => null,
+            'moderation_status' => 'approved', 'published_at' => now(),
+        ]);
+
+        $this->get(route('home'))->assertOk()->assertViewHas('latestEpisodes', function ($episodes): bool {
+            return $episodes->contains('slug', 'serie-reciente-1')
+                && ! $episodes->contains('slug', 'serie-clasica-especial');
+        });
+        $this->get(route('catalog.series.show', $old->slug))->assertOk()->assertSee('serie-clasica-especial');
+    }
+
     public function test_home_latest_episodes_are_twelve_most_recent_across_anime_and_gl(): void
     {
         $genre = Genre::query()->create([

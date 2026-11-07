@@ -148,6 +148,14 @@ class PublicCatalogController extends Controller
         $cutoff = now()->subMonth()->startOfDay();
 
         return $episodes
+            // An undated extra from an older completed series has no verified
+            // release date. Its upload time alone must not make it a new release.
+            ->reject(fn (Episode $episode): bool => ! $episode->release_date
+                && $episode->series?->status === 'completed'
+                && $episode->series?->release_year
+                && $episode->series->release_year < now()->year
+                && $episode->series->total_episodes > 0
+                && (float) $episode->episode_number > $episode->series->total_episodes)
             ->filter(fn (Episode $episode) => $this->episodeReleaseMoment($episode)->gte($cutoff))
             ->groupBy('series_id')
             ->map(function (Collection $seriesEpisodes): Collection {
