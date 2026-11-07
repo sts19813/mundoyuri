@@ -36,9 +36,10 @@ class HomeTitlesSectionTest extends TestCase
         }
 
         $response = $this->get(route('home'))->assertOk()
-            ->assertSee('Estreno del primer episodio')
-            ->assertSee('Más vistas')
+            ->assertSee('>Estreno</option>', false)
+            ->assertSee('>Vistas</option>', false)
             ->assertSee('Nombre A–Z')
+            ->assertDontSee('Ordenado por la fecha del primer episodio')
             ->assertDontSee('Pendiente');
 
         $titles = $response->viewData('mixedSeries');

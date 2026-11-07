@@ -3,18 +3,16 @@
         <div class="section-header home-catalog-header">
             <div>
                 <h2 class="section-title">{{ $title }}</h2>
-                <p class="home-catalog-subtitle">{{ number_format($series->count()) }} títulos · Series GL, anime y películas</p>
             </div>
             <div class="home-catalog-order">
                 <label for="home-catalog-sort">Ordenar por</label>
-                <select id="home-catalog-sort" data-home-catalog-sort aria-describedby="home-catalog-sort-help">
-                    <option value="premiere">Estreno del primer episodio</option>
-                    <option value="views">Más vistas</option>
+                <select id="home-catalog-sort" data-home-catalog-sort>
+                    <option value="premiere">Estreno</option>
+                    <option value="views">Vistas</option>
                     <option value="title">Nombre A–Z</option>
                 </select>
             </div>
         </div>
-        <p id="home-catalog-sort-help" class="home-catalog-hint">Ordenado por la fecha del primer episodio; si no está disponible, se usa su fecha de publicación. Las vistas son la suma de episodios publicados.</p>
         <div class="row g-3">
             @forelse($series as $item)
                 @php
