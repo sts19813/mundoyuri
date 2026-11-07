@@ -81,15 +81,14 @@ class PublicCatalogController extends Controller
     {
         $featuredGlSeries = $this->featuredSeriesForSection('series-gl');
         $featuredAnimeSeries = $this->featuredSeriesForSection('anime');
-        $glSeries = $this->allTitlesForSection('series-gl');
-        $animeSeries = $this->allTitlesForSection('anime');
+        $titles = $this->homeCatalogTitles();
 
         return [
             'section' => $this->resolveSection('series-gl') ?? $this->fallbackSection(),
             'isMixedHome' => true,
             'latestEpisodes' => $this->latestEpisodesForMixedHome(),
             'featuredSeries' => $this->interleave($featuredGlSeries, $featuredAnimeSeries),
-            'mixedSeries' => $this->interleave($glSeries, $animeSeries),
+            'mixedSeries' => $titles,
             'continueWatching' => $this->continueWatchingEpisodes(),
         ];
     }
@@ -217,13 +216,32 @@ class PublicCatalogController extends Controller
             ->get();
     }
 
-    private function allTitlesForSection(string $sectionSlug): Collection
+    private function homeCatalogTitles(): Collection
     {
+        $firstEpisodeDate = Episode::query()
+            ->selectRaw('COALESCE(release_date, published_at)')
+            ->whereColumn('series_id', 'series.id')
+            ->where('moderation_status', 'approved')
+            ->whereNotNull('published_at')
+            // A numbered special (episode 0) should not precede episode 1.
+            ->orderByRaw('CASE WHEN episode_number >= 1 THEN 0 ELSE 1 END')
+            ->orderBy('season_number')
+            ->orderBy('episode_number')
+            ->orderBy('id')
+            ->limit(1);
+
         return Series::query()
             ->where('moderation_status', 'approved')
             ->whereNotNull('published_at')
-            ->where('catalog_section', $sectionSlug)
-            ->orderByDesc('published_at')
+            ->select('series.*')
+            ->selectSub($firstEpisodeDate, 'first_episode_date')
+            ->withSum(['episodes as total_episode_views' => fn ($query) => $query
+                ->where('moderation_status', 'approved')
+                ->whereNotNull('published_at')], 'views_count')
+            ->orderByRaw('CASE WHEN first_episode_date IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('first_episode_date')
+            ->orderBy('title')
+            ->orderBy('id')
             ->get();
     }
 

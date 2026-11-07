@@ -121,7 +121,7 @@
         ])
         @include('partials.home.catalog-section', [
             'title' => 'Títulos',
-            'label' => 'Anime y Series GL',
+            'label' => 'series GL, anime y películas',
             'series' => $mixedSeries,
         ])
     @else
@@ -172,4 +172,7 @@
         heroYoutubeVideo?.addEventListener('load', () => window.setTimeout(() => heroYoutubeVideo.classList.add('is-ready'), 3000));
     </script>
     @include('partials.hover-media-script')
+    @if($isMixedHome)
+        <script src="{{ asset('assets/js/home-catalog-sort.js') }}?v={{ filemtime(public_path('assets/js/home-catalog-sort.js')) }}" defer></script>
+    @endif
 @endsection
