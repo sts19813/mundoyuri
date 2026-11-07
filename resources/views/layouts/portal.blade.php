@@ -44,6 +44,14 @@
     ])
     <script id="mundo-yuri-pwa-config" type="application/json">@json($pwaConfig)</script>
     <script src="{{ asset('assets/js/pwa.js') }}?v={{ filemtime(public_path('assets/js/pwa.js')) }}" defer></script>
+    @guest
+        @php($visitorPresenceConfig = [
+            'endpoint' => route('visitor-presence.heartbeat'),
+            'csrfToken' => csrf_token(),
+        ])
+        <script id="mundo-yuri-visitor-presence-config" type="application/json">@json($visitorPresenceConfig)</script>
+        <script src="{{ asset('assets/js/visitor-presence.js') }}?v={{ filemtime(public_path('assets/js/visitor-presence.js')) }}" defer></script>
+    @endguest
     @if($activeSeasonTheme === 'halloween')
         <script src="{{ asset('assets/js/halloween-theme.js') }}?v={{ filemtime(public_path('assets/js/halloween-theme.js')) }}" defer></script>
     @endif

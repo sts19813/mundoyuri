@@ -11,6 +11,7 @@ use App\Models\Series;
 use App\Models\SiteVisit;
 use App\Models\User;
 use App\Models\UserPresenceSession;
+use App\Models\VisitorPresenceSession;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -30,6 +31,9 @@ class AdminDashboardController extends Controller
         $canModerate = $user->can('moderate content');
         $siteVisitStats = null;
         $siteVisitChart = null;
+        $todayTrafficChart = null;
+        $topVisitedPages = collect();
+        $contentMomentum = null;
         $activePresenceSessions = collect();
         $topTimeUsers = collect();
         $recentUserVisits = collect();
@@ -53,6 +57,9 @@ class AdminDashboardController extends Controller
         if ($canModerate) {
             $siteVisitStats = $this->siteVisitStats();
             $siteVisitChart = $this->siteVisitChart();
+            $todayTrafficChart = $this->todayTrafficChart();
+            $topVisitedPages = $this->topVisitedPages();
+            $contentMomentum = $this->contentMomentum();
             $activePresenceSessions = $this->activePresenceSessions();
             $topTimeUsers = $this->topTimeUsers();
             $recentUserVisits = $this->recentUserVisits();
@@ -80,6 +87,9 @@ class AdminDashboardController extends Controller
             'stats',
             'siteVisitStats',
             'siteVisitChart',
+            'todayTrafficChart',
+            'topVisitedPages',
+            'contentMomentum',
             'mostViewedEpisodes',
             'mostViewedSeries',
             'activePresenceSessions',
@@ -90,7 +100,7 @@ class AdminDashboardController extends Controller
         ));
     }
 
-    /** @return array<string, int> */
+    /** @return array<string, int|float> */
     private function siteVisitStats(): array
     {
         $today = now()->toDateString();
@@ -107,6 +117,21 @@ class AdminDashboardController extends Controller
             ->selectRaw('COUNT(DISTINCT CASE WHEN user_id IS NOT NULL THEN user_id END) as registered_visitors')
             ->first();
 
+        $activeSince = now()->subMinutes(15);
+        $activeRegistered = UserPresenceSession::query()
+            ->where('last_seen_at', '>=', $activeSince)
+            ->distinct('user_id')
+            ->count('user_id');
+        $activeAnonymous = VisitorPresenceSession::query()
+            ->where('last_seen_at', '>=', $activeSince)
+            ->distinct('visitor_id')
+            ->count('visitor_id');
+
+        $todayVisits = (int) ($row->visits_today ?? 0);
+        $yesterdayVisits = SiteVisit::query()
+            ->where('visited_on', now()->subDay()->toDateString())
+            ->count();
+
         return [
             'total_visits' => (int) ($row->total_visits ?? 0),
             'visits_today' => (int) ($row->visits_today ?? 0),
@@ -116,38 +141,96 @@ class AdminDashboardController extends Controller
             'anonymous_visitors' => (int) ($row->anonymous_visitors ?? 0),
             'registered_visitors' => (int) ($row->registered_visitors ?? 0),
             'new_users_30_days' => User::query()->where('created_at', '>=', now()->subDays(29)->startOfDay())->count(),
-            'active_now' => UserPresenceSession::query()->where('last_seen_at', '>=', now()->subMinutes(2))->distinct('user_id')->count('user_id'),
+            'active_registered' => $activeRegistered,
+            'active_anonymous' => $activeAnonymous,
+            'active_now' => $activeRegistered + $activeAnonymous,
             'tracked_hours' => (int) floor(UserPresenceSession::query()->sum('total_seconds') / 3600),
+            'today_change' => $yesterdayVisits > 0 ? round((($todayVisits - $yesterdayVisits) / $yesterdayVisits) * 100, 1) : 0,
         ];
     }
 
-    /** @return array{labels: Collection<int, string>, values: Collection<int, int>} */
+    /** @return array{labels: Collection<int, string>, visits: Collection<int, int>, visitors: Collection<int, int>, anonymous: Collection<int, int>} */
     private function siteVisitChart(): array
     {
         $startDate = now()->subDays(29)->startOfDay();
         $visitsByDay = SiteVisit::query()
             ->where('visited_on', '>=', $startDate->toDateString())
-            ->selectRaw('visited_on, COUNT(*) as visits')
+            ->selectRaw('visited_on, COUNT(*) as visits, COUNT(DISTINCT visitor_id) as visitors, COUNT(DISTINCT CASE WHEN user_id IS NULL THEN visitor_id END) as anonymous')
             ->groupBy('visited_on')
-            ->pluck('visits', 'visited_on');
+            ->get()
+            ->keyBy('visited_on');
 
         $labels = collect();
-        $values = collect();
+        $visits = collect();
+        $visitors = collect();
+        $anonymous = collect();
 
         for ($day = $startDate->copy(); $day->lte(now()); $day->addDay()) {
             $date = $day->toDateString();
             $labels->push(Carbon::parse($date)->format('d/m'));
-            $values->push((int) ($visitsByDay[$date] ?? 0));
+            $row = $visitsByDay[$date] ?? null;
+            $visits->push((int) ($row->visits ?? 0));
+            $visitors->push((int) ($row->visitors ?? 0));
+            $anonymous->push((int) ($row->anonymous ?? 0));
+        }
+
+        return compact('labels', 'visits', 'visitors', 'anonymous');
+    }
+
+    /** @return array{labels: Collection<int, string>, values: Collection<int, int>} */
+    private function todayTrafficChart(): array
+    {
+        $start = now()->copy()->startOfDay();
+        $rows = SiteVisit::query()
+            ->where('visited_at', '>=', $start)
+            ->get(['visited_at'])
+            ->groupBy(fn (SiteVisit $visit) => $visit->visited_at->format('H'))
+            ->map->count();
+
+        $labels = collect();
+        $values = collect();
+        $lastHour = (int) now()->format('G');
+
+        for ($hour = 0; $hour <= $lastHour; $hour++) {
+            $key = str_pad((string) $hour, 2, '0', STR_PAD_LEFT);
+            $labels->push($key.':00');
+            $values->push((int) ($rows[$key] ?? 0));
         }
 
         return compact('labels', 'values');
+    }
+
+    private function topVisitedPages(): Collection
+    {
+        return SiteVisit::query()
+            ->where('visited_at', '>=', now()->subDays(30))
+            ->select('path')
+            ->selectRaw('COUNT(*) as visits')
+            ->selectRaw('COUNT(DISTINCT visitor_id) as visitors')
+            ->groupBy('path')
+            ->orderByDesc('visits')
+            ->take(8)
+            ->get();
+    }
+
+    /** @return array<string, int> */
+    private function contentMomentum(): array
+    {
+        $since = now()->subDays(30);
+
+        return [
+            'episode_starts' => EpisodeWatchProgress::query()->where('last_watched_at', '>=', $since)->count(),
+            'episode_completions' => EpisodeWatchProgress::query()->where('last_watched_at', '>=', $since)->where('completed', true)->count(),
+            'comments' => Comment::query()->where('created_at', '>=', $since)->count(),
+            'new_users' => User::query()->where('created_at', '>=', $since)->count(),
+        ];
     }
 
     private function activePresenceSessions(): Collection
     {
         return UserPresenceSession::query()
             ->with('user:id,name,alias,email')
-            ->where('last_seen_at', '>=', now()->subMinutes(2))
+            ->where('last_seen_at', '>=', now()->subMinutes(15))
             ->latest('last_seen_at')
             ->take(30)
             ->get()
@@ -190,7 +273,7 @@ class AdminDashboardController extends Controller
     {
         return EpisodeWatchProgress::query()
             ->with(['user:id,name,alias,email', 'episode.series:id,title'])
-            ->where('last_watched_at', '>=', now()->subMinutes(2))
+            ->where('last_watched_at', '>=', now()->subMinutes(15))
             ->latest('last_watched_at')
             ->take(10)
             ->get();

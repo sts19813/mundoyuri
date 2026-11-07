@@ -59,6 +59,7 @@ use App\Http\Controllers\StickerController;
 use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\UserPresenceController;
+use App\Http\Controllers\VisitorPresenceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicCatalogController::class, 'home'])->name('home');
@@ -84,6 +85,9 @@ Route::post('/comentarios', [CommentController::class, 'store'])
 Route::post('/asistente/mensajes', [AssistantMessageController::class, 'store'])
     ->middleware('throttle:5,10')
     ->name('assistant-messages.store');
+Route::post('/actividad/visitante', VisitorPresenceController::class)
+    ->middleware('throttle:240,1')
+    ->name('visitor-presence.heartbeat');
 Route::get('/episodios', [PublicCatalogController::class, 'episodes'])->name('legacy.episodios');
 Route::get('/episodios/{episode:slug}', [PublicCatalogController::class, 'episodes'])->name('public.episodes.show');
 Route::get('/comunidad', [CommunityController::class, 'index'])->name('community.index');

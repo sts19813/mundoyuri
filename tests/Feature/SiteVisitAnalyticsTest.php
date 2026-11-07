@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\SiteVisit;
 use App\Models\User;
+use App\Models\VisitorPresenceSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -98,11 +99,34 @@ class SiteVisitAnalyticsTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Visitantes únicos')
-            ->assertSee('Visitas hoy')
-            ->assertSee('Visitas últimos 30 días')
-            ->assertSee('Visitantes anónimos')
-            ->assertSee('Visitantes registrados')
-            ->assertSee('Usuarios nuevos 30 días')
-            ->assertSee('site-visits-30-days-chart', false);
+            ->assertSee('Páginas vistas hoy')
+            ->assertSee('Tráfico de los últimos 30 días')
+            ->assertSee('anónimos')
+            ->assertSee('Personas en el sitio')
+            ->assertSee('Páginas que atraen más visitas')
+            ->assertSee('site-visits-30-days-chart', false)
+            ->assertSee('site-visits-today-chart', false);
+    }
+
+    public function test_anonymous_visitor_presence_is_recorded_without_personal_data(): void
+    {
+        $sessionId = '22222222-2222-4222-8222-222222222222';
+        $this->withCredentials()
+            ->withCookie('mundo_yuri_visitor_id', '11111111-1111-4111-8111-111111111111')
+            ->postJson(route('visitor-presence.heartbeat'), [
+                'session_id' => $sessionId,
+                'path' => '/series',
+                'title' => 'Series GL',
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', true);
+
+        $this->assertDatabaseHas('visitor_presence_sessions', [
+            'session_id' => $sessionId,
+            'current_path' => '/series',
+            'current_title' => 'Series GL',
+        ]);
+
+        $this->assertSame(1, VisitorPresenceSession::count());
     }
 }
