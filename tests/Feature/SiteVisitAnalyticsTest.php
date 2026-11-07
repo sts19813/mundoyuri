@@ -95,17 +95,26 @@ class SiteVisitAnalyticsTest extends TestCase
             'path_hash' => sha1('/anime'),
         ]);
 
-        $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Visitantes únicos')
             ->assertSee('Páginas vistas hoy')
             ->assertSee('Tráfico de los últimos 30 días')
             ->assertSee('anónimos')
-            ->assertSee('Personas en el sitio')
+            ->assertSee('Personas activas')
             ->assertSee('Páginas que atraen más visitas')
             ->assertSee('site-visits-30-days-chart', false)
-            ->assertSee('site-visits-today-chart', false);
+            ->assertSee('site-visits-today-chart', false)
+            ->assertDontSee('Cola de moderación');
+
+        $chart = $response->viewData('siteVisitChart');
+        $this->assertCount(30, $chart['labels']);
+        $this->assertSame(1, $chart['visits'][29]);
+        $this->assertSame(1, $chart['visitors'][29]);
+        $this->assertSame(1, $chart['visits'][23]);
+        $this->assertSame(2, array_sum($chart['visits']));
+        $this->assertSame(2, $response->viewData('siteVisitStats')['unique_visitors_30_days']);
     }
 
     public function test_anonymous_visitor_presence_is_recorded_without_personal_data(): void

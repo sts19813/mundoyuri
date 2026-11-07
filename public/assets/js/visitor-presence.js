@@ -35,7 +35,7 @@
             method: 'POST',
             headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': config.csrfToken },
             credentials: 'same-origin',
-            body: JSON.stringify({ session_id: id, path: window.location.pathname + window.location.search, title: document.title || null }),
+            body: JSON.stringify({ session_id: id, path: window.location.pathname, title: document.title || null }),
         }).catch(function () {});
     }
     function start() {

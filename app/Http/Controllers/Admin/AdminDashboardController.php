@@ -34,6 +34,7 @@ class AdminDashboardController extends Controller
         $todayTrafficChart = null;
         $topVisitedPages = collect();
         $contentMomentum = null;
+        $anonymousPages = collect();
         $activePresenceSessions = collect();
         $topTimeUsers = collect();
         $recentUserVisits = collect();
@@ -60,6 +61,7 @@ class AdminDashboardController extends Controller
             $todayTrafficChart = $this->todayTrafficChart();
             $topVisitedPages = $this->topVisitedPages();
             $contentMomentum = $this->contentMomentum();
+            $anonymousPages = $this->anonymousPages();
             $activePresenceSessions = $this->activePresenceSessions();
             $topTimeUsers = $this->topTimeUsers();
             $recentUserVisits = $this->recentUserVisits();
@@ -90,6 +92,7 @@ class AdminDashboardController extends Controller
             'todayTrafficChart',
             'topVisitedPages',
             'contentMomentum',
+            'anonymousPages',
             'mostViewedEpisodes',
             'mostViewedSeries',
             'activePresenceSessions',
@@ -112,6 +115,14 @@ class AdminDashboardController extends Controller
             ->selectRaw('SUM(CASE WHEN visited_on = ? THEN 1 ELSE 0 END) as visits_today', [$today])
             ->selectRaw('SUM(CASE WHEN visited_on >= ? THEN 1 ELSE 0 END) as visits_7_days', [$sevenDaysAgo])
             ->selectRaw('SUM(CASE WHEN visited_on >= ? THEN 1 ELSE 0 END) as visits_30_days', [$thirtyDaysAgo])
+            ->selectRaw('COUNT(DISTINCT visitor_id) as unique_visitors')
+            ->selectRaw('COUNT(DISTINCT CASE WHEN user_id IS NULL THEN visitor_id END) as anonymous_visitors')
+            ->selectRaw('COUNT(DISTINCT CASE WHEN user_id IS NOT NULL THEN user_id END) as registered_visitors')
+            ->first();
+
+        $recentVisitors = SiteVisit::query()
+            ->where('visited_on', '>=', $thirtyDaysAgo)
+            ->where('visited_on', '<', now()->addDay()->toDateString())
             ->selectRaw('COUNT(DISTINCT visitor_id) as unique_visitors')
             ->selectRaw('COUNT(DISTINCT CASE WHEN user_id IS NULL THEN visitor_id END) as anonymous_visitors')
             ->selectRaw('COUNT(DISTINCT CASE WHEN user_id IS NOT NULL THEN user_id END) as registered_visitors')
@@ -145,7 +156,10 @@ class AdminDashboardController extends Controller
             'active_anonymous' => $activeAnonymous,
             'active_now' => $activeRegistered + $activeAnonymous,
             'tracked_hours' => (int) floor(UserPresenceSession::query()->sum('total_seconds') / 3600),
-            'today_change' => $yesterdayVisits > 0 ? round((($todayVisits - $yesterdayVisits) / $yesterdayVisits) * 100, 1) : 0,
+            'unique_visitors_30_days' => (int) ($recentVisitors->unique_visitors ?? 0),
+            'anonymous_visitors_30_days' => (int) ($recentVisitors->anonymous_visitors ?? 0),
+            'registered_visitors_30_days' => (int) ($recentVisitors->registered_visitors ?? 0),
+            'yesterday_visits' => $yesterdayVisits,
         ];
     }
 
@@ -158,7 +172,7 @@ class AdminDashboardController extends Controller
             ->selectRaw('visited_on, COUNT(*) as visits, COUNT(DISTINCT visitor_id) as visitors, COUNT(DISTINCT CASE WHEN user_id IS NULL THEN visitor_id END) as anonymous')
             ->groupBy('visited_on')
             ->get()
-            ->keyBy('visited_on');
+            ->keyBy(fn (SiteVisit $visit) => $visit->visited_on->toDateString());
 
         $labels = collect();
         $visits = collect();
@@ -174,7 +188,12 @@ class AdminDashboardController extends Controller
             $anonymous->push((int) ($row->anonymous ?? 0));
         }
 
-        return compact('labels', 'visits', 'visitors', 'anonymous');
+        return [
+            'labels' => $labels->all(),
+            'visits' => $visits->all(),
+            'visitors' => $visitors->all(),
+            'anonymous' => $anonymous->all(),
+        ];
     }
 
     /** @return array{labels: Collection<int, string>, values: Collection<int, int>} */
@@ -197,7 +216,24 @@ class AdminDashboardController extends Controller
             $values->push((int) ($rows[$key] ?? 0));
         }
 
-        return compact('labels', 'values');
+        return ['labels' => $labels->all(), 'values' => $values->all()];
+    }
+
+    private function anonymousPages(): Collection
+    {
+        // Count each anonymous browser once, on its most recently active tab.
+        $latest = VisitorPresenceSession::query()
+            ->where('last_seen_at', '>=', now()->subMinutes(15))
+            ->orderByDesc('last_seen_at')
+            ->orderByDesc('id')
+            ->get(['visitor_id', 'current_path', 'last_seen_at'])
+            ->unique('visitor_id');
+
+        return $latest->groupBy('current_path')
+            ->map(fn (Collection $sessions, string $path) => (object) ['path' => $path, 'visitors' => $sessions->count()])
+            ->sortByDesc('visitors')
+            ->take(8)
+            ->values();
     }
 
     private function topVisitedPages(): Collection

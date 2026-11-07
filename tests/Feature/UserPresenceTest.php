@@ -158,9 +158,9 @@ class UserPresenceTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('Personas en el sitio')
-            ->assertSee('Horas registradas')
-            ->assertSee('Usuarios viendo ahora')
+            ->assertSee('Personas activas')
+            ->assertSee('Tiempo registrado')
+            ->assertSee('Usuarios activos ahora')
             ->assertSee('Usuarios con más tiempo')
             ->assertSee('Luna')
             ->assertSee('/series');
